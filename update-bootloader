@@ -1,0 +1,50 @@
+#! /usr/bin/perl -w
+
+use POSIX;
+use Getopt::Long;
+use vars qw($opt_add $opt_remove $opt_image $opt_initrd $opt_name $opt_default);
+use Bootloader::Tools;
+use strict;
+
+sub synopsis() {
+    print STDERR "SYNOPSIS: $0 {--image file} [--initrd file] " .
+		 "[--default] {--add|--remove}\n";
+    exit 1
+}
+
+$opt_default = 0;
+
+GetOptions (
+	'add' => \$opt_add,
+	'remove' => \$opt_remove,
+	'image=s' => \$opt_image,
+	'initrd=s' => \$opt_initrd,
+	'name=s' => \$opt_name,
+	'default' => \$opt_default)
+    or synopsis;
+
+synopsis unless ($opt_image);
+synopsis unless (!$opt_add ^ !$opt_remove);
+
+$opt_image = getcwd . '/' . $opt_image
+    if ($opt_image !~ m#^/#);
+if ($opt_initrd) {
+    $opt_initrd = getcwd . '/' . $opt_initrd
+	if ($opt_initrd !~ m#^/#);
+}
+
+InitLibrary();
+if ($opt_add) {
+    unless ($opt_name) {
+	$opt_name = $opt_image;
+	$opt_name =~ s#.*/##;
+	$opt_name =~ s#.*?-#Linux-#;
+    }
+    unless (CountImageSections($opt_image)) {
+	AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
+    }
+} elsif ($opt_remove) {
+    if (CountImageSections($opt_image)) {
+	RemoveImageSections($opt_image);
+    }
+}

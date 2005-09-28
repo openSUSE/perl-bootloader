@@ -1,0 +1,234 @@
+-------------------------------------------------------------------
+Tue Sep 27 10:44:50 CEST 2005 - jsrain@suse.cz
+
+- fixed quoting of options in lilo.conf (#117642)
+
+-------------------------------------------------------------------
+Tue Aug 30 11:48:39 CEST 2005 - jsrain@suse.cz
+
+- added ELILO support
+
+-------------------------------------------------------------------
+Mon Aug 29 21:56:45 CEST 2005 - aj@suse.de
+
+- Do not package .orig file.
+
+-------------------------------------------------------------------
+Mon Aug 29 10:34:57 CEST 2005 - jsrain@suse.cz
+
+- added support for PPC loader
+- fixed rootnoverify handling for GRUB (#113683)
+
+-------------------------------------------------------------------
+Fri Aug 19 09:08:13 CEST 2005 - jsrain@suse.cz
+
+- fixed kernel/initrd specification in merged sections (#105660)
+
+-------------------------------------------------------------------
+Thu Aug 18 13:52:52 CEST 2005 - jsrain@suse.cz
+
+- fixed order of lines in XEN sections (#105171)
+
+-------------------------------------------------------------------
+Wed Aug 17 12:57:45 CEST 2005 - jsrain@suse.cz
+
+- fixed installing GRUB if /boot is on MD array (104908)
+- fixed displayed paths in configuration file editor during
+  bootloader installation (105140)
+
+-------------------------------------------------------------------
+Tue Aug  9 14:31:41 CEST 2005 - jsrain@suse.cz
+
+- fixed writing chainloader sections for GRUB (#102703)
+
+-------------------------------------------------------------------
+Wed Aug  3 14:15:11 CEST 2005 - jsrain@suse.cz
+
+- fixed crashes if using on unsupported bootloader
+
+-------------------------------------------------------------------
+Tue Aug  2 11:25:11 CEST 2005 - jsrain@suse.cz
+
+- fixed crash in some cases
+
+-------------------------------------------------------------------
+Wed Jul 27 13:57:16 CEST 2005 - jsrain@suse.cz
+
+- added possibility to set password
+
+-------------------------------------------------------------------
+Tue Jul 26 14:37:39 CEST 2005 - jsrain@suse.cz
+
+- fixed typo in function name
+
+-------------------------------------------------------------------
+Thu Jul 21 16:30:19 CEST 2005 - jsrain@suse.cz
+
+- fixed GRUB <-> UNIX path translations to make menus merging work
+
+-------------------------------------------------------------------
+Thu Jun 30 11:00:39 CEST 2005 - jsrain@suse.cz
+
+- fixed handling of wildcard sections
+- fixed determining whether bootloader initialization succeeded
+  for LILO and ZIPL
+
+-------------------------------------------------------------------
+Wed Jun 29 11:37:23 CEST 2005 - jsrain@suse.cz
+
+- fixed checking of labels for LILO
+- fixed creating global sections during distro installation
+
+-------------------------------------------------------------------
+Thu Jun  2 16:01:16 CEST 2005 - jsrain@suse.cz
+
+- use rootnoverify instead of root in chainloader sections (#84575)
+
+-------------------------------------------------------------------
+Wed Jun  1 15:11:42 CEST 2005 - jsrain@suse.cz
+
+- merged last patch to main tarball
+- fixed cripplink lilo.conf if detailed disk information is
+  present (#81526)
+
+-------------------------------------------------------------------
+Tue May 31 16:07:35 CEST 2005 - uli@suse.de
+
+- fixed syntax error 
+
+-------------------------------------------------------------------
+Mon May 23 14:17:34 CEST 2005 - uli@suse.de
+
+- shift s390* ramdisk up to 16MB so it will not be overwritten
+  on machines with many CPUs (bug #63045)
+
+-------------------------------------------------------------------
+Fri Apr 15 11:31:10 CEST 2005 - jsrain@suse.cz
+
+- added GRUB support for XEN
+
+-------------------------------------------------------------------
+Wed Apr  6 13:08:28 CEST 2005 - jsrain@suse.cz
+
+- removed code duplication between generic and S/390 specific code
+
+-------------------------------------------------------------------
+Wed Mar 16 13:24:39 CET 2005 - jsrain@suse.cz
+
+- added license to documentation
+
+-------------------------------------------------------------------
+Mon Mar 14 09:33:56 CET 2005 - jsrain@suse.cz
+
+- limit LILO section name length (#71830)
+- fixed setting default entry when GRUB section added (#71217)
+- make bootloader files not public readable (#72385)
+
+-------------------------------------------------------------------
+Tue Mar  8 17:29:32 CET 2005 - jsrain@suse.de
+
+- fixed creating zipl.conf during installation
+- added missing documentation in source code
+
+-------------------------------------------------------------------
+Mon Mar  7 15:36:11 CET 2005 - jsrain@suse.cz
+
+- fixed reading zip.conf (uli)
+
+-------------------------------------------------------------------
+Wed Mar  2 15:17:03 CET 2005 - jsrain@suse.cz
+
+- fixed error message written on terminal while finishing
+  installation
+
+-------------------------------------------------------------------
+Fri Feb 25 16:07:39 CET 2005 - jsrain@suse.cz
+
+- fixed initialization when device specified via UUID or LABEL
+  in /etc/fstab (#66623)
+
+-------------------------------------------------------------------
+Fri Feb 25 14:31:11 CET 2005 - agruen@suse.de
+
+- Add --default option to update-bootloader script.
+
+-------------------------------------------------------------------
+Wed Feb 23 16:52:16 CET 2005 - ihno@suse.de
+
+- added s390/s390x specific part (zipl)
+
+-------------------------------------------------------------------
+Thu Feb 17 18:15:53 CET 2005 - jsrain@suse.cz
+
+- avoid calling hwinfo when detecting partitioning (#50615)
+
+-------------------------------------------------------------------
+Wed Feb 16 22:26:30 CET 2005 - schwab@suse.de
+
+- Don't remove BuildRoot in %install.
+
+-------------------------------------------------------------------
+Wed Feb 16 13:51:49 CET 2005 - jsrain@suse.cz
+
+- added support for embedding stage1.5 of GRUB
+
+-------------------------------------------------------------------
+Mon Feb 14 09:36:36 CET 2005 - jsrain@suse.cz
+
+- fixed parameters of added kernel if the comment saying which
+  kernel comes from initial installation is missing (#50708)
+- fixed errors if removing entry for unexistent kernel (#50708)
+
+-------------------------------------------------------------------
+Mon Feb  7 10:43:00 CET 2005 - jsrain@suse.cz
+
+- fixed last patch (more entries can be removed with one kernel)
+- write only modified configuration files and modified sections
+- fixed splitting path to mountpoint + path relative to the mp
+
+-------------------------------------------------------------------
+Fri Feb  4 18:17:56 CET 2005 - agruen@suse.de
+
+- Set the new default boot entry to the first entry in the boot
+  menu when removing the current default entry.
+- A few minor code cleanups.
+
+-------------------------------------------------------------------
+Fri Feb  4 15:56:00 CET 2005 - jsrain@suse.de
+
+- fixed possible corruption of data files
+- fixed counting and removing sections with specified kernel
+
+-------------------------------------------------------------------
+Thu Feb  3 15:00:28 CET 2005 - agruen@suse.de
+
+- Rename the man pages so that they include the Bootloader::
+  prefix.
+- Fix a bug in Bootloader::Core::SplitDevPath.
+- Add update-bootloader frontend script.
+
+-------------------------------------------------------------------
+Mon Jan 31 16:11:48 CET 2005 - jsrain@suse.cz
+
+- fixed several bugs
+
+-------------------------------------------------------------------
+Tue Jan 25 16:27:09 CET 2005 - jsrain@suse.cz
+
+- fixed GRUB to work properly with MD arrays
+- fixed handlink of symlinks
+- fixed root device when creating a new section
+- implemented logging support when running without YaST
+- fixed handling of GRUB path prefix
+
+-------------------------------------------------------------------
+Mon Jan 24 17:35:27 CET 2005 - jsrain@suse.cz
+
+- implemented logging mechanism
+- several bugfixes
+
+-------------------------------------------------------------------
+Thu Jan 20 16:21:27 CET 2005 - jsrain@suse.cz
+
+- initial package
+
