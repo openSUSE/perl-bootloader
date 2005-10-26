@@ -294,7 +294,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	"/sbin/lilo",
+	"/sbin/lilo -v -v",
 	"/var/log/YaST2/y2log_tool_lilo"
     );
 }

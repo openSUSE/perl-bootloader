@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Oct 26 09:18:20 CEST 2005 - jsrain@suse.cz
+
+- fixed updating elilo configuration (#116739)
+- do more verbose output to log when installing lilo
+
+-------------------------------------------------------------------
 Tue Sep 27 10:44:50 CEST 2005 - jsrain@suse.cz
 
 - fixed quoting of options in lilo.conf (#117642)

@@ -294,9 +294,13 @@ sub UpdateBootloader {
     {
 	return undef;
     }
-    $ret = $self->InitializeBootloader ();
-    $self->{"update_needed"} = 0;
-    return $ret;
+    my $command = "test -d /boot/efi/efi/SuSE || mkdir -p /boot/efi/efi/SuSE";
+    system ($command);
+ 
+    return $self->RunCommand (
+	"/sbin/elilo -v",
+	"/var/log/YaST2/y2log_tool_elilo"
+    );
 }
 
 =item
@@ -311,15 +315,7 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
 
-    if (! $self->{"update_needed"})
-    {
-	return 1;
-    }
-
-    return $self->RunCommand (
-	"/sbin/elilo -v",
-	"/var/log/YaST2/y2log_tool_elilo"
-    );
+    # FIXME run EFI boot manager
 }
 
 1;
