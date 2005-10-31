@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Oct 31 10:50:08 CET 2005 - jsrain@suse.cz
+
+- fixed reading GRUB settings when /boot subtree is on MD array
+  (#130236)
+
+-------------------------------------------------------------------
 Wed Oct 26 09:18:20 CEST 2005 - jsrain@suse.cz
 
 - fixed updating elilo configuration (#116739)

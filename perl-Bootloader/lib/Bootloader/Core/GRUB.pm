@@ -271,6 +271,7 @@ sub GrubPath2UnixPath {
     }
 
     $dev = $self->GrubDev2UnixDev ($dev);
+    $dev = $self->Member2MD ($dev);
 
     my $mountpoint = $dev;
     while ((my $mp, my $d) = each (%{$self->{"mountpoints"}}))
