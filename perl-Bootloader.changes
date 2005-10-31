@@ -5,6 +5,11 @@ Wed Oct 26 09:18:20 CEST 2005 - jsrain@suse.cz
 - do more verbose output to log when installing lilo
 
 -------------------------------------------------------------------
+Wed Sep 28 22:08:05 CEST 2005 - dmueller@suse.de
+
+- add norootforbuild
+
+-------------------------------------------------------------------
 Tue Sep 27 10:44:50 CEST 2005 - jsrain@suse.cz
 
 - fixed quoting of options in lilo.conf (#117642)
