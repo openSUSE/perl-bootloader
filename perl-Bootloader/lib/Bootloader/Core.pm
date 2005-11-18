@@ -1538,7 +1538,7 @@ sub RunCommand {
 
     if (defined ($log))
     {
-	system ("test -f $log && rm $log >/dev/null 2>&1");
+	unlink "$log" if -f $log;
 	$command = "$command >>$log 2>&1";
     }
     else
@@ -1596,7 +1596,7 @@ sub GetSettings {
     my $self = shift;
 
     my %ret = ();
-    foreach my $key ("global", "sections", "device_map")
+    foreach my $key ("global", "exports", "sections", "device_map")
     {
 	if (defined ($self->{$key}))
 	{
@@ -1620,7 +1620,7 @@ sub SetSettings {
     my $self = shift;
     my %settings = %{+shift};
 
-    foreach my $key ("global", "sections", "device_map")
+    foreach my $key ("global", "imports", "sections", "device_map")
     {
 	if (defined ($settings{$key}))
 	{

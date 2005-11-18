@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Fri Nov 18 11:21:14 CET 2005 - jplack@suse.de
+
+- extend partition information interface transparently
+- encode module exports and transport them through 'global'
+  (intermediate solution/ proof of concept)
+- eliminate some unneeded 'system' calls
+- reenable ppc bootloader config
+- bump version to 0.2.1
+
+-------------------------------------------------------------------
 Mon Oct 31 10:50:08 CET 2005 - jsrain@suse.cz
 
 - fixed reading GRUB settings when /boot subtree is on MD array

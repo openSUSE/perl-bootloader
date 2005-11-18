@@ -77,6 +77,7 @@ use Bootloader::Core::GRUB;
 use Bootloader::Core::LILO;
 use Bootloader::Core::ELILO;
 use Bootloader::Core::ZIPL;
+use Bootloader::Core::PowerLILO;
 
 =item
 C<< $obj_ref = Bootloader::Library->new (); >>
@@ -137,6 +138,10 @@ sub Initialize {
     elsif ($bootloader eq "zipl")
     {
         $loader = Bootloader::Core::ZIPL->new ();
+    }
+    elsif ($bootloader eq "ppc")
+    {
+	$loader = Bootloader::Core::PowerLILO->new ();
     }
     else
     {
@@ -214,10 +219,10 @@ sub DefinePartitions {
     my $loader = $self->{"loader"};
     foreach my $part_ref (@{$partitions_ref})
     {
-	my $part = $part_ref->[0];
-	my $disk = $part_ref->[1];
-	my $num = $part_ref->[2];
-	$loader->l_debug ("Library::DefinePartitions: Partition: $part ; Disk: $disk ; Number: $num");
+	my ($part, $disk, $num, @part_info ) = @{$part_ref};
+	$loader->l_debug ("Library::DefinePartitions: Partition: $part ; " .
+			  "Disk: $disk ; Number: $num ; Info: " .
+			  join(", ", map { "$_"; } @part_info) );
     }
     $loader->{"partitions"} = $partitions_ref;
     return 1;
@@ -639,7 +644,34 @@ sub GetGlobalSettings {
     {
 	return undef;
     }
-    return $settings_ref->{"global"};
+
+    # copy the hash and add export tags
+    my %globals=%{$settings_ref->{"global"}};
+    if (defined $settings_ref->{"exports"}) {
+	# $globals{"__exports"} = %{$settings_ref->{"exports"}};
+
+	my @exports;
+
+	while ((my $key, my $value) = each ( %{$settings_ref->{"exports"}} ))
+	{
+	    if (ref($value)) {
+		if  (ref($value) eq "HASH") {
+		    foreach my $k (keys %$value) {
+			$globals{"__exports__%" . $key . "%" . $k} = $value->{$k};
+		    }
+		}
+		elsif  (ref($value) eq "ARRAY") {
+                   foreach my $i (0 .. $#$value) {
+			$globals{"__exports__#" . $key . "#" . $i} = $value->[$i];
+                   }
+		}
+	    }
+	    else {
+		$globals{"__exports__" . $key} = $value;
+	    }
+	}
+    }
+    return \%globals;
 }
 
 =item
