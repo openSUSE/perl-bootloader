@@ -1,8 +1,12 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/STABLE
-BUILD=/work/src/bin/build
 #BUILD_DIST=ppc
+ifeq ($(BUILD_DIST),ppc)
+BUILD=powerpc32 /work/src/bin/build
+else
+BUILD=/work/src/bin/build
+endif
 BUILD_ROOT=/abuild/buildsystem.$$HOST.$$LOGNAME
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
@@ -47,7 +51,14 @@ submit:	.submitted
 .built:	.exportdir
 	@rm -f .submitted
 	@echo "Trying to compile $(PKG) package under $$(<.exportdir)"
-	mypwd=`pwd` ; if { cd $$(<.exportdir); export XBUILD_DIST=$(BUILD_DIST) BUILD_ROOT=$(BUILD_ROOT); sudo $(BUILD); }; then touch $${mypwd}/$@; else echo Compile failed; exit 1; fi
+	mypwd=`pwd` ; \
+	if { cd $$(<.exportdir); \
+	    export $(if $(BUILD_DIST),BUILD_DIST=$(BUILD_DIST)) BUILD_ROOT=$(BUILD_ROOT); sudo $(BUILD); }; \
+	then \
+	    touch $${mypwd}/$@; \
+	else \
+	    echo Compile failed; exit 1; \
+	fi
 
 .submitted: .built
 	@echo "Target 'submit' will copy $$(<.exportdir) to $(SUBMIT_DIR)"
