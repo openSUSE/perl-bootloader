@@ -205,7 +205,7 @@ sub ReadMDArrays {
 	    {
 		my $dev = $2;
 		my $raid_dev = $1;
-		if ($raid_dev >= 0)
+		if ($raid_dev =~ /^[0-9]+$/ && $raid_dev >= 0)
 		{
 		    push @members, $dev;
 		}
