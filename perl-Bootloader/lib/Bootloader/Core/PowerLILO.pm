@@ -170,7 +170,7 @@ sub getExports() {
 	$go->{force_fat} = "bool:Always boot from FAT partition ";
 	$go->{force} = "bool:Install boot loader even on errors";
 
-	$go->{boot_custom} = "select::" . $boot_partitions;
+	$go->{boot_custom} = "select:PReP or FAT partition:" . $boot_partitions;
     }
     elsif ( "$arch" eq "prep" ) {
 	# only on old prep machines
