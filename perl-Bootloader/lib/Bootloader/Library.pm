@@ -646,7 +646,7 @@ sub GetGlobalSettings {
     }
 
     # copy the hash and add export tags
-    my %globals=%{$settings_ref->{"global"}};
+    my %globals=%{$settings_ref->{"global"}|| {}};
     if (defined $settings_ref->{"exports"}) {
 	# $globals{"__exports"} = %{$settings_ref->{"exports"}};
 

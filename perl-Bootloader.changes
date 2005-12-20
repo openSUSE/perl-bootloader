@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Dec 20 13:53:21 CET 2005 - jplack@suse.de
+
+- installer segfaults due to empty config (means always) #140127
+- bump version to 0.2.3
+
+-------------------------------------------------------------------
 Mon Dec 19 17:12:40 CET 2005 - jplack@suse.de
 
 - add needed label text
