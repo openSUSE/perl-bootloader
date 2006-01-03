@@ -54,10 +54,87 @@ package Bootloader::Core::ZIPL;
 use strict;
 
 use Bootloader::Core;
-our @ISA = ('Bootloader::Core');
+our @ISA = qw(Bootloader::Core);
 
 
 #module interface
+
+sub getExports() {
+    my $loader = shift;
+    
+    # possible global entries
+    #
+    #	default
+    #	timeout
+    #	prompt
+    #	target
+    #
+    # per section entries
+    #
+    #	label
+    #	menuname
+    #	image
+    #	ramdisk
+    #	dumpto
+    #	target
+    #	parameters
+    #	dumptofs (unimplemented)
+    #	parmfile (unimplemented)
+    
+    my %exports;
+    
+    my @bootpart;
+    my @partinfo = @{$loader->{"partitions"} || []};
+    
+    # boot from any partition (really?)
+    @bootpart = map {
+        my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
+        $device;
+    } @partinfo;
+    
+    my $boot_partitions = join(":", @bootpart);
+    
+    my $root_devices = join(":",
+        map {
+            my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
+            # FIXME: weed out non-root partitions
+        } @ partinfo,
+        keys %{$loader->{"md_arrays"} || {}}
+    );
+    
+    # FIXME: is "arch" export necessary?
+    
+    $exports{"global_options"} = {
+        default => "string:Default boot section:linux",
+        timeout => "int:Timeout in seconds:0:60:5",
+        prompt => "bool:Show boot menu",
+        target => "path:Target directory for configuration/menu section:/boot/zipl",
+    };
+    
+    my $go = $exports{"global_options"};
+    
+    $exports{"section_options"} = {
+        type_image => "bool:Kernel section",
+        type_dump => "bool:Dump section (obsolete)",
+        type_menu => "bool:Menu section",
+        # omitting implicit "label"
+        menu_menuname => "string:Menu name:usermenu",
+        image_image => "path:Kernel image:/boot/image",
+        image_ramdisk => "path:Initial RAM disk:/boot/initrd",
+        dump_dumpto => "path:Dump device:/dev/dasd",
+        image_target => "path:Target directory for configuration/menu section:/boot/zipl",
+        # FIXME: dump section has a target, too
+        image_parameters => "string:Optional kernel parameters",
+        image_parmfile => "path:Optional parameter file",
+        dump_dumptofs => "path:SCSI dump device:/dev/zfcp",
+    };
+    
+    my $so = $exports{"section_options"};
+    
+    $loader->{"exports"}=\%exports;
+}
+
+
 
 =item
 C<< $obj_ref = Bootloader::Core::ZIPL->new (); >>
@@ -70,9 +147,28 @@ sub new {
     my $self = shift;
 
     my $loader = $self->SUPER::new ();
+    $loader->{"default_global_lines"} = [
+    ];
+    
     bless ($loader);
     $loader->l_milestone ("ZIPL::new: Created ZIPL instance");
     return $loader;
+}
+
+=item
+C<< $settings_ref = Bootloader::Core::PowerLILO->GetSettings (); >>
+
+returns the complete settings in a hash. Does not read the settings
+from the system, but returns internal structures.
+
+=cut
+
+# map<string,any> GetSettings ()
+sub GetSettings {
+    my $self = shift;
+    $self->getExports();
+
+    return $self->SUPER::GetSettings();
 }
 
 =item
@@ -188,7 +284,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	"/sbin/zipl",
+	"/sbin/zipl -m menu",
     );
 }
 
@@ -205,15 +301,21 @@ the lines (a list of hashes).
 sub Info2Section {
     my $self = shift;
     my %sectinfo = %{+shift};
+    my $sect_names_ref = shift;
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
+    my $so = $self->{"exports"}{"section_options"};
+    
+    # print "info2section, section " . $sectinfo{"name"} . ", type " . $type . ".\n";
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
     {
 	return \@lines;
     }
+    
+    $sectinfo{"name"} = $self->FixSectionName ($sectinfo{"name"}, $sect_names_ref);
 
     @lines = map {
 	my $line_ref = $_;
@@ -250,7 +352,18 @@ sub Info2Section {
             $line_ref->{"key"}="menuname";
             $line_ref->{"value"}="";
         }
-
+        elsif (!exists $so->{$type . "_" . $key})
+        {
+            # print $type . "_" . $key . " unknown!\n";
+            next; # only accept known section options CAVEAT!
+        }
+        else
+        {
+            next unless defined ($sectinfo{$key});
+            
+            $line_ref->{"value"} = $sectinfo{$key};
+            delete ($sectinfo{$key});
+        }
 	$line_ref;
     } @lines;
 
@@ -286,6 +399,26 @@ sub Info2Section {
         {
             $parameters = $parameters . $value;
         }
+        elsif (! exists ($so->{$type . "_" . $key}))
+        {
+            # print $type . "_" . $key . " unknown!\n";
+            next; # only accept known section options CAVEAT!
+        }
+        else
+        {
+            my ($stype) = split /:/, $so->{$type . "_" . $key};
+	    # bool values appear in a config file or not
+	    if ($stype eq "bool") {
+		next if $value ne "true";
+		$value = "";
+	    }
+
+	    push @lines, {
+		"key" => $key,
+		"value" => $value,
+	    };
+        }
+            
     }
     if($parameters)
     {
@@ -332,9 +465,16 @@ sub Section2Info {
 	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
 	       $key eq "prompt" || $key eq "timeout" || $key eq "target")
 	{
-	    $key = "initrd" if $key eq "ramdisk";
-	    $ret{"type"} = "dump" if $key eq "dumpto";
-	    $ret{$key} = $line_ref->{"value"};
+	    if($key eq "ramdisk")
+	    {
+	      $key = "initrd";
+	      ($ret{$key} = $line_ref->{"value"}) =~ s/,0x[A-Fa-f0-9]+$//g; # remove load address
+            }
+            else
+	    {
+	      $ret{"type"} = "dump" if $key eq "dumpto";
+	      $ret{$key} = $line_ref->{"value"};
+            }
 	}
 	elsif ($key eq "parameters")
 	{
@@ -372,12 +512,15 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
+    my $go = $self->{"exports"}{"global_options"};
 
     my %ret = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
+	my ($type) = split /:/, $go->{$key};
+	
 	if ($key eq "default" || $key eq "timeout" || $key eq "prompt" || $key eq "menuname" || $key eq "target")
 	{
 	    $ret{$key} = $val;
@@ -403,12 +546,19 @@ sub Info2Global {
     my %globinfo = %{+shift};
     my @sections = @{+shift};
 
-    my @lines = @{[]};
-
+    my @lines = @{$globinfo{"__lines"} || []};
+    my @added_lines = ();
+    my $go = $self->{"exports"}{"global_options"};
+    
     # allow to keep the section unchanged
     if (! ($globinfo{"__modified"} || 0))
     {
 	return \@lines;
+    }
+    
+    if (scalar (@lines) == 0)
+    {
+      @lines = @{$self->{"default_global_lines"} || []};
     }
 
     # create [defaultboot] section
@@ -421,6 +571,7 @@ sub Info2Global {
 
     while ((my $key, my $value) = each (%globinfo))
     {
+        next unless exists $go->{$key};	# only accept known global options CAVEAT!
 	if ($key eq "default" || $key eq "defaultmenu")
 	{
 	    push @lines, {
@@ -459,15 +610,13 @@ sub Info2Global {
     my $seccount=1;
     for (my $i = 0; $i<= $#sections ; $i++)
     {
-      if($sections[$i])
-      {
+        next if($sections[$i] eq "");
         push @lines, {
             "key" => $seccount,
             "value" => $sections[$i]
         };
         $defbootsec = $seccount if ($sections[$i] eq $defbootsectionname);
         $seccount++;
-      }
     }
     push @lines, {
         "key" => "default",
@@ -475,6 +624,45 @@ sub Info2Global {
     };
     
     return \@lines;
+}
+
+# need to override this so we can filter out dump sections;
+# doing this in Info2Global would require an API change
+# (and even then I wasn't able to get it right. Perl sucks
+# golf balls through a hose.)
+# -- uli
+sub PrepareMenuFileLines {
+    my $self = shift;
+    my @sects = @{+shift};
+    my %glob = %{+shift};
+    my $indent = shift;
+    my $separ = shift;
+
+    my @sect_names = map {
+	$_->{"name"} || "";
+    } @sects;
+    
+    my @sect_names_image_only = map {
+        my $n;
+        if ($_->{"type"} ne "image")
+        {
+          $n = "";
+        }
+        else
+        {
+          $n = $_->{"name"} || "";
+        }
+        $n;
+    } @sects;
+    
+    @sects = map {
+	my $sect_ref = $self->Info2Section ($_, \@sect_names);
+	$sect_ref;
+    } @sects;
+    my @global = @{$self->Info2Global (\%glob, \@sect_names_image_only, \@sects)};
+    unshift @sects, \@global;
+    my @lines = $self->MergeSectionsLines (\@sects, $indent);
+    return $self->CreateMenuFileLines (\@lines, $separ);
 }
 
 =item
@@ -500,6 +688,8 @@ sub MangleSections
     {
       my $key = $sections->[$i]->{"name"};
       my $sec = $sections->[$i];
+      
+      # print "mangling section " . $sections->[$i]->{"name"} . ", type " . $sections->[$i]->{"type"} . "\n";
 
       # menu to mangle -> global section
       if (defined ($sections->[$i]->{"type"}) && $sections->[$i]->{"type"} eq "menu" && !$automangled_menu)
@@ -662,7 +852,7 @@ sub CreateSingleMenuFileLine {
     }
     elsif ($key eq "menuname")
     {
-	return ":$value";
+	return "\n:$value"; # zipl barfs if there is no empty line before a menu header
     }
     elsif (($key eq "ramdisk" || $key eq "initrd") && !($value =~ /,0x/))
     {
