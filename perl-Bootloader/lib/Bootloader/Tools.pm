@@ -132,10 +132,10 @@ sub ReadMountPoints {
 
 sub Udev2Dev {
     my $udev = shift;
+    my $cmd = "udevinfo -q name -p /block/$udev";
+    my $dev = qx{ $cmd };
 
-    open (OUT, "udevinfo -q name -p /block/$udev |") || die "Cannot run udevinfo";
-    my $dev = <OUT>;
-    close OUT;
+    die "Cannot run '$cmd' properly" unless $dev;
     chomp ($dev);
     return "/dev/$dev";
 }
