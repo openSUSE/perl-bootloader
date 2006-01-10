@@ -14,23 +14,23 @@ This package contains a set of high-level bootloader configuration functions
 
 =head1 SYNOPSIS
 
-C<< use BootTool; >>
+C<< use Bootloader::Tools; >>
 
-C<< $mp_ref = BootTool::ReadMountPoints (); >>
+C<< $mp_ref = Bootloader::Tools::ReadMountPoints (); >>
 
-C<< $part_ref = BootTool::ReadPartitions (); >>
+C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
-C<< $md_ref = BootTool::ReadMDArrays (); >>
+C<< $md_ref = Bootloader::Tools::ReadMDArrays (); >>
 
-C<< $loader = BootTool::GetBootloader (); >>
+C<< $loader = Bootloader::Tools::GetBootloader (); >>
 
-C<< BootTool::InitLibrary (); >>
+C<< Bootloader::Tools::InitLibrary (); >>
 
-C<< BootTool::AddNewImageSection ($name, $image, $initrd, $default); >>
+C<< Bootloader::Tools::AddNewImageSection ($name, $image, $initrd, $default); >>
 
-C<< BootTool::CountImageSections ($image); >>
+C<< Bootloader::Tools::CountImageSections ($image); >>
 
-C<< BootTool::RemoveImageSections ($image); >>
+C<< Bootloader::Tools::RemoveImageSections ($image); >>
 
 =head1 DESCRIPTION
 
@@ -90,7 +90,7 @@ sub ResolveCrossDeviceSymlinks {
 }
 
 =item
-C<< $mp_ref = BootTool::ReadMountPoints (); >>
+C<< $mp_ref = Bootloader::Tools::ReadMountPoints (); >>
 
 reads the information about mountpoints in the system. The returned
 data is needed to initialize the bootloader library properly.
@@ -141,7 +141,7 @@ sub Udev2Dev {
 }
 
 =item
-C<< $part_ref = BootTool::ReadPartitions (); >>
+C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
 reads the information about disk partitions. This data is needed
 to initialize the bootloader library properly.
@@ -184,7 +184,7 @@ sub ReadPartitions {
 }
 
 =item
-C<< $md_ref = BootTool::ReadMDArrays (); >>
+C<< $md_ref = Bootloader::Tools::ReadMDArrays (); >>
 
 reads the information about disk MD RAID arrays. This data is needed
 to initialize the bootloader library properly.
@@ -222,7 +222,7 @@ sub ReadMDArrays {
 }
 
 =item
-C<< $loader = BootTool::GetBootloader (); >>
+C<< $loader = Bootloader::Tools::GetBootloader (); >>
 
 returns the used bootloader. Reads the value from sysconfig.
 Returns the string - bootloader type.
@@ -241,7 +241,7 @@ sub GetBootloader {
 }   
 
 =item
-C<< BootTool::InitLibrary (); >>
+C<< Bootloader::Tools::InitLibrary (); >>
 
 initializes the bootloader configuration library. Fills its internal structures
 needed for it to run properly.
@@ -262,7 +262,7 @@ sub InitLibrary {
 }
 
 =item
-C<< BootTool::AddNewImageSection ($name, $image, $initrd, $default); >>
+C<< Bootloader::Tools::AddNewImageSection ($name, $image, $initrd, $default); >>
 
 Adds a new section to the bootloader menu via one function call (just the
 library needs to be initialized before). C<$initrd> and C<$default> are
@@ -271,8 +271,8 @@ as default.
 
 EXAMPLE:
 
-  BootTool::InitLibrary ();
-  BootTool::AddNewImageSection ("2.6.11", "/boot/vmlinuz-2.6.11", "/boot/initrd-2.6.11", 1);
+  Bootloader::Tools::InitLibrary ();
+  Bootloader::Tools::AddNewImageSection ("2.6.11", "/boot/vmlinuz-2.6.11", "/boot/initrd-2.6.11", 1);
 
 =cut
 
@@ -332,15 +332,15 @@ sub AddNewImageSection {
 
 
 =item
-C<< BootTool::CountImageSections ($image); >>
+C<< Bootloader::Tools::CountImageSections ($image); >>
 
 counts sections in the bootolader menu reffering to the
 specified kernel.
 
 EXAMPLE:
 
-  BootTool::InitLibrary ();
-  my $count = BootTool::CountImageSections ("/boot/vmlinuz-2.6.11");
+  Bootloader::Tools::InitLibrary ();
+  my $count = Bootloader::Tools::CountImageSections ("/boot/vmlinuz-2.6.11");
   print "Sections: $count\n";
 
 =cut
@@ -361,15 +361,15 @@ sub CountImageSections {
 
 
 =item
-C<< BootTool::RemoveImageSections ($image); >>
+C<< Bootloader::Tools::RemoveImageSections ($image); >>
 
 removes all sections in the bootloader menu referring to the
 specified kernel.
 
 EXAMPLE:
 
-  BootTool::InitLibrary ();
-  BootTool::RemoveImageSections ("/boot/vmlinuz-2.6.11");
+  Bootloader::Tools::InitLibrary ();
+  Bootloader::Tools::RemoveImageSections ("/boot/vmlinuz-2.6.11");
 
 =cut
 
