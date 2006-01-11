@@ -556,6 +556,16 @@ sub Info2Global {
 	return \@lines;
     }
     
+    my @newlines;
+    foreach my $ding (@lines)
+    {
+      # print $ding->{"key"} . " = " . $ding->{"value"} . "\n";
+      next if exists $go->{$ding->{"key"}};	# ignore everything we take care of ourselves...
+      next if $ding->{"key"} = "menuname";	# not in global_options because the user is not supposed to tinker with it
+      push @newlines, $ding;			# ...and keep everything else (just to be sure)
+    }
+    @lines = @newlines;
+    
     if (scalar (@lines) == 0)
     {
       @lines = @{$self->{"default_global_lines"} || []};

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 11 11:31:00 CET 2006 - uli@suse.de
+
+- ZIPL: take out the [defaultboot] garbage
+
+-------------------------------------------------------------------
 Tue Jan  3 14:59:45 CET 2006 - uli@suse.de
 
 - ZIPL: implemented new UI scheme
