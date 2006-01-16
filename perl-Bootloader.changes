@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jan 16 11:04:44 CET 2006 - jplack@suse.de
+
+- unify format of type spec string, they alway start with type,
+  desc, default now.
+
+-------------------------------------------------------------------
 Wed Jan 11 11:31:00 CET 2006 - uli@suse.de
 
 - ZIPL: take out the [defaultboot] garbage

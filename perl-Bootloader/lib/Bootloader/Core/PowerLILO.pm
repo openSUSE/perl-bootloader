@@ -80,6 +80,7 @@ sub getExports() {
     # one of iseries, prep, chrp, pmac_old, pmac_new ...
     my $arch = qx{ /sbin/lilo --get-arch };
     chomp( $arch );
+    $arch = "pmac" if "$arch" =~ /^pmac/;
 
     my @bootpart;
     my @partinfo = @{$loader->{"partitions"} || []};
@@ -109,7 +110,7 @@ sub getExports() {
 		? $device : ();
 	} @partinfo;
     }
-    elsif ( "$arch" =~ /^pmac/ ) {
+    elsif ( "$arch" eq "pmac" ) {
 	# boot from any Apple_HFS partition but dont take the big ones
 	@bootpart = map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
@@ -151,83 +152,67 @@ sub getExports() {
     $exports{"arch"} = $arch;
     $exports{"global_options"} = {
  	# for iseries list for others exactly one allowed
-	boot => ( "$arch" eq "iseries" ) ?
-	    "multi:iSeries boot image location:" :
-	    "select:PPC Boot loader location:",
-	activate => "bool:Change boot-device in NV-RAM",
-	timeout =>  "int:Timeout in 1/10th seconds:0:600:50",
-	default =>  "string:Default boot section:linux",
-	root =>     "select:Default root device:" . $root_devices,
-	append =>   "string:Append options for kernel command line",
-	initrd =>   "path:Default initrd path"			  
+	boot     => ( "$arch" eq "iseries" )
+		 ?  "multi:iSeries boot image location:"
+		 :  "select:PPC Boot loader location:",
+	activate => "bool:Change boot-device in NV-RAM:true",
+	timeout  => "int:Timeout in 1/10th seconds:50:0:600",
+	default  => "string:Default boot section:Linux",
+	root     => "select:Default root device::" . ":" . $root_devices,
+	append   => "string:Append options for kernel command line",
+	initrd   => "path:Default initrd path"			  
 	};
 
     my $go = $exports{"global_options"};
     
     if ( "$arch" eq "chrp" ) {
 	# pSeries only
-	$go->{clone} = "select:Partition for boot loader duplication:" . $boot_partitions;
-	$go->{force_fat} = "bool:Always boot from FAT partition ";
-	$go->{force} = "bool:Install boot loader even on errors";
+	$go->{clone}       = "select:Partition for boot loader duplication::" . ":" . $boot_partitions;
+	$go->{force_fat}   = "bool:Always boot from FAT partition:false";
+	$go->{force}       = "bool:Install boot loader even on errors:false";
 
-	$go->{boot_custom} = "select:PReP or FAT partition:" . $boot_partitions;
+	$go->{boot_chrp_custom}
+			   = "select:PReP or FAT partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "prep" ) {
 	# only on old prep machines
-	# $go->{progressbar} = "bool:Display progress bar"; # obsolete?
-	$go->{bootfolder} = "string:Bootfolder path";
-	$go->{boot_custom} = "select:PReP partition:" . $boot_partitions;
+	$go->{bootfolder}  = "string:Bootfolder path";
+	$go->{boot_prep_custom}
+			   = "select:PReP partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "iseries" ) {
 	# only on legacy iseries
-	$go->{boot_slot} = "select:Write to boot slot:A:B:C:D";
-	$go->{boot_file} = "path:Create boot image in file:/tmp/suse_boot_image";
-	$go->{boot_custom} = "select:PReP partition:" . $boot_partitions;
+	$go->{boot_slot}   = "select:Write to boot slot:B:" . "A:B:C:D";
+	$go->{boot_file}   = "path:Create boot image in file:/tmp/suse_boot_image";
+	$go->{boot_iseries_custom}
+			   = "select:PReP partition:" . $boot_partitions;
     }
-    elsif ( "$arch" =~ /^pmac.*/ ) {
+    elsif ( "$arch" eq "pmac" ) {
 	# only on pmac_new and pmac_old
-	# $go->{progressbar} = "bool:Display progress bar"; # obsolete?
-	$go->{bootfolder} = "string:Bootfolder path";
-	$go->{boot_custom} = "select:HFS boot partition:" . $boot_partitions;
+	$go->{bootfolder}  = "string:Bootfolder path:";
+	$go->{"boot_pmac_custom}
+			   = "select:HFS boot partition::" . $boot_partitions;
     }
-
-    # only temporary here for test ...
-    #$go->{boot_slot} = "select:Write to boot slot:A:B:C:D";
-    #$go->{boot_file} = "path:Create boot image in file:/tmp/suse_boot_image";
-    #$go->{boot_root} = "bool:Boot from root disk:";
-    # $go->{boot_num}  = "int:Number:0:100:10";
-
-    #$go->{multi} = "multi:Multi:a:b:c";
-    #$go->{path} = "path:Path:/path/to/file:/another/file";
-    #$go->{clone} = "select:" .
-    #    "Location of duplicate boot partition:" .
-    #    ":/dev/sda2:/dev/sdb2";
-
-    #$go->{boot} = "multi:Boot loader location:slot:file:prep:";
-
-    # $go->{boot_mbr} = "bool:Boot from root diskInstall boot loader to master boot record:";
-
-    # end of temporary test stuff
 
     $exports{"section_options"} = {
-	type_image   => "bool:Kernel section",
-	image_image  => "path:Kernel image:/boot/vmlinux",
-	image_root   => "select:Root device:" . $root_devices,
-	# image_label  => "string:Name of section", # implicit
-	image_append => "string:Optional kernel command line parameter",
-	image_initrd => "path:Initial RAM disk:/boot/initrd",
+	type_image        => "bool:Kernel section",
+	image_image       => "path:Kernel image:/boot/vmlinux",
+	image_root        => "select:Root device::" . $root_devices,
+	# image_label     => "string:Name of section", # implicit
+	image_append      => "string:Optional kernel command line parameter",
+	image_initrd      => "path:Initial RAM disk:/boot/initrd",
 	};
 
     my $so = $exports{"section_options"};
 
-    if ( "$arch" =~ /pmac.*/ ) {
+    if ( "$arch" eq "pmac" ) {
 	# only on pmac_new and pmac_old
-	$so->{image_copy}   = "bool:Copy image to boot partition";
-	# $so->{image_sysmap} = "string"; # deprecated
+	$so->{image_copy}  = "bool:Copy image to boot partition:false";
 
 	# define new section type for MacOS boot
-	$so->{type_other}   = "bool:Boot other system";
-	$so->{other_other}  = "select:Boot partition of other system:" . join
+	$so->{type_other}  = "bool:Boot other system";
+	# $so{other_label} = "string:Name of section" # implicit!
+	$so->{other_other} = "select:Boot partition of other system::" . join
 	    (":",
 	     # boot from any Apple_HFS partition but _only_ take the big ones
 	     map {
@@ -237,7 +222,6 @@ sub getExports() {
 		     ? $device : ();
 	     } @partinfo
 	     );
-	# $so{other_label}  = "string:Name of section" # implicit!
     }
 
     $loader->{"exports"}=\%exports;
@@ -436,6 +420,7 @@ sub Global2Info {
     my @lines = @{+shift};
     my @sections = @{+shift};
     my $go = $self->{"exports"}{"global_options"};
+    my $arch = $self->{"exports"}{"arch"};
 
     my %ret = ();
 
@@ -455,7 +440,7 @@ sub Global2Info {
 		$ret{boot_slot} = $val;
 	    }
 	    elsif ($val =~ m:^/dev/:) {
-		$ret{boot_custom} = $val;
+		$ret{"boot_" . $arch . "_custom"} = $val;
 	    }
 	    elsif ($val =~ m:^/:) {
 		$ret{boot_file} = $val;
@@ -496,6 +481,7 @@ sub Info2Global {
     my @lines_new = ();
     my @added_lines = ();
     my $go = $self->{"exports"}{"global_options"};
+    my $arch = $self->{"exports"}{"arch"};
 
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;
@@ -555,7 +541,7 @@ sub Info2Global {
 		}
 	    }
 	}
-	elsif ($key eq "boot_custom") {
+	elsif ($key eq "boot_" . $arch . "_custom") {
 		push @lines, {
 		    "key" => "boot",
 		    "value" => $value,
