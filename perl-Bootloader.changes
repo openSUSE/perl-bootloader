@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jan 16 18:09:10 CET 2006 - jplack@suse.de
+
+- fixed famous last typo
+
+-------------------------------------------------------------------
 Mon Jan 16 11:04:44 CET 2006 - jplack@suse.de
 
 - unify format of type spec string, they alway start with type,

@@ -190,7 +190,7 @@ sub getExports() {
     elsif ( "$arch" eq "pmac" ) {
 	# only on pmac_new and pmac_old
 	$go->{bootfolder}  = "string:Bootfolder path:";
-	$go->{"boot_pmac_custom}
+	$go->{boot_pmac_custom}
 			   = "select:HFS boot partition::" . $boot_partitions;
     }
 
