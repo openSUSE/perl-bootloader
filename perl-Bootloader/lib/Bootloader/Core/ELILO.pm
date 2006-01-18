@@ -243,13 +243,6 @@ if(0){
           }
         }
 }
-	if ( exists( $sect{"append"}) && defined( $sect{"append"}) ) {
-	  if ( $sect{"append"} eq "splash=silent" ) {
-	    delete $sect{"append"};
-	  } else {
-	    $append = $sect{"append"};
-	  }
-	}
 	next unless defined( $title = $sect{"name"});
 #        if( defined( $append) ) {
 #          print STDERR "SECTION $title has APPEND: '$append'\n";

@@ -286,7 +286,6 @@ sub AddNewImageSection {
     my $mp = $lib_ref->GetMountPoints ();
     my @sections = @{$lib_ref->GetSections ()};
     my %new = (
-	"append" => "splash=silent",
 	"root" => $mp->{"/"} || "/dev/null",
     );
     my %def = ();

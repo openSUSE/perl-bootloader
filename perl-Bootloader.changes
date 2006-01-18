@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 18 15:12:50 CET 2006 - rw@suse.de
+
+- get rid of 'append=splash=silent" default
+
+-------------------------------------------------------------------
 Mon Jan 16 18:09:10 CET 2006 - jplack@suse.de
 
 - fixed famous last typo
