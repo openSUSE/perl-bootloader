@@ -139,13 +139,13 @@ sub getExports() {
     # give a list of possible root devices: all MD devices
     # and all 'Linux' devices above 20 cylinders
     my $root_devices = join(":",
-	map {
+	(map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
 		$part_type, $start_cyl, $size_cyl) = @$_;
 	    (($fsid eq "131" or $fstype =~ m:linux:i) and
 	     $size_cyl >= 20)
 		? $device : ();
-	} @partinfo,
+	} @partinfo),
 	keys %{$loader->{"md_arrays"} || {}}
     );
 
