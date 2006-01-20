@@ -583,7 +583,9 @@ sub Info2Global {
     while ((my $key, my $value) = each (%globinfo))
     {
         next unless exists $go->{$key};	# only accept known global options CAVEAT!
-	next unless $key eq "default" || $key eq "defaultmenu"
+	#FIXME no deafult for now, this collides with default in menu section
+	#next unless $key eq "default" || $key eq "defaultmenu";
+	next unless $key eq "defaultmenu";
 
 	push @lines, {
 	    "key" => $key,
