@@ -578,18 +578,29 @@ sub Info2Global {
     };
     
     my $defbootsectionname = "";
+    my $found_default = 0; # false
 
     while ((my $key, my $value) = each (%globinfo))
     {
         next unless exists $go->{$key};	# only accept known global options CAVEAT!
-	if ($key eq "default" || $key eq "defaultmenu")
-	{
-	    push @lines, {
-		"key" => $key,
-		"value" => $value,
-	    };
-	}
+	next unless $key eq "default" || $key eq "defaultmenu"
+
+	push @lines, {
+	    "key" => $key,
+	    "value" => $value,
+	};
+	$found_default = 1; # true
 	$defbootsectionname = $value if $key eq "default";
+    }
+
+    unless ( $found_default ) {
+        # zipl does not allow an empty defaultboot section
+	# so add a defaultmenu line for now
+	# FIXME: for now there´s only one menu allowed
+	push @lines, {
+	    "key" => "defaultmenu",
+	    "value" => "menu",
+	};
     }
     
 
