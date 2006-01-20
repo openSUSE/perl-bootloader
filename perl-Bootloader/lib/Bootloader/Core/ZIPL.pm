@@ -156,7 +156,7 @@ sub new {
 }
 
 =item
-C<< $settings_ref = Bootloader::Core::PowerLILO->GetSettings (); >>
+C<< $settings_ref = Bootloader::Core::ZIPL->GetSettings (); >>
 
 returns the complete settings in a hash. Does not read the settings
 from the system, but returns internal structures.
