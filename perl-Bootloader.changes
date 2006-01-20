@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 20 14:22:09 CET 2006 - jplack@suse.de
+
+- defaultboot section must not be empty (#144321)
+- avoid colliding definition of default label in 'menu' and
+  'defaultboot'
+
+-------------------------------------------------------------------
 Wed Jan 18 15:56:38 CET 2006 - jplack@suse.de
 
 - add nice paranthesis to fix blocking yast2 crash (#143746)
