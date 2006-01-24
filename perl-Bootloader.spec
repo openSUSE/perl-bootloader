@@ -33,6 +33,7 @@ Perl modules for configuring various boot loaders.
 Authors:
 --------
     Jiri Srain <jsrain@suse.cz>
+    Joachim Plack <jplack@suse.de>
 
 %prep
 #setup -n Bootloader-%{version} -q
