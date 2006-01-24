@@ -2,17 +2,25 @@
 
 use POSIX;
 use Getopt::Long;
-use vars qw($opt_add $opt_remove $opt_image $opt_initrd $opt_name $opt_default);
+use vars qw($opt_add $opt_remove $opt_image $opt_initrd $opt_name $opt_default $opt_previous);
 use Bootloader::Tools;
+use Locale::gettext;
 use strict;
 
-sub synopsis() {
+sub synopsis()
+{
     print STDERR "SYNOPSIS: $0 {--image file} [--initrd file] " .
 		 "[--default] {--add|--remove}\n";
     exit 1
 }
 
 $opt_default = 0;
+$opt_previous = 0;
+
+setlocale(LC_MESSAGES, "");
+
+my $d =  Locale::gettext->domain("bootloader");
+$d->dir("/usr/share/YaST2/locale");
 
 GetOptions (
 	'add' => \$opt_add,
@@ -20,31 +28,57 @@ GetOptions (
 	'image=s' => \$opt_image,
 	'initrd=s' => \$opt_initrd,
 	'name=s' => \$opt_name,
-	'default' => \$opt_default)
+	'default' => \$opt_default,
+	'previous' => \$opt_previous)
     or synopsis;
 
-synopsis unless ($opt_image);
-synopsis unless (!$opt_add ^ !$opt_remove);
+synopsis unless ($opt_image or $opt_previous or $opt_add or $opt_remove);
 
-$opt_image = getcwd . '/' . $opt_image
+if ($opt_image)
+{
+    $opt_image = getcwd . '/' . $opt_image
     if ($opt_image !~ m#^/#);
-if ($opt_initrd) {
+}
+
+if ($opt_initrd)
+{
     $opt_initrd = getcwd . '/' . $opt_initrd
 	if ($opt_initrd !~ m#^/#);
 }
 
 InitLibrary();
-if ($opt_add) {
-    unless ($opt_name) {
-	$opt_name = $opt_image;
-	$opt_name =~ s#.*/##;
-	$opt_name =~ s#.*?-#Linux-#;
+
+if ($opt_previous)
+{
+	$opt_image = "/boot/vmlinux.previous";
+	$opt_initrd = "/boot/initrd.previous";
+}
+
+if ($opt_add)
+{
+    if ($opt_previous)
+    {
+    	$opt_name = $d->get("Previous Kernel") . `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
+	chomp $opt_name; 
     }
-    unless (CountImageSections($opt_image)) {
+    else
+    {
+    	unless ($opt_name)
+    	{
+    		$opt_name = $opt_image;
+    	}
+    }
+
+    unless (CountImageSections($opt_image))
+    {
 	AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
     }
-} elsif ($opt_remove) {
-    if (CountImageSections($opt_image)) {
+
+}
+elsif ($opt_remove)
+{
+    if (CountImageSections($opt_image))
+    {
 	RemoveImageSections($opt_image);
     }
 }
