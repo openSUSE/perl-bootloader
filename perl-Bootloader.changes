@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Jan 24 16:08:20 CET 2006 - jplack@suse.de
+
+- added changes from pth for (FATE #2154)
+
+-------------------------------------------------------------------
 Tue Jan 24 15:48:08 CET 2006 - jplack@suse.de
 
 - handle entries for block devices in sysfs correctly. replaced
