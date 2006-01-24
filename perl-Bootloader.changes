@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jan 24 15:48:08 CET 2006 - jplack@suse.de
+
+- handle entries for block devices in sysfs correctly. replaced
+  heuristic term by a proper device and partition detection
+  (FATE #2154)
+
+-------------------------------------------------------------------
 Fri Jan 20 14:22:09 CET 2006 - jplack@suse.de
 
 - defaultboot section must not be empty (#144321)

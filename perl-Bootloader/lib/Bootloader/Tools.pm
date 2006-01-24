@@ -135,7 +135,10 @@ sub Udev2Dev {
     my $cmd = "udevinfo -q name -p /block/$udev";
     my $dev = qx{ $cmd };
 
-    die "Cannot run '$cmd' properly" unless $dev;
+    unless ($dev) {
+	warn "Cannot run '$cmd' properly";
+	return "/dev/$udev";
+    }
     chomp ($dev);
     return "/dev/$dev";
 }
@@ -150,9 +153,10 @@ See InitLibrary function for example.
 
 =cut
 sub ReadPartitions {
-    opendir(BLOCK_DEVICES, "/sys/block") || die ("Failed to open dir /sys/block");
+    my $sb="/sys/block";
+    opendir(BLOCK_DEVICES, "$sb") || die ("Failed to open dir $sb");
     my @disks = grep {
-	! ($_ =~ /^md/ || $_ =~ /^dm-/ || $_ =~ /^fd/ || $_ =~ /^loop/ || $_ =~ /^ram/ || $_ =~ /^\./)
+	!m/^\./ and -l "$sb/$_/device"  and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
@@ -160,11 +164,10 @@ sub ReadPartitions {
     foreach my $disk (@disks)
     {
 	my $dev_disk = Udev2Dev ($disk);
-	opendir(BLOCK_DEVICES, "/sys/block/$disk") || die ("Failed to open dir /sys/block/$disk");
+	opendir(BLOCK_DEVICES, "$sb/$disk") ||
+	    die ("Failed to open dir $sb/$disk");
 	my @parts = grep {
-	    ! ($_ =~ /^dev/ || $_ =~ /^queue$/ || $_ =~ /^range/ || $_ =~ /^removable/
-		|| $_ =~ /^size/ || $_ =~ /^stat/ || $_ =~ /^\./)
-
+	    !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
 	} readdir (BLOCK_DEVICES);
 	closedir BLOCK_DEVICES;
 
@@ -197,7 +200,8 @@ sub ReadMDArrays {
     while ($index < 32)
     {
 	my @members = ();
-	open (MD, "/sbin/mdadm -Q --detail /dev/md$index 2>/dev/null |") || die ("Failed getting information about MD arrays");
+	open (MD, "/sbin/mdadm -Q --detail /dev/md$index 2>/dev/null |") ||
+	    die ("Failed getting information about MD arrays");
 	while (my $line = <MD>)
 	{
 	    chomp ($line);
@@ -408,3 +412,12 @@ sub RemoveImageSections {
 }
 
 1;
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#
