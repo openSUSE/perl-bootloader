@@ -958,7 +958,7 @@ string (otherwise).
 # string Comment2OriginalName (string comment)
 sub Comment2OriginalName {
     my $self = shift;
-    my $comment = shift;
+    my $comment = shift || "";
 
     if ($comment =~ m/###Don't change this comment - YaST2 identifier: Original name: ([a-zA-Z0-9]+)###/)
     {

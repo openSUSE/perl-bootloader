@@ -519,7 +519,7 @@ sub Global2Info {
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
-	my ($type) = split /:/, $go->{$key};
+	# my ($type) = split(/:/, $go->{$key}||""); # not used yet
 	
 	if ($key eq "default" || $key eq "timeout" || $key eq "prompt" || $key eq "menuname" || $key eq "target")
 	{
