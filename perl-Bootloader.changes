@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 25 21:39:29 CET 2006 - mls@suse.de
+ 
+- converted neededforbuild to BuildRequires
+  
+-------------------------------------------------------------------
 Tue Jan 24 16:08:20 CET 2006 - jplack@suse.de
 
 - added changes from pth for (FATE #2154)
