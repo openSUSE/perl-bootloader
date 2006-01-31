@@ -10,7 +10,7 @@ use strict;
 sub synopsis()
 {
     print STDERR "SYNOPSIS: $0 {--image file} [--initrd file] " .
-		 "[--default] {--add|--remove}\n";
+		 "[--default] [--previous] {--add|--remove}\n";
     exit 1
 }
 
@@ -48,6 +48,8 @@ if ($opt_initrd)
 
 InitLibrary();
 
+my $loader = Bootloader::Tools::GetBootloader();
+
 if ($opt_previous)
 {
 	$opt_image = "/boot/vmlinux.previous";
@@ -58,8 +60,23 @@ if ($opt_add)
 {
     if ($opt_previous)
     {
-    	$opt_name = $d->get("Previous Kernel") . `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
-	chomp $opt_name; 
+        $opt_name = "Previous Kernel";
+
+	# only localize on grub and lilo
+    	if ($loader eq "grub" || $loader eq "lilo")
+    	{
+    	    $opt_name = $d->get($opt_name);
+	    chomp ($opt_name);
+	    
+		# check wether translation only contains [a-zA-Z0-9 _]
+		# otherwise don't translate
+		if ($opt_name !~ /^[a-zA-Z0-9 _]*$/g ) {
+			$opt_name =  "Previous Kernel";
+	    	}	 
+    	}
+	# add product name and version
+        $opt_name .= `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
+        chomp $opt_name;
     }
     else
     {
