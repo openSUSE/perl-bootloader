@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Feb  1 14:42:26 CET 2006 - od@suse.de
+
+- update-bootloader:
+  - use /etc/sysconfig/language:RC_LANG
+  - translated section name must be non-empty to be used
+
+-------------------------------------------------------------------
 Tue Jan 31 11:50:40 CET 2006 - sf@suse.de
 
 - localize only on Grub or lilo
