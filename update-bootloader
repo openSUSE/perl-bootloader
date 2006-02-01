@@ -53,7 +53,7 @@ if ($opt_image)
 if ($opt_initrd)
 {
     $opt_initrd = getcwd . '/' . $opt_initrd
-	if ($opt_initrd !~ m#^/#);
+    if ($opt_initrd !~ m#^/#);
 }
 
 InitLibrary();
@@ -62,8 +62,8 @@ my $loader = Bootloader::Tools::GetBootloader();
 
 if ($opt_previous)
 {
-	$opt_image = "/boot/vmlinux.previous";
-	$opt_initrd = "/boot/initrd.previous";
+    $opt_image = "/boot/vmlinux.previous";
+    $opt_initrd = "/boot/initrd.previous";
 }
 
 if ($opt_add)
@@ -72,19 +72,28 @@ if ($opt_add)
     {
         $opt_name = "Previous Kernel";
 
-	# only localize on grub and lilo
+        # only localize on grub and lilo
     	if ($loader eq "grub" || $loader eq "lilo")
     	{
     	    $opt_name = $d->get($opt_name);
-	    chomp ($opt_name);
+            chomp ($opt_name);
 	    
-		# check wether translation only contains [a-zA-Z0-9 _]
-		# otherwise don't translate
-		if ($opt_name !~ /^[a-zA-Z0-9 _]+$/g ) {
-			$opt_name =  "Previous Kernel";
-	    	}	 
-    	}
-	# add product name and version
+            # check wether translation only contains [a-zA-Z0-9 _]
+            # otherwise don't translate
+            if ($opt_name !~ /^[a-zA-Z0-9 _]+$/g )
+            {
+                $opt_name = "Previous Kernel";
+            }
+
+            if($loader ne "grub")
+            {
+                #only grub allows blanks in section titles
+                $opt_name =~ s/ /_/g;
+                #restrict lenght to 16 chars
+                $opt_name = substr ($opt_name, 0, 15);
+            }
+        }
+        # add product name and version
         $opt_name .= `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
         chomp $opt_name;
     }
@@ -92,13 +101,13 @@ if ($opt_add)
     {
     	unless ($opt_name)
     	{
-    		$opt_name = $opt_image;
+            $opt_name = $opt_image;
     	}
     }
 
     unless (CountImageSections($opt_image))
     {
-	AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
+        AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
     }
 
 }
@@ -106,6 +115,6 @@ elsif ($opt_remove)
 {
     if (CountImageSections($opt_image))
     {
-	RemoveImageSections($opt_image);
+        RemoveImageSections($opt_image);
     }
 }

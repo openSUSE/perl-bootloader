@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Feb  1 15:52:00 CET 2006 - od@suse.de
+
+- update-bootloader changes from pth@suse.de and od@suse.de:
+  - only grub allows blanks in section titles
+  - for non-grub: restrict section title lenght to 16 chars
+  - beautify code
+
+-------------------------------------------------------------------
 Wed Feb  1 14:42:26 CET 2006 - od@suse.de
 
 - update-bootloader:
