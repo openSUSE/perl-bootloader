@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jan 31 11:50:40 CET 2006 - sf@suse.de
+
+- localize only on Grub or lilo
+- check if translated section name contains non-ASCII characters
+  and fallback to english
+
+-------------------------------------------------------------------
 Wed Jan 25 21:39:29 CET 2006 - mls@suse.de
  
 - converted neededforbuild to BuildRequires
