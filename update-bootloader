@@ -14,10 +14,20 @@ sub synopsis()
     exit 1
 }
 
+sub GetSystemLanguage()
+{
+    open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |")
+          || die "Cannot determine the system language";
+    my $lang = <FILE>;
+    close (FILE);
+    chomp ($lang);
+    return $lang;
+}
+
 $opt_default = 0;
 $opt_previous = 0;
 
-setlocale(LC_MESSAGES, "");
+setlocale(LC_MESSAGES, GetSystemLanguage());
 
 my $d =  Locale::gettext->domain("bootloader");
 $d->dir("/usr/share/YaST2/locale");
@@ -70,7 +80,7 @@ if ($opt_add)
 	    
 		# check wether translation only contains [a-zA-Z0-9 _]
 		# otherwise don't translate
-		if ($opt_name !~ /^[a-zA-Z0-9 _]*$/g ) {
+		if ($opt_name !~ /^[a-zA-Z0-9 _]+$/g ) {
 			$opt_name =  "Previous Kernel";
 	    	}	 
     	}
