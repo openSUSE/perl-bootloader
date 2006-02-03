@@ -62,7 +62,7 @@ my $loader = Bootloader::Tools::GetBootloader();
 
 if ($opt_previous)
 {
-    $opt_image = "/boot/vmlinux.previous";
+    $opt_image = "/boot/vmlinuz.previous";
     $opt_initrd = "/boot/initrd.previous";
 }
 
