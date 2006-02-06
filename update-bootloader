@@ -14,20 +14,10 @@ sub synopsis()
     exit 1
 }
 
-sub GetSystemLanguage()
-{
-    open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |")
-          || die "Cannot determine the system language";
-    my $lang = <FILE>;
-    close (FILE);
-    chomp ($lang);
-    return $lang;
-}
-
 $opt_default = 0;
 $opt_previous = 0;
 
-setlocale(LC_MESSAGES, GetSystemLanguage());
+setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
 my $d =  Locale::gettext->domain("bootloader");
 $d->dir("/usr/share/YaST2/locale");

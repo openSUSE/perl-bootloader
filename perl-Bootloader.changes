@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb  6 11:53:55 CET 2006 - sf@suse.de
+
+- get kernel/initrd  name and path from default section
+- put GetSystemLanguage in Tools.pm
+
+-------------------------------------------------------------------
 Fri Feb  3 17:01:01 CET 2006 - sf@suse.de
 
 - fix typo in image name 

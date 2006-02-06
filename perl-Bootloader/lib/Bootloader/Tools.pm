@@ -32,6 +32,15 @@ C<< Bootloader::Tools::CountImageSections ($image); >>
 
 C<< Bootloader::Tools::RemoveImageSections ($image); >>
 
+C<< Bootloader::Tools::GetSystemLanguage (); >>
+
+C<< Bootloader::Tools::GetDefaultSection (); >>
+
+C<< Bootloader::Tools::GetDefaultKernel (); >>
+
+C<< Bootloader::Tools::GetDefaultInitrd (); >>
+
+
 =head1 DESCRIPTION
 
 =over 2
@@ -411,6 +420,110 @@ sub RemoveImageSections {
     DumpLog ();
 }
 
+=item
+C<<  $lang = Bootloader::Tools::GetSystemLanguage (); >>
+
+Read the System Language from /etc/sysconfig/language:RC_LANG
+
+EXAMPLE:
+  my $Lang;
+  $Lang = Bootloader::Tools::GetSystemLanguage ();
+
+  setlocale(LC_MESSAGES, $Lang);
+
+=cut
+
+
+sub GetSystemLanguage {
+ 
+   open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |")
+          || die "Cannot determine the system language";
+
+    my $lang = <FILE>;
+    close (FILE);
+    chomp ($lang);
+    return $lang;
+}
+
+=item
+C<< %defaultSelection =  Bootloader::Tools::GetDefaultSection (); >>
+
+Get the default section, returns a hash reference 
+
+EXAMPLE:
+  my %section;
+  %section = Bootloader::Tools::GetDefaultSection ();
+  my $default_kernel = $section{"kernel"};
+=cut
+
+sub GetDefaultSection {
+  #parse Bootloader configuration files   
+   $lib_ref->ReadSettings ();
+
+   #Get global Settings
+   my $glob_ref = $lib_ref->GetGlobalSettings ();
+
+   if (! defined ($glob_ref))
+   {
+      die "Getting global data failed";
+   }
+
+   # This doesn't return the index of the default section, but the title of it.         
+   # All other keys have their real value (eg timeout has 8) 
+   my $def = $glob_ref->{"default"};
+
+   # $section_ref is a reference to a list of hashes, where the section data is stored  
+   my $section_ref = $lib_ref->GetSections ();
+
+   if (! defined ($section_ref))
+   {
+      die "Getting sections failed";
+   }
+
+   # get the hash of the default section, identified by key 'name'
+   my @default_sect = grep {$_->{"name"} eq $def} @{$section_ref};
+
+   return $default_sect[0];
+}
+
+
+=item
+C<< Bootloader::Tools::GetDefaultKernel (); >>
+
+Get the kernel name of the default section
+
+EXAMPLE:
+  my $kernel;
+  $kernel = Bootloader::Tools::GetDefaultKernel ();
+
+  print("Default Kernel Name: $kernel\n");
+
+=cut
+
+sub GetDefaultKernel {
+
+   return GetDefaultSection()->{"kernel"};  
+}
+
+=item
+C<< Bootloader::Tools::GetDefaultInitrd (); >>
+
+Get the initrd of the default section
+
+EXAMPLE:
+  my $initrd;
+  $initrd = Bootloader::Tools::GetDefaultInitrd ();
+
+  print("Default initrd  Name: $initrd\n");
+
+=cut
+
+sub GetDefaultInitrd {
+
+   return GetDefaultSection()->{"initrd"};
+}
+
+ 
 1;
 
 #
