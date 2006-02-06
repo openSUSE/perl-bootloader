@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Mon Feb  6 18:03:19 CET 2006 - jplack@suse.de
+
+- catch cases wherethere is no key 'kernel' (FATE #2154)
+- create name and initrd only if not given via parameter
+- use functions to detect kernel/initrd
+- bump version to 0.2.8
+
+-------------------------------------------------------------------
 Mon Feb  6 11:53:55 CET 2006 - sf@suse.de
 
 - get kernel/initrd  name and path from default section
