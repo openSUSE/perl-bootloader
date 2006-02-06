@@ -765,7 +765,7 @@ sub Section2Info {
 	}
 	elsif ($key eq "chainloader" || $key eq "initrd")
 	{
-	    if ($val =~ /^(.*)\+([0-9]+)/)
+	    if ($val =~ /^(.*)\+(\d+)/)
 	    {
 		$val = $1;
 		$ret{"sectors"} = $2;
