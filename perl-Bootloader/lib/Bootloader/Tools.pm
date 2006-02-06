@@ -36,7 +36,7 @@ C<< Bootloader::Tools::GetSystemLanguage (); >>
 
 C<< Bootloader::Tools::GetDefaultSection (); >>
 
-C<< Bootloader::Tools::GetDefaultKernel (); >>
+C<< Bootloader::Tools::GetDefaultImage (); >>
 
 C<< Bootloader::Tools::GetDefaultInitrd (); >>
 
@@ -488,21 +488,23 @@ sub GetDefaultSection {
 
 
 =item
-C<< Bootloader::Tools::GetDefaultKernel (); >>
+C<< Bootloader::Tools::GetDefaultImage (); >>
 
 Get the kernel name of the default section
 
 EXAMPLE:
   my $kernel;
-  $kernel = Bootloader::Tools::GetDefaultKernel ();
+  $kernel = Bootloader::Tools::GetDefaultImage ();
 
   print("Default Kernel Name: $kernel\n");
 
 =cut
 
-sub GetDefaultKernel {
-
-   return GetDefaultSection()->{"kernel"};  
+sub GetDefaultImage {
+    my $ref = GetDefaultSection();
+    # FIXME: all modules under .../Core should use "image" as a key tag to the
+    # kernel image
+   return $ref->{"image"} || $ref->{"kernel"};  
 }
 
 =item
