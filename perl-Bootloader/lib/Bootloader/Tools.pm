@@ -320,7 +320,12 @@ sub AddNewImageSection {
 	}
     }
 
-    $new{"kernel"} = $image;
+    if (exists $new{"kernel"}) { 
+	$new{"kernel"} = $image;
+    }
+    else {	
+       $new{"image"} = $image;
+    }  
     $new{"initrd"} = $initrd if defined ($initrd);
     $new{"name"} = $name;
     $new{"type"} = "image";
