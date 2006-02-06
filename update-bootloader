@@ -2,17 +2,68 @@
 
 use POSIX;
 use Getopt::Long;
-use vars qw($opt_add $opt_remove $opt_image $opt_initrd $opt_name $opt_default $opt_previous);
+use Pod::Usage;
 use Bootloader::Tools;
 use Locale::gettext;
 use strict;
 
-sub synopsis()
-{
-    print STDERR "SYNOPSIS: $0 {--image file} [--initrd file] " .
-		 "[--default] [--previous] {--add|--remove}\n";
-    exit 1
-}
+my ($opt_add, $opt_default, $opt_help, $opt_image, $opt_initrd,
+    $opt_man, $opt_name, $opt_previous, $opt_remove) =
+    (0,0,0,'','',0,'',0,0);
+
+=head1 NAME
+
+update-bootloader - update/change bootloader configuration using
+    Bootloader::Tools perl module
+
+ Using Getopt::Long and Pod::Usage
+
+=head1 SYNOPSIS
+
+update-bootloader [options]
+
+Options:
+   --help            brief help message
+   --man             full documentation
+   --image <file>
+   --initrd <file>
+   --default
+   --previous
+   --add
+   --remove
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--help>
+
+Print a brief help message and exits.
+
+=item B<--man>
+
+Prints the manual page and exits.
+   
+=item B<--image <file>>
+
+=item B<--initrd <file>>
+
+=item B<--default>
+
+=item B<--previous>
+
+=item B<--add>
+
+=item B<--remove>
+
+=back
+
+=head1 DESCRIPTION
+
+B<This program> will let you modify your bootloader configuration using
+Bootloader::Tools perl module.
+
+=cut
 
 $opt_default = 0;
 $opt_previous = 0;
@@ -23,16 +74,21 @@ my $d =  Locale::gettext->domain("bootloader");
 $d->dir("/usr/share/YaST2/locale");
 
 GetOptions (
-	'add' => \$opt_add,
-	'remove' => \$opt_remove,
-	'image=s' => \$opt_image,
-	'initrd=s' => \$opt_initrd,
-	'name=s' => \$opt_name,
-	'default' => \$opt_default,
-	'previous' => \$opt_previous)
-    or synopsis;
+    'help|h'   	    => \$opt_help,
+    'man|m'    	    => \$opt_man,
+    'add|a'    	    => \$opt_add,
+    'remove|r' 	    => \$opt_remove,
+    'image=s'  	    => \$opt_image,
+    'initrd=s' 	    => \$opt_initrd,
+    'name=s'   	    => \$opt_name,
+    'default|def'   => \$opt_default,
+    'previous|prev' => \$opt_previous)
+    or pod2usage(2);
+pod2usage(1) if $opt_help;
+pod2usage(-exitstatus => 0, -verbose => 2) if $opt_man;
 
-synopsis unless ($opt_image or $opt_previous or $opt_add or $opt_remove);
+pod2usage("Need at least one of the options 'add', 'image', 'previous' or 'remove'")
+    unless ($opt_image or $opt_previous or $opt_add or $opt_remove);
 
 if ($opt_image)
 {
@@ -110,3 +166,12 @@ elsif ($opt_remove)
         RemoveImageSections($opt_image);
     }
 }
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#
