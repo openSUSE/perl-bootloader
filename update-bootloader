@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl
 
 use POSIX;
 use Getopt::Long;
@@ -7,34 +7,47 @@ use Bootloader::Tools;
 use Locale::gettext;
 use strict;
 
-my ($opt_add, $opt_default, $opt_help, $opt_image, $opt_initrd,
-    $opt_man, $opt_name, $opt_previous, $opt_remove) =
-    (0,0,0,'','',0,'',0,0);
+my %oper;
+
+my ($opt_default, $opt_force, $opt_help, $opt_image, $opt_initrd, $opt_man,
+    $opt_name, $opt_previous)
+    = (0,0,0,'','',0,'',0);
 
 =head1 NAME
 
 update-bootloader - update/change bootloader configuration using
     Bootloader::Tools perl module
 
- Using Getopt::Long and Pod::Usage
-
 =head1 SYNOPSIS
 
-update-bootloader [options]
+update-bootloader [operation] [options]
 
-Options:
-   --help            brief help message
-   --man             full documentation
-   --image <file>
-   --initrd <file>
-   --default
-   --previous
-   --add
-   --remove
+operation is one of --add, --remove or --refresh.
 
-=head1 OPTIONS
+valid options are --help, --man, --image <file>, --initrd <file>, --default,
+--previous, --name <string>, --force.
+
+
+=head1 OPERATIONS
 
 =over 8
+
+=item B<--add>
+
+add an new image section.
+Needs a call to --refresh to take effect.
+
+=item B<--remove>
+
+remove the specified image section.
+Needs a call to --refresh to take effect.
+
+=item B<--refresh>
+
+activate the new config e.g. write boot loader to disk
+
+
+=head1 PARAMETER
 
 =item B<--help>
 
@@ -44,127 +57,147 @@ Print a brief help message and exits.
 
 Prints the manual page and exits.
    
-=item B<--image <file>>
+=item B<--image> F<file>
 
-=item B<--initrd <file>>
+specify path to kernel image
+
+=item B<--initrd> F<file>
+
+specify path to initial ramdisk or ramfs
 
 =item B<--default>
 
+let the new section to be added be the default section. Only allowed together
+with --add operation
+
 =item B<--previous>
 
-=item B<--add>
+set some usuable defaults for image, initrd and name when
 
-=item B<--remove>
+=item B<--name> F<string>
+
+specify the name of the section to be added/removed
+
+=item B<--force>
+
+dont complain, just do the right thing
 
 =back
 
 =head1 DESCRIPTION
 
-B<This program> will let you modify your bootloader configuration using
+B<update-bootloader> will let you modify your bootloader configuration using
 Bootloader::Tools perl module.
 
 =cut
 
-$opt_default = 0;
-$opt_previous = 0;
-
 setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
-my $d =  Locale::gettext->domain("bootloader");
-$d->dir("/usr/share/YaST2/locale");
-
-GetOptions (
-    'help|h'   	    => \$opt_help,
-    'man|m'    	    => \$opt_man,
-    'add|a'    	    => \$opt_add,
-    'remove|r' 	    => \$opt_remove,
-    'image=s'  	    => \$opt_image,
-    'initrd=s' 	    => \$opt_initrd,
-    'name=s'   	    => \$opt_name,
-    'default|def'   => \$opt_default,
-    'previous|prev' => \$opt_previous)
+GetOptions (\%oper,
+    'add|a'    	 ,
+    'refresh'    ,
+    'remove|r' 	 ,
+    'default|d'  => \$opt_default,
+    'help|h'   	 => \$opt_help,
+    'force'      => \$opt_force,
+    'image=s'  	 => \$opt_image,
+    'initrd=s' 	 => \$opt_initrd,
+    'man|m'    	 => \$opt_man,
+    'name=s'   	 => \$opt_name,
+    'previous|p' => \$opt_previous)
     or pod2usage(2);
 pod2usage(1) if $opt_help;
 pod2usage(-exitstatus => 0, -verbose => 2) if $opt_man;
 
-pod2usage("Need at least one of the options 'add', 'image', 'previous' or 'remove'")
-    unless ($opt_image or $opt_previous or $opt_add or $opt_remove);
+pod2usage("Specify exactly one operation, either 'add', 'remove' or 'refresh'")
+    unless scalar keys(%oper) == 1;
 
-if ($opt_image)
-{
+pod2usage("Option 'default' is only allowed for operation 'add'")
+    if ($opt_default and not defined $oper{add});
+
+if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
-    if ($opt_image !~ m#^/#);
 }
-
-if ($opt_initrd)
-{
-    $opt_initrd = getcwd . '/' . $opt_initrd
-    if ($opt_initrd !~ m#^/#);
+if ($opt_initrd and $opt_initrd !~ m;^/;) {
+    $opt_initrd = getcwd . '/' . $opt_initrd;
 }
 
 InitLibrary();
 
-my $loader = Bootloader::Tools::GetBootloader();
-
-if ($opt_previous)
-{
+if ($opt_previous) {
     unless ($opt_image)	{
-    	$opt_image = Bootloader::Tools::GetDefaultImage() . ".previous";
-    	$opt_initrd = Bootloader::Tools::GetDefaultInitrd() . ".previous";
+    	$opt_image = GetDefaultImage() . ".previous";
+    }
+    unless($opt_initrd) {
+    	$opt_initrd = GetDefaultInitrd() . ".previous";
     }	
-}
-
-if ($opt_add)
-{
-    if ($opt_previous)
-    {
+    unless ($opt_name) {
         $opt_name = "Previous Kernel";
-
-        # only localize on grub and lilo
-    	if ($loader eq "grub" || $loader eq "lilo")
-    	{
-    	    $opt_name = $d->get($opt_name);
-            chomp ($opt_name);
-	    
-            # check wether translation only contains [a-zA-Z0-9 _]
-            # otherwise don't translate
-            if ($opt_name !~ /^[a-zA-Z0-9 _]+$/g )
-            {
-                $opt_name = "Previous Kernel";
-            }
-
-            if($loader ne "grub")
-            {
-                #only grub allows blanks in section titles
-                $opt_name =~ s/ /_/g;
-                #restrict lenght to 16 chars
-                $opt_name = substr ($opt_name, 0, 15);
-            }
-        }
-        # add product name and version
-        $opt_name .= `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
-        chomp $opt_name;
     }
-    else
-    {
-    	unless ($opt_name)
-    	{
-            $opt_name = $opt_image;
-    	}
-    }
-
-    unless (CountImageSections($opt_image))
-    {
-        AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
-    }
-
 }
-elsif ($opt_remove)
-{
-    if (CountImageSections($opt_image))
-    {
-        RemoveImageSections($opt_image);
+
+unless ($opt_name) {
+    # FIXME: create a nicer default name e.g. without /#!@ ...
+    $opt_name = $opt_image;
+}
+
+
+if (defined $oper{add}) {
+    pod2usage("Please specify name and kernel image for new section")
+	unless $opt_name and $opt_image;
+
+    my $loader = Bootloader::Tools::GetBootloader();
+    # only localize on grub and lilo
+    if ($loader eq "grub" || $loader eq "lilo") {
+	my $d =  Locale::gettext->domain("bootloader");
+	$d->dir("/usr/share/YaST2/locale");
+	my $opt_trans = $d->get($opt_name);
+	chomp ($opt_trans);
+	
+	# check whether translation only contains [a-zA-Z0-9 _]
+	# otherwise fall back to untranslated string
+	if ($opt_trans =~ /^[a-zA-Z0-9 _]+$/g ) {
+	    $opt_name = $opt_trans;
+	}
     }
+    
+    # FIXME: this should be handled in loader specific code
+    if ($loader eq "lilo") {
+	# only grub allows blanks in section titles
+	$opt_name =~ s/ /_/g;
+	# restrict lenght to 16 chars
+	$opt_name = substr ($opt_name, 0, 15);
+    }
+    
+
+    # add product name and version
+    $opt_name .= `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
+    chomp $opt_name;
+
+    # 
+    if (CountImageSections($opt_image) != 0) {
+	pod2usage("There are already sections with image '$opt_image'")
+	    unless $opt_force;
+    }
+    else {
+	AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
+    }
+}
+
+if (defined $oper{remove}) {
+    my $num = CountImageSections($opt_image);
+    unless ($opt_force) {
+	if ($num > 1) {
+	    pod2usage("There are more than one section with image '$opt_image'");
+	} elsif ($num == 0) {
+	    pod2usage("There in no section with image '$opt_image'");
+	}
+    }
+    RemoveImageSections($opt_image);
+}
+
+if (defined $oper{refresh}) {
+    UpdateBootloader();
 }
 
 #
