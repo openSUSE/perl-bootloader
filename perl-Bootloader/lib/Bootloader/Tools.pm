@@ -54,7 +54,8 @@ use strict;
 use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary AddNewImageSection CountImageSections
-		 RemoveImageSections);
+		 RemoveImageSections GetDefaultImage GetDefaultInitrd
+		 UpdateBootloader);
 
 use Bootloader::Library;
 use Bootloader::Core;
@@ -245,10 +246,8 @@ See InitLibrary function for example.
 =cut
 
 sub GetBootloader {
-    open (FILE, ". /etc/sysconfig/bootloader && echo \$LOADER_TYPE |")
-	|| die "Cannot determine the loader type";
-    my $lt = <FILE>;
-    close (FILE);
+    my $lt = qx{ . /etc/sysconfig/bootloader && echo \$LOADER_TYPE } or
+	die "Cannot determine the loader type";
     chomp ($lt);
     return $lt;
 }   
@@ -284,8 +283,9 @@ as default.
 
 EXAMPLE:
 
-  Bootloader::Tools::InitLibrary ();
-  Bootloader::Tools::AddNewImageSection ("2.6.11", "/boot/vmlinuz-2.6.11", "/boot/initrd-2.6.11", 1);
+  Bootloader::Tools::InitLibrary();
+  Bootloader::Tools::AddNewImageSection("2.6.11", "/boot/vmlinuz-2.6.11", "/boot/initrd-2.6.11", 1);
+  Bootloader::Tools::UpdateBootloader();
 
 =cut
 
@@ -343,7 +343,8 @@ sub AddNewImageSection {
     $lib_ref->SetGlobalSettings ($glob_ref);
 
     $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader ();
+    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
+                                    # the right place
     DumpLog ();
 }
 
@@ -362,14 +363,19 @@ EXAMPLE:
 
 =cut
 
+#
+# FIXME: This function is bogus as sections are specified by a unique name
+# and not all sections of all types have a kernel entry
 sub CountImageSections {
     my $image = shift;
+
+    return 0 unless $image;
 
     $image = ResolveCrossDeviceSymlinks ($image);
     $lib_ref->ReadSettings ();
     my @sections = @{$lib_ref->GetSections ()};
     @sections = grep {
-	(ResolveCrossDeviceSymlinks ($_->{"kernel"} || "")) eq $image;
+	(ResolveCrossDeviceSymlinks ($_->{"kernel"} || $_->{"image"} || "")) eq $image;
     } @sections;
     my $count = scalar (@sections);
     DumpLog ();
@@ -387,11 +393,14 @@ EXAMPLE:
 
   Bootloader::Tools::InitLibrary ();
   Bootloader::Tools::RemoveImageSections ("/boot/vmlinuz-2.6.11");
+  Bootloader::Tools::UpdateBootloader();
 
 =cut
 
 sub RemoveImageSections {
     my $image = shift;
+
+    return unless $image;
 
     $image = ResolveCrossDeviceSymlinks ($image);
     $lib_ref->ReadSettings ();
@@ -402,7 +411,7 @@ sub RemoveImageSections {
     my $default_removed = 0;
 
     @sections = grep {
-	if ((ResolveCrossDeviceSymlinks ($_->{"kernel"} || "")) eq $image) {
+	if ((ResolveCrossDeviceSymlinks ($_->{"kernel"} || $_->{"image"} || "")) eq $image) {
 	    if ($default_section eq $_->{"name"})
 	    {
 		$default_removed = 1;
@@ -421,9 +430,28 @@ sub RemoveImageSections {
 				   # may change
     $lib_ref->SetGlobalSettings ($glob_ref);
     $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader ();
+    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
+                                    # the right place
     DumpLog ();
 }
+
+
+
+
+
+=item
+C<<  Bootloader::Tools::UpdateBootloader (); >>
+
+Updates the bootloader settings meaning do whatever it takes for the actual
+bootloader to use the current configuration
+
+=cut
+
+
+sub UpdateBootloader {
+    $lib_ref->UpdateBootloader ();
+}
+
 
 =item
 C<<  $lang = Bootloader::Tools::GetSystemLanguage (); >>
