@@ -228,7 +228,7 @@ C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
 Gets the mount point where a specified device is mounted. As argument
 takes the device to examinate (string, eg. C<'/dev/hda1'>), returns the
 mountopint where the device is mounter (string, eg. C<'/boot'>), or undef
-if the device isn't mounted (according to /etc/fstab).
+if the device is not mounted (according to /etc/fstab).
 
 =cut
 
@@ -320,7 +320,7 @@ C<< $index = Bootloader::Core->IndexOfSection ($name, \@section_names); >>
 Finds the section in the list. As arguments, takes the name of the section
 (string, eg. C<'linux'>) and the list of section names (list reference, eg.
 C<['linux', 'failsafe']>). Returns index of the section (integer) or undef
-if the section wasn't found in the list.
+if the section was not found in the list.
 
 =cut
 
@@ -893,12 +893,12 @@ sub ReadFiles {
 }
 
 =item
-C<< $status = Bootloader::Core->WriteFiles (\%files, $suffix); >>
+C<< $status = Bootloader::Core->WriteFiles (\%files, $suffix, $menu_only); >>
 
 Writes the files to the disk. As arguments, it takes a reference to a hash,
 where key is file name and value a reference to the list of lines to write
 to the file, and a suffix.
-Doesn't write the contents directly to the files, but $suffix is
+Does not write the contents directly to the files, but $suffix is
 appended to the file names.
 On success, returns defined value > 0, on fail, returns undef;
 
@@ -1046,7 +1046,7 @@ sub Section2Info {
 
 C<< $label = Bootloader::Core->FixSectionName ($name, \@existing); >>
 
-Update the section name so that it doesn't break anything (is in compliance
+Update the section name so that it does not break anything (is in compliance
 with the bootloader and is unique). As arguments takes suggested section name
 and list of existing sections, returns updated section name.
 
@@ -1586,7 +1586,7 @@ sub SetDeviceMapping {
 =item
 C<< $settings_ref = Bootloader::Core->GetSettings (); >>
 
-returns the complete settings in a hash. Doesn't read the settings
+returns the complete settings in a hash. Does not read the settings
 from the system, but returns internal structures.
 
 =cut
@@ -1610,7 +1610,7 @@ sub GetSettings {
 C<< $status = Bootloader::Core->SetSettings (\%settings); >>
 
 Stores the settings in the given parameter to the internal
-structures. Doesn't touch the system.
+structures. Does not touch the system.
 Returns undef on fail, defined nonzero value on success.
 
 =cut
@@ -1668,12 +1668,12 @@ sub SymlinkCrossesDevice($$) {
     my $self = shift;
     my $path = shift;
 
-    my @stat  = stat  $path;
-    my @lstat = lstat $path;
+    my ($dev_file,)  = stat($path);
+    my ($dev_symlink,) = lstat($path);
 
-    if (defined ($stat[0]) && defined ($lstat[0]))
+    if (defined ($dev_file) && defined ($dev_symlink))
     {
-	return $stat[0] != $lstat[0];
+	return $dev_file != $dev_symlink;
     }
     return 0;
 }
@@ -1683,7 +1683,7 @@ sub SymlinkCrossesDevice($$) {
 C<< $resolved = Bootloader::Core->ResolveCrossDeviceSymlinks ($path); >>
 
 Resolves all symlinks crossing device in the path. As argument, takes
-a path possibly wioth symlinks crossing device, returns the same path
+a path possibly with symlinks crossing device, returns the same path
 with these symlinks resolved.
 
 =cut
@@ -1769,13 +1769,22 @@ sub RealFileName {
 
 C<< Bootloader::Core->MangleSections (\@sections, \%global); >>
 
-In this version doesn't do anything, is needed just to be overridden
+In this version does not do anything, is needed just to be overridden
 by the ZIPL implementation where global stuff is in sections
 
 =cut
 
-#MangleSections (list &sctions, map &global);
+#MangleSections (list &sections, map &global);
 sub MangleSections {
 }
 
 1;
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#
