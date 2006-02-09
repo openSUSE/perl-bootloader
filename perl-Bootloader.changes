@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Thu Feb  9 13:41:56 CET 2006 - jplack@suse.de
+
+- added help messages to make update-bootloader usuable
+- added error handling which was not there at all
+- added --force and --refresh option for FATE #2154
+- introduce Bootloader::Tools::UpdateBootloader(), no longer in
+  Add/Remove Section functions
+- image name may be empty and stored either under "kernel" or "image"
+- bump version to 0.2.9
+
+-------------------------------------------------------------------
 Mon Feb  6 18:03:19 CET 2006 - jplack@suse.de
 
 - catch cases wherethere is no key 'kernel' (FATE #2154)
