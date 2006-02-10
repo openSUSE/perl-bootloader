@@ -404,6 +404,29 @@ sub CreateLines {
 }
 
 
+# give me the unique internal boot= label for this special value
+sub boot2special($$) {
+    my $val = shift;
+    my $arch = shift;
+
+    if ($val =~ /^[ABCD]$/) {
+	return "boot_slot";
+    }
+    elsif ($val =~ m:^/dev/:) {
+	return "boot_" . $arch . "_custom";
+	
+    }
+    elsif ($val =~ m:^/:) {
+	return "boot_file";
+	
+    }
+    
+    # bummer, should never happen
+    # ignore wrong entry
+    return undef;
+}
+
+
 =item
 C<< $glob_info = $Bootloader::Core->Global2Info (\@glob_lines, \@section_names); >>
 
@@ -431,24 +454,8 @@ sub Global2Info {
 
 	if ($key eq "boot")
 	{
-	    my @devs = @{$ret{"stage1_dev"} || []};
-	    push @devs, $val;
-	    $ret{"stage1_dev"} = \@devs;
-
-	    # the new stuff
-	    if ($val =~ /^[ABCD]$/) {
-		$ret{boot_slot} = $val;
-	    }
-	    elsif ($val =~ m:^/dev/:) {
-		$ret{"boot_" . $arch . "_custom"} = $val;
-	    }
-	    elsif ($val =~ m:^/:) {
-		$ret{boot_file} = $val;
-	    }
-	    else {
-		# bummer, should never happen
-		# ignore wrong entry
-	    }
+	    $key = boot2special($val, $arch);
+	    $ret{$key} = $val if defined $key;
 	}
 	elsif ($type eq "bool") {
 	    $ret{$key} = "true";
@@ -498,8 +505,14 @@ sub Info2Global {
 	next unless exists $go->{$key};
 
 	if ($key eq "boot"){
-	    delete $globinfo{$key} if exists ($globinfo{$key});
-	    delete $globinfo{"stage1_dev"} if exists ($globinfo{"stage1_dev"});
+	    my $special = boot2special($line_ref->{"value"}, $arch);
+
+	    if ( exists ($globinfo{$special}) ) {
+		if ( defined ($globinfo{$special})) {
+		    $line_ref->{"value"} = $globinfo{$special};
+		}		
+		delete $globinfo{$special};
+	    }
 	}
 	else {
 	    if (defined ($globinfo{$key})) {
@@ -531,17 +544,7 @@ sub Info2Global {
 	next unless exists $go->{$key};
 	#next if $key =~ /^__/;
 
-	if ($key eq "stage1_dev")
-	{
-	    # old useless stuff?
-	    foreach my $dev (@{$value}) {
-		push @lines, {
-		    "key" => "boot",
-		    "value" => $dev,
-		}
-	    }
-	}
-	elsif ($key eq "boot_" . $arch . "_custom") {
+	if ($key eq "boot_" . $arch . "_custom") {
 		push @lines, {
 		    "key" => "boot",
 		    "value" => $value,
