@@ -330,7 +330,7 @@ sub AddNewImageSection {
     $new{"name"} = $name;
     $new{"type"} = "image";
     $new{"__modified"} = 1;
-    unshift @sections, \%new;
+    push @sections, \%new;
 
     $lib_ref->SetSections (\@sections);
     my $glob_ref = $lib_ref->GetGlobalSettings ();
