@@ -1261,7 +1261,8 @@ sub Info2Global {
 		    $new_line{"value"} = $dest;
 		    push (@added_lines, \%new_line);
 		}
-		$line_ref->{"value"} = $globinfo{$key};
+		$line_ref = shift @added_lines;
+
 		delete ($globinfo{$key});
 	    }
 	    else

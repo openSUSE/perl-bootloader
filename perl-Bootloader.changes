@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Feb 10 18:50:26 CET 2006 - jplack@suse.de
+
+- fix boot_*/stage1_dev tag handling which breaks kernel builds
+  through update-bootloader, hopefully final checkin´ for FATE #2154
+- remove stage1_dev code for POWER
+- bump version to 0.2.10
+
+-------------------------------------------------------------------
 Thu Feb  9 13:41:56 CET 2006 - jplack@suse.de
 
 - added help messages to make update-bootloader usuable
