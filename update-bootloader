@@ -91,6 +91,30 @@ Bootloader::Tools perl module.
 
 =cut
 
+# Get product name and version
+# FIXME: This is just a workaround for non working YaST-code
+ 
+sub GetProduct {
+    
+    my $name;
+    my $ver;
+    my $namever;
+    open (RELEASE, "/var/adm/YaST/ProdDB/prod_00000001");
+
+    while(<RELEASE>) {
+        chomp $_;
+        
+        if ($_ eq "+Product:") {
+            my $line = <RELEASE>;
+            my ($name,$ver, ) = split(/-/,$line);
+	    $namever = join(' ', $name, $ver);
+        }
+    }
+
+    close RELEASE;
+    return $namever;
+}
+
 setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
 GetOptions (\%oper,
@@ -171,7 +195,8 @@ if (defined $oper{add}) {
     
 
     # add product name and version
-    $opt_name .= `yast2 /usr/share/YaST2/modules/print-product.ycp 2>&1`;
+    $opt_name .= " -- ";
+    $opt_name .= GetProduct();
     chomp $opt_name;
 
     # 
