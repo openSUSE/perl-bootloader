@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Feb 13 18:56:56 CET 2006 - sf@suse.de
+
+- workaround for broken Product.ycp (Bug #148625) 
+
+-------------------------------------------------------------------
 Fri Feb 10 18:50:26 CET 2006 - jplack@suse.de
 
 - fix boot_*/stage1_dev tag handling which breaks kernel builds
