@@ -955,15 +955,15 @@ string (otherwise).
 
 =cut
 
+my $orig_name_comment="###Don't change this comment - YaST2 identifier: Original name: ";
+
 # string Comment2OriginalName (string comment)
 sub Comment2OriginalName {
     my $self = shift;
     my $comment = shift || "";
 
-    if ($comment =~ m/###Don't change this comment - YaST2 identifier: Original name: ([a-zA-Z0-9]+)###/)
-    {
-	return $1;
-    }
+    return $1
+	if $comment =~ m/${orig_name_comment}([a-zA-Z0-9]+)###/o;
     return "";
 }
 
@@ -988,13 +988,11 @@ sub UpdateSectionNameLine {
     if (defined ($original_name) && $original_name ne "")
     {
 	my $cb = $line_ref->{"comment_before"} || "";
-	my @cb_lines = split /\n/, $cb;
-	@cb_lines = grep {
-	    ! $_ =~ m/###Don't change this comment - YaST2 identifier: Original name: ([a-zA-Z0-9]+)###/;
-	} @cb_lines;
-	push @cb_lines, "###Don't change this comment - YaST2 identifier: Original name: $original_name###";
-	$cb = join "\n", @cb_lines;
-	$line_ref->{"comment_before"} = $cb;
+	my @cb_lines = grep {
+	    ! m/^${orig_name_comment}/o;
+	} split( /\n/, $cb );
+	push @cb_lines, "${orig_name_comment}${original_name}###";
+	$line_ref->{"comment_before"} =  join "\n", @cb_lines;
     }
     return $line_ref;
 }
@@ -1048,7 +1046,8 @@ C<< $label = Bootloader::Core->FixSectionName ($name, \@existing); >>
 
 Update the section name so that it does not break anything (is in compliance
 with the bootloader and is unique). As arguments takes suggested section name
-and list of existing sections, returns updated section name.
+and list of existing sections, returns updated section name and updates the
+list of section names as a side effect.
 
 =cut
  
@@ -1311,7 +1310,7 @@ sub Info2Global {
 		push @lines, {
 		    "key" => "boot",
 		    "value" => $dev,
-		}
+		} 
 	    }
 	}
 	elsif ($key eq "prompt" && "0" ne $globinfo{"prompt"})
