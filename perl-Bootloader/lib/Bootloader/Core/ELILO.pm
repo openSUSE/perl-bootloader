@@ -93,34 +93,16 @@ sub FixSectionName {
     my $orig_label = $label;
 
     # then check not allowed chars
-    $label =~ s/[^a-zA-Z0-9_.-]/_/g;
+    $label =~ s/[^\w.-]/_/g;
 
     for (my $i = 0; $i < $#$names_ref; $i++)
     {
-	my $name = $names_ref->[$i];
-	if ($name eq $orig_label)
+	if ($names_ref->[$i] eq $orig_label)
 	{
 	    $names_ref->[$i] = $label;
-	    $i = $#$names_ref + 1; # to finish the cycle
+	    last;	# finish the cycle
 	}
     }
-
-=item
-    # and make the label unique
-    while (length ($label) > 5 && scalar (grep {$_ eq $label} @$names_ref) != 0)
-    {
-        $label = substr ($label, 0, length ($label) - 1);
-    }
-    my $short_label = $label;
-    my $index = 1;
-#    while (scalar (grep {$_ eq $label} @$names_ref) != 0)
-    if (scalar (grep {$_ eq $label} @$names_ref) == 1)
-    {
-        $label = $short_label . "_" . $index;
-        $index = $index + 1;
-    }
-
-=cut
 
     return $label;
 }
@@ -312,3 +294,12 @@ sub InitializeBootloader {
 }
 
 1;
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#
