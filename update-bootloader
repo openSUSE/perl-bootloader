@@ -185,15 +185,6 @@ if (defined $oper{add}) {
 	}
     }
     
-    # FIXME: this should be handled in loader specific code
-    if ($loader eq "lilo") {
-	# only grub allows blanks in section titles
-	$opt_name =~ s/ /_/g;
-	# restrict lenght to 16 chars
-	$opt_name = substr ($opt_name, 0, 15);
-    }
-    
-
     # add product name and version
     $opt_name .= " -- ";
     $opt_name .= GetProduct();

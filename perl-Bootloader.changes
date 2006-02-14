@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Feb 14 13:53:05 CET 2006 - jplack@suse.de
+
+- implement new requirements/word split in FixSectionName
+- bump version to 0.2.11
+
+-------------------------------------------------------------------
 Mon Feb 13 18:56:56 CET 2006 - sf@suse.de
 
 - workaround for broken Product.ycp (Bug #148625) 

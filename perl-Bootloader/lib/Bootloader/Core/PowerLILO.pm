@@ -286,52 +286,42 @@ sub ListFiles {
 
 sub FixSectionName {
     my $self = shift;
-    my $label = shift;
+    my $name = shift;
     my $names_ref = shift;
 
-    my $orig_label = $label;
+    my $orig_name = $name;
+    my $index = 0;	# 0 means not-found, 1 is_unique, else index to be
+    			# appended
+    my $name_ix = -1;
 
-    # first fix length
-    if (length ($label) > 11 && substr (lc ($label), 0, 6) eq "linux-")
-    {
-	$label = substr ($label, 6);
-    }
-    if (length ($label) > 11)
-    {
-	$label = substr ($label, 0, 11);
-    }
+    # replace unwanted characters by underscore, normally all printables
+    # beside space equal sign and quote signs should be ok, no length limit
+    $name =~ s/[^\w.-]/_/g;
 
-    # then check not allowed chars
-    $label =~ s/[^a-zA-Z0-9_.-]/_/g;
-
-    # and make the label unique
-    if (scalar (grep {$_ eq $label} @$names_ref) > 1)
-    {
-	while (length ($label) > 5 && scalar (grep {$_ eq $label} @$names_ref) != 0)
-	{
-	    $label = substr ($label, 0, length ($label) - 1);
-	}
-	my $short_label = $label;
-	my $index = 1;
-	while (scalar (grep {$_ eq $label} @$names_ref) != 0)
-	{
-	    $label = $short_label . "_" . $index;
-	    $index = $index + 1;
+    # and make the section name unique
+    for (my $i = 0; $i < $#$names_ref; $i++) {
+	$_ = $names_ref->[$i];
+	$name_ix = $i
+	    if $_ eq $orig_name; # remember index of original name
+	# Does the name start with $name? -> cut off and calc $index
+	if (s/^\Q$name\E//o) {
+	    if ($_ eq '' and $index<0) {
+		$index = 0;
+		next;
+	    }
+	    s/^_//;	# cut off an optional leading underscore
+	    my $new_index = $_ + 1;	# interprete the remainder string as
+	    				# integer index and try next number
+	    # finally take the maximum as index to append to $name
+	    $index = $new_index if $index < $new_index;
 	}
     }
+    
+    # update $name and list of section names if neccessary
+    $name .= "_" . $index if $index>1;
+    $names_ref->[$name_ix] = $name if $name_ix>=0;
 
-    # update list of section names
-    for (my $i = 0; $i < $#$names_ref; $i++)
-    {
-	my $name = $names_ref->[$i];
-	if ($name eq $orig_label)
-	{
-	    $names_ref->[$i] = $label;
-	    last;	# stop it we're done
-	}
-    }
-
-    return $label;
+    return $name;
 }
 
 
