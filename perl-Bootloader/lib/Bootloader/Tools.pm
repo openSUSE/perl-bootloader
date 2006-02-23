@@ -53,8 +53,8 @@ package Bootloader::Tools;
 use strict;
 use base 'Exporter';
 
-our @EXPORT = qw(InitLibrary AddNewImageSection CountImageSections
-		 RemoveImageSections GetDefaultImage GetDefaultInitrd
+our @EXPORT = qw(InitLibrary AddSection CountImageSections CountSections
+		 RemoveImageSections RemoveSections GetDefaultImage GetDefaultInitrd
 		 UpdateBootloader);
 
 use Bootloader::Library;
@@ -162,6 +162,8 @@ to initialize the bootloader library properly.
 See InitLibrary function for example.
 
 =cut
+
+# FIXME: this has to be read through yast::storage
 sub ReadPartitions {
     my $sb="/sys/block";
     opendir(BLOCK_DEVICES, "$sb") || die ("Failed to open dir $sb");
@@ -204,6 +206,7 @@ to initialize the bootloader library properly.
 
 =cut
 
+# FIXME: this has to be read through yast::storage
 sub ReadMDArrays {
     my $index = 0;
     my %mapping = ();
@@ -245,6 +248,7 @@ See InitLibrary function for example.
 
 =cut
 
+# FIXME: this has to be read through yast::storage or such
 sub GetBootloader {
     my $lt = qx{ . /etc/sysconfig/bootloader && echo \$LOADER_TYPE } or
 	die "Cannot determine the loader type";
@@ -270,6 +274,10 @@ sub InitLibrary {
     $lib_ref->DefineMountPoints ($mp);
     $lib_ref->DefinePartitions ($part);
     $lib_ref->DefineMDArrays ($md);
+
+    # parse Bootloader configuration files   
+    $lib_ref->ReadSettings();
+
     DumpLog ();
 }
 
@@ -295,7 +303,20 @@ sub AddNewImageSection {
     my $initrd = shift;
     my $default = shift;
 
-    $lib_ref->ReadSettings ();
+    # old broken stuff
+    exit 1;
+}
+
+
+# FIXME: Add documentation
+sub AddSection {
+    my %option = @_;
+
+    return unless exists $option{"name"};
+    return unless exists $option{"type"};
+
+    my $default = delete $option{"default"} || 0;
+	
     my $mp = $lib_ref->GetMountPoints ();
     my @sections = @{$lib_ref->GetSections ()};
     my %new = (
@@ -320,32 +341,70 @@ sub AddNewImageSection {
 	}
     }
 
-    if (exists $new{"kernel"}) { 
-	$new{"kernel"} = $image;
+    if (exists $option{"image"}) {
+	if (exists $new{"kernel"}) { 
+	    $new{"kernel"} = delete $option{"image"};
+	}
+	else {	
+	    $new{"image"} = delete $option{"image"};
+	}
     }
-    else {	
-       $new{"image"} = $image;
-    }  
-    $new{"initrd"} = $initrd if defined ($initrd);
-    $new{"name"} = $name;
-    $new{"type"} = "image";
+
+    foreach (keys %option) {
+	$new{"$_"} = $option{"$_"};
+    }
+
     $new{"__modified"} = 1;
     push @sections, \%new;
 
     $lib_ref->SetSections (\@sections);
-    my $glob_ref = $lib_ref->GetGlobalSettings ();
-    if (defined ($default) && $default)
-    {
-	$glob_ref->{"default"} = $name;
+
+    if ($default) {
+	my $glob_ref = $lib_ref->GetGlobalSettings ();
+	$glob_ref->{"default"} = $option{"name"};
+	$glob_ref->{"__modified"} = 1;
+	$lib_ref->SetGlobalSettings ($glob_ref);
     }
-    $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
-				   # may change
-    $lib_ref->SetGlobalSettings ($glob_ref);
 
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
     DumpLog ();
+}
+
+
+# internal: does section match with set of tags
+sub match_section {
+    my ($sect_ref, $opt_ref,) = @_;
+    my $match = 1;
+
+    foreach my $opt (keys %{$opt_ref}) {
+	next unless exists $sect_ref->{"$opt"};
+	# FIXME: avoid "kernel"
+	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
+	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
+		      $opt_ref->{"$opt"});
+	}
+	else {
+	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
+	}
+	last unless $match;
+    }
+    return $match;
+}
+
+
+# internal: normalize options in a way needed for 'match_section'
+sub normalize_options {
+    my $opt_ref = shift;
+
+    foreach ("image", "initrd" ) {
+	$opt_ref->{"$_"} = ResolveCrossDeviceSymlinks($opt_ref->{"$_"})
+	    if exists $opt_ref->{"$_"};
+    }
+
+    # FIXME: some have "kernel" some have "image" tag, latter makes more sense
+    $opt_ref->{"kernel"} = $opt_ref->{"image"} if exists $opt_ref->{"image"};
 }
 
 
@@ -357,7 +416,7 @@ specified kernel.
 
 EXAMPLE:
 
-  Bootloader::Tools::InitLibrary ();
+  Bootloader::Tools::InitLibrary();
   my $count = Bootloader::Tools::CountImageSections ("/boot/vmlinuz-2.6.11");
   print "Sections: $count\n";
 
@@ -370,14 +429,21 @@ sub CountImageSections {
     my $image = shift;
 
     return 0 unless $image;
+    return CountSections(type=>"image", image=>$image);
+}
 
-    $image = ResolveCrossDeviceSymlinks ($image);
-    $lib_ref->ReadSettings ();
+
+# FIXME: add documentation
+sub CountSections {
+    my %option = @_;
+    my $count = 0;
+
+    normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
-    @sections = grep {
-	(ResolveCrossDeviceSymlinks ($_->{"kernel"} || $_->{"image"} || "")) eq $image;
-    } @sections;
-    my $count = scalar (@sections);
+    foreach (@sections) {
+	$count++ if match_section($_, \%option);
+    }
+
     DumpLog ();
     return $count;
 }
@@ -401,42 +467,36 @@ sub RemoveImageSections {
     my $image = shift;
 
     return unless $image;
+    RemoveSections(type=>"image", image => $image);
+}
 
-    $image = ResolveCrossDeviceSymlinks ($image);
-    $lib_ref->ReadSettings ();
 
-    my @sections = @{$lib_ref->GetSections ()};
-    my $glob_ref = $lib_ref->GetGlobalSettings ();
+sub RemoveSections {
+    my %option = @_;
+    my @sections = @{$lib_ref->GetSections()};
+    my $glob_ref = $lib_ref->GetGlobalSettings();
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
+    normalize_options(\%option);
     @sections = grep {
-	if ((ResolveCrossDeviceSymlinks ($_->{"kernel"} || $_->{"image"} || "")) eq $image) {
-	    if ($default_section eq $_->{"name"})
-	    {
-		$default_removed = 1;
-	    }
-	    0;
-	} else {
-	    1;
-	}
+	my $match = match_section($_, \%option);
+	$default_removed = 1
+	    if $match and $default_section eq $_->{"name"};
+	!$match;
     } @sections;
     $lib_ref->SetSections (\@sections);
-    if ($default_removed)
-    {
+    if ($default_removed) {
 	$glob_ref->{"default"} = $sections[0]{"name"};
     }
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
-				   # may change
+				   # may change even if not deleted
     $lib_ref->SetGlobalSettings ($glob_ref);
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
     DumpLog ();
 }
-
-
-
 
 
 =item
@@ -490,9 +550,6 @@ EXAMPLE:
 =cut
 
 sub GetDefaultSection {
-  #parse Bootloader configuration files   
-   $lib_ref->ReadSettings ();
-
    #Get global Settings
    my $glob_ref = $lib_ref->GetGlobalSettings ();
 
