@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Thu Feb 23 19:44:27 CET 2006 - jplack@suse.de
+
+- modified interface in Tools.pm to enable more generic chages to the
+  bl config sections (#148461)
+- use new interface of Tools.pm for the xen case in update-bootloader
+  (#148461)
+- bump version to 0.2.12
+
+-------------------------------------------------------------------
 Tue Feb 14 13:53:05 CET 2006 - jplack@suse.de
 
 - implement new requirements/word split in FixSectionName
