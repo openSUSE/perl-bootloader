@@ -8,10 +8,9 @@ use Locale::gettext;
 use strict;
 
 my %oper;
-
-my ($opt_default, $opt_force, $opt_help, $opt_image, $opt_initrd, $opt_man,
-    $opt_name, $opt_previous)
-    = (0,0,0,'','',0,'',0);
+my ($opt_default, $opt_force, $opt_help, $opt_man, $opt_previous, $opt_xen)
+    = (0,0,0,0,0,0);
+my ($opt_image, $opt_initrd, $opt_name) = ('','','');
 
 =head1 NAME
 
@@ -24,9 +23,8 @@ update-bootloader [operation] [options]
 
 operation is one of --add, --remove or --refresh.
 
-valid options are --help, --man, --image <file>, --initrd <file>, --default,
---previous, --name <string>, --force.
-
+valid options are --help, --man, --image <file>, --initrd <file>,
+--xen, --default, --previous, --name <string>, --force.
 
 =head1 OPERATIONS
 
@@ -61,9 +59,9 @@ Prints the manual page and exits.
 
 specify path to kernel image
 
-=item B<--initrd> F<file>
+=item B<--xen>
 
-specify path to initial ramdisk or ramfs
+specify that you what to add a xen and not a regular image section
 
 =item B<--default>
 
@@ -127,6 +125,7 @@ GetOptions (\%oper,
     'image=s'  	 => \$opt_image,
     'initrd=s' 	 => \$opt_initrd,
     'man|m'    	 => \$opt_man,
+    'xen'        => \$opt_xen,
     'name=s'   	 => \$opt_name,
     'previous|p' => \$opt_previous)
     or pod2usage(2);
@@ -145,6 +144,7 @@ if ($opt_image and $opt_image !~ m;^/;) {
 if ($opt_initrd and $opt_initrd !~ m;^/;) {
     $opt_initrd = getcwd . '/' . $opt_initrd;
 }
+my $type = $opt_xen ? "xen" : "image";
 
 InitLibrary();
 
@@ -160,13 +160,12 @@ if ($opt_previous) {
     }
 }
 
-unless ($opt_name) {
-    # FIXME: create a nicer default name e.g. without /#!@ ...
-    $opt_name = $opt_image;
-}
-
-
 if (defined $oper{add}) {
+    unless ($opt_name) {
+	# FIXME: create a nicer default name e.g. without /#!@ ...
+	$opt_name = $opt_image;
+    }
+
     pod2usage("Please specify name and kernel image for new section")
 	unless $opt_name and $opt_image;
 
@@ -180,7 +179,7 @@ if (defined $oper{add}) {
 	
 	# check whether translation only contains [a-zA-Z0-9 _]
 	# otherwise fall back to untranslated string
-	if ($opt_trans =~ /^[a-zA-Z0-9 _]+$/g ) {
+	if ($opt_trans =~ /^[a-zA-Z\d _]+$/g ) {
 	    $opt_name = $opt_trans;
 	}
     }
@@ -191,17 +190,30 @@ if (defined $oper{add}) {
     chomp $opt_name;
 
     # 
-    if (CountImageSections($opt_image) != 0) {
+    if (CountSections(type=>"$type", image => "$opt_image") != 0) {
 	pod2usage("There are already sections with image '$opt_image'")
 	    unless $opt_force;
     }
     else {
-	AddNewImageSection($opt_name, $opt_image, $opt_initrd, $opt_default);
+	my @params = (
+		      name =>$opt_name,
+		      image=>$opt_image,
+	);
+	push @params, initrd=> $opt_initrd if $opt_initrd;
+		      
+	AddSection(type=>"$type", default=>$opt_default, @params);
     }
 }
 
 if (defined $oper{remove}) {
-    my $num = CountImageSections($opt_image);
+    my @params = (
+		  type  =>$type,
+		  image =>$opt_image,
+    );
+    push @params, initrd=>$opt_initrd if $opt_initrd;
+    push @params, name  =>$opt_name if $opt_name;
+		      
+    my $num = CountSections(@params);
     unless ($opt_force) {
 	if ($num > 1) {
 	    pod2usage("There are more than one section with image '$opt_image'");
@@ -209,7 +221,8 @@ if (defined $oper{remove}) {
 	    pod2usage("There in no section with image '$opt_image'");
 	}
     }
-    RemoveImageSections($opt_image);
+
+    RemoveSections(@params);
 }
 
 if (defined $oper{refresh}) {
