@@ -199,6 +199,7 @@ if (defined $oper{add}) {
 		      name =>$opt_name,
 		      image=>$opt_image,
 	);
+	push @params, xen => "/boot/xen.gz" if $type eq "xen";
 	push @params, initrd=> $opt_initrd if $opt_initrd;
 		      
 	AddSection(type=>"$type", default=>$opt_default, @params);
@@ -207,9 +208,10 @@ if (defined $oper{add}) {
 
 if (defined $oper{remove}) {
     my @params = (
-		  type  =>$type,
+		  type  =>$type eq "xen" ? "image" : $type,
 		  image =>$opt_image,
     );
+    push @params, xen => "/boot/xen.gz" if $type eq "xen";
     push @params, initrd=>$opt_initrd if $opt_initrd;
     push @params, name  =>$opt_name if $opt_name;
 		      
