@@ -745,7 +745,7 @@ sub InitializeBootloader {
 
     return 0 == $self->RunCommand (
 	"/sbin/lilo",
-	"/var/log/YaST2/y2log_tool_lilo"
+	"/var/log/YaST2/y2log_bootloader"
     );
 }
 

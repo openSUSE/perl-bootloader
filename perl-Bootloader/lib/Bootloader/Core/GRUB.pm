@@ -1376,7 +1376,7 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
 
-    my $log = "/var/log/YaST2/y2log_tool_grub";
+    my $log = "/var/log/YaST2/y2log_bootloader";
     my $ret = $self->RunCommand (
 	"cat /etc/grub.conf | /usr/sbin/grub --device-map=/boot/grub/device.map --batch",
 	$log
@@ -1397,3 +1397,12 @@ sub InitializeBootloader {
 }
 
 1;
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#

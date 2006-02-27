@@ -265,16 +265,13 @@ sub UpdateBootloader {
     my $self = shift;
 
     my $ret = $self->SUPER::UpdateBootloader ();
-    if (! defined ($ret))
-    {
-	return undef;
-    }
-    my $command = "test -d /boot/efi/efi/SuSE || mkdir -p /boot/efi/efi/SuSE";
-    system ($command);
+    return undef unless defined $ret;
+
+    system ("mkdir -p /boot/efi/efi/SuSE") unless -d "/boot/efi/efi/SuSE";
  
     return $self->RunCommand (
 	"/sbin/elilo -v",
-	"/var/log/YaST2/y2log_tool_elilo"
+	"/var/log/YaST2/y2log_bootloader"
     );
 }
 

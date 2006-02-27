@@ -285,6 +285,7 @@ sub InitializeBootloader {
 
     return 0 == $self->RunCommand (
 	"/sbin/zipl -m menu",
+	"/var/log/YaST2/y2log_bootloader"
     );
 }
 
@@ -888,3 +889,12 @@ sub CreateSingleMenuFileLine {
 }
 
 1;
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#

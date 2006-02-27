@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Feb 27 19:00:27 CET 2006 - jplack@suse.de
+
+- change log file name for _all- archs to y2log_bootloader(#145106)
+
+-------------------------------------------------------------------
 Thu Feb 23 19:44:27 CET 2006 - jplack@suse.de
 
 - modified interface in Tools.pm to enable more generic chages to the
