@@ -8,6 +8,13 @@ Thu Feb 23 19:44:27 CET 2006 - jplack@suse.de
 - bump version to 0.2.12
 
 -------------------------------------------------------------------
+Sun Feb 19 16:32:41 CET 2006 - agruen@suse.de
+
+- update-bootloader: Only modify the section name if no explicit
+  name is specified. Strip directories when generating a name from
+  the image name.
+
+-------------------------------------------------------------------
 Tue Feb 14 13:53:05 CET 2006 - jplack@suse.de
 
 - implement new requirements/word split in FixSectionName

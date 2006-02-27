@@ -104,6 +104,7 @@ sub GetProduct {
         
         if ($_ eq "+Product:") {
             my $line = <RELEASE>;
+	    chomp;
             my ($name,$ver, ) = split(/-/,$line);
 	    $namever = join(' ', $name, $ver);
         }
@@ -156,14 +157,14 @@ if ($opt_previous) {
     	$opt_initrd = GetDefaultInitrd() . ".previous";
     }	
     unless ($opt_name) {
-        $opt_name = "Previous Kernel";
+        $opt_name = "Previous Kernel -- " . GetProduct();
     }
 }
 
 if (defined $oper{add}) {
     unless ($opt_name) {
-	# FIXME: create a nicer default name e.g. without /#!@ ...
 	$opt_name = $opt_image;
+	$opt_name =~ s/.*\///;
     }
 
     pod2usage("Please specify name and kernel image for new section")
@@ -184,12 +185,6 @@ if (defined $oper{add}) {
 	}
     }
     
-    # add product name and version
-    $opt_name .= " -- ";
-    $opt_name .= GetProduct();
-    chomp $opt_name;
-
-    # 
     if (CountSections(type=>"$type", image => "$opt_image") != 0) {
 	pod2usage("There are already sections with image '$opt_image'")
 	    unless $opt_force;
