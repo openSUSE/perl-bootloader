@@ -73,6 +73,8 @@ package Bootloader::Library;
 use strict;
 
 use Bootloader::Core;
+
+# this is bad style, load modules when required
 use Bootloader::Core::GRUB;
 use Bootloader::Core::LILO;
 use Bootloader::Core::ELILO;
@@ -145,6 +147,7 @@ sub Initialize {
     }
     else
     {
+	# FIXME: handle case 'none'
 	$loader = Bootloader::Core->new ();
 	$loader->l_error ("Bootloader::Library::Initialize: Initializing for unknown bootloader $bootloader");
     }
