@@ -267,6 +267,8 @@ sub UpdateBootloader {
     my $ret = $self->SUPER::UpdateBootloader ();
     return undef unless defined $ret;
 
+    # FIXME: this is good-weather programming: /boot/efi is _always_ a
+    #        FAT partition which has to be mounted
     system ("mkdir -p /boot/efi/efi/SuSE") unless -d "/boot/efi/efi/SuSE";
  
     return $self->RunCommand (
