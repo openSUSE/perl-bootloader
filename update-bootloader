@@ -149,6 +149,11 @@ my $type = $opt_xen ? "xen" : "image";
 
 InitLibrary();
 
+if ($opt_xen and not $opt_name) {
+    $opt_name = ($opt_previous ? "Previous " : "") .
+	"Xen -- " . GetProduct();
+}
+
 if ($opt_previous) {
     unless ($opt_image)	{
     	$opt_image = GetDefaultImage() . ".previous";
