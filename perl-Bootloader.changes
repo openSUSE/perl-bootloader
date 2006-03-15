@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Mar 15 17:35:56 CET 2006 - od@suse.de
+
+- fix erroneous error message on ELILO installation (#156993)
+
+-------------------------------------------------------------------
 Mon Mar 13 18:41:14 CET 2006 - jplack@suse.de
 
 - create a nicer default for Xen
