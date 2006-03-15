@@ -271,7 +271,7 @@ sub UpdateBootloader {
     #        FAT partition which has to be mounted
     system ("mkdir -p /boot/efi/efi/SuSE") unless -d "/boot/efi/efi/SuSE";
  
-    return $self->RunCommand (
+    return 0 == $self->RunCommand (
 	"/sbin/elilo -v",
 	"/var/log/YaST2/y2log_bootloader"
     );
