@@ -115,8 +115,9 @@ sub getExports() {
 	@bootpart = map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
 		$part_type, $start_cyl, $size_cyl) = @$_;
-	    ($fstype eq "Apple_HFS" and
-	     $size_cyl < 20)
+	    (($fstype eq "Apple_HFS" or
+	      $fstype eq "Apple_Bootstrap")
+	     and $size_cyl < 20)
 		? $device : ();
 	} @partinfo;
     }
