@@ -87,7 +87,7 @@ sub ListFiles {
 
 sub FixSectionName {
     my $self = shift;
-    my $label = shift;
+    my $name = shift;
     my $names_ref = shift;
 
     my $orig_name = $name;
@@ -97,7 +97,7 @@ sub FixSectionName {
     $name =~ s/[^\w.-]/_/g;
 
     # and make the section name unique
-    $name = $self->SUPER::FixSectionName($name, $name_ref, $orig_name);
+    $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
 
     return $name;
 }

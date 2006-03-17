@@ -92,9 +92,6 @@ sub FixSectionName {
     my $names_ref = shift;
 
     my $orig_name = $name;
-    my $index = 0;	# 0 means not-found, 1 is_unique, else index to be
-    			# appended
-    my $name_ix = -1;
 
     # label tag for lilo.conf has a restricted valid character set and limited
     # allowed string length
@@ -116,30 +113,11 @@ sub FixSectionName {
     $name =~ s/[^\w.-]/_/g;
 
     # and make the section name unique
-    for (my $i = 0; $i < $#$names_ref; $i++) {
-	$_ = $names_ref->[$i];
-	$name_ix = $i
-	    if $_ eq $orig_name; # remember index of original name
-	# Does the name start with $name? -> cut off and calc $index
-	if (s/^\Q$name\E//o) {
-	    if ($_ eq '' and $index<0) {
-		$index = 0;
-		next;
-	    }
-	    s/^_//;	# cut off an optional leading underscore
-	    my $new_index = $_ + 1;	# interprete the remainder string as
-	    				# integer index and try next number
-	    # finally take the maximum as index to append to $name
-	    $index = $new_index if $index < $new_index;
-	}
-    }
-    
-    # update $name and list of section names if neccessary
-    $name .= "_" . $index if $index>1;
-    $names_ref->[$name_ix] = $name if $name_ix>=0;
+    $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
 
     return $name;
 }
+
 
 =item
 C<< $status = Bootloader::Core::LILO->ParseLines (\%files); >>

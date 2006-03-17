@@ -1065,21 +1065,25 @@ sub FixSectionName {
 
     # make the section name unique, if you find a duplicate then make it
     # distinguishable by appending an underscore followed by a number 
-    for (my $i = 0; $i < $#$names_ref; $i++) {
+    for (my $i = 0; $i <= $#$names_ref; $i++) {
 	$_ = $names_ref->[$i];
 	$name_ix = $i
 	    if $_ eq $orig_name; # remember index of original name
 	# Does the name start with $name? -> cut off and calc $index
 	if (s/^\Q$name\E//o) {
-	    if ($_ eq '' and $index<0) {
-		$index = 0;
+	    if ($_ eq '') {
+		# count one up for every identical entry, should be
+		# maximum one but who knows ...
+		$index++;
 		next;
 	    }
 	    s/^_//;	# cut off an optional leading underscore
-	    my $new_index = $_ + 1;	# interprete the remainder string as
+	    if (/^\d*$/) {
+		my $new_index = $_ + 1;	# interprete the remainder string as
 	    				# integer index and try next number
-	    # finally take the maximum as index to append to $name
-	    $index = $new_index if $index < $new_index;
+		# finally take the maximum as index to append to $name
+		$index = $new_index if $index < $new_index;
+	    }
 	}
     }
     

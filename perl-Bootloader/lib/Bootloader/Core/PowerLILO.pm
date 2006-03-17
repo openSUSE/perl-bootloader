@@ -297,7 +297,7 @@ sub FixSectionName {
     $name =~ s/[^\w.-]/_/g;
 
     # and make the section name unique
-    $name = $self->SUPER::FixSectionName($name, $name_ref, $orig_name);
+    $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
 
     return $name;
 }
