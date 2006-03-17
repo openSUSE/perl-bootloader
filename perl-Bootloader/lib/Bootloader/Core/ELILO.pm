@@ -90,23 +90,17 @@ sub FixSectionName {
     my $label = shift;
     my $names_ref = shift;
 
-    my $orig_label = $label;
+    my $orig_name = $name;
 
-    # then check not allowed chars
-    $label =~ s/[^\w.-]/_/g;
+    # replace unwanted characters by underscore, normally all printables
+    # beside space equal sign and quote signs should be ok, no length limit
+    $name =~ s/[^\w.-]/_/g;
 
-    for (my $i = 0; $i < $#$names_ref; $i++)
-    {
-	if ($names_ref->[$i] eq $orig_label)
-	{
-	    $names_ref->[$i] = $label;
-	    last;	# finish the cycle
-	}
-    }
+    # and make the section name unique
+    $name = $self->SUPER::FixSectionName($name, $name_ref, $orig_name);
 
-    return $label;
+    return $name;
 }
-
 
 
 =item

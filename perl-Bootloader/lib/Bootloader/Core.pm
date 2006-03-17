@@ -1047,17 +1047,47 @@ C<< $label = Bootloader::Core->FixSectionName ($name, \@existing); >>
 Update the section name so that it does not break anything (is in compliance
 with the bootloader and is unique). As arguments takes suggested section name
 and list of existing sections, returns updated section name and updates the
-list of section names as a side effect.
+list of section names as a side effect. Optional parameter orig_name is
+intended for internal use of the loader specific modules
 
 =cut
  
-# string FixSectionName (string name, list<string> existing)
+# string FixSectionName (string name, list<string> existing, optional orig_name)
 sub FixSectionName {
     my $self = shift;
-    my $label = shift;
-    my @existing = @{+shift};
+    my $name = shift;
+    my $names_ref = shift;
+    my $orig_name = shift || $name;
 
-    return $label;
+    my $index = 0;	# 0 means not-found, 1 is_unique, else index to be
+    			# appended
+    my $name_ix = -1;
+
+    # make the section name unique, if you find a duplicate then make it
+    # distinguishable by appending an underscore followed by a number 
+    for (my $i = 0; $i < $#$names_ref; $i++) {
+	$_ = $names_ref->[$i];
+	$name_ix = $i
+	    if $_ eq $orig_name; # remember index of original name
+	# Does the name start with $name? -> cut off and calc $index
+	if (s/^\Q$name\E//o) {
+	    if ($_ eq '' and $index<0) {
+		$index = 0;
+		next;
+	    }
+	    s/^_//;	# cut off an optional leading underscore
+	    my $new_index = $_ + 1;	# interprete the remainder string as
+	    				# integer index and try next number
+	    # finally take the maximum as index to append to $name
+	    $index = $new_index if $index < $new_index;
+	}
+    }
+    
+    # update $name and list of section names if neccessary
+    $name .= "_" . $index if $index>1;
+    $names_ref->[$name_ix] = $name if $name_ix>=0;
+
+    return $name;
 }
 
 =item
