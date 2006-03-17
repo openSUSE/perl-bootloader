@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Mar 17 17:15:49 CET 2006 - jplack@suse.de
+
+- moved unification of section names in FixSectionName to Core.pm
+- altered loader specific code to use that (needed by #158274)
+- rearranged update-bootloader so that bootloader entry translation
+  works again (#158274)
+- bump version to 0.2.14
+
+-------------------------------------------------------------------
 Wed Mar 15 17:35:56 CET 2006 - od@suse.de
 
 - fix erroneous error message on ELILO installation (#156993)

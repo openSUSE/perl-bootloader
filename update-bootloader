@@ -11,6 +11,7 @@ my %oper;
 my ($opt_default, $opt_force, $opt_help, $opt_man, $opt_previous, $opt_xen)
     = (0,0,0,0,0,0);
 my ($opt_image, $opt_initrd, $opt_name) = ('','','');
+my $add_product = 0;
 
 =head1 NAME
 
@@ -149,10 +150,6 @@ my $type = $opt_xen ? "xen" : "image";
 
 InitLibrary();
 
-if ($opt_xen and not $opt_name) {
-    $opt_name = ($opt_previous ? "Previous " : "") .
-	"Xen -- " . GetProduct();
-}
 
 if ($opt_previous) {
     unless ($opt_image)	{
@@ -161,21 +158,47 @@ if ($opt_previous) {
     unless($opt_initrd) {
     	$opt_initrd = GetDefaultInitrd() . ".previous";
     }	
-    unless ($opt_name) {
-        $opt_name = "Previous Kernel -- " . GetProduct();
-    }
 }
 
+# FIXME: these section names should be unified somehow together with multi
+# language and grafical menu handling
 if (defined $oper{add}) {
+    my $loader = Bootloader::Tools::GetBootloader();
+
     unless ($opt_name) {
-	$opt_name = $opt_image;
-	$opt_name =~ s/.*\///;
+	if ($opt_xen and $opt_previous) {
+	    if ($loader eq "grub" || $loader eq "lilo") {
+		$opt_name = "Previous Xen";
+		$add_product = 1;
+	    }
+	    else {
+		$opt_name = "previous xen";
+	    }
+	}
+	elsif ($opt_xen) {
+	    if ($loader eq "grub" || $loader eq "lilo") {
+		$opt_name = "Xen";
+		$add_product = 1;
+	    }
+	    else {
+		$opt_name = "xen";
+	    }
+	}
+	elsif ($opt_previous) {
+	    if ($loader eq "grub" || $loader eq "lilo") {
+		$opt_name = "Previous Kernel";
+		$add_product = 1;
+	    }
+	    else {
+		$opt_name = "previous";
+	    }
+	}
+	else {
+	    $opt_name = $opt_image;
+	    $opt_name =~ s/.*\///;
+	}
     }
 
-    pod2usage("Please specify name and kernel image for new section")
-	unless $opt_name and $opt_image;
-
-    my $loader = Bootloader::Tools::GetBootloader();
     # only localize on grub and lilo
     if ($loader eq "grub" || $loader eq "lilo") {
 	my $d =  Locale::gettext->domain("bootloader");
@@ -189,21 +212,30 @@ if (defined $oper{add}) {
 	    $opt_name = $opt_trans;
 	}
     }
-    
-    if (CountSections(type=>"$type", image => "$opt_image") != 0) {
-	pod2usage("There are already sections with image '$opt_image'")
-	    unless $opt_force;
+    $opt_name .= " -- " . GetProduct() if $add_product;
+}
+
+#
+#  execute selected operation
+#
+if (defined $oper{add}) {
+    pod2usage("Please specify name and kernel image for new section")
+	unless $opt_name and $opt_image;
+
+    if (not $opt_force and
+	CountSections(type=>"$type", image => "$opt_image") != 0)
+    {
+	pod2usage("There are already sections with image '$opt_image'");
     }
-    else {
-	my @params = (
-		      name =>$opt_name,
-		      image=>$opt_image,
-	);
-	push @params, xen => "/boot/xen.gz" if $type eq "xen";
-	push @params, initrd=> $opt_initrd if $opt_initrd;
+
+    my @params = (
+		  name =>$opt_name,
+		  image=>$opt_image,
+    );
+    push @params, xen => "/boot/xen.gz" if $type eq "xen";
+    push @params, initrd=> $opt_initrd if $opt_initrd;
 		      
-	AddSection(type=>"$type", default=>$opt_default, @params);
-    }
+    AddSection(type=>"$type", default=>$opt_default, @params);
 }
 
 if (defined $oper{remove}) {
