@@ -91,27 +91,22 @@ Bootloader::Tools perl module.
 =cut
 
 # Get product name and version
-# FIXME: This is just a workaround for non working YaST-code
+# FIXME: There is still no guaranteed-to-work solution
+# FIXME: as Commandline:: always prints to stderr, which is risky
+# FIXME: to get garbage.
+# If Commandline:: prints garbage, use /etc/SuSE-release instead  
  
 sub GetProduct {
-    
-    my $name;
-    my $ver;
     my $namever;
-    open (RELEASE, "/var/adm/YaST/ProdDB/prod_00000001");
-
-    while(<RELEASE>) {
-        chomp $_;
-        
-        if ($_ eq "+Product:") {
-            my $line = <RELEASE>;
-	    chomp;
-            my ($name,$ver, ) = split(/-/,$line);
-	    $namever = join(' ', $name, $ver);
-        }
-    }
-
-    close RELEASE;
+   
+    ($namever, ) = split(/\n/,`yast2 print-product 2>&1`);	
+ 
+    if ($namever !~ /SUSE/)
+    {
+	open(RELEASE, "</etc/SuSE-release") or die "can't find out Name";
+	$namever = <RELEASE>;	
+	($namever, ) = split(/\(/, $namever);
+    }		
     return $namever;
 }
 
