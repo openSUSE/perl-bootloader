@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Mar 21 17:51:20 CET 2006 - jplack@suse.de
+
+- added package dependency to perl-gettext (#159773)
+- add a fallback value of "SUSE Code 10" instead of error in
+  function GetProduct
+- bump version to 0.2.15
+
+-------------------------------------------------------------------
 Tue Mar 21 14:10:18 CET 2006 - sf@suse.de
 
 - use print-product.ycp again, fallback to /etc/SuSE-release
