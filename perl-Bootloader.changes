@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 21 14:10:18 CET 2006 - sf@suse.de
+
+- use print-product.ycp again, fallback to /etc/SuSE-release
+  if that doesn't work.  
+
+-------------------------------------------------------------------
 Fri Mar 17 17:15:49 CET 2006 - jplack@suse.de
 
 - moved unification of section names in FixSectionName to Core.pm
