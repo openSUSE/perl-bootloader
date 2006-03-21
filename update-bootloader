@@ -99,16 +99,23 @@ Bootloader::Tools perl module.
 sub GetProduct {
     my $namever;
    
+    # First try: Does yast work these days?
     ($namever, ) = split(/\n/,`yast2 print-product 2>&1`);	
- 
-    if ($namever !~ /SUSE/)
-    {
-	open(RELEASE, "</etc/SuSE-release") or die "can't find out Name";
+    return "$namever" if $namever =~ /SUSE/;
+
+    # Second try: Is there a usable /etc/SuSE-release?
+    if (open(RELEASE, "</etc/SuSE-release")) {
+	# first line is sufficient
 	$namever = <RELEASE>;	
-	($namever, ) = split(/\(/, $namever);
-    }		
-    return $namever;
+	$namever =~ s/\(.*//; # delete everything starting with the first parenthesis
+	close(RELEASE);
+	return "$namever";
+    }
+
+    # the last line of defense ...
+    return "SUSE Code 10";
 }
+
 
 setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
