@@ -107,7 +107,7 @@ sub GetProduct {
     if (open(RELEASE, "</etc/SuSE-release")) {
 	# first line is sufficient
 	$namever = <RELEASE>;	
-	$namever =~ s/\(.*//; # delete everything starting with the first parenthesis
+	$namever =~ s/\s*\(.*//; # delete everything starting with the first parenthesis
 	close(RELEASE);
 	return "$namever";
     }
