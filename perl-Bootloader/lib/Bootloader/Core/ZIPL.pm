@@ -552,10 +552,11 @@ sub Info2Global {
     my $go = $self->{"exports"}{"global_options"};
     
     # allow to keep the section unchanged
-    if (! ($globinfo{"__modified"} || 0))
-    {
-	return \@lines;
-    }
+    # FIXME: always regenerate our 'meta global' section to avoid #160595
+    #if (! ($globinfo{"__modified"} || 0))
+    #{
+    #	return \@lines;
+    #}
     
     my @newlines;
     foreach my $ding (@lines)
