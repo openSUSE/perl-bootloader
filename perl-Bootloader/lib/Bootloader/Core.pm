@@ -821,17 +821,24 @@ sub HasEmptyValue {
 #module interface
 
 =item
-C<< $obj_ref = Bootloader::Core->new (); >>
+C<< $obj_ref = Bootloader::Core->new ($old); >>
 
 Creates an instance of the Bootloader::Core class.
-
+Optional parameter 'old' is object reference to former bootloader
 =cut
 sub new {
     my $self = shift;
+    my $old = shift;
 
-    my $loader = {
-	"log_records" => [],
-    };
+    my $loader = {};
+    # keep old settings if given as parameter
+    if (defined($old)) {
+	foreach my $key (keys %old) {
+	    $loader->{$key} = $old->{$key};
+	}
+    }
+    $loader{"log_records"} = [];
+
     bless ($loader);
     return $loader;
 }

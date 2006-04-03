@@ -238,8 +238,9 @@ Creates an instance of the Bootloader::Core::PowerLILO class.
 
 sub new {
     my $self = shift;
+    my $old = shift;
 
-    my $loader = $self->SUPER::new ();
+    my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
 	{ key => "activate", value => "" },
     ];

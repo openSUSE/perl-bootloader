@@ -53,8 +53,9 @@ Creates an instance of the Bootloader::Core::LILO class.
 
 sub new {
     my $self = shift;
+    my $old = shift;
 
-    my $loader = $self->SUPER::new ();
+    my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
 	{ "key" => "menu-scheme", "value" => "Wb:kw:Wb:Wb" },
 	{ "key" => "timeout", "value" => 80 },

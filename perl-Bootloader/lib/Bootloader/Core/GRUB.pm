@@ -85,8 +85,9 @@ Creates an instance of the Bootloader::Core::GRUB class.
 
 sub new {
     my $self = shift;
+    my $old = shift;
 
-    my $loader = $self->SUPER::new ();
+    my $loader = $self->SUPER::new ($old);
     bless ($loader);
     $loader->l_milestone ("GRUB::new: Created GRUB instance");
     return $loader;

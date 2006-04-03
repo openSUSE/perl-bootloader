@@ -53,8 +53,9 @@ Creates an instance of the Bootloader::Core::ELILO class.
 
 sub new {
     my $self = shift;
+    my $old = shift;
 
-    my $loader = $self->SUPER::new ();
+    my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
 	{ "key" => "timeout", "value" => 80 },
 	{ "key" => "read-only", "value" => "" },

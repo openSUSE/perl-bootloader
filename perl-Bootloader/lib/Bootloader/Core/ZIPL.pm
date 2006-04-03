@@ -145,8 +145,9 @@ Creates an instance of the Bootloader::Core::ZIPL class.
 
 sub new {
     my $self = shift;
+    my $old = shift;
 
-    my $loader = $self->SUPER::new ();
+    my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
     ];
     

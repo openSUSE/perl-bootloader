@@ -123,32 +123,32 @@ sub Initialize {
     my $self = shift;
     my $bootloader = shift;
 
-    my $loader = undef;
+    my $loader = exists $self->{"loader"} ? $self->{"loader"} : undef;
 
     if ($bootloader eq "grub")
     {
-	$loader = Bootloader::Core::GRUB->new ();
+	$loader = Bootloader::Core::GRUB->new ($loader);
     }
     elsif ($bootloader eq "lilo")
     {
-	$loader = Bootloader::Core::LILO->new ();
+	$loader = Bootloader::Core::LILO->new ($loader);
     }
     elsif ($bootloader eq "elilo")
     {
-        $loader = Bootloader::Core::ELILO->new ();
+        $loader = Bootloader::Core::ELILO->new ($loader);
     }
     elsif ($bootloader eq "zipl")
     {
-        $loader = Bootloader::Core::ZIPL->new ();
+        $loader = Bootloader::Core::ZIPL->new ($loader);
     }
     elsif ($bootloader eq "ppc")
     {
-	$loader = Bootloader::Core::PowerLILO->new ();
+	$loader = Bootloader::Core::PowerLILO->new ($loader);
     }
     else
     {
 	# FIXME: handle case 'none'
-	$loader = Bootloader::Core->new ();
+	$loader = Bootloader::Core->new ($loader);
 	$loader->l_error ("Bootloader::Library::Initialize: Initializing for unknown bootloader $bootloader");
     }
 
@@ -160,7 +160,7 @@ sub Initialize {
 C<< $status = Bootloader::Library->DefineMountPoints (\%mountpoints); >>
 
 Defines mount points in the system so that the library
-needn't probe them itself when needed.
+does not need to probe them itself when needed.
 Parameter (mountpoints) is a hash reference (key is mountpoint,
 value device).
 Returns undef on fail, defined nonzero value otherwise.
@@ -296,7 +296,7 @@ sub ReadSettings {
 =item
 C<< $status = Bootloader::Library->WriteSettings (); >>
 
-Writes the settings to the system. Doesn't activate the bootloader
+Writes the settings to the system. Does not activate the bootloader
 or the written settings, InitializeBootloader or UpdateBootloader functions
 must be used for it.
 Returns undef on fail, defined nonzero value otherwise.
@@ -805,3 +805,12 @@ sub SetDeviceMapping {
 }
 
 1;
+
+#
+# Local variables:
+#     mode: perl
+#     mode: font-lock
+#     mode: auto-fill
+#     fill-column: 78
+# End:
+#
