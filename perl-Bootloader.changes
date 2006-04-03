@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Apr  3 20:15:35 CEST 2006 - jplack@suse.de
+
+- extended interface to fix #161755
+- bump version to 0.2.17
+
+------------------------------------------------------------------------
 Mon Mar 27 17:44:12 CEST 2006 - jplack@suse.de
 
 - always regenerate our 'meta global' section to avoid #160595
