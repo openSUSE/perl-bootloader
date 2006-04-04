@@ -833,11 +833,11 @@ sub new {
     my $loader = {};
     # keep old settings if given as parameter
     if (defined($old)) {
-	foreach my $key (keys %old) {
+	foreach my $key (keys %{$old}) {
 	    $loader->{$key} = $old->{$key};
 	}
     }
-    $loader{"log_records"} = [];
+    $loader->{"log_records"} = [];
 
     bless ($loader);
     return $loader;
