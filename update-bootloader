@@ -224,20 +224,21 @@ if (defined $oper{add}) {
     pod2usage("Please specify name and kernel image for new section")
 	unless $opt_name and $opt_image;
 
-    if (not $opt_force and
-	CountSections(type=>"$type", image => "$opt_image") != 0)
+    if (CountSections(type => "$type", image => "$opt_image") != 0)
     {
-	pod2usage("There are already sections with image '$opt_image'");
+    	if (not $opt_force) {
+	    pod2usage("There are already sections with image '$opt_image'");
+	}
+    } else {
+	my @params = (
+		      name =>$opt_name,
+		      image=>$opt_image,
+	);
+	push @params, xen => "/boot/xen.gz" if $type eq "xen";
+	push @params, initrd=> $opt_initrd if $opt_initrd;
+			  
+	AddSection(type=>"$type", default=>$opt_default, @params);
     }
-
-    my @params = (
-		  name =>$opt_name,
-		  image=>$opt_image,
-    );
-    push @params, xen => "/boot/xen.gz" if $type eq "xen";
-    push @params, initrd=> $opt_initrd if $opt_initrd;
-		      
-    AddSection(type=>"$type", default=>$opt_default, @params);
 }
 
 if (defined $oper{remove}) {
@@ -250,15 +251,15 @@ if (defined $oper{remove}) {
     push @params, name  =>$opt_name if $opt_name;
 		      
     my $num = CountSections(@params);
-    unless ($opt_force) {
-	if ($num > 1) {
+    if ($num > 0) {
+        if ($num > 1 and not $opt_force) {
 	    pod2usage("There are more than one section with image '$opt_image'");
-	} elsif ($num == 0) {
-	    pod2usage("There in no section with image '$opt_image'");
+	} else {
+	    RemoveSections(@params);
 	}
+    } elsif (not $opt_force) {
+	pod2usage("There in no section with image '$opt_image'");
     }
-
-    RemoveSections(@params);
 }
 
 if (defined $oper{refresh}) {
