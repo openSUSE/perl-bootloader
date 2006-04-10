@@ -65,7 +65,7 @@ submit:	.submitted
 	@echo "Please confirm or abort"
 	@select s in submit abort;do [ "$$s" == submit ] && break || exit 1; done
 	cp -av $$(<.exportdir) $(SUBMIT_DIR)
-	@cd $(SUBMIT_DIR)/$(PKG); distmail -C ro@suse.de
+	@cd $(SUBMIT_DIR)/$(PKG); distmail
 	@touch $@
 
 clean:
