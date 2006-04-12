@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Apr 12 18:11:46 CEST 2006 - sf@suse.de
+
+- remove wrong dashes from update-bootloader 
+- bump version to 0.2.20 
+
+-------------------------------------------------------------------
 Wed Apr 12 16:47:23 CEST 2006 - od@suse.de
 
 - make error checking for yast2 print-product independent of
