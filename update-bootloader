@@ -100,8 +100,9 @@ sub GetProduct {
     my $namever;
    
     # First try: Does yast work these days?
-    ($namever, ) = split(/\n/,`yast2 print-product 2>&1`);	
-    return "$namever" if $namever =~ /SUSE/;
+    $namever = `yast2 print-product 2>&1`;	
+    chomp $namever;
+    return "$namever" if $namever !~ /\n/;
 
     # Second try: Is there a usable /etc/SuSE-release?
     if (open(RELEASE, "</etc/SuSE-release")) {
