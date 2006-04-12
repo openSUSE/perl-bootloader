@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Apr 12 16:47:23 CEST 2006 - od@suse.de
+
+- make error checking for yast2 print-product independent of
+  the contents of the product name
+- bump version to 0.2.19
+
+-------------------------------------------------------------------
 Fri Apr  7 17:03:05 CEST 2006 - jplack@suse.de
 
 - changed update-bootloader semantic according to #164427
