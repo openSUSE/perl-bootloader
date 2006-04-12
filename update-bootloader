@@ -114,7 +114,7 @@ sub GetProduct {
     }
 
     # the last line of defense ...
-    return "SUSE Code 10";
+    return "SUSE Code10";
 }
 
 
