@@ -198,22 +198,25 @@ sub UnixDev2GrubDev {
     my $self = shift;
     my $dev = shift;
 
-    if (defined ($dev) && $dev ne "" && $dev =~ /^\(.*\)$/)
-    {
-	$self->l_debug ("GRUB::UnixDev2GrubDev: Not translating device $dev");
+    unless (defined($dev) and $dev) {
+	$self->l_debug ("GRUB::UnixDev2GrubDev: Empty device to translate");
 	return $dev;
     }
-    if ($dev eq "")
-    {
-	$self->l_debug ("GRUB::UnixDev2GrubDev: Empty device to translate");
+    if ($dev =~ /^\(.*\)$/) { # seems to be a grub device already 
+	$self->l_debug ("GRUB::UnixDev2GrubDev: Not translating device $dev");
 	return $dev;
     }
     my $original = $dev;
     my $partition = undef;
-    if ($dev =~ /\/dev\/md[0-9]+/)
-    {
+    if ($dev =~ m:/dev/md\d+:) {
 	my @members = @{$self->MD2Members ($dev) || []};
+	# FIXME! This only works for mirroring (Raid1)
 	$dev = $members[0] || $dev;
+    }
+    # check for symbolic links as they are used for dev-by-id and such
+    if ( -l "$dev") {
+	$dev = sprintf("%s/%s", $dev=~m:^(.+)/[^/]*$:, readlink($dev));
+	$dev = $self->CanonicalPath($dev);
     }
     foreach my $dev_ref (@{$self->{"partitions"}})
     {
@@ -240,7 +243,7 @@ sub UnixDev2GrubDev {
 =item
 C<< $unix_path = Bootloader::Core::GRUB->GrubPath2UnixPath ($grub_path, $grub_dev_prefix); >>
 
-Translates the GRUB path (eg. '(hd0,0)/grub/device.map') to GRUB path (eg.
+Translates the GRUB path (eg. '(hd0,0)/grub/device.map') to UNIX path (eg.
 '/boot/grub/device.map'). If the GRUB path doesn't contain the device, the one
 specified in the argument is used instead.
 As arguments, the function takes the GRUB path and the device to be used if not

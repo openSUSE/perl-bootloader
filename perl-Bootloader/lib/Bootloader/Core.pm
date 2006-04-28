@@ -630,7 +630,8 @@ sub ProcessMenuFileLines {
 
     foreach my $line (@lilo_conf_lines)
     {
-	(my $new_lines_ref, $comment_before) = $self->ProcessSingleMenuFileLine ($line, $comment_before, $equal_sep);
+	(my $new_lines_ref, $comment_before) =
+	    $self->ProcessSingleMenuFileLine ($line, $comment_before, $equal_sep);
 	foreach my $l (@{$new_lines_ref}) {
 	    push @ret, $l;
 	};
@@ -709,11 +710,11 @@ sub ProcessSingleMenuFileLine {
 	    $line = $1;
 	    $comment_after = $2;
 	}
-	if ($line =~ /=[ \t]*(.*)/ && $equal_sep)
+	if ($equal_sep && ($line =~ /=[ \t]*(.*)/)) 
 	{
 	    $value = $1;
 	}
-	elsif ((! $equal_sep) && ($line !~ /^[ \t]*$/))
+	elsif (!$equal_sep && ($line !~ /^[ \t]*$/))
 	{
 	    $value = $line;
 	}
@@ -1539,14 +1540,12 @@ sub UpdateBootloader {
     my $files_ref = $self->ListFiles ();
     my @files = @{$files_ref};
     my $ok = 1;
-    foreach my $file (@files)
-    {
-	my $new_exists = system ("test -f $file.new");
-	if (0 == $new_exists)
-	{
-	    my $status = system (
-		"test -f $file.new && { test -f $file && mv $file $file.old; mv $file.new $file; } >/dev/null 2>&1");
-	    if (0 != $status)
+    foreach my $file (@files) {
+	if ( -f "$file.new" ) {
+	    unless ( -f "$file" and
+		     rename "$file", "$file.old" and
+		     rename "$file.new",  "$file"
+		     )
 	    {
 		$self->l_error ("Core::UpdateBootloader: Error occurred while updating file $file");
 		$ok = undef;
@@ -1777,7 +1776,7 @@ sub CanonicalPath($$) {
 
 C<< $real = Bootloader::Core->RealFileName ($filename); >>
 
-Gets the file name with all symlinks resolvfed and with some "beautification"
+Gets the file name with all symlinks resolved and with some "beautification"
 (eg. removing duplicate slashes). Takes one argument - path, returns it
 after symlniks resolved.
 
