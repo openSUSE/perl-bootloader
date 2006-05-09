@@ -2,6 +2,20 @@
 Tue May  9 13:05:37 CEST 2006 - jplack@suse.de
 
 - follow symlinks for dev-by-id (#170588) 
+- bump version to 0.2.21
+
+-------------------------------------------------------------------
+Wed Apr 19 19:34:52 CEST 2006 - agruen@suse.de
+
+- Fix a bug in CountSections(), and be more specific in
+  update-bootloader, even though it shouldn't be necessary with
+  the fix.
+
+-------------------------------------------------------------------
+Wed Apr 19 17:08:50 CEST 2006 - agruen@suse.de
+
+- Change option --xen to --xen-kernel=... (161197).
+- Fix a bug when removing xen bootloader entries.
 
 -------------------------------------------------------------------
 Wed Apr 12 18:11:46 CEST 2006 - sf@suse.de

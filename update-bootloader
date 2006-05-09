@@ -10,7 +10,7 @@ use strict;
 my %oper;
 my ($opt_default, $opt_force, $opt_help, $opt_man, $opt_previous, $opt_xen)
     = (0,0,0,0,0,0);
-my ($opt_image, $opt_initrd, $opt_name) = ('','','');
+my ($opt_image, $opt_initrd, $opt_name, $opt_xen_kernel) = ('','','','');
 my $add_product = 0;
 
 =head1 NAME
@@ -25,7 +25,7 @@ update-bootloader [operation] [options]
 operation is one of --add, --remove or --refresh.
 
 valid options are --help, --man, --image <file>, --initrd <file>,
---xen, --default, --previous, --name <string>, --force.
+--xen-kernel <file>, --xen, --default, --previous, --name <string>, --force.
 
 =head1 OPERATIONS
 
@@ -63,6 +63,11 @@ specify path to kernel image
 =item B<--xen>
 
 specify that you what to add a xen and not a regular image section
+
+=item B<--xen-kernel> F<file>
+
+specify that you what to add a xen section with a specific image.
+Implies --xen option.
 
 =item B<--default>
 
@@ -131,6 +136,7 @@ GetOptions (\%oper,
     'initrd=s' 	 => \$opt_initrd,
     'man|m'    	 => \$opt_man,
     'xen'        => \$opt_xen,
+    'xen-kernel=s' => \$opt_xen_kernel,
     'name=s'   	 => \$opt_name,
     'previous|p' => \$opt_previous)
     or pod2usage(2);
@@ -148,6 +154,12 @@ if ($opt_image and $opt_image !~ m;^/;) {
 }
 if ($opt_initrd and $opt_initrd !~ m;^/;) {
     $opt_initrd = getcwd . '/' . $opt_initrd;
+}
+
+if (defined $opt_xen_kernel) {
+    $opt_xen = 1;
+} elsif ($opt_xen) {
+    $opt_xen_kernel = "/boot/xen.gz";
 }
 my $type = $opt_xen ? "xen" : "image";
 
@@ -232,13 +244,15 @@ if (defined $oper{add}) {
 	}
     } else {
 	my @params = (
+		      type =>$type,
 		      name =>$opt_name,
 		      image=>$opt_image,
+		      default=>$opt_default,
 	);
-	push @params, xen => "/boot/xen.gz" if $type eq "xen";
+	push @params, xen => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd=> $opt_initrd if $opt_initrd;
 			  
-	AddSection(type=>"$type", default=>$opt_default, @params);
+	AddSection(@params);
     }
 }
 
@@ -247,19 +261,19 @@ if (defined $oper{remove}) {
 		  type  =>$type eq "xen" ? "image" : $type,
 		  image =>$opt_image,
     );
-    push @params, xen => "/boot/xen.gz" if $type eq "xen";
+    push @params, xen => $opt_xen_kernel if $type eq "xen";
     push @params, initrd=>$opt_initrd if $opt_initrd;
     push @params, name  =>$opt_name if $opt_name;
 		      
     my $num = CountSections(@params);
     if ($num > 0) {
         if ($num > 1 and not $opt_force) {
-	    pod2usage("There are more than one section with image '$opt_image'");
+	    pod2usage("There is more than one section with image '$opt_image'");
 	} else {
 	    RemoveSections(@params);
 	}
     } elsif (not $opt_force) {
-	pod2usage("There in no section with image '$opt_image'");
+	pod2usage("There is no section with image '$opt_image'");
     }
 }
 
