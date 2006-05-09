@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue May  9 13:05:37 CEST 2006 - jplack@suse.de
+
+- follow symlinks for dev-by-id (#170588) 
+
+-------------------------------------------------------------------
 Wed Apr 12 18:11:46 CEST 2006 - sf@suse.de
 
 - remove wrong dashes from update-bootloader 
