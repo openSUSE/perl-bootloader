@@ -376,7 +376,7 @@ sub AddSection {
 # internal: does section match with set of tags
 sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
-    my $match = 1;
+    my $match = 0;
 
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
