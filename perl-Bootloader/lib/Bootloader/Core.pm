@@ -1542,11 +1542,8 @@ sub UpdateBootloader {
     my $ok = 1;
     foreach my $file (@files) {
 	if ( -f "$file.new" ) {
-	    unless ( -f "$file" and
-		     rename "$file", "$file.old" and
-		     rename "$file.new",  "$file"
-		     )
-	    {
+	    rename "$file", "$file.old" if -f "$file";
+	    unless ( rename "$file.new",  "$file" ) {
 		$self->l_error ("Core::UpdateBootloader: Error occurred while updating file $file");
 		$ok = undef;
 	    }

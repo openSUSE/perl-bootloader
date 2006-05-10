@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed May 10 15:34:20 CEST 2006 - jplack@suse.de
+
+- fix blocking bootloader issue (all archs) found by kukuk right
+  now: bootloader config files are not moved to final destination
+  and bootloader installation thus hangs complete install.
+
+-------------------------------------------------------------------
 Tue May  9 13:05:37 CEST 2006 - jplack@suse.de
 
 - follow symlinks for dev-by-id (#170588) 
