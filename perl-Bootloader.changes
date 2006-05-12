@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Fri May 12 15:56:05 CEST 2006 - jplack@suse.de
+
+- do not accept empty product string
+
+-------------------------------------------------------------------
+Fri May 12 14:22:12 CEST 2006 - jplack@suse.de
+
+- call setlocale only when neccessary (helps with --refresh in
+  instsys)
+- do not define opt_xen_kernel initially hence else all new entries
+  will be xen entries.
+
+-------------------------------------------------------------------
 Wed May 10 15:34:20 CEST 2006 - jplack@suse.de
 
 - fix blocking bootloader issue (all archs) found by kukuk right

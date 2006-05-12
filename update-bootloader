@@ -10,7 +10,7 @@ use strict;
 my %oper;
 my ($opt_default, $opt_force, $opt_help, $opt_man, $opt_previous, $opt_xen)
     = (0,0,0,0,0,0);
-my ($opt_image, $opt_initrd, $opt_name, $opt_xen_kernel) = ('','','','');
+my ($opt_image, $opt_initrd, $opt_name, $opt_xen_kernel) = ('','','',undef);
 my $add_product = 0;
 
 =head1 NAME
@@ -107,7 +107,7 @@ sub GetProduct {
     # First try: Does yast work these days?
     $namever = `yast2 print-product 2>&1`;	
     chomp $namever;
-    return "$namever" if $namever !~ /\n/;
+    return "$namever" if $namever != '' and $namever !~ /\n/;
 
     # Second try: Is there a usable /etc/SuSE-release?
     if (open(RELEASE, "</etc/SuSE-release")) {
@@ -122,8 +122,6 @@ sub GetProduct {
     return "SUSE Code10";
 }
 
-
-setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
 GetOptions (\%oper,
     'add|a'    	 ,
@@ -216,6 +214,8 @@ if (defined $oper{add}) {
 
     # only localize on grub and lilo
     if ($loader eq "grub" || $loader eq "lilo") {
+	setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
+
 	my $d =  Locale::gettext->domain("bootloader");
 	$d->dir("/usr/share/YaST2/locale");
 	my $opt_trans = $d->get($opt_name);
