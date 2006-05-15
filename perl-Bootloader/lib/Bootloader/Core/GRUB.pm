@@ -1183,7 +1183,10 @@ sub Global2Info {
 	}
 	if ($key eq "default")
 	{
-	    $ret{"default"} = $sections[$line_ref->{"value"}];
+	    # cast $val to integer. That means that if no valid default has
+	    # been given, weÂll take the first section as default.
+	    my $defindex = 0+$val;
+	    $ret{"default"} = $sections[$defindex];
 	}
 	elsif ($key eq "timeout" || $key eq "password")
 	{
