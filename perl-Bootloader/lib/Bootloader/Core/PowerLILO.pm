@@ -598,13 +598,12 @@ sub Info2Section {
 
 	    $line_ref->{"value"} = $sectinfo{$key};
 	    delete ($sectinfo{$key});
-	}
-
-	my ($stype) = split /:/, $so->{$type . "_" . $key};
-	# bool values appear in a config file or not
-	if ($stype eq "bool") {
-	    next if $line_ref->{"value"} ne "true";
-	    $line_ref->{"value"} = "";
+	    my ($stype) = split /:/, $so->{$type . "_" . $key};
+	    # bool values appear in a config file or not
+	    if ($stype eq "bool") {
+	        next if $line_ref->{"value"} ne "true";
+	        $line_ref->{"value"} = "";
+	    }
 	}
 
 	push @lines_new, $line_ref if defined $line_ref;
