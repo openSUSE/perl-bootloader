@@ -144,13 +144,9 @@ sub Udev2Dev {
     my $udev = shift;
     my $cmd = "udevinfo -q name -p /block/$udev";
     my $dev = qx{ $cmd };
-
-    unless ($dev) {
-	warn "Cannot run '$cmd' properly";
-	return "/dev/$udev";
-    }
     chomp ($dev);
-    return "/dev/$dev";
+
+    return $dev ? "/dev/$dev" : "/dev/$udev";
 }
 
 =item
