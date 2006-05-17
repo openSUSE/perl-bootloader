@@ -237,20 +237,20 @@ if (defined $oper{add}) {
     pod2usage("Please specify name and kernel image for new section")
 	unless $opt_name and $opt_image;
 
-    if (CountSections(type => "$type", image => "$opt_image") != 0)
+    my @params = (
+		  type  => $type eq "xen" ? "image" : $type,
+		  image => $opt_image,
+    );
+    if (CountSections(@params) != 0)
     {
     	if (not $opt_force) {
 	    pod2usage("There are already sections with image '$opt_image'");
 	}
     } else {
-	my @params = (
-		      type =>$type,
-		      name =>$opt_name,
-		      image=>$opt_image,
-		      default=>$opt_default,
-	);
-	push @params, xen => $opt_xen_kernel if $type eq "xen";
-	push @params, initrd=> $opt_initrd if $opt_initrd;
+	push @params, name    => $opt_name;
+	push @params, default => $opt_default;
+	push @params, xen     => $opt_xen_kernel if $type eq "xen";
+	push @params, initrd  => $opt_initrd if $opt_initrd;
 			  
 	AddSection(@params);
     }
@@ -258,12 +258,12 @@ if (defined $oper{add}) {
 
 if (defined $oper{remove}) {
     my @params = (
-		  type  =>$type eq "xen" ? "image" : $type,
-		  image =>$opt_image,
+		  type  => $type eq "xen" ? "image" : $type,
+		  image => $opt_image,
     );
-    push @params, xen => $opt_xen_kernel if $type eq "xen";
-    push @params, initrd=>$opt_initrd if $opt_initrd;
-    push @params, name  =>$opt_name if $opt_name;
+    push @params, xen    => $opt_xen_kernel if $type eq "xen";
+    push @params, initrd => $opt_initrd if $opt_initrd;
+    push @params, name   => $opt_name if $opt_name;
 		      
     my $num = CountSections(@params);
     if ($num > 0) {
