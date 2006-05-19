@@ -1,6 +1,7 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/STABLE
+SUBMIT_DIR2=/work/src/done/SLES10
 #BUILD_DIST=ppc
 ifeq ($(BUILD_DIST),ppc)
 BUILD=powerpc32 /work/src/bin/build
@@ -66,6 +67,10 @@ submit:	.submitted
 	@select s in submit abort;do [ "$$s" == submit ] && break || exit 1; done
 	cp -av $$(<.exportdir) $(SUBMIT_DIR)
 	@cd $(SUBMIT_DIR)/$(PKG); distmail
+ifneq ($(SUBMIT_DIR2),)
+	cp -av $$(<.exportdir) $(SUBMIT_DIR2)
+	@cd $(SUBMIT_DIR2)/$(PKG); distmail
+endif
 	@touch $@
 
 clean:
