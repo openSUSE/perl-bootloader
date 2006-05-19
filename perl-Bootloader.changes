@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Fri May 19 15:47:45 CEST 2006 - jplack@suse.de
+
+- fix xen section counting when adding (#161559)
+- omit bogus warning (#165158)
+- move check for bool type to save code area (#175228)
+- do syntax checking for global "default" parameter. Has to be an
+  integer (#174829)
+- bump version to 0.2.23
+
+-------------------------------------------------------------------
 Fri May 12 15:56:05 CEST 2006 - jplack@suse.de
 
 - do not accept empty product string
