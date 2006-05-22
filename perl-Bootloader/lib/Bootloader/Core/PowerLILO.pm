@@ -186,7 +186,7 @@ sub getExports() {
 	$go->{boot_slot}   = "select:Write to boot slot:B:" . "A:B:C:D";
 	$go->{boot_file}   = "path:Create boot image in file:/tmp/suse_boot_image";
 	$go->{boot_iseries_custom}
-			   = "select:PReP partition:" . $boot_partitions;
+			   = "select:PReP partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "pmac" ) {
 	# only on pmac_new and pmac_old
