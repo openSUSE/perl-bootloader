@@ -20,7 +20,7 @@ C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
 
 C<< $device = Bootloader::Core->MP2Dev ($mountpoint); >>
 
-C<< $members_ref = Bootloader::Core->Md2Members ($md_device); >>
+C<< $members_ref = Bootloader::Core->MD2Members ($md_device); >>
 
 C<< $md_dev = Bootloader::Core->Member2MD (string $md_member); >>
 
@@ -266,14 +266,14 @@ sub MP2Dev {
 }
 
 =item
-C<< $members_ref = Bootloader::Core->Md2Members ($md_device); >>
+C<< $members_ref = Bootloader::Core->MD2Members ($md_device); >>
 
 Gets the list of partitions building an MD software RAID array. As argument
 it takes a MD device (string), returns a reference to a list of its members.
 
 =cut
 
-# list<string> Md2Members (string md_device)
+# list<string> MD2Members (string md_device)
 sub MD2Members {
     my $self = shift;
     my $md_dev = shift;
