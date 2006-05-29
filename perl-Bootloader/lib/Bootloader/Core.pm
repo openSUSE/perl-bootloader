@@ -595,7 +595,8 @@ sub MergeSectionsLines {
 	{
 	    if ($first && $ind ne "")
 	    {
-		$entry->{"comment_before"} = "\n" . ($entry->{"comment_before"} || "");
+		$entry->{"comment_before"} = [] unless defined $entry->{"comment_before"};
+		unshift @{$entry->{"comment_before"}}, "";
 	    }
 	    else
 	    {
@@ -625,7 +626,7 @@ sub ProcessMenuFileLines {
     my @lilo_conf_lines = @{+shift};
     my $equal_sep = shift;
 
-    my $comment_before = "";
+    my $comment_before = [];
     my @ret = ();
 
     foreach my $line (@lilo_conf_lines)
@@ -681,9 +682,9 @@ to a list of hashed and a pending comment.
 
 =cut
 
-# (list<map<string,string>>, string comment_before) ProcessSingleMenuFileLine
+# (list<map<string,string>>, list<string> comment_before) ProcessSingleMenuFileLine
 #     (string line, string comment_before, string separator)
-sub ProcessSingleMenuFileLine {
+sub ProcessSingleMenuFileLine($$$) {
     my $self = shift;
     my $line = shift;
     my $comment_before = shift;
@@ -697,7 +698,7 @@ sub ProcessSingleMenuFileLine {
     }
     elsif ($line =~ /^[ \t]*#/)
     {
-	$comment_before = $comment_before . $line . "\n";
+	pushd @{$comment_before}, $line;
     }
     elsif ($line =~ /^[ \t]*([^:\[ \t=#]+)[ \t]*(.*)$/)
     {
@@ -705,16 +706,16 @@ sub ProcessSingleMenuFileLine {
 	my $comment_after = "";
 	my $key = $1;
 	$line = $2;
-	if ($line =~ /^([^#]*)(#.*)$/)
+	if ($line =~ /^([^#]*)(\s*#.*)$/)
 	{
 	    $line = $1;
 	    $comment_after = $2;
 	}
-	if ($equal_sep && ($line =~ /=[ \t]*(.*)/)) 
+	if ($equal_sep && ($line =~ /=\s*(.*)/)) 
 	{
 	    $value = $1;
 	}
-	elsif (!$equal_sep && ($line !~ /^[ \t]*$/))
+	elsif (!$equal_sep && ($line !~ /^\s*$/))
 	{
 	    $value = $line;
 	}
@@ -726,7 +727,7 @@ sub ProcessSingleMenuFileLine {
 	    "comment_after" => $comment_after,
 	);
 	push @ret, \%val;
-	$comment_before = "";
+	$comment_before = [];
     }
     return ( \@ret, $comment_before );
 }
@@ -746,32 +747,21 @@ sub CreateMenuFileLines {
     my @parsed_lines = @{+shift};
     my $equal_sep = shift;
 
-    my $date = `date 2>&1`;
+    my $date = qx{date 2>&1};
     my @ret = ($headline . $date);
 
     foreach my $l (@parsed_lines) {
-	my $cb = $l->{"comment_before"} || "";
-	if ($cb ne "")
-	{
-	    my @cb = split "\n", $cb, -1;
-	    foreach my $line (@cb)
-	    {
-		push @ret, $line;
-	    }
-	}
+	push @ret, @{$l->{"comment_before"}} if defined $l->{"comment_before"};
 
-	my $ca = $l->{"comment_after"} || "";
 	my $ind = $l->{"indent"} || "";
-
 	my $line = $self->CreateSingleMenuFileLine (
 	    $l->{"key"},
-	    defined ($l->{"value"}) ? $l->{"value"} : "",
+	    $l->{"value"} || "",
 	    $equal_sep);
-	if ($ca ne "")
-	{
-	    $line = "$line $ca";
-	}
-	$line = $ind . $line;
+    
+	$line = $l->{"indent"} . $line if defined $l->{"indent"};
+	$line .= $l->{"comment_after"} if defined $l->{"comment_after"};
+
 	push @ret, $line;
     }
     return \@ret;
@@ -965,13 +955,14 @@ string (otherwise).
 
 my $orig_name_comment="###Don't change this comment - YaST2 identifier: Original name: ";
 
-# string Comment2OriginalName (string comment)
-sub Comment2OriginalName {
+# string Comment2OriginalName (list<string> comment)
+sub Comment2OriginalName($) {
     my $self = shift;
-    my $comment = shift || "";
-
-    return $1
-	if $comment =~ m/${orig_name_comment}([a-zA-Z0-9]+)###/o;
+    my $comment_lines_ref = shift || [];
+    foreach (@{$comment_lines_ref}) {
+	return $1
+	    if m/${orig_name_comment}([a-zA-Z0-9]+)###/o;
+    }
     return "";
 }
 
@@ -995,12 +986,11 @@ sub UpdateSectionNameLine {
     $line_ref->{"value"} = $name;
     if (defined ($original_name) && $original_name ne "")
     {
-	my $cb = $line_ref->{"comment_before"} || "";
-	my @cb_lines = grep {
+	my @comment_before = grep {
 	    ! m/^${orig_name_comment}/o;
-	} split( /\n/, $cb );
-	push @cb_lines, "${orig_name_comment}${original_name}###";
-	$line_ref->{"comment_before"} =  join "\n", @cb_lines;
+	}  @{$line_ref->{"comment_before"} || []};
+	push @comment_before, "${orig_name_comment}${original_name}###";
+	$line_ref->{"comment_before"} = \@comment_before;
     }
     return $line_ref;
 }
