@@ -698,7 +698,7 @@ sub ProcessSingleMenuFileLine($$$) {
     }
     elsif ($line =~ /^[ \t]*#/)
     {
-	pushd @{$comment_before}, $line;
+	push @{$comment_before}, $line;
     }
     elsif ($line =~ /^[ \t]*([^:\[ \t=#]+)[ \t]*(.*)$/)
     {
@@ -706,7 +706,7 @@ sub ProcessSingleMenuFileLine($$$) {
 	my $comment_after = "";
 	my $key = $1;
 	$line = $2;
-	if ($line =~ /^([^#]*)(\s*#.*)$/)
+	if ($line =~ /^([^#]*?)(\s*#.*)$/)
 	{
 	    $line = $1;
 	    $comment_after = $2;
@@ -747,7 +747,8 @@ sub CreateMenuFileLines {
     my @parsed_lines = @{+shift};
     my $equal_sep = shift;
 
-    my $date = qx{date 2>&1};
+    use POSIX qw(strftime);
+    my $date = strftime "%a %b %e %H:%M:%S %Z %Y", localtime;
     my @ret = ($headline . $date);
 
     foreach my $l (@parsed_lines) {

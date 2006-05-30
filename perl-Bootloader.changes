@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May 30 15:04:15 CEST 2006 - jplack@suse.de
+
+- fixed broken parsing/handling/reassembly esp. of comments in
+  config files
+- fixed inline documentation for MD2Members
+
+-------------------------------------------------------------------
 Mon May 22 18:09:07 CEST 2006 - jplack@suse.de
 
 - fix broken selection list (#167390)
