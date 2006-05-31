@@ -20,7 +20,7 @@ C<< $mp_ref = Bootloader::Tools::ReadMountPoints (); >>
 
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
-C<< $md_ref = Bootloader::Tools::ReadMDArrays (); >>
+C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
 
 C<< $loader = Bootloader::Tools::GetBootloader (); >>
 
@@ -195,30 +195,37 @@ sub ReadPartitions {
 }
 
 =item
-C<< $md_ref = Bootloader::Tools::ReadMDArrays (); >>
+C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
 
-reads the information about disk MD RAID arrays. This data is needed
+reads the information about disk MD RAID1 arrays. This data is needed
 to initialize the bootloader library properly.
 
 =cut
 
 # FIXME: this has to be read through yast::storage
-sub ReadMDArrays {
-    my $index = 0;
+sub ReadRAID1Arrays {
     my %mapping = ();
-    while ($index < 32)
-    {
+    # FIXME: better use '/sbin/mdadm --detail --verbose --scan' instead of a
+    # god damn polling loop.
+    # Assuming an output format like:
+    #
+    #	 ARRAY /dev/md1 level=raid5 num-devices=3 UUID=12cdd4f2:0f932f25:adb61ba6:1b34cb24
+    #	    devices=/dev/sda3,/dev/sda4,/dev/sdb3
+    #	 ARRAY /dev/md0 level=raid1 num-devices=2 UUID=af4346f4:eba443d2:c493326f:36a37aad
+    #	    devices=/dev/sda1,/dev/sdb1
+    #
+    for (my $index=0; $index<32; $index++) {
 	my @members = ();
 	open (MD, "/sbin/mdadm -Q --detail /dev/md$index 2>/dev/null |") ||
 	    die ("Failed getting information about MD arrays");
 	while (my $line = <MD>)
 	{
 	    chomp ($line);
-	    if ($line =~ /[-0-9]+[ \t]+[-0-9]+[ \t]+[-0-9]+[ \t]+([-0-9]+)[ \t]+.*[ \t]+([^ \t]+)$/)
+	    if ($line =~ /[-\d]+\s+[-\d]+\s+[-\d]+\s+([-\d]+)\s+.*\s+(\S+)$/)
 	    {
 		my $dev = $2;
 		my $raid_dev = $1;
-		if ($raid_dev =~ /^[0-9]+$/ && $raid_dev >= 0)
+		if ($raid_dev =~ /^\d+$/ && $raid_dev >= 0)
 		{
 		    push @members, $dev;
 		}
@@ -229,7 +236,6 @@ sub ReadMDArrays {
 	{
 	    $mapping{"/dev/md$index"} = \@members;
 	}
-	$index = $index + 1;
     }
     return \%mapping;
 }
@@ -264,7 +270,7 @@ sub InitLibrary {
     $lib_ref = Bootloader::Library->new ();
     my $mp = ReadMountPoints ();
     my $part = ReadPartitions ();
-    my $md = ReadMDArrays ();
+    my $md = ReadRAID1Arrays ();
 
     $lib_ref->Initialize (GetBootloader ());
     $lib_ref->DefineMountPoints ($mp);
