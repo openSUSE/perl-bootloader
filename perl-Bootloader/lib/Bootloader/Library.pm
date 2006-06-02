@@ -234,6 +234,10 @@ sub DefinePartitions {
 =item
 C<< $status = Bootloader::Library->DefineMDArrays (\%md_arrays); >>
 
+This interface is broken by design and its use is deprecated!!
+We only need information about mirrored devices (RAID1) and only GRUB uses
+that hack.
+
 Defines the information about MD RAID arrays (what array is built
 by what disks).
 As parameter, it takes a reference to a map of all MD devices, where
