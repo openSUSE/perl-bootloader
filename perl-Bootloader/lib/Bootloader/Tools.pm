@@ -205,8 +205,7 @@ to initialize the bootloader library properly.
 # FIXME: this has to be read through yast::storage
 sub ReadRAID1Arrays {
     my %mapping = ();
-    # FIXME: better use '/sbin/mdadm --detail --verbose --scan' instead of a
-    # god damn polling loop.
+    # use '/sbin/mdadm --detail --verbose --scan'
     # Assuming an output format like:
     #
     #	 ARRAY /dev/md1 level=raid5 num-devices=3 UUID=12cdd4f2:0f932f25:adb61ba6:1b34cb24
@@ -216,7 +215,7 @@ sub ReadRAID1Arrays {
     #
 
     my @members = ();
-    open (MD, "/sbin/mdadm -Q --detail /dev/md$index 2>/dev/null |") ||
+    open (MD, "/sbin/mdadm --detail --verbose --scan") ||
         die ("Failed getting information about MD arrays");
     while (my $line = <MD>)
     {
