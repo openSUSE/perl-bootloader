@@ -214,29 +214,27 @@ sub ReadRAID1Arrays {
     #	 ARRAY /dev/md0 level=raid1 num-devices=2 UUID=af4346f4:eba443d2:c493326f:36a37aad
     #	    devices=/dev/sda1,/dev/sdb1
     #
-    for (my $index=0; $index<32; $index++) {
-	my @members = ();
-	open (MD, "/sbin/mdadm -Q --detail /dev/md$index 2>/dev/null |") ||
-	    die ("Failed getting information about MD arrays");
-	while (my $line = <MD>)
-	{
-	    chomp ($line);
-	    if ($line =~ /[-\d]+\s+[-\d]+\s+[-\d]+\s+([-\d]+)\s+.*\s+(\S+)$/)
-	    {
-		my $dev = $2;
-		my $raid_dev = $1;
-		if ($raid_dev =~ /^\d+$/ && $raid_dev >= 0)
-		{
-		    push @members, $dev;
-		}
-	    }
-	}
-	close (MD);
-	if (scalar (@members))
-	{
-	    $mapping{"/dev/md$index"} = \@members;
-	}
+
+    my @members = ();
+    open (MD, "/sbin/mdadm -Q --detail /dev/md$index 2>/dev/null |") ||
+        die ("Failed getting information about MD arrays");
+    while (my $line = <MD>)
+    {
+        chomp ($line);
+
+        if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+))
+        {
+            my ($array, $level, $num_devices) = ($1, $2, $3);
+        }
+        elsif ($level == "raid1" and $line =~ /devices=(\S+))
+        {
+            # we could test $num_device against number of found devices to
+            # detect degradedmode but that does not matter here (really?) 
+
+             $mapping{$array}= split(/,/, $1)
+        }
     }
+    close( <MD> );
     return \%mapping;
 }
 

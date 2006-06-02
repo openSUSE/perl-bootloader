@@ -670,6 +670,19 @@ sub CreateLines {
 	    my $options = join " ", @{$grub_conf_item->{"options"} || []};
 	    my $location = $self->UnixDev2GrubDev ($grub_conf_item->{"device"});
 	    (my $s1dev, my $s1path) = $self->SplitDevPath ("/boot/grub/stage1");
+            if( $s1dev =~  m:/dev/md\d\d?: )
+            {
+                my $mddiscs = $self->MD2Members( $s1dev );
+                foreach my $mddisc (@$mddiscs)
+                {
+                    if( $mddisc =~ /$s1dev..?/o )
+                    {
+                       $s1dev = $mddisc;
+                       last;
+                    }
+                }
+                $s1dev = $grub_conf_item->{"device"};
+            }
 	    $s1dev = $self->UnixDev2GrubDev ($s1dev);
 	    my $line = "setup $options $location $s1dev";
 	    push @grub_conf, $line;
