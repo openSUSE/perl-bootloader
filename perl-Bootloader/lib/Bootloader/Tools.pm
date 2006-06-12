@@ -40,6 +40,17 @@ C<< Bootloader::Tools::GetDefaultImage (); >>
 
 C<< Bootloader::Tools::GetDefaultInitrd (); >>
 
+C<< Bootloader::Tools::GetGlobals(); >>
+
+C<< Bootloader::Tools::SetGlobals(@params); >>
+
+C<< Bootloader::Tools::GetSectionList(@selectors); >>
+
+C<< Bootloader::Tools::GetSection($name); >>
+
+C<< Bootloader::Tools::AddSection($name, @params); >>
+
+C<< Bootloader::Tools::RemoveSection($name); >>
 
 =head1 DESCRIPTION
 
@@ -53,9 +64,12 @@ package Bootloader::Tools;
 use strict;
 use base 'Exporter';
 
-our @EXPORT = qw(InitLibrary AddSection CountImageSections CountSections
-		 RemoveImageSections RemoveSections GetDefaultImage GetDefaultInitrd
-		 UpdateBootloader);
+our @EXPORT = qw(InitLibrary CountImageSections CountSections
+		 RemoveImageSections RemoveSections GetDefaultImage
+		 GetDefaultInitrd UpdateBootloader
+		 GetGlobals SetGlobals
+		 GetSectionList GetSection AddSection RemoveSection
+);
 
 use Bootloader::Library;
 use Bootloader::Core;
@@ -307,71 +321,6 @@ sub AddNewImageSection {
 }
 
 
-# FIXME: Add documentation
-sub AddSection {
-    my %option = @_;
-
-    return unless exists $option{"name"};
-    return unless exists $option{"type"};
-
-    my $default = delete $option{"default"} || 0;
-	
-    my $mp = $lib_ref->GetMountPoints ();
-    my @sections = @{$lib_ref->GetSections ()};
-    my %new = (
-	"root" => $mp->{"/"} || "/dev/null",
-    );
-    my %def = ();
-    foreach my $s (@sections)
-    {
-	if (defined ($s->{"initial"}) && $s->{"initial"})
-	{
-	    %def = %{$s};
-	    last;
-	}
-    }
-
-    while ((my $k, my $v) = each (%def))
-    {
-	if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
-	    && $k ne "initrd")
-	{
-	    $new{$k} = $v;
-	}
-    }
-
-    if (exists $option{"image"}) {
-	if (exists $new{"kernel"}) { 
-	    $new{"kernel"} = delete $option{"image"};
-	}
-	else {	
-	    $new{"image"} = delete $option{"image"};
-	}
-    }
-
-    foreach (keys %option) {
-	$new{"$_"} = $option{"$_"};
-    }
-
-    $new{"__modified"} = 1;
-    push @sections, \%new;
-
-    $lib_ref->SetSections (\@sections);
-
-    if ($default) {
-	my $glob_ref = $lib_ref->GetGlobalSettings ();
-	$glob_ref->{"default"} = $option{"name"};
-	$glob_ref->{"__modified"} = 1;
-	$lib_ref->SetGlobalSettings ($glob_ref);
-    }
-
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
-    DumpLog ();
-}
-
-
 # internal: does section match with set of tags
 sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
@@ -432,19 +381,14 @@ sub CountImageSections {
 }
 
 
+=item
+C<< Bootloader::Tools::CountSections (@selections); >>
+
 # FIXME: add documentation
+=cut
+
 sub CountSections {
-    my %option = @_;
-    my $count = 0;
-
-    normalize_options(\%option);
-    my @sections = @{$lib_ref->GetSections ()};
-    foreach (@sections) {
-	$count++ if match_section($_, \%option);
-    }
-
-    DumpLog ();
-    return $count;
+    return scalar GetSectionList(@_);
 }
 
 
@@ -610,9 +554,185 @@ EXAMPLE:
 =cut
 
 sub GetDefaultInitrd {
-
    return GetDefaultSection()->{"initrd"};
 }
+
+=item
+C<< Bootloader::Tools::GetGlobals(); >>
+=cut
+
+sub GetGlobals() {
+    return $lib_ref->GetGlobals();
+}
+
+
+=item
+C<< Bootloader::Tools::SetGlobals(@params); >>
+
+# FIXME: Add documentation
+=cut
+sub SetGlobals {
+    my %option = @_;
+    my $glob_ref = $lib_ref->GetGlobalSettings();
+
+    # merge with current, undef values delete options
+    foreach (keys %option) {
+	if (defined $option{$_}) {
+	    $glob_ref->{$_} = $option{$_};
+	} else {
+	    delete $glob_ref->{$_};
+	}
+    }
+    $glob_ref->{"__modified"} = 1;
+    $lib_ref->SetGlobalSettings ($glob_ref);
+    $lib_ref->WriteSettings (1);
+    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
+                                    # the right place
+    DumpLog ();
+}
+
+
+=item
+C<< Bootloader::Tools::GetSectionList(@selectors); >>
+
+# FIXME: Add documentation
+=cut
+
+sub GetSectionsList {
+    my %option = @_;
+
+    normalize_options(\%option);
+    my @sections = @{$lib_ref->GetSections ()};
+    my @section_names = map {
+	$_->{"name"} if match_section($_, \%option);
+    } @sections;
+
+    DumpLog ();
+    return @section_names;
+}
+
+
+=item
+C<< Bootloader::Tools::GetSection($name); >>
+
+# FIXME: Add documentation
+=cut
+
+sub GetSection($) {
+    my $name = shift or return undef;
+
+    foreach (@{$lib_ref->GetSections ()}) {
+	return $_ if $_->{"name"} eq $name;
+    }
+    return undef;
+}
+
+
+=item
+C<< Bootloader::Tools::AddSection($name, @params); >>
+
+# FIXME: Add documentation
+=cut
+
+sub AddSection {
+    my $name = shift;
+    my %option = @_;
+
+    return unless defined $name;
+    return unless exists $option{"type"};
+
+    my $default = delete $option{"default"} || 0;
+	
+    my $mp = $lib_ref->GetMountPoints ();
+    my @sections = @{$lib_ref->GetSections ()};
+    my %new = (
+	"root" => $mp->{"/"} || "/dev/null",
+    );
+    my %def = ();
+    foreach my $s (@sections)
+    {
+	if (defined ($s->{"initial"}) && $s->{"initial"})
+	{
+	    %def = %{$s};
+	    last;
+	}
+    }
+
+    while ((my $k, my $v) = each (%def))
+    {
+	if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
+	    && $k ne "initrd")
+	{
+	    $new{$k} = $v;
+	}
+    }
+
+    if (exists $option{"image"}) {
+	if (exists $new{"kernel"}) { 
+	    $new{"kernel"} = delete $option{"image"};
+	}
+	else {	
+	    $new{"image"} = delete $option{"image"};
+	}
+    }
+
+    foreach (keys %option) {
+	$new{"$_"} = $option{"$_"};
+    }
+
+    $new{"__modified"} = 1;
+    push @sections, \%new;
+
+    $lib_ref->SetSections (\@sections);
+
+    if ($default) {
+	my $glob_ref = $lib_ref->GetGlobalSettings ();
+	$glob_ref->{"default"} = $option{"name"};
+	$glob_ref->{"__modified"} = 1;
+	$lib_ref->SetGlobalSettings ($glob_ref);
+    }
+
+    $lib_ref->WriteSettings (1);
+    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
+                                    # the right place
+    DumpLog ();
+}
+
+
+=item
+C<< Bootloader::Tools::RemoveSection($name); >>
+
+=cut
+
+sub RemoveSection {
+    my $name = shift or return;
+
+    my @sections = @{$lib_ref->GetSections()};
+    my $glob_ref = $lib_ref->GetGlobalSettings();
+    my $default_section = $glob_ref->{"default"} || "";
+    my $default_removed = 0;
+
+    normalize_options(\%option);
+    @sections = grep {
+	my $match = $_->{"name"} eq $name;
+	$default_removed = 1
+	    if $match and $default_section eq $_->{"name"};
+	!$match;
+    } @sections;
+    $lib_ref->SetSections (\@sections);
+    if ($default_removed) {
+	$glob_ref->{"default"} = $sections[0]{"name"};
+    }
+    $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
+				   # may change even if not deleted
+    $lib_ref->SetGlobalSettings ($glob_ref);
+    $lib_ref->WriteSettings (1);
+    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
+                                    # the right place
+    DumpLog ();
+}
+
+
 
  
 1;

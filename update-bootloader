@@ -247,12 +247,11 @@ if (defined $oper{add}) {
 	    pod2usage("There are already sections with image '$opt_image'");
 	}
     } else {
-	push @params, name    => $opt_name;
 	push @params, default => $opt_default;
 	push @params, xen     => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd  => $opt_initrd if $opt_initrd;
 			  
-	AddSection(@params);
+	AddSection($opt_name, @params);
     }
 }
 
