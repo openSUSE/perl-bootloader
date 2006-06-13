@@ -361,7 +361,7 @@ sub SplitDevPath {
 
     $path = $self->RealFileName ($path);
 
-    my $mp = $path;
+    my $mp = $path || "/";
     until (exists $self->{"mountpoints"}{$mp}) {
 	unless ($mp =~ s#/[^/]*$##) {
 	    $self->l_error ("Core::SplitDevPath: Cannot get device for $path");
@@ -1775,10 +1775,7 @@ sub RealFileName {
     my $self = shift;
     my $filename = shift;
 
-    if ($filename eq "")
-    {
-	return $filename;
-    }
+    return "" unless $filename;
 
     my $ret = "";
     if ($self->{"resolve_symlinks"})
