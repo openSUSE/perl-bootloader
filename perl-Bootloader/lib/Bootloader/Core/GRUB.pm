@@ -244,7 +244,7 @@ sub UnixDev2GrubDev {
 C<< $unix_path = Bootloader::Core::GRUB->GrubPath2UnixPath ($grub_path, $grub_dev_prefix); >>
 
 Translates the GRUB path (eg. '(hd0,0)/grub/device.map') to UNIX path (eg.
-'/boot/grub/device.map'). If the GRUB path doesn't contain the device, the one
+'/boot/grub/device.map'). If the GRUB path does not contain the device, the one
 specified in the argument is used instead.
 As arguments, the function takes the GRUB path and the device to be used if not
 specified in the GRUB path, and returns the UNIX path (all strings).
@@ -303,7 +303,7 @@ C<< $grub_path = Bootloader::Core::GRUB->UnixPath2GrubPath ($unix_path, $grub_de
 Translates the UNIX path (eg. '/boot/grub/device.map') to GRUB path (eg.
 '(hd0,0)/grub/device.map'). If the device (as specified in GRUB configuration
 files via the 'root' option) is the same as the device in the resulting path,
-the resulting path doesn't contain the device.
+the resulting path does not contain the device.
 As arguments, the function takes the UNIX path and the device as specified via
 'root' option, and returns the GRUB path (all strings).
 
@@ -321,8 +321,7 @@ sub UnixPath2GrubPath {
 	return $orig_path;
     }
 
-    my $link_path = $self->RealFileName ($orig_path);
-    (my $dev, my $path) = $self->SplitDevPath ($link_path);
+    (my $dev, my $path) = $self->SplitDevPath ($orig_path);
 
     $dev = $self->UnixDev2GrubDev ($dev);
     if ($dev eq $preset_dev)
