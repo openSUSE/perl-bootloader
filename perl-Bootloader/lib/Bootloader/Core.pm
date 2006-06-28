@@ -479,7 +479,7 @@ sub MergeIfDefined {
 	    $ret = $ret . " " . $arg;
 	}
     }
-    $ret = substr ($ret, 1) if (length ($ret) > 0 && substr ($ret, 0, 1) eq " ");
+    $ret = substr ($ret, 1) if substr ($ret, 0, 1) eq " ";
     return $ret;
 }
 
