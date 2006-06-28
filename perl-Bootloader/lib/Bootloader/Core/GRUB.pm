@@ -736,44 +736,56 @@ sub Section2Info {
 	}
 	elsif ($key eq "kernel")
 	{
-	    if ($val =~ /^[ \t]*([^ \t]+)([ \t]+(.*))?$/)
+	    # split into loader and parameter, note that the regex does
+	    # always match
+	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
+    
+	    $ret{"kernel"} = $self->GrubPath2UnixPath ($1, $grub_root);
+	    $val = $2 || "";
+
+	    if ($val =~ /^(?:(.*)\s+)?root=(\S+)(?:\s+(.*))?$/)
 	    {
-		$ret{"kernel"} = $self->GrubPath2UnixPath ($1, $grub_root);
-		$val = $3;
-		$val = "" if (! defined ($val));
+		$ret{"root"} = $2 if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $3);
 	    }
-	    else
+	    if ($val =~ /^(?:(.*)\s+)?vga=(\S+)(?:\s+(.*))?$/)
 	    {
-		$ret{"kernel"} = $self->GrubPath2UnixPath ($val, $grub_root);
-		$val = "";
-	    }
-	    if ($val =~ /^((.*)[ \t])?root=([^ \t]+)([ \t](.*))?$/)
-	    {
-		$ret{"root"} = $3 if ($3 ne "");
-		$val = $self->MergeIfDefined ($2, $5);
-	    }
-	    if ($val =~ /^((.*)[ \t])?vga=([^ \t]+)([ \t](.*))?$/)
-	    {
-		$ret{"vga"} = $3 if ($3 ne "");
-		$val = $self->MergeIfDefined ($2, $5);
+		$ret{"vga"} = $2 if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $3);
 	    }
 	    if ($val ne "")
 	    {
 		$ret{"append"} = $val;
+		if ($is_xen) {
+		    if ($val =~ /console=ttyS(\d+),(\d+)/) {
+			# merge console and speed into xen_append
+			my $console = sprintf("com%d", $1+1);
+			my $speed   = sprintf("%s=%d", $console, $2);
+			if (exists $ret{"xen_append"}) {
+			    my $xen_append = $ret{"xen_append"};
+			    while ($xen_append =~
+				   s/(.*)console=(\S+)\s+(.*)$/$1$3/o) {
+				my $del_console = $2;
+				$xen_append =~
+				    s/(.*)${del_console}=(\S+)\s+(.*)$/$1$2/g;
+			    }
+			    $ret{"xen_append"} = "$console $speed $xen_append";
+			} else {
+			    $ret{"xen_append"} = "$console $speed";
+			}
+		    }
+		}
 	    }
 	    $ret{"type"} = "image";
 	}
 	elsif ($key eq "xen")
 	{
-	    if ($val =~ /^[ \t]*([^ \t]+)([ \t]+(.*))?$/)
-	    {
-		$ret{"xen"} = $self->GrubPath2UnixPath ($1, $grub_root);
-		$ret{"xen_append"} = $3 if (defined ($3));
-	    }
-	    else
-	    {
-		$ret{"xen"} = $self->GrubPath2UnixPath ($val, $grub_root);
-	    }
+	    # split into loader and parameter, note that the regex does
+	    # always match
+	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
+
+	    $ret{"xen"} = $self->GrubPath2UnixPath ($1, $grub_root);
+	    $ret{"xen_append"} = $2 if defined $2;
 	}
 	elsif ($key eq "initrd" || $key eq "wildcard")
 	{
@@ -1051,6 +1063,26 @@ sub Info2Section {
     if (exists ($sectinfo{"xen"}))
     {
 	@lines = @{$self->Section2XenInfo (\@lines)};
+
+	if (exists($sectinfo{"append"}) and
+	    ($sectinfo{"append"} =~ /console=ttyS(\d+),(\d+)/) )
+	{
+	    # merge console and speed into xen_append
+	    my $console = sprintf("com%d", $1+1);
+	    my $speed   = sprintf("%s=%d", $console, $2);
+	    if (exists $sectinfo{"xen_append"}) {
+		my $xen_append = $sectinfo{"xen_append"};
+		while ($xen_append =~
+		       s/(.*)console=(\S+)\s+(.*)$/$1$3/o) {
+		    my $del_console = $2;
+		    $xen_append =~
+			s/(.*)${del_console}=(\S+)\s+(.*)$/$1$2/g;
+		}
+		$sectinfo{"xen_append"} = "$console $speed $xen_append";
+	    } else {
+		$sectinfo{"xen_append"} = "$console $speed";
+	    }
+	}
     }
 
     @lines = map {
@@ -1196,8 +1228,9 @@ sub Global2Info {
 	if ($key eq "default")
 	{
 	    # cast $val to integer. That means that if no valid default has
-	    # been given, weÂll take the first section as default.
-	    my $defindex = 0+$val;
+	    # been given, we'll take the first section as default.
+	    no warnings "numeric"; # this is neccessary to avoid to trigger a perl bug
+	    my $defindex = 0+ $val;
 	    $ret{"default"} = $sections[$defindex];
 	}
 	elsif ($key eq "timeout" || $key eq "password")
