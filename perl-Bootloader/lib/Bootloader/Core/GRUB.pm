@@ -769,9 +769,9 @@ sub Section2Info {
 				$xen_append =~
 				    s/(.*)${del_console}=(\S+)\s+(.*)$/$1$2/g;
 			    }
-			    $ret{"xen_append"} = "$console $speed $xen_append";
+			    $ret{"xen_append"} = "console=$console $speed $xen_append";
 			} else {
-			    $ret{"xen_append"} = "$console $speed";
+			    $ret{"xen_append"} = "console=$console $speed";
 			}
 		    }
 		}
@@ -1078,9 +1078,9 @@ sub Info2Section {
 		    $xen_append =~
 			s/(.*)${del_console}=(\S+)\s+(.*)$/$1$2/g;
 		}
-		$sectinfo{"xen_append"} = "$console $speed $xen_append";
+		$sectinfo{"xen_append"} = "console=$console $speed $xen_append";
 	    } else {
-		$sectinfo{"xen_append"} = "$console $speed";
+		$sectinfo{"xen_append"} = "console=$console $speed";
 	    }
 	}
     }

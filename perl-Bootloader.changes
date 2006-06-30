@@ -1,4 +1,25 @@
 -------------------------------------------------------------------
+Wed Jun 28 19:38:31 CEST 2006 - jplack@suse.de
+
+- map kernel_append params to xen_append params (#188614) when
+  having a serial console
+
+-------------------------------------------------------------------
+Wed Jun 28 19:32:25 CEST 2006 - jplack@suse.de
+
+- be nicer while handling empty paths (#177083)
+- remove call to RealFileName which is called in SplitDevPath
+  anyway
+- extended/reworked interface in Tools.pm, more generic functions
+  those are needed for another tool needed to enable multipathing
+  after install, add new entries
+- check for RAID1 md arrays as all others will break on reboot
+  (#178802), fix mdadm call (RAID1 check)
+- changed name of ReadMDArrays to ReadRAID1Array which matches its
+  intended functionality.
+- Added FIXME notes for mskibbe
+
+-------------------------------------------------------------------
 Tue May 30 15:04:15 CEST 2006 - jplack@suse.de
 
 - fixed broken parsing/handling/reassembly esp. of comments in
