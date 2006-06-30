@@ -764,10 +764,10 @@ sub Section2Info {
 			if (exists $ret{"xen_append"}) {
 			    my $xen_append = $ret{"xen_append"};
 			    while ($xen_append =~
-				   s/(.*)console=(\S+)\s+(.*)$/$1$3/o) {
+				   s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
 				my $del_console = $2;
 				$xen_append =~
-				    s/(.*)${del_console}=(\S+)\s+(.*)$/$1$2/g;
+				    s/(.*)${del_console}=\d+\s*(.*)$/$1$2/g;
 			    }
 			    $ret{"xen_append"} = "console=$console $speed $xen_append";
 			} else {
@@ -1073,10 +1073,10 @@ sub Info2Section {
 	    if (exists $sectinfo{"xen_append"}) {
 		my $xen_append = $sectinfo{"xen_append"};
 		while ($xen_append =~
-		       s/(.*)console=(\S+)\s+(.*)$/$1$3/o) {
+		       s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
 		    my $del_console = $2;
 		    $xen_append =~
-			s/(.*)${del_console}=(\S+)\s+(.*)$/$1$2/g;
+			s/(.*)${del_console}=\d+\s*(.*)$/$1$2/g;
 		}
 		$sectinfo{"xen_append"} = "console=$console $speed $xen_append";
 	    } else {
