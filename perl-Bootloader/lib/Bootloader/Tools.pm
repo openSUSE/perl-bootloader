@@ -231,10 +231,10 @@ sub ReadRAID1Arrays {
     my @members = ();
     open (MD, "/sbin/mdadm --detail --verbose --scan |") ||
         die ("Failed getting information about MD arrays");
+    my ($array, $level, $num_devices);
     while (my $line = <MD>)
     {
         chomp ($line);
-        my ($array, $level, $num_devices);
 
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
@@ -599,13 +599,13 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSectionsList {
+sub GetSectionList {
     my %option = @_;
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
     my @section_names = map {
-	$_->{"name"} if match_section($_, \%option);
+	match_section($_, \%option) ? $_->{"name"} : ();
     } @sections;
 
     DumpLog ();

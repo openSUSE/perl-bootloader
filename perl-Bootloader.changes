@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Mon Jul  3 20:40:11 CEST 2006 - jplack@suse.de
+
+- fix CountSections/GetSectionList which always returned all
+  sections
+
+-------------------------------------------------------------------
+Mon Jul  3 18:54:57 CEST 2006 - jplack@suse.de
+
+- fix raid1 support in Tools.pm, still more problems in
+  Grub.pm:GrubPath2UnixPath
+
+-------------------------------------------------------------------
 Mon Jul  3 12:23:58 CEST 2006 - jplack@suse.de
 
 - fixed severe syntax problems introduced by r113&r111 in Tools.pm
