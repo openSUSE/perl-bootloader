@@ -237,12 +237,8 @@ sub Dev2MP {
     my $self = shift;
     my $dev = shift;
 
-    while ((my $mp, my $d) = each (%{$self->{"mountpoints"}}))
-    {
-	if ($d eq $dev)
-	{
-	    return $mp;
-	}
+    foreach my $mp ( keys %{$self->{"mountpoints"}}) {
+	return $mp if $self->{"mountpoints"}->{$mp} eq $dev;
     }
     return undef;
 }
@@ -296,6 +292,9 @@ name.
 sub Member2MD {
     my $self = shift;
     my $member = shift;
+
+    # reset 'each' iterator
+    my $dummy = keys %{$self->{"md_arrays"}};
 
     while ((my $md, my $mem_ref) = each (%{$self->{"md_arrays"}}))
     {

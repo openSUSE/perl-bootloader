@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul  3 23:18:44 CEST 2006 - jplack@suse.de
+
+- several 'each' iterators for global hashes not properly reset.
+  This broke root-on-raid1 support so far.
+
+-------------------------------------------------------------------
 Mon Jul  3 20:40:11 CEST 2006 - jplack@suse.de
 
 - fix CountSections/GetSectionList which always returned all
