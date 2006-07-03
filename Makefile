@@ -11,6 +11,7 @@ endif
 BUILD_ROOT=/abuild/buildsystem.$$HOST.$$LOGNAME
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
+DISTMAIL=/work/src/bin/distmail
 
 .PHONY:	export build submit rpm clean
 
@@ -66,10 +67,10 @@ submit:	.submitted
 	@echo "Please confirm or abort"
 	@select s in submit abort;do [ "$$s" == submit ] && break || exit 1; done
 	cp -av $$(<.exportdir) $(SUBMIT_DIR)
-	@cd $(SUBMIT_DIR)/$(PKG); distmail
+	@cd $(SUBMIT_DIR)/$(PKG); $(DISTMAIL)
 ifneq ($(SUBMIT_DIR2),)
 	cp -av $$(<.exportdir) $(SUBMIT_DIR2)
-	@cd $(SUBMIT_DIR2)/$(PKG); distmail
+	@cd $(SUBMIT_DIR2)/$(PKG); $(DISTMAIL)
 endif
 	@touch $@
 
