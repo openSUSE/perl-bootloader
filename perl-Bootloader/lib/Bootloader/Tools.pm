@@ -229,25 +229,26 @@ sub ReadRAID1Arrays {
     #
 
     my @members = ();
-    open (MD, "/sbin/mdadm --detail --verbose --scan") ||
+    open (MD, "/sbin/mdadm --detail --verbose --scan |") ||
         die ("Failed getting information about MD arrays");
     while (my $line = <MD>)
     {
         chomp ($line);
+        my ($array, $level, $num_devices);
 
-        if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+))
+        if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
-            my ($array, $level, $num_devices) = ($1, $2, $3);
+            ($array, $level, $num_devices) = ($1, $2, $3);
         }
-        elsif ($level == "raid1" and $line =~ /devices=(\S+))
+        elsif ($level eq "raid1" and $line =~ /devices=(\S+)/)
         {
             # we could test $num_device against number of found devices to
             # detect degradedmode but that does not matter here (really?) 
 
-             $mapping{$array}= split(/,/, $1)
+             $mapping{$array} = [ split(/,/, $1) ];
         }
     }
-    close( <MD> );
+    close( MD );
     return \%mapping;
 }
 
@@ -712,7 +713,6 @@ sub RemoveSection {
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
-    normalize_options(\%option);
     @sections = grep {
 	my $match = $_->{"name"} eq $name;
 	$default_removed = 1

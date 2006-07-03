@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul  3 12:23:58 CEST 2006 - jplack@suse.de
+
+- fixed severe syntax problems introduced by r113&r111 in Tools.pm
+  and broke update-bootloader
+
+-------------------------------------------------------------------
 Wed Jun 28 19:38:31 CEST 2006 - jplack@suse.de
 
 - map kernel_append params to xen_append params (#188614) when
