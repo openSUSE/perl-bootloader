@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Jul  6 20:00:28 CEST 2006 - jplack@suse.de
+
+- do not replace section names of new sections by default section
+  name (#190529)
+- do not interpret zero integer values as null string (#190529)
+
+-------------------------------------------------------------------
 Mon Jul  3 23:18:44 CEST 2006 - jplack@suse.de
 
 - several 'each' iterators for global hashes not properly reset.

@@ -680,6 +680,7 @@ sub AddSection {
     foreach (keys %option) {
 	$new{"$_"} = $option{"$_"};
     }
+    $new{"name"} = $name;
 
     $new{"__modified"} = 1;
     push @sections, \%new;
@@ -688,7 +689,7 @@ sub AddSection {
 
     if ($default) {
 	my $glob_ref = $lib_ref->GetGlobalSettings ();
-	$glob_ref->{"default"} = $option{"name"};
+	$glob_ref->{"default"} = $name;
 	$glob_ref->{"__modified"} = 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }

@@ -756,7 +756,7 @@ sub CreateMenuFileLines {
 	my $ind = $l->{"indent"} || "";
 	my $line = $self->CreateSingleMenuFileLine (
 	    $l->{"key"},
-	    $l->{"value"} || "",
+	    defined ($l->{"value"}) ? $l->{"value"} : "",
 	    $equal_sep);
     
 	$line = $l->{"indent"} . $line if defined $l->{"indent"};
