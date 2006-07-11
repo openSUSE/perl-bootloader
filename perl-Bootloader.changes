@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jul 11 18:45:33 CEST 2006 - jplack@suse.de
+
+- move Partition2Disk function to Grub.pm as the only place of
+  usage and the only place to make it really work (#189348).
+
+-------------------------------------------------------------------
 Thu Jul  6 20:00:28 CEST 2006 - jplack@suse.de
 
 - do not replace section names of new sections by default section

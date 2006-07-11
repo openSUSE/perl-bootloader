@@ -44,6 +44,8 @@ C<< $line = Bootloader::Core::GRUB->CreateKernelLine (\%sectingo, $grub_root); >
 
 C<< $line = Bootloader::Core::GRUB->CreateChainloaderLine (\%sectinfo, $grub_root); >>
 
+C<< $disk = Bootloader::Core::GRUB->Partition2Disk ($partition); >>
+
 C<< $sectin_info_ref = Bootloader::Core::GRUB->Section2Info (\@section_lines); >>
 
 C<< $lines_ref = Bootloader::Core::GRUB->Info2Section (\%section_info); >>
@@ -925,6 +927,35 @@ sub CreateChainloaderLine {
 	return $self->UnixPath2GrubPath ($line, $grub_root);
     }
 }
+
+=item
+C<< $disk = Bootloader::Core::Grub->Partition2Disk ($partition); >>
+
+Gets the disk a partition resides on. As argument, it takes the partition
+device node (eg. C<'/dev/hda3'>), returns the device node of the disk
+holding the partition (eg. C</dev/hda>), or undef if checking failed.
+
+=cut
+
+# string Partition2Disk (string partition)
+sub Partition2Disk {
+    my $self = shift;
+    my $partition = shift;
+
+    foreach my $dev_ref (@{$self->{"partitions"}})
+    {
+	if ($dev_ref->[0] eq $partition)
+	{
+	    return $dev_ref->[1];
+	}
+    }
+
+    # FIXME:
+    # check in device mapping as a fallback
+
+    return $partition; 
+}
+
 
 sub Section2XenInfo {
     my $self = shift;

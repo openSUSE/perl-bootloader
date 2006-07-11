@@ -28,8 +28,6 @@ C<< $index = Bootloader::Core->IndexOfSection ($name, \@section_names); >>
 
 C<< ($device, $path) = Bootloader::Core->SplitDevPath ($path); >>
 
-C<< $disk = Bootloader::Core->Partition2Disk ($partition); >>
-
 C<< $quoted = Bootloader::Core->Quote ($text, $when); >>
 
 C<< $unquoted = Bootloader::Core->Unquote ($text); >>
@@ -373,30 +371,6 @@ sub SplitDevPath {
     $path =~ s#^$mp/?#/#;
     $self->l_debug ("Core::SplitDevPath: $orig was split to $dev + $path");
     return ($dev, $path);
-}
-
-=item
-C<< $disk = Bootloader::Core->Partition2Disk ($partition); >>
-
-Gets the disk a partition resides on. As argument, it takes the partition
-device node (eg. C<'/dev/hda3'>), returns the device node of the disk
-holding the partition (eg. C</dev/hda>), or undef if checking failed.
-
-=cut
-
-# string Partition2Disk (string partition)
-sub Partition2Disk {
-    my $self = shift;
-    my $partition = shift;
-
-    foreach my $dev_ref (@{$self->{"partitions"}})
-    {
-	if ($dev_ref->[0] eq $partition)
-	{
-	    return $dev_ref->[1];
-	}
-    }
-    return $partition; 
 }
 
 =item
