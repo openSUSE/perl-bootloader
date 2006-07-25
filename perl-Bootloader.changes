@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jul 25 14:17:40 CEST 2006 - jplack@suse.de
+
+- do not use device symlink in sysfs as a criteria for device
+  detection which breaks on SmartArray controllers (#189348)
+- bump version to 0.2.27
+
+-------------------------------------------------------------------
 Tue Jul 11 18:45:33 CEST 2006 - jplack@suse.de
 
 - move Partition2Disk function to Grub.pm as the only place of
