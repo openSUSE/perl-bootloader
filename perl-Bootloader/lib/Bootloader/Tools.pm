@@ -178,7 +178,7 @@ sub ReadPartitions {
     my $sb="/sys/block";
     opendir(BLOCK_DEVICES, "$sb") || die ("Failed to open dir $sb");
     my @disks = grep {
-	!m/^\./ and -l "$sb/$_/device"  and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
+	!m/^\./ and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
