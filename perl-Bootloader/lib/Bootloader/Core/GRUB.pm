@@ -141,13 +141,11 @@ sub GrubDev2UnixDev {
     my $self = shift;
     my $dev = shift;
 
-    if ($dev eq "")
-    {
+    unless ($dev) {
 	$self->l_debug ("GRUB::GrubDev2UnixDev: Empty device to translate");
 	return $dev;
     }
-    if (defined ($dev) && $dev ne "" && $dev !~ /^\(.*\)$/)
-    {
+    if ($dev !~ /^\(.*\)$/) {
 	$self->l_debug ("GRUB::GrubDev2UnixDev: Not translating device $dev");
 	return $dev;
     }
@@ -164,10 +162,10 @@ sub GrubDev2UnixDev {
     }
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
-	if ($fw eq "($dev)")
-	{
+	if ($dev eq $fw) {
 	    $dev = $unix;
 	}
+	elsif 
     }
     if (defined ($partition))
     {
@@ -181,8 +179,7 @@ sub GrubDev2UnixDev {
 	    }
 	}
     }
-    my $md_dev = $self->Member2MD ($dev);
-    $dev = $md_dev if (defined ($md_dev));
+    $dev = $self->Member2MD ($dev);
     $self->l_debug ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
     return $dev;
 }
@@ -216,7 +213,7 @@ sub UnixDev2GrubDev {
 	$dev = $members[0] || $dev;
     }
     # check for symbolic links as they are used for dev-by-id and such
-    if ( -l "$dev") {
+    if ( -l $dev) {
 	$dev = sprintf("%s/%s", $dev=~m:^(.+)/[^/]*$:, readlink($dev));
 	$dev = $self->CanonicalPath($dev);
     }
@@ -228,13 +225,11 @@ sub UnixDev2GrubDev {
 	    $partition = $dev_ref->[2] - 1;
 	}
     }
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
-    {
-	if ($unix eq $dev)
-	{
-	    $dev = substr ($fw, 1, length ($fw) - 2);
-	}
+
+    if ( exists $self->{"device_map"}->{$dev} ) {
+	$dev = $self->{"device_map"}->{$dev};
     }
+
     $dev = defined ($partition)
 	? "($dev,$partition)"
 	: "($dev)";
@@ -425,7 +420,7 @@ sub ParseLines {
     my %devmap = ();
     foreach my $dm_entry (@device_map)
     {
-	if ($dm_entry =~ /^[ \t]*([^ \t#]+)[ \t]+([^ \t]+)[ \t]*$/)
+	if ($dm_entry =~ /^\s*(\([^\s#]+\))\s+(\S+)\s*$/)
 	{
 	    $devmap{$2} = $1;
 	}
@@ -570,7 +565,7 @@ sub CreateLines {
     my @device_map = ();
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
-	my $line = "$fw\t$unix";
+	my $line = "($fw)\t$unix";
 	push @device_map, $line;
     }
 
@@ -793,7 +788,7 @@ sub Section2Info {
 	{
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
-	elsif ($key eq "chainloader" || $key eq "initrd")
+	elsif ($key eq "chainloader")
 	{
 	    if ($val =~ /^(.*)\+(\d+)/)
 	    {
