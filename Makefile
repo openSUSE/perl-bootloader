@@ -6,30 +6,35 @@ BUILD=powerpc32 /work/src/bin/build
 else
 BUILD=/work/src/bin/build
 endif
-BUILD_ROOT=/abuild/buildsystem.$$HOST.$$LOGNAME
+MBUILD=/work/src/bin/mbuild
+MBUILDC=$(MBUILD) -l $(LOGNAME) -d sles10
+MBUILDQ=$(MBUILD) -q
+BUILD_ROOT=/abuild/buildsystem.$(HOST).$(LOGNAME)
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
 DISTMAIL=/work/src/bin/distmail
 
-.PHONY:	export build submit rpm clean
+.PHONY:	export build mbuild submit rpm clean
 
 all:
-	@echo "Choose one target out of 'export', 'build', 'submit', 'rpm' or 'clean'"
+	@echo "Choose one target out of 'export', 'build', 'mbuild', 'submit', 'rpm' or 'clean'"
 	@echo
 
-export:	.exportdir
+export:	 .checkexportdir .exportdir
 
-build:	.built
+build:	.checkexportdir .built
 
-rpm:	.built
+rpm:	build
 	@cp -av $(BUILD_ROOT)/usr/src/packages/RPMS/*/$(PKG)* .
 	
 submit:	.submitted
 
 
 # worker targets
+.checkexportdir:
+	@[ -f .exportdir -a -d "$$(<.exportdir)" ] || make clean
 
-.exportdir:	$(PKG).changes
+.exportdir:	$(PKG).changes version
 	@rm -f .built .submitted
 	set -e ; set -x ;\
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \
@@ -58,6 +63,14 @@ submit:	.submitted
 	    touch $${mypwd}/$@; \
 	else \
 	    echo Compile failed; exit 1; \
+	fi
+
+mbuild: .checkexportdir .exportdir
+	@if [ -f .mbuild_id -a .exportdir -ot .mbuild_id ]; then \
+	    $(MBUILDQ) $$(<.mbuild_id); \
+	else \
+	   sudo $(MBUILDC) $$(<.exportdir) | tee .message | grep jobid | cut -d\' -f2 > .mbuild_id; \
+	   cat .message; rm -f .message; \
 	fi
 
 .submitted: .built
