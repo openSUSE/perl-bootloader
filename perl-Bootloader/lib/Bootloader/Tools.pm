@@ -157,10 +157,14 @@ sub ReadMountPoints {
 sub Udev2Dev {
     my $udev = shift;
     my $cmd = "udevinfo -q name -p /block/$udev";
-    my $dev = qx{ $cmd };
+    my $dev = qx{ $cmd 2>/dev/null };
     chomp ($dev);
 
-    return $dev ? "/dev/$dev" : "/dev/$udev";
+    $dev = $dev ? "/dev/$dev" : "/dev/$udev";
+    # CCISS maps slashes to bangs so we have to reverse that.
+    $dev =~ s:!:/:g;
+
+    return $dev;
 }
 
 =item

@@ -1088,6 +1088,8 @@ sub Info2Section {
 
     if (exists ($sectinfo{"xen"}))
     {
+	# FIXME: looks like the wrong call to me: XenInfo2Section sounds more
+	# appropriate or not calling it
 	@lines = @{$self->Section2XenInfo (\@lines)};
 
 	if (exists($sectinfo{"append"}) and
