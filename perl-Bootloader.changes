@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jul 28 17:40:51 CEST 2006 - jplack@suse.de
+
+- Tools.pm@Udev2Dev : CCISS driver maps slashes to bangs so we
+  have to reverse that, suppress ignorable warnings from udevinfo
+  (#189348)
+
+-------------------------------------------------------------------
 Tue Jul 25 14:17:40 CEST 2006 - jplack@suse.de
 
 - do not use device symlink in sysfs as a criteria for device
