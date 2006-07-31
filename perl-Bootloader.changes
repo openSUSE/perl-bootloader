@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 31 16:19:46 CEST 2006 - jplack@suse.de
+
+- typo fix
+
+-------------------------------------------------------------------
 Fri Jul 28 17:40:51 CEST 2006 - jplack@suse.de
 
 - Tools.pm@Udev2Dev : CCISS driver maps slashes to bangs so we

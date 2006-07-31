@@ -165,7 +165,6 @@ sub GrubDev2UnixDev {
 	if ($dev eq $fw) {
 	    $dev = $unix;
 	}
-	elsif 
     }
     if (defined ($partition))
     {
