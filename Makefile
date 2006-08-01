@@ -32,13 +32,15 @@ submit:	.submitted
 
 # worker targets
 .checkexportdir:
-	@[ -f .exportdir -a -d "$$(<.exportdir)" ] || make clean
+	@[ -f .exportdir ] && [ -d "$$(<.exportdir)" ] || make clean
 
 .exportdir:	$(PKG).changes version
+	env PERLLIB=./perl-Bootloader/lib/:$PERLLIB perl -c ./update-bootloader
 	@rm -f .built .submitted
 	set -e ; set -x ;\
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \
-	tmpdir=`mktemp -d /tmp/temp.XXXXXX`/$(PKG) ; \
+	exportdir=`mktemp -d /tmp/temp.XXXXXX` ; \
+	tmpdir=$$exportdir/$(PKG) ; \
 	lv=`cat version` ; \
 	svn export $(SVNREP) $$tmpdir ; \
 	cd $$tmpdir ; \
@@ -50,14 +52,14 @@ submit:	.submitted
 	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in; \
 	pwd ; \
 	ls -la ; \
-	if /work/src/bin/check_if_valid_source_dir; then cd -; echo $$tmpdir > $@; else exit 1 ; fi
+	if /work/src/bin/check_if_valid_source_dir; then cd -; echo $$exportdir > $@; else exit 1 ; fi
 
 
 .built:	.exportdir
 	@rm -f .submitted
-	@echo "Trying to compile $(PKG) package under $$(<.exportdir)"
+	@echo "Trying to compile $(PKG) package under $$(<.exportdir)/$(PKG)"
 	mypwd=`pwd` ; \
-	if { cd $$(<.exportdir); \
+	if { cd $$(<.exportdir)/$(PKG); \
 	    export $(if $(BUILD_DIST),BUILD_DIST=$(BUILD_DIST)) BUILD_ROOT=$(BUILD_ROOT); sudo $(BUILD); }; \
 	then \
 	    touch $${mypwd}/$@; \
@@ -69,21 +71,22 @@ mbuild: .checkexportdir .exportdir
 	@if [ -f .mbuild_id -a .exportdir -ot .mbuild_id ]; then \
 	    $(MBUILDQ) $$(<.mbuild_id); \
 	else \
-	   sudo $(MBUILDC) $$(<.exportdir) | tee .message | grep jobid | cut -d\' -f2 > .mbuild_id; \
+	   sudo $(MBUILDC) $$(<.exportdir)/$(PKG) | tee .message | grep jobid | cut -d\' -f2 > .mbuild_id; \
 	   cat .message; rm -f .message; \
 	fi
 
 .submitted: .built
-	@echo "Target 'submit' will copy $$(<.exportdir) to $(SUBMIT_DIR)"
+	@echo "Target 'submit' will copy $$(<.exportdir)/$(PKG) to $(SUBMIT_DIR)"
 	@echo "Please confirm or abort"
 	@select s in submit abort;do [ "$$s" == submit ] && break || exit 1; done
-	cp -av $$(<.exportdir) $(SUBMIT_DIR)
+	cp -av $$(<.exportdir)/$(PKG) $(SUBMIT_DIR)
 	@cd $(SUBMIT_DIR)/$(PKG); $(DISTMAIL)
 ifneq ($(SUBMIT_DIR2),)
-	cp -av $$(<.exportdir) $(SUBMIT_DIR2)
+	cp -av $$(<.exportdir)/$(PKG) $(SUBMIT_DIR2)
 	@cd $(SUBMIT_DIR2)/$(PKG); $(DISTMAIL)
 endif
 	@touch $@
 
 clean:
+	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
 	rm -f .exportdir .built .submitted
