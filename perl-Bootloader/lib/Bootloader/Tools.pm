@@ -66,7 +66,7 @@ use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
 		 RemoveImageSections RemoveSections GetDefaultImage
-		 GetDefaultInitrd UpdateBootloader
+		 GetDefaultInitrd GetBootloader UpdateBootloader
 		 GetGlobals SetGlobals
 		 GetSectionList GetSection AddSection RemoveSection
 );
