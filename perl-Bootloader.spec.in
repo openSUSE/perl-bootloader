@@ -39,7 +39,7 @@ Authors:
 %setup -q
 
 %build
-perl Makefile.PL
+perl -M ExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
 make
 
 %install

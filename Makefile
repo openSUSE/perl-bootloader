@@ -28,7 +28,7 @@ build:	.checkexportdir .built
 
 rpm:	build
 	@cp -av $(BUILD_ROOT)/usr/src/packages/RPMS/*/$(PKG)* .
-	
+
 submit:	.submitted
 
 
@@ -47,9 +47,11 @@ submit:	.submitted
 	svn export $(SVNREP) $$tmpdir ; \
 	cd $$tmpdir ; \
 	chmod -R a+rX .. ; \
-	mv -v $(PKG) $(PKG)-$$lv ; \
+	mkdir $(PKG)-$$lv; \
+	mkdir $(PKG)-$$lv/lib; \
+	mv COPYING $(PKG)-$$lv/lib; \
+	mv src $(PKG)-$$lv/lib/Bootloader; \
 	tar cfvj $(PKG)-$$lv.tar.bz2 $(PKG)-$$lv ; \
-	mv $(PKG).spec $(PKG).spec.in ; \
 	sed "s/^Version:.*/Version: $$lv/" < $(PKG).spec.in > $(PKG).spec ; \
 	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in; \
 	pwd ; \
