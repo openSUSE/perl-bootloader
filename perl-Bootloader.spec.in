@@ -39,7 +39,8 @@ Authors:
 %setup -q
 
 %build
-perl -M ExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
+touch Makefile.PL
+perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
 make
 
 %install

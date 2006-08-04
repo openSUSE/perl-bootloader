@@ -37,8 +37,9 @@ submit:	.submitted
 	@[ -f .exportdir ] && [ -d "$$(<.exportdir)" ] || make clean
 
 .exportdir:	$(PKG).changes version
-	env PERLLIB=./perl-Bootloader/lib/:$PERLLIB perl -c ./update-bootloader
-	@rm -f .built .submitted
+	ln -sfn src Bootloader
+	env PERLLIB=.:$PERLLIB perl -c ./update-bootloader
+	@rm -f .built .submitted Bootloader
 	set -e ; set -x ;\
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \
 	exportdir=`mktemp -d /tmp/temp.XXXXXX` ; \
@@ -49,7 +50,7 @@ submit:	.submitted
 	chmod -R a+rX .. ; \
 	mkdir $(PKG)-$$lv; \
 	mkdir $(PKG)-$$lv/lib; \
-	mv COPYING $(PKG)-$$lv/lib; \
+	mv COPYING $(PKG)-$$lv/; \
 	mv src $(PKG)-$$lv/lib/Bootloader; \
 	tar cfvj $(PKG)-$$lv.tar.bz2 $(PKG)-$$lv ; \
 	sed "s/^Version:.*/Version: $$lv/" < $(PKG).spec.in > $(PKG).spec ; \
