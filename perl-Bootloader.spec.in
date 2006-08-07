@@ -16,6 +16,7 @@ Version:      --autoinserted--
 Release:      0
 Requires:     perl >= %{perl_version}
 Requires:     perl-gettext
+Requires:     mdadm e2fsprogs
 Autoreqprov:  on
 Group:        System/Boot
 License:      GPL
