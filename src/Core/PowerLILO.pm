@@ -193,7 +193,8 @@ sub getExports() {
 	$go->{bootfolder}  = "string:Bootfolder path:";
 	$go->{boot_pmac_custom}
 			   = "select:HFS boot partition::" . $boot_partitions;
-    }
+ 	$go->{no_os_chooser} = "bool:Do not use os-chooser:false";
+   }
 
     $exports{"section_options"} = {
 	type_image        => "bool:Kernel section",
@@ -202,6 +203,7 @@ sub getExports() {
 	# image_label     => "string:Name of section", # implicit
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
+	image_optional    => "bool:Skip section gracefully on errors:false",
 	};
 
     my $so = $exports{"section_options"};
