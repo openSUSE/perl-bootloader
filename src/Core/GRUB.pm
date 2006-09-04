@@ -419,7 +419,7 @@ sub ParseLines {
     my %devmap = ();
     foreach my $dm_entry (@device_map)
     {
-	if ($dm_entry =~ /^\s*(\([^\s#]+\))\s+(\S+)\s*$/)
+	if ($dm_entry =~ /^\s*\(([^\s#]+)\)\s+(\S+)\s*$/)
 	{
 	    $devmap{$2} = $1;
 	}

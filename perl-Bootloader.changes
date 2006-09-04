@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Sep  4 17:00:54 CEST 2006 - jplack@suse.de
+
+- remove braces when parsing device.map file (#203545)
+
+-------------------------------------------------------------------
 Mon Aug  7 17:16:10 CEST 2006 - jplack@suse.de
 
 - add requirement for 'mdadm' and 'e2fsprogs' (#197471)
