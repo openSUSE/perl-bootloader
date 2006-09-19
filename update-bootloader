@@ -60,6 +60,10 @@ Prints the manual page and exits.
 
 specify path to kernel image
 
+=item B<--initrd> F<file>
+
+specify path to initrd file
+
 =item B<--xen>
 
 specify that you what to add a xen and not a regular image section
