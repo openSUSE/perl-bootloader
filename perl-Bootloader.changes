@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Sep 22 12:50:21 CEST 2006 - jplack@suse.de
+
+- add dependency on mdadm for Tools.pm (#205957)
+
+-------------------------------------------------------------------
 Fri Jul 28 17:40:51 CEST 2006 - jplack@suse.de
 
 - Tools.pm@Udev2Dev : CCISS driver maps slashes to bangs so we

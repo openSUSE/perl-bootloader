@@ -15,7 +15,7 @@ Name:         perl-Bootloader
 Version:      --autoinserted--
 Release:      0
 Requires:     perl >= %{perl_version}
-Requires:     perl-gettext
+Requires:     mdadm perl-gettext
 Autoreqprov:  on
 Group:        System/Boot
 License:      GPL
