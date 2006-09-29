@@ -19,7 +19,7 @@ C<< use Bootloader::Library; >>
 
 C<< $obj_ref = Bootloader::Library->new (); >>
 
-C<< $status = Bootloader::Library->Initialize ($bootloader); >>
+C<< $status = Bootloader::Library->SetLoaderType ($bootloader); >>
 
 C<< $status = Bootloader::Library->DefineMountPoints (\%mountpoints); >>
 
@@ -49,15 +49,17 @@ C<< $settings_ref = Bootloader::Library->GetSettings (); >>
 
 C<< $status Bootloader::Library->SetSettings ($settings_ref); >>
 
-C<< $sections_ref = Bootloader::Library->GetSections (); >>
+C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
 
 C<< $global_ref = Bootloader::Library->GetGlobalSettings (); >>
 
-C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
+C<< $status = Bootloader::Library->SetGlobalSettings ($global_settings_ref); >>
+
+C<< $sections_ref = Bootloader::Library->GetSections (); >>
 
 C<< $status = Bootloader::Library->SetSections ($sections_ref); >>
 
-C<< $status = Bootloader::Library->SetGlobalSettings ($global_settings_ref); >>
+C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
 
 C<< $status = Bootloader::Library->SetDeviceMapping ($device_map_ref); >>
 
@@ -103,7 +105,7 @@ sub GetLogRecords {
 }
 
 =item
-C<< $status = Bootloader::Library->Initialize ($bootloader); >>
+C<< $status = Bootloader::Library->SetLoaderType($bootloader); >>
 
 Initializes the library for the particular bootloader.
 Takes the name of the bootloader as parameter.
@@ -111,7 +113,7 @@ Returns undef on fail, defined nonzero value otherwise.
 
 EXAMPLE:
 
-  my $status = Bootloader::Library->Initialize ("lilo");
+  my $status = Bootloader::Library->SetLoaderType ("lilo");
   if (! defined ($status))
   {
     die "Error occurred while initalizing for LILO";
@@ -119,7 +121,7 @@ EXAMPLE:
 
 =cut
 
-sub Initialize {
+sub SetLoaderType {
     my $self = shift;
     my $bootloader = shift;
 
@@ -149,7 +151,7 @@ sub Initialize {
     {
 	# FIXME: handle case 'none'
 	$loader = Bootloader::Core->new ($loader);
-	$loader->l_error ("Bootloader::Library::Initialize: Initializing for unknown bootloader $bootloader");
+	$loader->l_error ("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader");
     }
 
     $self->{"loader"} = $loader;
@@ -626,6 +628,51 @@ sub GetSections {
 }
 
 =item
+C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
+
+Gets the meta data of the bootloader describing possible setting in the config,
+its data type, default value, etc.
+Returns undef on fail.
+
+=cut
+
+sub GetMetaData {
+    my $self = shift;
+
+    my $meta_ref = $self->GetMetaData();
+    if (defined $meta_ref) {
+	return $meta_ref;
+    }
+
+    my $settings_ref = $self->GetSettings ();
+    return undef unless defined $settings_ref;
+
+    # copy the hash and add export tags
+    my %metadata=();
+    if (defined $settings_ref->{"exports"}) {
+	while ((my $key, my $value) = each ( %{$settings_ref->{"exports"}} ))
+	{
+	    if (ref($value)) {
+		if  (ref($value) eq "HASH") {
+		    foreach my $k (keys %$value) {
+			$metadata{"%" . $key . "%" . $k} = $value->{$k};
+		    }
+		}
+		elsif  (ref($value) eq "ARRAY") {
+                   foreach my $i (0 .. $#$value) {
+			$metadata{"#" . $key . "#" . $i} = $value->[$i];
+                   }
+		}
+	    }
+	    else {
+		$metadata{$key} = $value;
+	    }
+	}
+    }
+    return \%metadata;
+}
+
+=item
 C<< $global_ref = Bootloader::Library->GetGlobalSettings (); >>
 
 Gets the global settings of the bootloader. See the example map above TODO
@@ -652,32 +699,9 @@ sub GetGlobalSettings {
 	return undef;
     }
 
-    # copy the hash and add export tags
+    # copy the hash and return the ref to copy
     my %globals=%{$settings_ref->{"global"}|| {}};
-    if (defined $settings_ref->{"exports"}) {
-	# $globals{"__exports"} = %{$settings_ref->{"exports"}};
 
-	my @exports;
-
-	while ((my $key, my $value) = each ( %{$settings_ref->{"exports"}} ))
-	{
-	    if (ref($value)) {
-		if  (ref($value) eq "HASH") {
-		    foreach my $k (keys %$value) {
-			$globals{"__exports__%" . $key . "%" . $k} = $value->{$k};
-		    }
-		}
-		elsif  (ref($value) eq "ARRAY") {
-                   foreach my $i (0 .. $#$value) {
-			$globals{"__exports__#" . $key . "#" . $i} = $value->[$i];
-                   }
-		}
-	    }
-	    else {
-		$globals{"__exports__" . $key} = $value;
-	    }
-	}
-    }
     return \%globals;
 }
 

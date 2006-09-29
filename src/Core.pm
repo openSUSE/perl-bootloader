@@ -1516,6 +1516,12 @@ sub UpdateBootloader {
     return $ok;
 }
 
+#
+# map<string,any> GetMetaData ()
+# sub GetMetaData() {
+#     return undef;
+# }
+#
 # boolean InitializeBootloader ()
 # sub InitializeBootloader {
 #     return undef;

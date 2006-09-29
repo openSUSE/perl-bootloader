@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Sep 29 12:41:55 CEST 2006 - jplack@suse.de
+
+- new interface for FATE#300732
+
+-------------------------------------------------------------------
 Thu Sep 28 15:47:23 CEST 2006 - aosthof@suse.de
 
 - added new interface script bootloader_entry

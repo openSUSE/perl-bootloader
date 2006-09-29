@@ -288,7 +288,7 @@ sub InitLibrary {
     my $part = ReadPartitions ();
     my $md = ReadRAID1Arrays ();
 
-    $lib_ref->Initialize (GetBootloader ());
+    $lib_ref->SetLoaderType (GetBootloader ());
     $lib_ref->DefineMountPoints ($mp);
     $lib_ref->DefinePartitions ($part);
     $lib_ref->DefineMDArrays ($md);

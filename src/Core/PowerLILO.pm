@@ -45,7 +45,7 @@ our @ISA = qw(Bootloader::Core);
 
 #module interface
 
-sub getExports() {
+sub GetMetaData() {
     my $loader = shift;
 
     # possible global entries:
@@ -159,7 +159,7 @@ sub getExports() {
 	activate => "bool:Change boot-device in NV-RAM:true",
 	timeout  => "int:Timeout in 1/10th seconds:50:0:600",
 	default  => "string:Default boot section:Linux",
-	root     => "select:Default root device::" . ":" . $root_devices,
+	root     => "selectdevice:Default root device::" . ":" . $root_devices,
 	append   => "string:Append options for kernel command line",
 	initrd   => "path:Default initrd path"			  
 	};
@@ -168,7 +168,7 @@ sub getExports() {
     
     if ( "$arch" eq "chrp" ) {
 	# pSeries only
-	$go->{clone}       = "select:Partition for boot loader duplication::" . ":" . $boot_partitions;
+	$go->{clone}       = "selectdevice:Partition for boot loader duplication::" . ":" . $boot_partitions;
 	$go->{force_fat}   = "bool:Always boot from FAT partition:false";
 	$go->{force}       = "bool:Install boot loader even on errors:false";
 
@@ -179,14 +179,14 @@ sub getExports() {
 	# only on old prep machines
 	$go->{bootfolder}  = "string:Bootfolder path";
 	$go->{boot_prep_custom}
-			   = "select:PReP partition::" . $boot_partitions;
+			   = "selectdevice:PReP partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "iseries" ) {
 	# only on legacy iseries
 	$go->{boot_slot}   = "select:Write to boot slot:B:" . "A:B:C:D";
 	$go->{boot_file}   = "path:Create boot image in file:/tmp/suse_boot_image";
 	$go->{boot_iseries_custom}
-			   = "select:PReP partition::" . $boot_partitions;
+			   = "selectdevice:PReP partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "pmac" ) {
 	# only on pmac_new and pmac_old
@@ -228,6 +228,7 @@ sub getExports() {
     }
 
     $loader->{"exports"}=\%exports;
+    return \%exports;
 }
 
 
@@ -249,7 +250,7 @@ sub new {
 
     bless ($loader);
 
-    $loader->getExports();
+    $loader->GetMetaData();
     $loader->l_milestone ("PowerLILO::new: Created PowerLILO instance");
     return $loader;
 }
@@ -266,7 +267,6 @@ from the system, but returns internal structures.
 # map<string,any> GetSettings ()
 sub GetSettings {
     my $self = shift;
-    $self->getExports();
 
     return $self->SUPER::GetSettings();
 }
