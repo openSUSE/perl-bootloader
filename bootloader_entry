@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# This script represents an interface between the postinstall and postuninstall
+# scripts of kernel rpms and the update-bootloader script. 
+# 
+# Interface:
+# ----------
+# /usr/lib/bootloader/bootloader_entry [add|remove] <pkg-name> <image-name> <initrd-name>
+#
+# Call Semantics:
+# ---------------
+# [ -x $cmd ] && $cmd <parameters>
+#
+#
+# Author: aosthof@suse.de
+#
+
+
+# Print how to use this script correctly
+function usage()
+{
+	echo "Unknown or missing parameter."
+	echo "Usage: $0 [add|remove] <pkg-name> <image-name> <initrd-name>"
+	exit 1
+}
+
+
+# Get all command line arguments
+function getargs()
+{
+    declare j=0
+    declare -a args
+
+    for i in "$@" ; do
+    {
+        args[$j]=$i
+		#echo "args[$j] = ${args[$j]}"
+		((j++))
+    }
+    done
+
+    action=${args[0]}		# contains the action to be exectued, e.g. add or remove
+    package=${args[1]}		# contains the package name, e.g. kernel-smp-2.6.18-4.x86_64.rpm
+    image=${args[2]}		# contains the full image name, e.g. vmlinuz-2.6.18-4-smp
+    initrd=${args[3]}		# contains the full initrd name, e.g. initrd-2.6.18-4-smp
+	
+    tmp=${package/kernel-/}
+    kerntype=${tmp%%-*}		# contains the kernel type, e.g. xen or xenpae
+
+	kernversion=${image#*-}	# contains the kernel version, e.g. 2.6.18-4-smp
+}
+
+
+# Wrapper for the update-bootloader function
+function update_bootloader() 
+{
+    [ -x /sbin/update-bootloader -a \
+      "$YAST_IS_RUNNING" != instsys ] || return 0
+    /sbin/update-bootloader "$@"
+}
+
+
+##############################
+# Add a new bootloader entry #
+##############################
+function add_entry()
+{
+	# Set up the new kernel
+	if [ "$YAST_IS_RUNNING" != instsys ]; then
+    	case $kerntype in
+        	(kdump|um)
+            	;;
+	        (*)
+    	        opt_xen_kernel=
+        	    case $kerntype in
+            	xen*)
+	                set -- $kerntype
+    	            set -- ${1#xen}
+        	        opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
+            	    ;;
+	            esac
+
+				# Add the new bootloader entry
+            	update_bootloader --image /boot/$image \
+        	                      --initrd /boot/$initrd \
+								  --default --add \
+	                              --force $opt_xen_kernel \
+								  --name "Kernel-$kernversion"
+
+	            # Run the bootloader (e.g., lilo).
+    	        update_bootloader --refresh
+        	    ;;
+	    esac
+	fi
+}
+
+
+#######################################
+# Remove an existing bootloader entry #
+#######################################
+function remove_entry()
+{
+    #echo 'This is the function "remove_entry"'
+
+   	update_bootloader --image /boot/$image \
+       	              --initrd /boot/$initrd \
+           	          --remove --force \
+					  --name "Kernel-$kernversion"
+
+	# Run the bootloader (e.g., lilo).
+   	update_bootloader --refresh
+}
+
+
+
+#####################  M A I N  ###############################################
+
+
+# Checks if correct amount of arguments is given
+if [ "$#" -ne "4" ] ; then 
+    usage
+fi
+
+# Get all given arguments
+getargs $@
+
+#echo "Action  = $action"
+#echo "Package = $package"
+#echo "Kernel  = $image"
+#echo "Initrd  = $initrd"
+#echo "Type    = $kerntype"
+#echo "Version = $kernversion"
+
+# Find out which action should be executed
+case $1 in
+    add)
+        # Add a new bootloader entry
+        add_entry
+		;;
+    remove) 
+        # Remove an existing bootloader entry
+        remove_entry
+		;;
+    *)  
+        # Unknown argument    
+        usage
+        ;;
+esac
+

@@ -1,7 +1,7 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/STABLE
-#SUBMIT_DIR2=/work/src/done/SLES10
+SUBMIT_DIR2=/work/src/done/SLES10
 #BUILD_DIST=ppc
 ifeq ($(BUILD_DIST),ppc)
 BUILD=powerpc32 /work/src/bin/build
@@ -36,7 +36,7 @@ submit:	.submitted
 .checkexportdir:
 	@[ -f .exportdir ] && [ -d "$$(<.exportdir)" ] || make clean
 
-.exportdir:	$(PKG).changes version
+.exportdir:	$(PKG).changes $(PKG).spec.in version
 	ln -sfn src Bootloader
 	env PERLLIB=.:$PERLLIB perl -c ./update-bootloader
 	@rm -f .built .submitted Bootloader

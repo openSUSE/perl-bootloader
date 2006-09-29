@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Sep 28 15:47:23 CEST 2006 - aosthof@suse.de
+
+- added new interface script bootloader_entry
+
+-------------------------------------------------------------------
 Tue Sep 19 17:29:38 CEST 2006 - jplack@suse.de
 
 - fix man page for update-bootloader
