@@ -638,38 +638,9 @@ Returns undef on fail.
 
 sub GetMetaData {
     my $self = shift;
+    my $loader = $self->{loader} || return undef;
 
-    my $meta_ref = $self->GetMetaData();
-    if (defined $meta_ref) {
-	return $meta_ref;
-    }
-
-    my $settings_ref = $self->GetSettings ();
-    return undef unless defined $settings_ref;
-
-    # copy the hash and add export tags
-    my %metadata=();
-    if (defined $settings_ref->{"exports"}) {
-	while ((my $key, my $value) = each ( %{$settings_ref->{"exports"}} ))
-	{
-	    if (ref($value)) {
-		if  (ref($value) eq "HASH") {
-		    foreach my $k (keys %$value) {
-			$metadata{"%" . $key . "%" . $k} = $value->{$k};
-		    }
-		}
-		elsif  (ref($value) eq "ARRAY") {
-                   foreach my $i (0 .. $#$value) {
-			$metadata{"#" . $key . "#" . $i} = $value->[$i];
-                   }
-		}
-	    }
-	    else {
-		$metadata{$key} = $value;
-	    }
-	}
-    }
-    return \%metadata;
+    return $loader->GetMetaData();;
 }
 
 =item

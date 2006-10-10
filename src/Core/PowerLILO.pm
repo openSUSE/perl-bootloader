@@ -457,7 +457,6 @@ sub Info2Global {
 
     my @lines = @{$globinfo{"__lines"} || []};
     my @lines_new = ();
-    my @added_lines = ();
     my $go = $self->{"exports"}{"global_options"};
     my $arch = $self->{"exports"}{"arch"};
 
@@ -487,8 +486,7 @@ sub Info2Global {
 	}
 	else {
 	    if (defined ($globinfo{$key})) {
-		$line_ref->{"value"} = $globinfo{$key};
-		delete ($globinfo{$key});
+		$line_ref->{"value"} = delete $globinfo{$key};
 	    }
 	    else {
 		next;
@@ -507,7 +505,6 @@ sub Info2Global {
     };
 
     @lines = @lines_new;
-    push @lines, @added_lines;
 
 
     while ((my $key, my $value) = each (%globinfo)) {
