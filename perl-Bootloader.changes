@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct 12 09:27:48 CEST 2006 - jplack@suse.de
+
+- first chunk of changes for GRub using generic interface,
+  grub.conf handling still missing
+
+-------------------------------------------------------------------
 Fri Sep 29 12:41:55 CEST 2006 - jplack@suse.de
 
 - new interface for FATE#300732

@@ -78,6 +78,202 @@ our @ISA = ('Bootloader::Core');
 
 #module interface
 
+sub GetMetaData() {
+    my $loader = shift;
+
+    # possible global entries:
+    #
+
+    # activate		# encode somewhere in grub.conf
+    # generic_mbr	# ditto
+
+    # boot_custom	# data for grub.conf
+    # boot_mbr
+    # boot_root
+
+    # map
+    # unhide
+    # hide
+    # rootnoverify
+    # serial
+    # terminal
+    # default
+    # timeout
+    # fallback
+    # hiddenmenu
+    # gfxmenu
+    # * password::                    Set a password for the menu interface
+
+    # * bootp:: --with-configfile                      Initialize a network device via BOOTP
+    # * color::                       Color the menu interface
+    # * dhcp::                        Initialize a network device via DHCP
+    # * ifconfig::                    Configure a network device manually
+    # * rarp::                        Initialize a network device via RARP
+    # debug
+
+
+
+
+
+    # image section
+
+    # root (hd0,0) # omit this, it's always encoded in image/initrd path
+    # image	# kernel /new_kernel
+    # append
+    # initrd
+    # savedefault # not supported
+
+    # xen section
+
+    # xen
+    # xen_append
+    # image
+    # append
+    # initrd
+
+
+    # chainloader section
+    # lock
+    # root
+    # verifyroot	# true if rootnoverify is used instead of root
+    # makeactive
+    # blockoffset	# this is encoded in 'chainloader' +1
+
+
+    # FIXME: add help texts for all widgets
+
+    my %exports;
+
+
+    my @bootpart;
+    my @partinfo = @{$loader->{"partitions"} || []};
+
+    # Partitioninfo is a list of list references of the format:
+    #   Device,   disk,    nr, fsid, fstype,   part_type, start_cyl, size_cyl
+    #   /dev/sda9 /dev/sda 9   258   Apple_HFS `primary   0          18237
+    #
+
+    # boot from any primary partition with PReP or FAT partition id
+    @bootpart = map {
+	my ($device, $disk, $nr, $fsid, $fstype,
+	    $part_type, $start_cyl, $size_cyl) = @$_;
+	($part_type eq "`primary" and $fstype ne "xfs" and
+	     ($fsid eq "131" or $fsid eq "130"))
+	         ? $device : ();
+	} @partinfo;
+
+    my $boot_partitions = join(":", @bootpart);
+
+    # give a list of possible root devices: all MD devices
+    # and all 'Linux' devices above 20 cylinders
+    my $root_devices = join(":",
+	(map {
+	    my ($device, $disk, $nr, $fsid, $fstype,
+		$part_type, $start_cyl, $size_cyl) = @$_;
+	    (($fsid eq "131" or $fstype =~ m:linux:i) and
+	     $size_cyl >= 20)
+		? $device : ();
+	} @partinfo),
+	keys %{$loader->{"md_arrays"} || {}}
+	# FIXME this does no longer include raid0 and raid5 devices
+    );
+
+    # FIXME: does it make sense to distinguish between x86_64 and x86?
+    $exports{"arch"} = "x86";
+    $exports{"global_options"} = {
+ 	# for iseries list for others exactly one allowed
+	boot     => "multi:Boot Loader Locations:",
+	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
+	timeout  => "int:Timeout in Seconds:8:0:60",
+	default  => "string:Default Boot Section:Linux",
+	generic_mbr => "bool:Write generic Boot Code to MBR:true",
+	boot_custom => "selectdevice:Custom Boot Partition::" . $boot_partitions,
+	boot_mbr => "bool:Boot from Master Boot Record:false",
+	boot_root => "bool:Boot from Root Partition:true",
+	boot_boot => "bool:Boot from Boot Partition:true",
+
+	# map
+	# unhide
+	# hide
+	# rootnoverify
+
+	serial => "string:Serial connection parameters:",
+	terminal => "string:Terminal definition:",
+	fallback => "string:Fallback sections if default fails:1",
+	hiddenmenu => "bool:Hide menu on boot:false",
+	gfxmenu => "path:Graphical menu file:/boot/message",
+	password => "password:Password for the Menu Interface:",
+
+	# * bootp:: --with-configfile                      Initialize a network device via BOOTP
+	# * color::                       Color the menu interface
+	# * dhcp::                        Initialize a network device via DHCP
+	# * ifconfig::                    Configure a network device manually
+	# * rarp::                        Initialize a network device via RARP
+	debug => "bool:Debugging flag:false"
+    };
+
+    my $go = $exports{"global_options"};
+
+    $exports{"section_options"} = {
+	type_image        => "bool:Kernel section",
+	# image_name     => "string:Name of section", # implicit
+	image_image       => "path:Kernel image:/boot/vmlinux",
+	image_root        => "select:Root device::" . $root_devices,
+	image_vgamode     => "string:Vga Mode",
+	image_append      => "string:Optional kernel command line parameter",
+	image_initrd      => "path:Initial RAM disk:/boot/initrd",
+
+	type_other        => "bool:Chainloader section",
+	lock => "bool:Use password protection:false",
+	root => "selectdevice:Other system::" .
+	    join(":",
+		 map {
+		     my ($device, $disk, $nr, $fsid, $fstype,
+			 $part_type, $start_cyl, $size_cyl) = @$_;
+		     ($size_cyl >= 20) ? $device : ();
+		 } @partinfo
+	    ),
+	verifyroot => "bool:Verify filesystem before booting:false",
+	makeactive => "bool:Activate this partition when selected for boot:false",
+	blockoffset => "int:Block offset for chainloading:1:0:32",
+
+	type_xen          => "bool:Xen section",
+	xen_xen => "select:Hypervisor:/boot/xen.gz:/boot/xen.gz:/boot/xen-pae.gz",
+	xen_xen_append => "string:Additional Xen Hypervisor Parameters:",
+	xen_image       => "path:Kernel image:/boot/vmlinux",
+	xen_root        => "select:Root device::" . $root_devices,
+	xen_vgamode     => "String:Vga Mode",
+	xen_append      => "string:Optional kernel command line parameter",
+	xen_initrd      => "path:Initial RAM disk:/boot/initrd",
+    };
+
+    my $so = $exports{"section_options"};
+
+    if ( "$exports{arch}" eq "pmac" ) {
+	# only on pmac_new and pmac_old
+	$so->{image_copy}  = "bool:Copy image to boot partition:false";
+
+	# define new section type for MacOS boot
+	$so->{type_other}  = "bool:Boot other system";
+	# $so{other_label} = "string:Name of section" # implicit!
+	$so->{other_other} = "select:Boot partition of other system::" . join
+	    (":",
+	     # boot from any Apple_HFS partition but _only_ take the big ones
+	     map {
+		 my ($device, $disk, $nr, $fsid, $fstype,
+		     $part_type, $start_cyl, $size_cyl) = @$_;
+		 ($fstype eq "Apple_HFS" and $size_cyl >= 20)
+		     ? $device : ();
+	     } @partinfo
+	     );
+    }
+
+    $loader->{"exports"}=\%exports;
+    return \%exports;
+}
+
+
+
 =item
 C<< $obj_ref = Bootloader::Core::GRUB->new (); >>
 
@@ -160,6 +356,7 @@ sub GrubDev2UnixDev {
     {
 	$dev = $1;
     }
+    # $dev = UnixDevName($dev)
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
 	if ($dev eq $fw) {
@@ -343,11 +540,11 @@ sub CreateGrubConfLine {
     my $self = shift;
     my $target = shift;
     my $discswitch = shift;
-    my $embed_stage15 = shift;
+    my $use_setup = shift;
 
 
     my $line_ref = {};
-    if ($embed_stage15)
+    if ($use_setup)
     {
 	$line_ref = {
 	    'options' => [
@@ -439,100 +636,69 @@ sub ParseLines {
     my $grub_root = "";
     my @grub_conf = ();
     my @devices = ();
-    my $embed_stage15 = 0;
+
     foreach my $line (@grub_conf_lines)
     {
-	if ($line !~ /^[ \t]*([^ \t]+)([ \t]+([^ \t]+.*))?$/)
-	{
-	    next;
-	}
+	next unless $line =~ /^\s*(\S+)(\s+(\S+.*))?$/;
+
 	my $key = $1;
 	my $value = $3;
-	if ($key eq "quit" || substr ($key, 0, 1) eq "#")
-	{
-	    next;
-	}
-	elsif ($key eq "root" || $key eq "rootnoverify")
+	
+	last if $key eq "quit";
+	next if substr ($key, 0, 1) eq "#";
+
+	if ($key eq "root" || $key eq "rootnoverify")
 	{
 	    $grub_root = $value;
 	}
-	elsif ($key eq "install")
-	{
+	elsif (($key eq "install") or ($key eq "setup")) {
 	    my @options = ();
 	    my %grub_conf_item = ();
-	    $grub_conf_item{"command"} = "install";
-	    my @entries = split /[ \t]/, $value;
-	    @entries = grep {
-		$_ ne "";
-	    } @entries;
-	    my $shift = 0;
-	    my $tmp = $entries[$shift] || "";
+	    $grub_conf_item{"command"} = $key;
+	    my @entries = split /\s+/, $value;
+	    my $tmp = shift @entries;
 	    while (substr ($tmp, 0, 2) eq "--")
 	    {
 		push @options, $tmp;
-		$shift = $shift + 1;
-		$tmp = $entries[$shift] || "";
-	    }
-	    if (substr ($tmp, 0, length ($grub_root)) eq $grub_root)
-	    {
-		$tmp = substr ($tmp, length ($grub_root));
-	    }
-	    $grub_conf_item{"stage1"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
-	    $tmp = $entries[$shift + 1] || "";
-	    if ("d" eq $tmp)
-	    {
-		$grub_conf_item{"discswitch"} = "d";
-		$shift = $shift + 1;
-		$tmp = $entries[$shift + 1] || "";
-	    }
-	    else
-	    {
-		$grub_conf_item{"discswitch"} = "";
-	    }
-	    $tmp = $self->GrubDev2UnixDev ($tmp);
-	    push @devices, $tmp;
-	    $grub_conf_item{"device"} = $tmp;
-	    $tmp = $entries[$shift + 2] || "";
-	    if (substr ($tmp, 0, length ($grub_root)) eq $grub_root)
-	    {
-		$tmp = substr ($tmp, length ($grub_root));
-	    }
-	    $grub_conf_item{"stage2"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
-	    $grub_conf_item{"addr"} = $entries[$shift + 3] || "";
-	    $tmp = $entries[$shift + 4] || "";
-	    if ($tmp ne "")
-	    {
-		$grub_conf_item{"menu"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
+		$tmp = shift @entries;
 	    }
 	    $grub_conf_item{"options"} = \@options;
-	    push @grub_conf, \%grub_conf_item;
-	}
-	elsif ($key eq "setup")
-	{
-	    $embed_stage15 = 1;
-	    my @options = ();
-	    my %grub_conf_item = ();
-	    $grub_conf_item{"command"} = "setup";
-	    my @entries = split /[ \t]/, $value;
-	    @entries = grep {
-		$_ ne "";
-	    } @entries;
-	    my $shift = 0;
-	    my $tmp = $entries[$shift] || "";
-	    while (substr ($tmp, 0, 2) eq "--")
-	    {
-		push @options, $tmp;
-		$shift = $shift + 1;
-		$tmp = $entries[$shift] || "";
+
+	    if ($key eq "install") {
+		$grub_conf_item{"stage1"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
+		$tmp = shift @entries;
+		if ("d" eq $tmp)
+		{
+		    $grub_conf_item{"discswitch"} = "d";
+		    $tmp = shift @entries;
+		}
+		else
+		{
+		    $grub_conf_item{"discswitch"} = "";
+		}
+		$tmp = $self->GrubDev2UnixDev ($tmp);
+		push @devices, $tmp;
+		$grub_conf_item{"device"} = $tmp;
+		$grub_conf_item{"stage2"} = $self->GrubPath2UnixPath ( shift @entries, $grub_root);
+		$grub_conf_item{"addr"} = shift @entries || "";
+		$tmp = shift @entries;
+		if ($tmp ne "")
+		{
+		    $grub_conf_item{"menu"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
+		}
 	    }
-	    $tmp = $self->GrubDev2UnixDev ($tmp);
-	    push @devices, $tmp;
-	    $grub_conf_item{"device"} = $tmp;
-	    # not interested in the rest
+	    else
+	    { # "setup"
+		$tmp = $self->GrubDev2UnixDev ($tmp);
+		push @devices, $tmp;
+		$grub_conf_item{"options"} = \@options;
+		$grub_conf_item{"device"} = $tmp;
+		# not interested in the rest
+	    }
+	    push @grub_conf, \%grub_conf_item;
 	}
     }
     $glob_ref->{"stage1_dev"} = \@devices;
-    $glob_ref->{"embed_stage1.5"} = $embed_stage15;
     $self->{"sections"} = $sect_ref;
     $self->{"global"} = $glob_ref;
     $self->{"grub_conf"} = \@grub_conf;
@@ -559,6 +725,13 @@ sub CreateLines {
 	"    ",
 	" "
     );
+
+    # handle 'hidden magic' entries
+    map {
+	s/^/##YaST - /
+	    if /^activate/ or /^generic_mbr/;
+    } @{$menu_lst};
+
     # now process the device map
     my %glob = %{$self->{"global"}};
     my @device_map = ();
@@ -575,13 +748,9 @@ sub CreateLines {
     {
 	$s1_devices{$s1dev} = 1;
     }
-    my $embed_stage15 = $glob{"embed_stage1.5"} || 0;
-    $self->l_milestone ("GRUB::CreateLines: Embed Stage1.5: $embed_stage15");
-
     my @grub_conf_items = grep {
 	my $keep = 1;
-	if (($_->{"command"} eq "install" && ! $embed_stage15)
-	    || ($_->{"command"} eq "setup" && $embed_stage15))
+	if ($_->{"command"} eq "install"|| $_->{"command"} eq "setup")
 	{
 	    $keep = defined ($s1_devices{$_->{"device"}});
 	    delete ($s1_devices{$_->{"device"}});
@@ -625,7 +794,7 @@ sub CreateLines {
 	}
 	foreach my $new_dev (keys (%s1_devices))
 	{
-	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch, $embed_stage15);
+	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch, 1);
 
 	    push @grub_conf_items, $line;
 	}
@@ -665,7 +834,7 @@ sub CreateLines {
 	    my $options = join " ", @{$grub_conf_item->{"options"} || []};
 	    my $location = $self->UnixDev2GrubDev ($grub_conf_item->{"device"});
 	    (my $s1dev, my $s1path) = $self->SplitDevPath ("/boot/grub/stage1");
-            if( $s1dev =~  m:/dev/md\d\d?: )
+            if( $s1dev =~  m:/dev/md\d+: )
             {
                 my $mddiscs = $self->MD2Members( $s1dev );
                 foreach my $mddisc (@$mddiscs)
@@ -676,6 +845,7 @@ sub CreateLines {
                        last;
                     }
                 }
+		# FIXME: this overwrites the last change!!! Who did that?
                 $s1dev = $grub_conf_item->{"device"};
             }
 	    $s1dev = $self->UnixDev2GrubDev ($s1dev);
@@ -1054,6 +1224,7 @@ sub Info2Section {
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
+    my $so = $self->{"exports"}{"section_options"};
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
@@ -1241,6 +1412,7 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
+    my $go = $self->{"exports"}{"global_options"};
 
     my %ret = ();
     my $grub_root = "";
@@ -1248,11 +1420,14 @@ sub Global2Info {
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
+	my ($type) = split /:/, $go->{$key};
+
 	if ($key eq "root" || $key eq "rootnoverify")
 	{
 	    $grub_root = $val;
+	    $ret{verifyroot} = ($key eq "root");
 	}
-	if ($key eq "default")
+	elsif ($key eq "default")
 	{
 	    # cast $val to integer. That means that if no valid default has
 	    # been given, we'll take the first section as default.
@@ -1260,22 +1435,17 @@ sub Global2Info {
 	    my $defindex = 0+ $val;
 	    $ret{"default"} = $sections[$defindex];
 	}
-	elsif ($key eq "timeout" || $key eq "password")
+	elsif ($type eq "path")
 	{
-	    $ret{$key} = $line_ref->{"value"};
+	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
-	elsif ($key eq "gfxmenu")
-	{
-	    $ret{"gfxmenu"} = $self->GrubPath2UnixPath ($val, $grub_root);
+	elsif ($type eq "bool") {
+	    $ret{$key} = "true";
 	}
-	elsif ($key eq "hiddenmenu")
-	{
-	    $ret{"prompt"} = 0;
+	else {
+	    $ret{$key} = $val;
 	}
-    }
-    if (! defined ($ret{"prompt"}))
-    {
-	$ret{"prompt"} = 1;
+	# FIXME handle boot_* parameters
     }
     $ret{"__lines"} = \@lines;
     return \%ret;
@@ -1298,13 +1468,10 @@ sub Info2Global {
     my $sections_ref = shift;
 
     my @lines = @{$globinfo{"__lines"} || []};
-    my $type = $globinfo{"type"} || "";
-
+    my $go = $self->{"exports"}{"global_options"};
+  
     # allow to keep the section unchanged
-    if (! ($globinfo{"__modified"} || 0))
-    {
-	return \@lines;
-    }
+    return \@lines unless $globinfo{"__modified"} || 0;
 
     if (scalar (@lines) == 0)
     {
@@ -1318,79 +1485,66 @@ sub Info2Global {
     @lines = map {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
-	if ($key eq "default")
-	{
-	    if (! defined ($globinfo{"default"}))
-	    {
+	my ($type) = split /:/, $go->{$key};
+
+	# only accept known global options :-)
+	if ( !exists $go->{$key} ) {
 		$line_ref = undef;
-	    }
-	    else
-	    {
-		$line_ref->{"value"} = $self->IndexOfSection ($globinfo{$key}, $sections_ref);
-		delete ($globinfo{$key});
-	    }
 	}
-	elsif ($key eq "timeout" || $key eq "password")
+	elsif (!defined ($globinfo{$key}))
 	{
-	    if (! defined ($globinfo{$key}))
-	    {
-		$line_ref = undef;
-	    }
-	    else
-	    {
-		$line_ref->{"value"} = $globinfo{$key};
-		delete ($globinfo{$key});
-	    }
+	    $line_ref = undef;
 	}
-	elsif ($key eq "gfxmenu")
+	elsif ($key eq "default")
 	{
-	    if (! defined ($globinfo{$key}))
-	    {
-		$line_ref = undef;
-	    }
-	    else
-	    {
-		$line_ref->{"value"} = $self->UnixPath2GrubPath ($globinfo{$key}, "");
-		delete ($globinfo{$key});
-	    }
+	    $line_ref->{"value"} = $self->IndexOfSection (delete $globinfo{$key}, $sections_ref);
 	}
-	elsif ($key eq "hiddenmenu")
+	elsif ($key eq "password")
 	{
-            if (defined ($globinfo{"prompt"}) && "0" ne $globinfo{"prompt"})
-            {
-                $line_ref = undef;
-            }
-            else
-            {
-                $line_ref->{"value"} = "";
-            }
-	    $globinfo{"prompt"} = 1; # key deletion is intentional not here
+	    # FIXME: Do md5 encryption
+	    $line_ref->{"value"} = delete $globinfo{$key};
+
 	}
-	$line_ref;
+	elsif ($type eq "path")
+	{
+	    $line_ref->{"value"} = $self->UnixPath2GrubPath (delete $globinfo{$key}, "");
+	}
+	# bool values appear in a config file or not. there might be types
+	# like 'yesno' or 'truefalse' in the future which behave differently
+	elsif ($type eq "bool") {
+	    $line_ref->{"value"} =  delete $globinfo{$key} ne "true" ? undef : "";
+	}
+	else
+	{
+	    $line_ref->{"value"} = delete $globinfo{$key};
+	}
+	defined $line_ref ? $line_ref : ();
     } @lines;
 
-    @lines = grep {
-	defined $_;
-    } @lines;
 
     while ((my $key, my $value) = each (%globinfo))
     {
-	if ($key eq "default" || $key eq "timeout" || $key eq "gfxmenu" || $key eq "password")
-	{
-	    $value = $self->IndexOfSection ($value, $sections_ref) if ($key eq "default");
-	    $value = $self->UnixPath2GrubPath ($value) if ($key eq "gfxmenu");
-	    push @lines, {
-		"key" => $key,
-		"value" => $value,
-	    };
+	# only accept known global options :-)
+	next unless exists $go->{$key};
+	my ($type) = split /:/, $go->{$key};
+
+	if ($key eq "default") {
+	    $value = $self->IndexOfSection ($value, $sections_ref);
 	}
-    }
-    if (! (defined ($globinfo{"prompt"}) && "0" ne $globinfo{"prompt"} && 0 != $globinfo{"prompt"}))
-    {
+	# bool values appear in a config file or not
+	elsif ($type eq "bool") {
+	    next if $value ne "true";
+	    $value = "";
+	}
+	elsif ($type eq "path")
+	{
+	    $value = $self->UnixPath2GrubPath ($value, "");
+	}
+
 	push @lines, {
-	    "key" => "hiddenmenu",
-	    "value" => "",
-	};
+	    "key" => $key,
+	    "value" => $value,
+	}
     }
 
     return \@lines;
@@ -1399,7 +1553,7 @@ sub Info2Global {
 =item
 C<< $settings_ref = Bootloader::Core::GRUB->GetSettings (); >>
 
-returns the complete settings in a hash. Doesn't read the settings
+returns the complete settings in a hash. Does not read the settings
 from the system, but returns internal structures.
 
 =cut
@@ -1423,7 +1577,7 @@ sub GetSettings {
 C<< $status = Bootloader::Core::GRUB->SetSettings (\%settings); >>
 
 Stores the settings in the given parameter to the internal
-structures. Doesn't touch the system.
+structures. Does not touch the system.
 Returns undef on fail, defined nonzero value on success.
 
 =cut

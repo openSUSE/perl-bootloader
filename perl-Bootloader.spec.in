@@ -17,6 +17,7 @@ Release:      0
 Requires:     perl >= %{perl_version}
 Requires:     perl-gettext
 Requires:     mdadm e2fsprogs
+Requires:     limal-bootloader >= 1.2.2
 Autoreqprov:  on
 Group:        System/Boot
 License:      GPL

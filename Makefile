@@ -38,7 +38,7 @@ submit:	.submitted
 
 .exportdir:	$(PKG).changes $(PKG).spec.in version
 	ln -sfn src Bootloader
-	env PERLLIB=.:$PERLLIB perl -c ./update-bootloader
+	env PERLLIB=.:$$PERLLIB perl -c ./update-bootloader
 	@rm -f .built .submitted Bootloader
 	set -e ; set -x ;\
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \

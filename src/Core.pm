@@ -665,6 +665,9 @@ sub ProcessSingleMenuFileLine($$$) {
 
     my @ret = ();
 
+    # convert 'hidden magic' entry to normal one
+    $line =~ s/^##YaST - //;
+
     if ($self->MenuFileLineEmpty ($line))
     {
 	# ignore empty line
