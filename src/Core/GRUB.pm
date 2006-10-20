@@ -1468,6 +1468,10 @@ sub Info2Global {
     my $sections_ref = shift;
 
     my @lines = @{$globinfo{"__lines"} || []};
+
+    # REVIEWME: make sure metadata are available (e.g. in the chroot
+    # environment)
+    GetMetaData();
     my $go = $self->{"exports"}{"global_options"};
   
     # allow to keep the section unchanged
