@@ -1471,7 +1471,7 @@ sub Info2Global {
 
     # REVIEWME: make sure metadata are available (e.g. in the chroot
     # environment)
-    GetMetaData();
+    $self->GetMetaData();
     my $go = $self->{"exports"}{"global_options"};
   
     # allow to keep the section unchanged

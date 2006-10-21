@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Sat Oct 21 15:47:49 CEST 2006 - od@suse.de
+
+- grub: using OO call for last fix (#213255)
+
+-------------------------------------------------------------------
+Fri Oct 20 17:25:03 CEST 2006 - od@suse.de
+
+- grub: fix writing globals (#213255)
+
+-------------------------------------------------------------------
 Thu Oct 12 09:27:48 CEST 2006 - jplack@suse.de
 
 - first chunk of changes for GRub using generic interface,
