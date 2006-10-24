@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Oct 23 16:34:14 CEST 2006 - jplack@suse.de
+
+- move GetMetaData call to the constructor (#213255)
+
+-------------------------------------------------------------------
 Sat Oct 21 15:47:49 CEST 2006 - od@suse.de
 
 - grub: using OO call for last fix (#213255)

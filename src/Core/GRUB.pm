@@ -287,6 +287,10 @@ sub new {
 
     my $loader = $self->SUPER::new ($old);
     bless ($loader);
+
+    # FIXME: Add an 'init-only' parameter to GetMetaData if
+    # perfomance goes down
+    $loader->GetMetaData();
     $loader->l_milestone ("GRUB::new: Created GRUB instance");
     return $loader;
 }
@@ -1468,10 +1472,6 @@ sub Info2Global {
     my $sections_ref = shift;
 
     my @lines = @{$globinfo{"__lines"} || []};
-
-    # REVIEWME: make sure metadata are available (e.g. in the chroot
-    # environment)
-    $self->GetMetaData();
     my $go = $self->{"exports"}{"global_options"};
   
     # allow to keep the section unchanged
