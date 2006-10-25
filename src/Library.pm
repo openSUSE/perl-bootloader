@@ -101,7 +101,7 @@ sub GetLogRecords {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->GetLogRecords ();
+    return defined $loader ? $loader->GetLogRecords () : undef;
 }
 
 =item
@@ -182,6 +182,8 @@ sub DefineMountPoints {
     my $mountpoints_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
     {
 	$loader->l_debug ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
@@ -222,6 +224,8 @@ sub DefinePartitions {
     my $partitions_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     foreach my $part_ref (@{$partitions_ref})
     {
 	my ($part, $disk, $num, @part_info ) = @{$part_ref};
@@ -261,6 +265,8 @@ sub DefineMDArrays {
     my $md_arrays_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
     {
 	my $members = join ", ", @{$members_ref};
@@ -290,6 +296,8 @@ sub ReadSettings {
     my $self = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my $files_ref = $loader->ReadFiles ($loader->ListFiles ());
     if (! defined ($files_ref))
     {
@@ -325,6 +333,8 @@ sub WriteSettings {
 # $menu_only = 0;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     $loader->{"resolve_symlinks"} = 1;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -355,6 +365,8 @@ sub ReadSettingsTmp {
     my $tmp_dir = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my @files = @{$loader->ListFiles ()};
     my %filenames = ();
     @files = map {
@@ -399,6 +411,8 @@ sub WriteSettingsTmp {
     my $tmp_dir = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
     {
@@ -437,6 +451,8 @@ sub GetFilesContents {
     my $self = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     $loader->{"resolve_symlinks"} = 0;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -466,6 +482,8 @@ sub SetFilesContents {
     my $files_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my %lines = ();
     while ((my $fn, my $contents) = each (%{$files_ref}))
     {
@@ -500,7 +518,7 @@ sub UpdateBootloader {
     my $avoid_init = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->UpdateBootloader ($avoid_init);
+    return defined $loader ? $loader->UpdateBootloader ($avoid_init) : undef;
 }
 
 =item
@@ -523,7 +541,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->InitializeBootloader ();
+    return defines $loader ? $loader->InitializeBootloader () : undef;
 }
 
 =item
@@ -550,7 +568,7 @@ sub ListConfigurationFiles {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->ListFiles ();
+    return defined $loader ? $loader->ListFiles () : undef;
 }
 
 =item
@@ -569,8 +587,7 @@ sub GetSettings {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    my $ret = $loader->GetSettings ();
-    return $ret;
+    return defined $loader ? $loader->GetSettings () : undef;
 }
 
 =item
@@ -590,7 +607,7 @@ sub SetSettings {
     my $settings_ref = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->SetSettings ($settings_ref);
+    return defined $loader ? $loader->SetSettings ($settings_ref) : undef;
 }
 
 # wrappers for easier use

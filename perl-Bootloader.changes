@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Oct 25 10:29:43 CEST 2006 - jplack@suse.de
+
+- do error handling when $loader is not yet initialized (#213873)
+
+-------------------------------------------------------------------
 Mon Oct 23 16:34:14 CEST 2006 - jplack@suse.de
 
 - move GetMetaData call to the constructor (#213255)
