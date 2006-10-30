@@ -247,7 +247,6 @@ sub new {
     $loader->{"default_global_lines"} = [
 	{ key => "activate", value => "" },
     ];
-
     bless ($loader);
 
     $loader->GetMetaData();
