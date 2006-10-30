@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Oct 31 00:33:15 CET 2006 - od@suse.de
+
+- increase maximum timeout for grub to 3600 seconds (#214146)
+
+-------------------------------------------------------------------
 Wed Oct 25 10:29:43 CEST 2006 - jplack@suse.de
 
 - do error handling when $loader is not yet initialized (#213873)

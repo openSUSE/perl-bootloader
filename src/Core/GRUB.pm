@@ -184,7 +184,7 @@ sub GetMetaData() {
  	# for iseries list for others exactly one allowed
 	boot     => "multi:Boot Loader Locations:",
 	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
-	timeout  => "int:Timeout in Seconds:8:0:60",
+	timeout  => "int:Timeout in Seconds:8:0:3600",
 	default  => "string:Default Boot Section:Linux",
 	generic_mbr => "bool:Write generic Boot Code to MBR:true",
 	boot_custom => "selectdevice:Custom Boot Partition::" . $boot_partitions,
