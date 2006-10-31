@@ -541,7 +541,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return defines $loader ? $loader->InitializeBootloader () : undef;
+    return defined $loader ? $loader->InitializeBootloader () : undef;
 }
 
 =item

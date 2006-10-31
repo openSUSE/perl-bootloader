@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Oct 31 15:47:35 CET 2006 - jplack@suse.de
+
+- fix typo in Library.pm (#215613)
+- reduce build dependencies
+- version bump 0.3.5
+
+-------------------------------------------------------------------
 Tue Oct 31 00:33:15 CET 2006 - od@suse.de
 
 - increase maximum timeout for grub to 3600 seconds (#214146)

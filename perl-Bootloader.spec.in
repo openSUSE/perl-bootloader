@@ -26,6 +26,7 @@ Source:       perl-Bootloader-%{version}.tar.bz2
 Source1:      update-bootloader
 Source2:      bootloader_entry
 BuildRoot:    %{_tmppath}/%{name}-%{version}-build
+BuildRequires: -mdadm -e2fsprogs -limal-bootloader
 
 %description
 Perl modules for configuring various boot loaders.
