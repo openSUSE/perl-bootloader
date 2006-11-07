@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Nov  7 15:27:15 CET 2006 - jplack@suse.de
+
+- fix implementation for grub.conf generation and parsing
+  (FATE#300732, bug#213256)
+- version bump 0.4.0
+
+-------------------------------------------------------------------
 Tue Oct 31 15:47:35 CET 2006 - jplack@suse.de
 
 - fix typo in Library.pm (#215613)
