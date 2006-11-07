@@ -5,7 +5,7 @@
 # 
 # Interface:
 # ----------
-# /usr/lib/bootloader/bootloader_entry [add|remove] <pkg-name> <image-name> <initrd-name>
+# /usr/lib/bootloader/bootloader_entry [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>
 #
 # Call Semantics:
 # ---------------
@@ -20,7 +20,7 @@
 function usage()
 {
 	echo "Unknown or missing parameter."
-	echo "Usage: $0 [add|remove] <pkg-name> <image-name> <initrd-name>"
+	echo "Usage: $0 [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>"
 	exit 1
 }
 
@@ -34,20 +34,15 @@ function getargs()
     for i in "$@" ; do
     {
         args[$j]=$i
-		#echo "args[$j] = ${args[$j]}"
 		((j++))
     }
     done
 
-    action=${args[0]}		# contains the action to be exectued, e.g. add or remove
-    package=${args[1]}		# contains the package name, e.g. kernel-smp-2.6.18-4.x86_64.rpm
-    image=${args[2]}		# contains the full image name, e.g. vmlinuz-2.6.18-4-smp
-    initrd=${args[3]}		# contains the full initrd name, e.g. initrd-2.6.18-4-smp
-	
-    tmp=${package/kernel-/}
-    kerntype=${tmp%%-*}		# contains the kernel type, e.g. xen or xenpae
-
-	kernversion=${image#*-}	# contains the kernel version, e.g. 2.6.18-4-smp
+    action=${args[0]}		# contains the action to be executed, e.g. "add" or "remove"
+    flavor=${args[1]}		# contains the kernel-flavor, e.g. "default" or "xen"
+	release=${args[2]}		# contains the kernel-release, e.g. "2.6.18-4-default"
+    image=${args[3]}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
+    initrd=${args[4]}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
 }
 
 
@@ -67,14 +62,14 @@ function add_entry()
 {
 	# Set up the new kernel
 	if [ "$YAST_IS_RUNNING" != instsys ]; then
-    	case $kerntype in
+    	case $flavor in
         	(kdump|um)
             	;;
 	        (*)
     	        opt_xen_kernel=
-        	    case $kerntype in
+        	    case $flavor in
             	xen*)
-	                set -- $kerntype
+	                set -- $flavor
     	            set -- ${1#xen}
         	        opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
             	    ;;
@@ -85,7 +80,7 @@ function add_entry()
         	                      --initrd /boot/$initrd \
 								  --default --add \
 	                              --force $opt_xen_kernel \
-								  --name "Kernel-$kernversion"
+								  --name "Kernel-$release"
 
 	            # Run the bootloader (e.g., lilo).
     	        update_bootloader --refresh
@@ -100,12 +95,10 @@ function add_entry()
 #######################################
 function remove_entry()
 {
-    #echo 'This is the function "remove_entry"'
-
    	update_bootloader --image /boot/$image \
        	              --initrd /boot/$initrd \
            	          --remove --force \
-					  --name "Kernel-$kernversion"
+					  --name "Kernel-$release"
 
 	# Run the bootloader (e.g., lilo).
    	update_bootloader --refresh
@@ -123,13 +116,6 @@ fi
 
 # Get all given arguments
 getargs $@
-
-#echo "Action  = $action"
-#echo "Package = $package"
-#echo "Kernel  = $image"
-#echo "Initrd  = $initrd"
-#echo "Type    = $kerntype"
-#echo "Version = $kernversion"
 
 # Find out which action should be executed
 case $1 in
