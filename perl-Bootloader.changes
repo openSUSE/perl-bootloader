@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Nov  8 13:57:40 CET 2006 - schwab@suse.de
+
+- Fix error checking.
+
+-------------------------------------------------------------------
 Tue Nov  7 16:46:47 CET 2006 - aosthof@suse.de
 
 - changed interface of bootloader_entry script to kernel rpm, 

@@ -21,6 +21,9 @@ function usage()
 {
 	echo "Unknown or missing parameter."
 	echo "Usage: $0 [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>"
+	echo
+	echo "Note (in case of old interface with 4 parameters):"
+	echo "Usage: $0 [add|remove] <kernel-package-name> <image-name> <initrd-name>"
 	exit 1
 }
 
@@ -28,11 +31,8 @@ function usage()
 # Get all command line arguments
 function getargs()
 {
-    declare j=0
-    declare -a args
-
+	# old interface with 4 parameters
     if [ $# -eq 4 ] ; then
-	    # old interface
 	    action=${1}		# contains the action to be executed, e.g. "add" or "remove"
 	    flavor=${2#*-}	# contains the kernel-flavor, e.g. "default" or "xen"
 	    flavor=${flavor%%-*}
@@ -41,15 +41,15 @@ function getargs()
 	    release="${release}-${flavor}"
 	    image=${3}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
 	    initrd=${4}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
+		
+	# new interface with 5 parameters
     else
-	    # new interface
 	    action=${1}		# contains the action to be executed, e.g. "add" or "remove"
 	    flavor=${2}		# contains the kernel-flavor, e.g. "default" or "xen"
 	    release=${3}	# contains the kernel-release, e.g. "2.6.18-4-default"
 	    image=${4}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
 	    initrd=${5}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
     fi
-
 }
 
 
@@ -85,7 +85,8 @@ function add_entry()
 				# Add the new bootloader entry
             	update_bootloader --image /boot/$image \
         	                      --initrd /boot/$initrd \
-								  --default --add \
+								  --default \
+								  --add \
 	                              --force $opt_xen_kernel \
 								  --name "Kernel-$release"
 
@@ -104,7 +105,8 @@ function remove_entry()
 {
    	update_bootloader --image /boot/$image \
        	              --initrd /boot/$initrd \
-           	          --remove --force \
+           	          --remove \
+					  --force \
 					  --name "Kernel-$release"
 
 	# Run the bootloader (e.g., lilo).
@@ -125,7 +127,7 @@ fi
 getargs $@
 
 # Find out which action should be executed
-case $1 in
+case $action in
     add)
         # Add a new bootloader entry
         add_entry
