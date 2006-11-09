@@ -22,7 +22,8 @@ function usage()
 	echo "Unknown or missing parameter."
 	echo "Usage: $0 [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>"
 	echo
-	echo "Note (in case of old interface with 4 parameters):"
+	echo "The old interface with 4 parameters is still supported, but deprecated."
+	echo "This interface will be dropped in the near future."
 	echo "Usage: $0 [add|remove] <kernel-package-name> <image-name> <initrd-name>"
 	exit 1
 }
