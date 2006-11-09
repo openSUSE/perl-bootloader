@@ -31,18 +31,25 @@ function getargs()
     declare j=0
     declare -a args
 
-    for i in "$@" ; do
-    {
-        args[$j]=$i
-		((j++))
-    }
-    done
+    if [ $# -eq 4 ] ; then
+	    # old interface
+	    action=${1}		# contains the action to be executed, e.g. "add" or "remove"
+	    flavor=${2#*-}	# contains the kernel-flavor, e.g. "default" or "xen"
+	    flavor=${flavor%%-*}
+	    release=${2#*-*-}	# contains the kernel-release, e.g. "2.6.18-4-default"
+	    release=${release%.*.*}
+	    release="${release}-${flavor}"
+	    image=${3}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
+	    initrd=${4}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
+    else
+	    # new interface
+	    action=${1}		# contains the action to be executed, e.g. "add" or "remove"
+	    flavor=${2}		# contains the kernel-flavor, e.g. "default" or "xen"
+	    release=${3}	# contains the kernel-release, e.g. "2.6.18-4-default"
+	    image=${4}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
+	    initrd=${5}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
+    fi
 
-    action=${args[0]}		# contains the action to be executed, e.g. "add" or "remove"
-    flavor=${args[1]}		# contains the kernel-flavor, e.g. "default" or "xen"
-	release=${args[2]}		# contains the kernel-release, e.g. "2.6.18-4-default"
-    image=${args[3]}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
-    initrd=${args[4]}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
 }
 
 
@@ -110,7 +117,7 @@ function remove_entry()
 
 
 # Checks if correct amount of arguments is given
-if [ "$#" -ne "5" ] ; then 
+if [ "$#" -ne "4" -a "$#" -ne "5" ] ; then 
     usage
 fi
 
