@@ -110,7 +110,7 @@ function remove_entry()
 
 
 # Checks if correct amount of arguments is given
-if [ "$#" -ne "4" ] ; then 
+if [ "$#" -ne "5" ] ; then 
     usage
 fi
 
