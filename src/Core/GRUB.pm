@@ -157,7 +157,7 @@ sub GetMetaData() {
     @bootpart = map {
 	my ($device, $disk, $nr, $fsid, $fstype,
 	    $part_type, $start_cyl, $size_cyl) = @$_;
-	($part_type eq "`primary" and $fstype ne "xfs" and
+	($fstype ne "xfs" and
 	     ($fsid eq "131" or $fsid eq "130"))
 	         ? $device : ();
 	} @partinfo;
@@ -218,7 +218,7 @@ sub GetMetaData() {
 	type_image        => "bool:Kernel section",
 	# image_name     => "string:Name of section", # implicit
 	image_image       => "path:Kernel image:/boot/vmlinux",
-	image_root        => "select:Root device::" . $root_devices,
+	image_root        => "selectdevice:Root device::" . $root_devices,
 	image_vgamode     => "string:Vga Mode",
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
@@ -1721,6 +1721,12 @@ Returns undef on fail, defined nonzero value otherwise
 # boolean InitializeBootloader ()
 sub InitializeBootloader {
     my $self = shift;
+
+    # FIXME: activate
+    # call parted if activate set
+
+    # FIXME: generic_mbr
+    # write generic_mbr in case
 
     my $log = "/var/log/YaST2/y2log_bootloader";
     my $ret = $self->RunCommand (

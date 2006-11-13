@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Nov 13 16:20:01 CET 2006 - jplack@suse.de
+
+- use selectdevice type for "root" tag: may be given by-id as well
+- include logical partitions in list of custom boot devices
+  (#213256)
+
+-------------------------------------------------------------------
 Wed Nov  8 13:57:40 CET 2006 - schwab@suse.de
 
 - Fix error checking.
