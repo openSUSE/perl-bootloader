@@ -6,6 +6,12 @@ Mon Nov 13 16:20:01 CET 2006 - jplack@suse.de
   (#213256)
 
 -------------------------------------------------------------------
+Thu Nov  9 13:12:23 CET 2006 - aosthof@suse.de
+
+- accept old arguments and new arguments in bootloader_entry
+- fixed usage() and did some cleanup
+
+-------------------------------------------------------------------
 Wed Nov  8 13:57:40 CET 2006 - schwab@suse.de
 
 - Fix error checking.
