@@ -251,7 +251,7 @@ sub GetMetaData() {
 	xen_xen_append    => "string:Additional Xen Hypervisor Parameters:",
 	xen_image         => "path:Kernel image:/boot/vmlinux",
 	xen_root          => "select:Root device::" . $root_devices,
-	xen_vgamode       => "String:Vga Mode",
+	xen_vgamode       => "string:Vga Mode",
 	xen_append        => "string:Optional kernel command line parameter",
 	xen_initrd        => "path:Initial RAM disk:/boot/initrd",
     };
@@ -995,7 +995,6 @@ sub Section2Info {
 	elsif ($type eq "image") {
 	    if ($key eq "kernel") {
 		$key = "image";
-		$key = $line_ref->{"key"} = "image";
 	    }
 	}
 	# remapping end, start processing
@@ -1055,7 +1054,6 @@ sub Section2Info {
 		    }
 		}
 	    }
-	    $ret{"type"} = "image";
 	}
 	elsif ($key eq "xen")
 	{
@@ -1337,27 +1335,17 @@ sub Info2Section {
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
 	}
-	elsif ($key eq "kernel" and $type eq "xen") {
-	    $key = "xen";
-	    $line_ref->{"value"} =
-		$self->UnixPath2GrubPath (delete($sectinfo{$key}), $grub_root)
-		. " " . (delete($sectinfo{"xen_append"}) || "");
-	}
 	elsif ($key eq "module") {
-	    if ($modules == 0) {
-		$key = "kernel"
-	    }
-	    elsif  ($modules == 1) {
-		$key = "initrd";
-	    }
-
-	    $modules++;
+	    # put module lines always at the end.
+	    $line_ref = undef;
 	}
-
-	# restart the if chain here for a wanted side effect with the remapped
-	# "module" lines
-	if ($key eq "kernel") {
-	    if ($type eq "xen" or $type eq "image") {
+	elsif ($key eq "kernel") {
+	    if ($type eq "xen") {
+		$line_ref->{"value"} =
+		    $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root)
+		    . " " . (delete($sectinfo{"xen_append"}) || "");
+	    }
+	    elsif ($type eq "image") {
 		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
 		delete ($sectinfo{"root"});
 		delete ($sectinfo{"vgamode"});
@@ -1403,6 +1391,28 @@ sub Info2Section {
 	};
     }
 
+    # keep a hard order for the following three entries
+    if (exists $sectinfo{"xen"}) {
+	push @lines, {
+	    "key" => "kernel",
+	    "value" => $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
+		. " " . ($sectinfo{"xen_append"} || ""),
+	    };
+    }
+    if (exists $sectinfo{"image"}) {
+	my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
+	push @lines, {
+	    "key" => ($type eq "xen") ? "module" : "kernel",
+	    "value" => $val,
+	};
+    }
+    if (exists $sectinfo{"initrd"}) {
+	push @lines, {
+	    "key" => ($type eq "xen") ? "module" : "initrd",
+	    "value" => $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root),
+	};
+    }
+
     while ((my $key, my $value) = each (%sectinfo))
     {
 	if ($key eq "name")
@@ -1410,30 +1420,6 @@ sub Info2Section {
 	    my $line_ref = $self->UpdateSectionNameLine ($value, {}, $sectinfo{"original_name"});
 	    $line_ref->{"key"} = "title";
 	    unshift @lines, $line_ref;
-	}
-	elsif ($key eq "xen")
-	{
-	    push @lines, {
-		"key" => "kernel",
-		"value" => $self->UnixPath2GrubPath ($value, $grub_root)
-		    . " " . ($sectinfo{"xen_append"} || ""),
-	    };
-
-	}
-	elsif ($key eq "image")
-	{
-	    my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
-	    push @lines, {
-		"key" => ($type eq "xen") ? "module" : "kernel",
-		"value" => $val,
-	    };
-	}
-	elsif ($key eq "initrd" || $key eq "wildcard")
-	{
-	    push @lines, {
-		"key" => ($type eq "xen") ? "module" : "initrd",
-		"value" => $self->UnixPath2GrubPath ($value, $grub_root),
-	    };
 	}
 	elsif ($key eq "chainloader")
 	{

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Nov 17 17:34:00 CET 2006 - jplack@suse.de
+
+- some more finer fixes for the last entries stuff
+
+-------------------------------------------------------------------
 Fri Nov 17 15:55:17 CET 2006 - jplack@suse.de
 
 - kernel line and vga mode now editable again (#214875)
