@@ -78,6 +78,15 @@ our @ISA = ('Bootloader::Core');
 
 #module interface
 
+sub bootable($) {
+    my $fsid = shift;
+
+    for my $id ( 5, 6, 11..15, 130, 131) {
+	return 1 if $fsid == $id;
+    }
+    return 0;
+}
+
 sub GetMetaData() {
     my $loader = shift;
 
@@ -157,8 +166,7 @@ sub GetMetaData() {
     @bootpart = map {
 	my ($device, $disk, $nr, $fsid, $fstype,
 	    $part_type, $start_cyl, $size_cyl) = @$_;
-	($fstype ne "xfs" and
-	     ($fsid eq "131" or $fsid eq "130"))
+	($fstype ne "xfs" and bootable($fsid))
 	         ? $device : ();
 	} @partinfo;
 
@@ -222,10 +230,11 @@ sub GetMetaData() {
 	image_vgamode     => "string:Vga Mode",
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
+	image_noverifyroot=> "bool:Do not verify filesystem before booting:false",
 
 	type_other        => "bool:Chainloader section",
-	lock => "bool:Use password protection:false",
-	root => "selectdevice:Other system::" .
+	other_lock        => "bool:Use password protection:false",
+	other_chainloader => "selectdevice:Other system::" .
 	    join(":",
 		 map {
 		     my ($device, $disk, $nr, $fsid, $fstype,
@@ -233,45 +242,26 @@ sub GetMetaData() {
 		     ($size_cyl >= 20) ? $device : ();
 		 } @partinfo
 	    ),
-	noverifyroot => "bool:Do not verify filesystem before booting:false",
-	makeactive => "bool:Activate this partition when selected for boot:false",
-	blockoffset => "int:Block offset for chainloading:1:0:32",
+	other_noverifyroot=> "bool:Do not verify filesystem before booting:false",
+	other_makeactive  => "bool:Activate this partition when selected for boot:false",
+	other_blockoffset => "int:Block offset for chainloading:1:0:32",
 
 	type_xen          => "bool:Xen section",
 	xen_xen => "select:Hypervisor:/boot/xen.gz:/boot/xen.gz:/boot/xen-pae.gz",
-	xen_xen_append => "string:Additional Xen Hypervisor Parameters:",
-	xen_image       => "path:Kernel image:/boot/vmlinux",
-	xen_root        => "select:Root device::" . $root_devices,
-	xen_vgamode     => "String:Vga Mode",
-	xen_append      => "string:Optional kernel command line parameter",
-	xen_initrd      => "path:Initial RAM disk:/boot/initrd",
+	xen_xen_append    => "string:Additional Xen Hypervisor Parameters:",
+	xen_image         => "path:Kernel image:/boot/vmlinux",
+	xen_root          => "select:Root device::" . $root_devices,
+	xen_vgamode       => "String:Vga Mode",
+	xen_append        => "string:Optional kernel command line parameter",
+	xen_initrd        => "path:Initial RAM disk:/boot/initrd",
     };
 
-    my $so = $exports{"section_options"};
-
-    if ( "$exports{arch}" eq "pmac" ) {
-	# only on pmac_new and pmac_old
-	$so->{image_copy}  = "bool:Copy image to boot partition:false";
-
-	# define new section type for MacOS boot
-	$so->{type_other}  = "bool:Boot other system";
-	# $so{other_label} = "string:Name of section" # implicit!
-	$so->{other_other} = "select:Boot partition of other system::" . join
-	    (":",
-	     # boot from any Apple_HFS partition but _only_ take the big ones
-	     map {
-		 my ($device, $disk, $nr, $fsid, $fstype,
-		     $part_type, $start_cyl, $size_cyl) = @$_;
-		 ($fstype eq "Apple_HFS" and $size_cyl >= 20)
-		     ? $device : ();
-	     } @partinfo
-	     );
-    }
+    # my $so = $exports{"section_options"};
+    # add architecture specific section_options here in case
 
     $loader->{"exports"}=\%exports;
     return \%exports;
 }
-
 
 
 =item
@@ -715,7 +705,8 @@ sub ParseLines {
     # in glob_ref accordingly
     my ($boot_dev,) = $self->SplitDevPath ("/boot");
     my ($root_dev,) = $self->SplitDevPath ("/");
-    my $mbr_dev =  $self->Partition2Disk ($boot_dev);
+    # mbr_dev is the first bios device
+    my $mbr_dev =  $self->GrubDev2UnixDev("hd0");
 
     foreach my $dev (@devices) {
 	$self->l_milestone ("GRUB::Parselines: checking boot device $dev");
@@ -814,8 +805,8 @@ sub CreateGrubConfLines() {
 	$flag = delete $glob{"boot_mbr"};
 	if (defined $flag and $flag eq "true") {
 	    # if /boot mountpoint exists add($disk(/boot) else add disk(/)
-	    ($dev,) = $self->SplitDevPath ("/boot");
-	    $dev = $self->Partition2Disk ($dev);
+	    # mbr_dev is the first bios device
+	    $dev =  $self->GrubDev2UnixDev("hd0");
 	    $s1_devices{$dev} = 1 if defined $dev;
 	}
 
@@ -909,9 +900,16 @@ sub CreateGrubConfLines() {
 
     my $last_root = "";
     (my $stage1dev,) = $self->SplitDevPath ("/boot/grub/stage1");
-    $stage1dev =  ($stage1dev =~ m:/dev/md\d+:) ?
-	undef :
-	$self->UnixDev2GrubDev ($stage1dev);
+
+    # For RAID1 devices, tell grub to read the kernel&stuff from first disk
+    # array member
+    if ($stage1dev =~ m:/dev/md\d+:) {
+	my @members = @{$self->MD2Members ($stage1dev) || []};
+	# FIXME! This only works for mirroring (Raid1)
+	# FIXME: boot from MBR does not work for RAID1 yet
+	$stage1dev = $members[0] || $stage1dev;
+    }
+    $stage1dev = $self->UnixDev2GrubDev ($stage1dev);
 
     foreach my $grub_conf_item (@grub_conf_items)
     {
@@ -971,21 +969,43 @@ sub Section2Info {
 
     my %ret = ();
     my $grub_root = "";
+    my $modules = 0;
     my $type = $self->EvalSectionType (\@lines);
     $ret{"type"} = $type;
-
-    if ($type eq "xen")
-    {
-	@lines = @{$self->Section2XenInfo (\@lines)};
-    }
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
+
+	# do mapping of config file names to internal
+	if ($type eq "xen") {
+	    if ($key eq "kernel") {
+		$key = "xen";
+	    }
+	    elsif ($line_ref->{"key"} eq "module") {
+		if ($modules == 0) {
+		    $key = "image";
+		}
+		elsif ($modules == 1) {
+		    $key = "initrd";
+		}
+		$modules++;
+	    }
+	}
+	elsif ($type eq "image") {
+	    if ($key eq "kernel") {
+		$key = "image";
+		$key = $line_ref->{"key"} = "image";
+	    }
+	}
+	# remapping end, start processing
+
+	# FIXME : check against metadata?
+
 	if ($key eq "root" || $key eq "rootnoverify")
 	{
 	    $grub_root = $val;
-	    $ret{"noverifyroot"} = "" if ($key eq "rootnoverify");
+	    $ret{"noverifyroot"} = "true" if ($key eq "rootnoverify");
 	}
 	elsif ($key eq "title")
 	{
@@ -993,13 +1013,13 @@ sub Section2Info {
 	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	}
-	elsif ($key eq "kernel")
+	elsif ($key eq "image")
 	{
 	    # split into loader and parameter, note that the regex does
-	    # always match
+	    # always match, then split out root= vgamode= and append= values
 	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
     
-	    $ret{"kernel"} = $self->GrubPath2UnixPath ($1, $grub_root);
+	    $ret{"image"} = $self->GrubPath2UnixPath ($1, $grub_root);
 	    $val = $2 || "";
 
 	    if ($val =~ /^(?:(.*)\s+)?root=(\S+)(?:\s+(.*))?$/)
@@ -1009,7 +1029,7 @@ sub Section2Info {
 	    }
 	    if ($val =~ /^(?:(.*)\s+)?vga=(\S+)(?:\s+(.*))?$/)
 	    {
-		$ret{"vga"} = $2 if $2 ne "";
+		$ret{"vgamode"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
 	    }
 	    if ($val ne "")
@@ -1055,7 +1075,7 @@ sub Section2Info {
 	    if ($val =~ /^(.*)\+(\d+)/)
 	    {
 		$val = $1;
-		$ret{"sectors"} = $2;
+		$ret{"blockoffset"} = $2;
 		if ($val eq "")
 		{
 		    $val = $grub_root;
@@ -1067,13 +1087,9 @@ sub Section2Info {
 		$val = $self->GrubPath2UnixPath ($val, $grub_root);
 	    }
 	    $ret{$key} = $val;
-	    $ret{"type"} = "chainloader";
 	}
     }
-    if ($type eq "xen")
-    {
-	@lines = @{$self->XenInfo2Section (\@lines)};
-    }
+
     $ret{"__lines"} = \@lines;
     return \%ret;
 }
@@ -1136,14 +1152,14 @@ sub CreateKernelLine {
     my $grub_root = shift || "";
 
     my $root = $sectinfo_ref->{"root"} || "";
-    my $vga = $sectinfo_ref->{"vga"} || "";
+    my $vga = $sectinfo_ref->{"vgamode"} || "";
     my $append = $sectinfo_ref->{"append"} || "";
-    my $kernel = $sectinfo_ref->{"kernel"} || "";
+    my $image = $sectinfo_ref->{"image"} || "";
     $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
-    $kernel = $self->UnixPath2GrubPath ($kernel, $grub_root);
-    return "$kernel$root$vga$append";
+    $image = $self->UnixPath2GrubPath ($image, $grub_root);
+    return "$image$root$vga$append";
 }
 
 =item
@@ -1163,7 +1179,7 @@ sub CreateChainloaderLine {
     my $sectinfo_ref = shift;
     my $grub_root = shift || "";
 
-    my $sectors = $sectinfo_ref->{"sectors"};
+    my $sectors = $sectinfo_ref->{"blockoffset"};
     my $line = $sectinfo_ref->{"chainloader"};
     if (substr ($line, 0, 5) eq "/dev/" && ! defined ($sectors))
     {
@@ -1213,76 +1229,6 @@ sub Partition2Disk {
     return $partition; 
 }
 
-
-sub Section2XenInfo {
-    my $self = shift;
-    my @lines = @{+shift};
-
-    my $modules = 0;
-    @lines = map {
-	my $line_ref = $_;
-	if ($line_ref->{"key"} eq "kernel")
-	{
-	    $line_ref->{"key"} = "xen";
-	}
-	elsif ($line_ref->{"key"} eq "module")
-	{
-	    if ($modules == 0)
-	    {
-		$line_ref->{"key"} = "kernel";
-	    }
-	    elsif ($modules == 1)
-	    {
-		$line_ref->{"key"} = "initrd";
-	    }
-	    $modules = $modules + 1;
-	}
-	$line_ref;
-    } @lines;
-    return \@lines;
-}
-
-sub XenInfo2Section {
-    my $self = shift;
-    my @lines = @{+shift};
-
-    my $kernel_index = 0;
-    my $xen_index = 0;
-    my $index = -1;
-    foreach my $line_ref (@lines) {
-	$index = $index + 1;
-	if ($line_ref->{"key"} eq "xen")
-	{
-	    $xen_index = $index;
-	}
-	elsif ($line_ref->{"key"} eq "kernel")
-	{
-	    $kernel_index = $index;
-	}
-    }
-    if ($kernel_index < $xen_index)
-    {
-	my $tmp = $lines[$kernel_index];
-	$lines[$kernel_index] = $lines[$xen_index];
-	$lines[$xen_index] = $tmp;
-    }
-
-    @lines = map {
-	my $line_ref = $_;
-	if ($line_ref->{"key"} eq "xen")
-	{
-	    $line_ref->{"key"} = "kernel";
-	}
-	elsif ($line_ref->{"key"} eq "kernel" || $line_ref->{"key"} eq "initrd")
-	{
-	    $line_ref->{"key"} = "module";
-	}
-	$line_ref;
-    } @lines;
-    return \@lines;
-}
-
-
 sub EvalSectionType {
     my $self = shift;
     my @lines = @{+shift};
@@ -1309,7 +1255,7 @@ sub EvalSectionType {
 	return "xen";
     }
     elsif ($chainloader and $modules == 0 and $kernel_xen == 0) {
-	return "chainloader";
+	return "other";
     }
 
     # return "image" type as a fallback even on errors
@@ -1333,6 +1279,7 @@ sub Info2Section {
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
     my $so = $self->{"exports"}{"section_options"};
+    my $modules = 0;
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
@@ -1343,33 +1290,18 @@ sub Info2Section {
     }
 
     #if section type is not known, don't touch it.
-    if ($type ne "image" && $type ne "chainloader" && $type ne "xen")
+    if ($type ne "image" && $type ne "other" && $type ne "xen")
     {
 	return \@lines;
     }
     my $grub_root = "";
-    if (defined ($sectinfo{"kernel"}) && defined ($sectinfo{"initrd"}))
+    if (defined ($sectinfo{"image"}) && defined ($sectinfo{"initrd"}))
     {
-	$grub_root = $self->GetCommonDevice ($sectinfo{"kernel"}, $sectinfo{"initrd"});
+	$grub_root = $self->GetCommonDevice ($sectinfo{"image"}, $sectinfo{"initrd"});
 	$grub_root = $self->UnixDev2GrubDev ($grub_root);
-	@lines = grep {
-	    $_->{"key"} ne "root" && $_->{"key"} ne "rootnoverify";
-	} @lines;
-	if ($grub_root ne "")
-	{
-	    unshift @lines, {
-		"key" => $type eq "chainloader" ? "rootnoverify" : "root",
-		"value" => $grub_root,
-	    };
-	}
     }
 
-    if (exists ($sectinfo{"xen"}))
-    {
-	# FIXME: looks like the wrong call to me: XenInfo2Section sounds more
-	# appropriate or not calling it
-	@lines = @{$self->Section2XenInfo (\@lines)};
-
+    if ($type eq "xen") {
 	if (exists($sectinfo{"append"}) and
 	    ($sectinfo{"append"} =~ /console=ttyS(\d+),(\d+)/) )
 	{
@@ -1397,62 +1329,79 @@ sub Info2Section {
 
 	if ($key eq "root" || $key eq "rootnoverify")
 	{
-	    $grub_root = $line_ref->{"value"};
+	    # always remove old root line
+	    $line_ref = undef;
 	}
 	elsif ($key eq "title")
 	{
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
 	}
-	elsif ($key eq "xen")
-	{
-	    if (defined ($sectinfo{"xen"}))
-	    {
-		$line_ref->{"value"} =
-		    $self->UnixPath2GrubPath (delete($sectinfo{$key}), $grub_root)
-		    . " " . (delete($sectinfo{"xen_append"}) || "");
-		$sectinfo{"type"} = "xen";
-	    }
+	elsif ($key eq "kernel" and $type eq "xen") {
+	    $key = "xen";
+	    $line_ref->{"value"} =
+		$self->UnixPath2GrubPath (delete($sectinfo{$key}), $grub_root)
+		. " " . (delete($sectinfo{"xen_append"}) || "");
 	}
-	elsif ($key eq "kernel")
-	{
-	    $line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
-	    delete ($sectinfo{"root"});
-	    delete ($sectinfo{"vga"});
-	    delete ($sectinfo{"append"});
-	    delete ($sectinfo{"kernel"});
+	elsif ($key eq "module") {
+	    if ($modules == 0) {
+		$key = "kernel"
+	    }
+	    elsif  ($modules == 1) {
+		$key = "initrd";
+	    }
+
+	    $modules++;
+	}
+
+	# restart the if chain here for a wanted side effect with the remapped
+	# "module" lines
+	if ($key eq "kernel") {
+	    if ($type eq "xen" or $type eq "image") {
+		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
+		delete ($sectinfo{"root"});
+		delete ($sectinfo{"vgamode"});
+		delete ($sectinfo{"append"});
+		delete ($sectinfo{"image"});
+	    }
 	}
 	elsif ($key eq "initrd" || $key eq "wildcard")
 	{
-	    if ($type eq "chainloader" || ! defined ($sectinfo{$key}))
-	    {
+	    if ($type eq "other" or not defined ($sectinfo{$key})) {
 		$line_ref = undef;
 	    }
-	    else
-	    {
+	    else {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
 	    }
 	    delete ($sectinfo{$key});
 	}
 	elsif ($key eq "chainloader")
 	{
-	    if ($type eq "image" || ! defined ($sectinfo{$key}))
-	    {
-		$line_ref = undef;
-	    }
-	    else
-	    {
+	    if ($type eq "other" and defined ($sectinfo{$key})) {
 		$line_ref->{"value"} = $self->CreateChainloaderLine (\%sectinfo, $grub_root);
 		delete ($sectinfo{$key});
-		delete ($sectinfo{"sectors"});
+		delete ($sectinfo{"blockoffset"});
+	    }
+	    else {
+		$line_ref = undef;
 	    }
 	}
-	$line_ref;
+	defined $line_ref ? $line_ref : ();
     } @lines;
 
-    @lines = grep {
-	defined $_;
-    } @lines;
+    # prepend a root/rootnoverify line where appropriate
+    if ($grub_root ne "") {
+	# handle noverify flag and do never verify on chainloader sections
+	my $noverify = ($type eq "other") or
+	    ( exists $sectinfo{"noverifyroot"} and
+	      defined $sectinfo{"noverifyroot"} and
+	      delete $sectinfo{"noverifyroot"} eq "true"
+	      );
+	unshift @lines, {
+	    "key" => $noverify ? "rootnoverify" : "root",
+	    "value" => $grub_root,
+	};
+    }
 
     while ((my $key, my $value) = each (%sectinfo))
     {
@@ -1460,28 +1409,29 @@ sub Info2Section {
 	{
 	    my $line_ref = $self->UpdateSectionNameLine ($value, {}, $sectinfo{"original_name"});
 	    $line_ref->{"key"} = "title";
-	    push @lines, $line_ref;
+	    unshift @lines, $line_ref;
 	}
 	elsif ($key eq "xen")
 	{
 	    push @lines, {
-		"key" => "xen",
-		"value" => $self->UnixPath2GrubPath ($value, $grub_root) . " " . ($sectinfo{"xen_append"} || ""),
+		"key" => "kernel",
+		"value" => $self->UnixPath2GrubPath ($value, $grub_root)
+		    . " " . ($sectinfo{"xen_append"} || ""),
 	    };
 
 	}
-	elsif ($key eq "kernel")
+	elsif ($key eq "image")
 	{
 	    my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
 	    push @lines, {
-		"key" => "kernel",
+		"key" => ($type eq "xen") ? "module" : "kernel",
 		"value" => $val,
 	    };
 	}
 	elsif ($key eq "initrd" || $key eq "wildcard")
 	{
 	    push @lines, {
-		"key" => "initrd",
+		"key" => ($type eq "xen") ? "module" : "initrd",
 		"value" => $self->UnixPath2GrubPath ($value, $grub_root),
 	    };
 	}
@@ -1493,11 +1443,6 @@ sub Info2Section {
 		"value" => $line,
 	    };
 	}
-    }
-
-    if (exists ($sectinfo{"xen"}) || $sectinfo{"type"} eq "xen")
-    {
-	@lines = @{$self->XenInfo2Section (\@lines)};
     }
 
     my $ret = $self->FixSectionLineOrder (\@lines,

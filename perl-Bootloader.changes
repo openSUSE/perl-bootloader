@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Fri Nov 17 15:55:17 CET 2006 - jplack@suse.de
+
+- kernel line and vga mode now editable again (#214875)
+- show most partitions in Custom Boot Partition drop-down list
+  (#220283)
+- fix handling for chainloader sections (broken)
+- fix handling for xen sections (various problems, partial redesign
+  neccessary)
+- boot from MBR does now address the first bios disk (#221204)
+
+-------------------------------------------------------------------
 Fri Nov 17 14:57:43 CET 2006 - jplack@suse.de
 
 - adding support for 'macos_timeout'
