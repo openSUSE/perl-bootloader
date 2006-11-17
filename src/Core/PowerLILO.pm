@@ -58,6 +58,7 @@ sub GetMetaData() {
     #	progressbar (deprecated, check yaboot)
     #	bootfolder
     #	timeout
+    #	macos_timeout
     #	default
     #	append
     #	initrd
@@ -65,6 +66,7 @@ sub GetMetaData() {
     #
     # per section entries
     #	image
+    #   optional
     #	other
     #	root
     #	copy
@@ -194,6 +196,7 @@ sub GetMetaData() {
 	$go->{boot_pmac_custom}
 			   = "select:HFS boot partition::" . $boot_partitions;
  	$go->{no_os_chooser} = "bool:Do not use os-chooser:false";
+	$go->{macos_timeout} = "int:Timeout in seconds for MacOS/Linux selection:5:0:60",
    }
 
     $exports{"section_options"} = {
@@ -203,7 +206,7 @@ sub GetMetaData() {
 	# image_label     => "string:Name of section", # implicit
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
-	image_optional    => "bool:Skip section gracefully on errors:false",
+	image_optional    => "bool:Skip section gracefully on errors:true",
 	};
 
     my $so = $exports{"section_options"};
