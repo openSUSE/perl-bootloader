@@ -1378,16 +1378,16 @@ sub Info2Section {
     } @lines;
 
     # prepend a root/rootnoverify line where appropriate
-    if ($grub_root ne "") {
-	# handle noverify flag and do never verify on chainloader sections
-	my $noverify = ($type eq "other") or
-	    ( exists $sectinfo{"noverifyroot"} and
-	      defined $sectinfo{"noverifyroot"} and
-	      delete $sectinfo{"noverifyroot"} eq "true"
-	      );
+    # handle noverify flag and do never verify on chainloader sections
+    my $noverify = ($type eq "other") or
+	( exists $sectinfo{"noverifyroot"} and
+	  defined $sectinfo{"noverifyroot"} and
+	  (delete($sectinfo{"noverifyroot"}) eq "true")
+	  );
+    if ($grub_root ne "" or $noverify) {
 	unshift @lines, {
 	    "key" => $noverify ? "rootnoverify" : "root",
-	    "value" => $grub_root,
+	    "value" => $grub_root ne "" ? $grub_root : "(hd0,0)",
 	};
     }
 
@@ -1528,7 +1528,7 @@ sub Info2Global {
     @lines = map {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
-	my ($type) = split /:/, $go->{$key};
+	my ($type) = split(/:/, $go->{$key} || "");
 
 	# only accept known global options :-)
 	if ( !exists $go->{$key} ) {

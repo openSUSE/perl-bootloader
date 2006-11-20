@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Nov 20 15:53:09 CET 2006 - jplack@suse.de
+
+- fix various warnings (#222600)
+
+-------------------------------------------------------------------
 Fri Nov 17 17:34:00 CET 2006 - jplack@suse.de
 
 - some more finer fixes for the last entries stuff
