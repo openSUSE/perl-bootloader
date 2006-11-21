@@ -1426,8 +1426,22 @@ sub ParseMenuFileLines {
     my @global = @{+shift @sects};
 
     @sects = map {
-	$self->Section2Info ($_);
+	$self->l_debug ("Core::ParseMenuFileLines: section lines to convert :\n'" .
+			join("'\n' ",
+			     map {
+				 $_->{"key"} . " => " . $_->{"value"};
+			     } @{$_}) . "'"
+			);
+	my $s = $self->Section2Info ($_);
+	$self->l_debug ("Core::ParseMenuFileLines: parsing result :\n'" .
+			join("'\n' ",
+			     map {
+				 m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+			     } keys %{$s}) . "'"
+			);
+	$s;
     } @sects;
+
     $self->MangleSections(\@sects, \@global);
     my @sect_names = map {
 	$_->{"name"} || "";

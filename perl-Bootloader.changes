@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Nov 21 14:44:51 CET 2006 - jplack@suse.de
+
+- fix mostly all remaining warnings (#222600)
+
+-------------------------------------------------------------------
 Mon Nov 20 15:53:09 CET 2006 - jplack@suse.de
 
 - fix various warnings (#222600)

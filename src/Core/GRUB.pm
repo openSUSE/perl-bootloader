@@ -620,8 +620,8 @@ sub ParseLines {
 
     # and now proceed with menu.lst
     my @menu_lst = @{$files{"/boot/grub/menu.lst"} || []};
-    $self->l_milestone ("GRUB::Parselines: input from menu.lst for boot :\n'" .
-			join("'\n' ", grep { m/boot/; } @menu_lst) . "'");
+    $self->l_milestone ("GRUB::Parselines: input from menu.lst :\n'" .
+			join("'\n' ", @menu_lst) . "'");
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	0,
 	["title"],
@@ -1379,11 +1379,13 @@ sub Info2Section {
 
     # prepend a root/rootnoverify line where appropriate
     # handle noverify flag and do never verify on chainloader sections
-    my $noverify = ($type eq "other") or
-	( exists $sectinfo{"noverifyroot"} and
-	  defined $sectinfo{"noverifyroot"} and
-	  (delete($sectinfo{"noverifyroot"}) eq "true")
-	  );
+    my $noverify = ($type eq "other");
+    if ( exists $sectinfo{"noverifyroot"} and
+	 defined $sectinfo{"noverifyroot"})
+    {
+	$noverify = ($noverify or ($sectinfo{"noverifyroot"} eq "true"));
+	delete($sectinfo{"noverifyroot"});
+    }
     if ($grub_root ne "" or $noverify) {
 	unshift @lines, {
 	    "key" => $noverify ? "rootnoverify" : "root",
@@ -1459,30 +1461,25 @@ sub Global2Info {
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
-	my ($type) = split /:/, $go->{$key};
-
-	if ($key eq "root" || $key eq "rootnoverify")
-	{
+	my ($type) = split(/:/, $go->{$key}||"");
+	if (($key eq "root") or ($key eq "rootnoverify")) {
 	    $grub_root = $val;
-	    $ret{verifyroot} = ($key eq "root");
+	    $ret{"verifyroot"} = ($key eq "root");
 	}
-	elsif ($key eq "default")
-	{
+	elsif ($key eq "default") {
 	    # cast $val to integer. That means that if no valid default has
 	    # been given, we'll take the first section as default.
 	    no warnings "numeric"; # this is neccessary to avoid to trigger a perl bug
 	    my $defindex = 0+ $val;
 	    $ret{"default"} = $sections[$defindex];
 	}
-	elsif ($type eq "path")
-	{
+	elsif ($type eq "path") {
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
 	elsif ($type eq "bool") {
 	    $ret{$key} = "true";
 	}
-	elsif ($key =~ m/^boot_/)
-	{
+	elsif ($key =~ m/^boot_/) {
 	    # boot_* parameters are handled else where but should not happen!
 	    $self->l_milestone ("GRUB::Global2Info: Wrong item here $key, ignored");
 	}
