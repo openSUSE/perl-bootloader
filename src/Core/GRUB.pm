@@ -163,14 +163,14 @@ sub GetMetaData() {
     #
 
     # boot from any primary partition with PReP or FAT partition id
-    @bootpart = map {
-	my ($device, $disk, $nr, $fsid, $fstype,
-	    $part_type, $start_cyl, $size_cyl) = @$_;
-	($fstype ne "xfs" and bootable($fsid))
-	         ? $device : ();
-	} @partinfo;
-
-    my $boot_partitions = join(":", @bootpart);
+    my $boot_partitions = join(":", 
+	map {
+	    my ($device, $disk, $nr, $fsid, $fstype,
+		$part_type, $start_cyl, $size_cyl) = @$_;
+	    ($fstype ne "xfs" and bootable($fsid))
+		? $device : ();
+	} @partinfo
+    );
 
     # give a list of possible root devices: all MD devices
     # and all 'Linux' devices above 20 cylinders
@@ -184,6 +184,15 @@ sub GetMetaData() {
 	} @partinfo),
 	keys %{$loader->{"md_arrays"} || {}}
 	# FIXME this does no longer include raid0 and raid5 devices
+    );
+
+    # give a list of all other partitions possibly ready for chain loading
+    my $other_partitions = join(":",
+	map {
+	    my ($device, $disk, $nr, $fsid, $fstype,
+		$part_type, $start_cyl, $size_cyl) = @$_;
+	    ($size_cyl >= 20) ? $device : ();
+	} @partinfo
     );
 
     # FIXME: does it make sense to distinguish between x86_64 and x86?
@@ -234,14 +243,7 @@ sub GetMetaData() {
 
 	type_other        => "bool:Chainloader section",
 	other_lock        => "bool:Use password protection:false",
-	other_chainloader => "selectdevice:Other system::" .
-	    join(":",
-		 map {
-		     my ($device, $disk, $nr, $fsid, $fstype,
-			 $part_type, $start_cyl, $size_cyl) = @$_;
-		     ($size_cyl >= 20) ? $device : ();
-		 } @partinfo
-	    ),
+	other_chainloader => "selectdevice:Other system::" . $other_partitions,
 	other_noverifyroot=> "bool:Do not verify filesystem before booting:false",
 	other_makeactive  => "bool:Activate this partition when selected for boot:false",
 	other_blockoffset => "int:Block offset for chainloading:1:0:32",
