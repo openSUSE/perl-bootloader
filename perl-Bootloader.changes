@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Mon Nov 27 17:44:26 CET 2006 - od@suse.de
+
+- do not specify the name of a bootloader entry when removing it
+  with bootloader_entry, thus removing all sections matching the
+  kernel image and initrd names (if these are on a currently
+  mounted partition) (#223030)
+
+-------------------------------------------------------------------
 Tue Nov 21 14:44:51 CET 2006 - jplack@suse.de
 
 - fix mostly all remaining warnings (#222600)
