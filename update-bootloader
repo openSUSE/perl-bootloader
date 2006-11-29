@@ -242,7 +242,7 @@ if (defined $oper{add}) {
 	unless $opt_name and $opt_image;
 
     my @params = (
-		  type  => $type eq "xen" ? "image" : $type,
+		  type  => $type,
 		  image => $opt_image,
     );
     if (CountSections(@params) != 0)
@@ -261,7 +261,7 @@ if (defined $oper{add}) {
 
 if (defined $oper{remove}) {
     my @params = (
-		  type  => $type eq "xen" ? "image" : $type,
+		  type  => $type,
 		  image => $opt_image,
     );
     push @params, xen    => $opt_xen_kernel if $type eq "xen";

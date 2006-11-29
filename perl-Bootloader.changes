@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Nov 29 13:34:40 CET 2006 - jplack@suse.de
+
+- handle xen sections correctly in update-bootloader (#224330)
+
+-------------------------------------------------------------------
 Mon Nov 27 17:44:26 CET 2006 - od@suse.de
 
 - do not specify the name of a bootloader entry when removing it
