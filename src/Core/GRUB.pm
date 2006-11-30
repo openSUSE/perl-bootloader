@@ -120,10 +120,6 @@ sub GetMetaData() {
     # * rarp::                        Initialize a network device via RARP
     # debug
 
-
-
-
-
     # image section
 
     # root (hd0,0) # omit this, it's always encoded in image/initrd path
@@ -140,7 +136,6 @@ sub GetMetaData() {
     # append
     # initrd
 
-
     # chainloader section
     # lock
     # root
@@ -148,11 +143,9 @@ sub GetMetaData() {
     # makeactive
     # blockoffset	# this is encoded in 'chainloader' +1
 
-
     # FIXME: add help texts for all widgets
 
     my %exports;
-
 
     my @bootpart;
     my @partinfo = @{$loader->{"partitions"} || []};
@@ -256,6 +249,10 @@ sub GetMetaData() {
 	xen_vgamode       => "string:Vga Mode",
 	xen_append        => "string:Optional kernel command line parameter",
 	xen_initrd        => "path:Initial RAM disk:/boot/initrd",
+
+	type_menu         => "bool:Menu section",
+	menu_root         => "select:Partition of menu file:::" . $other_partitions,
+	menu_configfile   => "path:Menu description file:/boot/grub/menu.lst"
     };
 
     # my $so = $exports{"section_options"};
@@ -1005,8 +1002,13 @@ sub Section2Info {
 
 	if ($key eq "root" || $key eq "rootnoverify")
 	{
-	    $grub_root = $val;
-	    $ret{"noverifyroot"} = "true" if ($key eq "rootnoverify");
+	    if ($type eq "menu") {
+		$ret{"root"} = $self->GrubDev2UnixDev ($val);
+	    }
+	    else {
+		$grub_root = $val;
+		$ret{"noverifyroot"} = "true" if ($key eq "rootnoverify");
+	    }
 	}
 	elsif ($key eq "title")
 	{
@@ -1066,7 +1068,7 @@ sub Section2Info {
 	    $ret{"xen"} = $self->GrubPath2UnixPath ($1, $grub_root);
 	    $ret{"xen_append"} = $2 if defined $2;
 	}
-	elsif ($key eq "initrd" || $key eq "wildcard")
+	elsif ($key eq "initrd" || $key eq "wildcard" || $key eq "configfile")
 	{
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
@@ -1236,22 +1238,26 @@ sub EvalSectionType {
     my $modules = 0;
     my $kernel_xen = 0;
     my $chainloader = 0;
+    my $configfile = 0;
 
     foreach my $line_ref (@lines) {
-	if ($line_ref->{"key"} eq "module")
-	{
+	if ($line_ref->{"key"} eq "module") {
 	    $modules++;
 	}
-	elsif ($line_ref->{"key"} eq "kernel" && $line_ref->{"value"} =~ m/xen/)
-	{
+	elsif ($line_ref->{"key"} eq "kernel" && $line_ref->{"value"} =~ m/xen/) {
 	    $kernel_xen = 1;
 	}
-	elsif ($line_ref->{"key"} eq "chainloader")
-	{
+	elsif ($line_ref->{"key"} eq "chainloader") {
 	    $chainloader = 1;
 	}
+	elsif ($line_ref->{"key"} eq "configfile") {
+	    $configfile = 1;
+	}
     }
-    if ($modules > 0 and $kernel_xen and not $chainloader) {
+    if ($configfile) {
+	return "menu";
+    }
+    elsif ($modules > 0 and $kernel_xen and not $chainloader) {
 	return "xen";
     }
     elsif ($chainloader and $modules == 0 and $kernel_xen == 0) {
@@ -1290,7 +1296,7 @@ sub Info2Section {
     }
 
     #if section type is not known, don't touch it.
-    if ($type ne "image" && $type ne "other" && $type ne "xen")
+    if ($type ne "image" and $type ne "other" and $type ne "xen" and $type ne "menu")
     {
 	return \@lines;
     }
@@ -1299,6 +1305,12 @@ sub Info2Section {
     {
 	$grub_root = $self->GetCommonDevice ($sectinfo{"image"}, $sectinfo{"initrd"});
 	$grub_root = $self->UnixDev2GrubDev ($grub_root);
+    }
+    elsif ($type eq "menu") {
+	my ($boot_dev,) = $self->SplitDevPath ("/boot");
+	$grub_root = $self->UnixDev2GrubDev (
+	    exists $sectinfo{"root"} ? delete($sectinfo{"root"}) : $boot_dev
+        );
     }
 
     if ($type eq "xen") {
@@ -1327,7 +1339,7 @@ sub Info2Section {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
 
-	if ($key eq "root" || $key eq "rootnoverify")
+	if ($key eq "root" or $key eq "rootnoverify" or $key eq "configfile")
 	{
 	    # always remove old root line
 	    $line_ref = undef;
@@ -1427,10 +1439,16 @@ sub Info2Section {
 	}
 	elsif ($key eq "chainloader")
 	{
-	    my $line = $self->CreateChainloaderLine (\%sectinfo, $grub_root);
 	    push @lines, {
-		"key" => "chainloader",
-		"value" => $line,
+		"key" => $key,
+		"value" => $self->CreateChainloaderLine (\%sectinfo, $grub_root), 
+	    };
+	}
+	elsif ($key eq "configfile")
+	{
+	    push @lines, {
+		"key" => $key,
+		"value" => $value,
 	    };
 	}
     }
