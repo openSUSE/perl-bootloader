@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Dec  7 13:52:00 CET 2006 - aosthof@suse.de
+
+- fixed identation (correct usage of tabs)
+- fixed remove_entry() that it removes xen entries correctly
+  (#223576)
+
+-------------------------------------------------------------------
 Thu Nov 30 15:42:48 CET 2006 - jplack@suse.de
 
 - implement new section type menu neccessary for linking to other
