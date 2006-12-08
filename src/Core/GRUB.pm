@@ -113,7 +113,7 @@ sub GetMetaData() {
     # gfxmenu
     # * password::                    Set a password for the menu interface
 
-    # * bootp:: --with-configfile                      Initialize a network device via BOOTP
+    # * bootp:: --with-configfile     Initialize a network device via BOOTP
     # * color::                       Color the menu interface
     # * dhcp::                        Initialize a network device via DHCP
     # * ifconfig::                    Configure a network device manually
