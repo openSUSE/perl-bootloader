@@ -66,7 +66,7 @@ use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
 		 RemoveImageSections RemoveSections GetDefaultImage
-		 GetDefaultInitrd UpdateBootloader
+		 GetDefaultInitrd GetBootloader UpdateBootloader
 		 GetGlobals SetGlobals
 		 GetSectionList GetSection AddSection RemoveSection
 );
@@ -159,7 +159,7 @@ sub Udev2Dev {
     my $cmd = "udevinfo -q name -p /block/$udev";
     my $dev = qx{ $cmd 2>/dev/null };
     chomp ($dev);
- 
+
     $dev = $dev ? "/dev/$dev" : "/dev/$udev";
     # CCISS maps slashes to bangs so we have to reverse that.
     $dev =~ s:!:/:g;
@@ -288,7 +288,7 @@ sub InitLibrary {
     my $part = ReadPartitions ();
     my $md = ReadRAID1Arrays ();
 
-    $lib_ref->Initialize (GetBootloader ());
+    $lib_ref->SetLoaderType (GetBootloader ());
     $lib_ref->DefineMountPoints ($mp);
     $lib_ref->DefinePartitions ($part);
     $lib_ref->DefineMDArrays ($md);

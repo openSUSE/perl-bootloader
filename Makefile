@@ -1,7 +1,8 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/SLES10
-ifeq ($(BUILD_DIST),ppc)
+BUILD_DIST=sles10-ppc
+ifeq ($(BUILD_DIST),sles10-ppc)
 BUILD=powerpc32 /work/src/bin/build
 else
 BUILD=/work/src/bin/build
@@ -20,13 +21,13 @@ all:
 	@echo "Choose one target out of 'export', 'build', 'mbuild', 'submit', 'rpm' or 'clean'"
 	@echo
 
-export:	 .checkexportdir .exportdir
+export:	.checkexportdir .exportdir
 
 build:	.checkexportdir .built
 
 rpm:	build
 	@cp -av $(BUILD_ROOT)/usr/src/packages/RPMS/*/$(PKG)* .
-	
+
 submit:	.submitted
 
 
@@ -34,9 +35,10 @@ submit:	.submitted
 .checkexportdir:
 	@[ -f .exportdir ] && [ -d "$$(<.exportdir)" ] || make clean
 
-.exportdir:	$(PKG).changes version
-	env PERLLIB=./perl-Bootloader/lib/:$PERLLIB perl -c ./update-bootloader
-	@rm -f .built .submitted
+.exportdir:	$(PKG).changes $(PKG).spec.in version
+	ln -sfn src Bootloader
+	env PERLLIB=.:$$PERLLIB perl -c ./update-bootloader
+	@rm -f .built .submitted Bootloader
 	set -e ; set -x ;\
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \
 	exportdir=`mktemp -d /tmp/temp.XXXXXX` ; \
@@ -45,9 +47,11 @@ submit:	.submitted
 	svn export $(SVNREP) $$tmpdir ; \
 	cd $$tmpdir ; \
 	chmod -R a+rX .. ; \
-	mv -v $(PKG) $(PKG)-$$lv ; \
+	mkdir $(PKG)-$$lv; \
+	mkdir $(PKG)-$$lv/lib; \
+	mv COPYING $(PKG)-$$lv/; \
+	mv src $(PKG)-$$lv/lib/Bootloader; \
 	tar cfvj $(PKG)-$$lv.tar.bz2 $(PKG)-$$lv ; \
-	mv $(PKG).spec $(PKG).spec.in ; \
 	sed "s/^Version:.*/Version: $$lv/" < $(PKG).spec.in > $(PKG).spec ; \
 	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in; \
 	pwd ; \

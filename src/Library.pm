@@ -19,7 +19,7 @@ C<< use Bootloader::Library; >>
 
 C<< $obj_ref = Bootloader::Library->new (); >>
 
-C<< $status = Bootloader::Library->Initialize ($bootloader); >>
+C<< $status = Bootloader::Library->SetLoaderType ($bootloader); >>
 
 C<< $status = Bootloader::Library->DefineMountPoints (\%mountpoints); >>
 
@@ -49,15 +49,17 @@ C<< $settings_ref = Bootloader::Library->GetSettings (); >>
 
 C<< $status Bootloader::Library->SetSettings ($settings_ref); >>
 
-C<< $sections_ref = Bootloader::Library->GetSections (); >>
+C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
 
 C<< $global_ref = Bootloader::Library->GetGlobalSettings (); >>
 
-C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
+C<< $status = Bootloader::Library->SetGlobalSettings ($global_settings_ref); >>
+
+C<< $sections_ref = Bootloader::Library->GetSections (); >>
 
 C<< $status = Bootloader::Library->SetSections ($sections_ref); >>
 
-C<< $status = Bootloader::Library->SetGlobalSettings ($global_settings_ref); >>
+C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
 
 C<< $status = Bootloader::Library->SetDeviceMapping ($device_map_ref); >>
 
@@ -99,11 +101,11 @@ sub GetLogRecords {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->GetLogRecords ();
+    return defined $loader ? $loader->GetLogRecords () : undef;
 }
 
 =item
-C<< $status = Bootloader::Library->Initialize ($bootloader); >>
+C<< $status = Bootloader::Library->SetLoaderType($bootloader); >>
 
 Initializes the library for the particular bootloader.
 Takes the name of the bootloader as parameter.
@@ -111,7 +113,7 @@ Returns undef on fail, defined nonzero value otherwise.
 
 EXAMPLE:
 
-  my $status = Bootloader::Library->Initialize ("lilo");
+  my $status = Bootloader::Library->SetLoaderType ("lilo");
   if (! defined ($status))
   {
     die "Error occurred while initalizing for LILO";
@@ -119,7 +121,7 @@ EXAMPLE:
 
 =cut
 
-sub Initialize {
+sub SetLoaderType {
     my $self = shift;
     my $bootloader = shift;
 
@@ -149,7 +151,7 @@ sub Initialize {
     {
 	# FIXME: handle case 'none'
 	$loader = Bootloader::Core->new ($loader);
-	$loader->l_error ("Bootloader::Library::Initialize: Initializing for unknown bootloader $bootloader");
+	$loader->l_error ("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader");
     }
 
     $self->{"loader"} = $loader;
@@ -180,6 +182,8 @@ sub DefineMountPoints {
     my $mountpoints_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
     {
 	$loader->l_debug ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
@@ -220,6 +224,8 @@ sub DefinePartitions {
     my $partitions_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     foreach my $part_ref (@{$partitions_ref})
     {
 	my ($part, $disk, $num, @part_info ) = @{$part_ref};
@@ -259,6 +265,8 @@ sub DefineMDArrays {
     my $md_arrays_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
     {
 	my $members = join ", ", @{$members_ref};
@@ -288,6 +296,8 @@ sub ReadSettings {
     my $self = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my $files_ref = $loader->ReadFiles ($loader->ListFiles ());
     if (! defined ($files_ref))
     {
@@ -323,6 +333,8 @@ sub WriteSettings {
 # $menu_only = 0;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     $loader->{"resolve_symlinks"} = 1;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -353,6 +365,8 @@ sub ReadSettingsTmp {
     my $tmp_dir = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my @files = @{$loader->ListFiles ()};
     my %filenames = ();
     @files = map {
@@ -397,6 +411,8 @@ sub WriteSettingsTmp {
     my $tmp_dir = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
     {
@@ -435,6 +451,8 @@ sub GetFilesContents {
     my $self = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     $loader->{"resolve_symlinks"} = 0;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -464,6 +482,8 @@ sub SetFilesContents {
     my $files_ref = shift;
 
     my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
     my %lines = ();
     while ((my $fn, my $contents) = each (%{$files_ref}))
     {
@@ -498,7 +518,7 @@ sub UpdateBootloader {
     my $avoid_init = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->UpdateBootloader ($avoid_init);
+    return defined $loader ? $loader->UpdateBootloader ($avoid_init) : undef;
 }
 
 =item
@@ -521,7 +541,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->InitializeBootloader ();
+    return defined $loader ? $loader->InitializeBootloader () : undef;
 }
 
 =item
@@ -548,7 +568,7 @@ sub ListConfigurationFiles {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->ListFiles ();
+    return defined $loader ? $loader->ListFiles () : undef;
 }
 
 =item
@@ -567,8 +587,7 @@ sub GetSettings {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    my $ret = $loader->GetSettings ();
-    return $ret;
+    return defined $loader ? $loader->GetSettings () : undef;
 }
 
 =item
@@ -588,7 +607,7 @@ sub SetSettings {
     my $settings_ref = shift;
 
     my $loader = $self->{"loader"};
-    return $loader->SetSettings ($settings_ref);
+    return defined $loader ? $loader->SetSettings ($settings_ref) : undef;
 }
 
 # wrappers for easier use
@@ -626,6 +645,22 @@ sub GetSections {
 }
 
 =item
+C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
+
+Gets the meta data of the bootloader describing possible setting in the config,
+its data type, default value, etc.
+Returns undef on fail.
+
+=cut
+
+sub GetMetaData {
+    my $self = shift;
+    my $loader = $self->{loader} || return undef;
+
+    return $loader->GetMetaData();;
+}
+
+=item
 C<< $global_ref = Bootloader::Library->GetGlobalSettings (); >>
 
 Gets the global settings of the bootloader. See the example map above TODO
@@ -652,32 +687,9 @@ sub GetGlobalSettings {
 	return undef;
     }
 
-    # copy the hash and add export tags
+    # copy the hash and return the ref to copy
     my %globals=%{$settings_ref->{"global"}|| {}};
-    if (defined $settings_ref->{"exports"}) {
-	# $globals{"__exports"} = %{$settings_ref->{"exports"}};
 
-	my @exports;
-
-	while ((my $key, my $value) = each ( %{$settings_ref->{"exports"}} ))
-	{
-	    if (ref($value)) {
-		if  (ref($value) eq "HASH") {
-		    foreach my $k (keys %$value) {
-			$globals{"__exports__%" . $key . "%" . $k} = $value->{$k};
-		    }
-		}
-		elsif  (ref($value) eq "ARRAY") {
-                   foreach my $i (0 .. $#$value) {
-			$globals{"__exports__#" . $key . "#" . $i} = $value->[$i];
-                   }
-		}
-	    }
-	    else {
-		$globals{"__exports__" . $key} = $value;
-	    }
-	}
-    }
     return \%globals;
 }
 

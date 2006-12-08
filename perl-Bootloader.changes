@@ -1,7 +1,185 @@
 -------------------------------------------------------------------
+Fri Dec  8 13:04:55 CET 2006 - jplack@suse.de
+
+- fixed comment handling for ZIPL
+- basic implementation for generic bootloader widgets for ZIPL
+  (Fate#300732)
+- basic implementation for generic bootloader widgets for ELILO
+  (Fate#300732)
+- version bump 0.4.7  
+
+-------------------------------------------------------------------
+Thu Dec  7 13:52:00 CET 2006 - aosthof@suse.de
+
+- fixed identation (correct usage of tabs)
+- fixed remove_entry() that it removes xen entries correctly
+  (#223576)
+
+-------------------------------------------------------------------
+Thu Nov 30 15:42:48 CET 2006 - jplack@suse.de
+
+- implement new section type menu neccessary for linking to other
+  systems/ complexer multiboot setups
+
+-------------------------------------------------------------------
+Wed Nov 29 13:34:40 CET 2006 - jplack@suse.de
+
+- handle xen sections correctly in update-bootloader (#224330)
+
+-------------------------------------------------------------------
+Mon Nov 27 17:44:26 CET 2006 - od@suse.de
+
+- do not specify the name of a bootloader entry when removing it
+  with bootloader_entry, thus removing all sections matching the
+  kernel image and initrd names (if these are on a currently
+  mounted partition) (#223030)
+
+-------------------------------------------------------------------
+Tue Nov 21 14:44:51 CET 2006 - jplack@suse.de
+
+- fix mostly all remaining warnings (#222600)
+
+-------------------------------------------------------------------
+Mon Nov 20 15:53:09 CET 2006 - jplack@suse.de
+
+- fix various warnings (#222600)
+
+-------------------------------------------------------------------
+Fri Nov 17 17:34:00 CET 2006 - jplack@suse.de
+
+- some more finer fixes for the last entries stuff
+
+-------------------------------------------------------------------
+Fri Nov 17 15:55:17 CET 2006 - jplack@suse.de
+
+- kernel line and vga mode now editable again (#214875)
+- show most partitions in Custom Boot Partition drop-down list
+  (#220283)
+- fix handling for chainloader sections (broken)
+- fix handling for xen sections (various problems, partial redesign
+  neccessary)
+- boot from MBR does now address the first bios disk (#221204)
+
+-------------------------------------------------------------------
+Fri Nov 17 14:57:43 CET 2006 - jplack@suse.de
+
+- adding support for 'macos_timeout'
+
+-------------------------------------------------------------------
+Mon Nov 13 16:20:01 CET 2006 - jplack@suse.de
+
+- use selectdevice type for "root" tag: may be given by-id as well
+- include logical partitions in list of custom boot devices
+  (#213256)
+
+-------------------------------------------------------------------
+Thu Nov  9 13:12:23 CET 2006 - aosthof@suse.de
+
+- accept old arguments and new arguments in bootloader_entry
+- fixed usage() and did some cleanup
+
+-------------------------------------------------------------------
+Wed Nov  8 13:57:40 CET 2006 - schwab@suse.de
+
+- Fix error checking.
+
+-------------------------------------------------------------------
+Tue Nov  7 16:46:47 CET 2006 - aosthof@suse.de
+
+- changed interface of bootloader_entry script to kernel rpm, 
+  no more second guessing.
+
+-------------------------------------------------------------------
+Tue Nov  7 15:27:15 CET 2006 - jplack@suse.de
+
+- fix implementation for grub.conf generation and parsing
+  (FATE#300732, bug#213256)
+- version bump 0.4.0
+
+-------------------------------------------------------------------
+Tue Oct 31 15:47:35 CET 2006 - jplack@suse.de
+
+- fix typo in Library.pm (#215613)
+- reduce build dependencies
+- version bump 0.3.5
+
+-------------------------------------------------------------------
+Tue Oct 31 00:33:15 CET 2006 - od@suse.de
+
+- increase maximum timeout for grub to 3600 seconds (#214146)
+
+-------------------------------------------------------------------
+Wed Oct 25 10:29:43 CEST 2006 - jplack@suse.de
+
+- do error handling when $loader is not yet initialized (#213873)
+
+-------------------------------------------------------------------
+Mon Oct 23 16:34:14 CEST 2006 - jplack@suse.de
+
+- move GetMetaData call to the constructor (#213255)
+
+-------------------------------------------------------------------
+Sat Oct 21 15:47:49 CEST 2006 - od@suse.de
+
+- grub: using OO call for last fix (#213255)
+
+-------------------------------------------------------------------
+Fri Oct 20 17:25:03 CEST 2006 - od@suse.de
+
+- grub: fix writing globals (#213255)
+
+-------------------------------------------------------------------
+Thu Oct 12 09:27:48 CEST 2006 - jplack@suse.de
+
+- first chunk of changes for GRub using generic interface,
+  grub.conf handling still missing
+
+-------------------------------------------------------------------
+Fri Sep 29 12:41:55 CEST 2006 - jplack@suse.de
+
+- new interface for FATE#300732
+
+-------------------------------------------------------------------
+Thu Sep 28 15:47:23 CEST 2006 - aosthof@suse.de
+
+- added new interface script bootloader_entry
+
+-------------------------------------------------------------------
 Fri Sep 22 12:50:21 CEST 2006 - jplack@suse.de
 
 - add dependency on mdadm for Tools.pm (#205957)
+
+-------------------------------------------------------------------
+Tue Sep 19 17:29:38 CEST 2006 - jplack@suse.de
+
+- fix man page for update-bootloader
+
+-------------------------------------------------------------------
+Mon Sep  4 17:15:19 CEST 2006 - jplack@suse.de
+
+- support new options no_os_chooser and optional (#202069, #202072)
+
+-------------------------------------------------------------------
+Mon Sep  4 17:00:54 CEST 2006 - jplack@suse.de
+
+- remove braces when parsing device.map file (#203545)
+
+-------------------------------------------------------------------
+Mon Aug  7 17:16:10 CEST 2006 - jplack@suse.de
+
+- add requirement for 'mdadm' and 'e2fsprogs' (#197471)
+
+-------------------------------------------------------------------
+Mon Jul 31 16:19:46 CEST 2006 - jplack@suse.de
+
+- typo fix
+
+-------------------------------------------------------------------
+Fri Jul 28 17:40:51 CEST 2006 - jplack@suse.de
+
+- Tools.pm@Udev2Dev : CCISS driver maps slashes to bangs so we
+  have to reverse that, suppress ignorable warnings from udevinfo
+  (#189348)
 
 -------------------------------------------------------------------
 Fri Jul 28 17:40:51 CEST 2006 - jplack@suse.de

@@ -1,0 +1,171 @@
+#!/bin/bash
+#
+# This script represents an interface between the postinstall and postuninstall
+# scripts of kernel rpms and the update-bootloader script.
+# 
+# Interface:
+# ----------
+# /usr/lib/bootloader/bootloader_entry [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>
+#
+# Call Semantics:
+# ---------------
+# [ -x $cmd ] && $cmd <parameters>
+#
+#
+# Author: aosthof@suse.de
+#
+
+
+# Print how to use this script correctly
+function usage()
+{
+	echo "Unknown or missing parameter."
+	echo "Usage: $0 [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>"
+	echo
+	echo "The old interface with 4 parameters is still supported, but deprecated."
+	echo "This interface will be dropped in the near future."
+	echo "Usage: $0 [add|remove] <kernel-package-name> <image-name> <initrd-name>"
+	exit 1
+}
+
+
+# Get all command line arguments
+function getargs()
+{
+	# old interface with 4 parameters
+	if [ $# -eq 4 ] ; then
+		action=${1}		# contains the action to be executed, e.g. "add" or "remove"
+		flavor=${2#*-}		# contains the kernel-flavor, e.g. "default" or "xen"
+		flavor=${flavor%%-*}
+		release=${2#*-*-}	# contains the kernel-release, e.g. "2.6.18-4-default"
+		release=${release%.*.*}
+		release="${release}-${flavor}"
+		image=${3}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
+		initrd=${4}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
+		
+	# new interface with 5 parameters
+	else
+		action=${1}		# contains the action to be executed, e.g. "add" or "remove"
+		flavor=${2}		# contains the kernel-flavor, e.g. "default" or "xen"
+		release=${3}		# contains the kernel-release, e.g. "2.6.18-4-default"
+		image=${4}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
+		initrd=${5}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
+	fi
+}
+
+
+# Wrapper for the update-bootloader function
+function update_bootloader() 
+{
+	[ -x /sbin/update-bootloader -a "$YAST_IS_RUNNING" != instsys ] || return 0
+		/sbin/update-bootloader "$@"
+}
+
+
+##############################
+# Add a new bootloader entry #
+##############################
+function add_entry()
+{
+	# Set up the new kernel
+	if [ "$YAST_IS_RUNNING" != instsys ]; then
+		case $flavor in
+			(kdump|um)
+			;;
+			(*)
+				opt_xen_kernel=
+				case $flavor in
+					xen*)
+						set -- $flavor
+						set -- ${1#xen}
+						opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
+					;;
+				esac
+
+				# Add the new bootloader entry
+				update_bootloader --image /boot/$image \
+						  --initrd /boot/$initrd \
+						  --default \
+						  --add \
+						  --force $opt_xen_kernel \
+						  --name "Kernel-$release"
+
+				# Run the bootloader (e.g., lilo).
+				update_bootloader --refresh
+			;;
+		esac
+	fi
+}
+
+
+#######################################
+# Remove an existing bootloader entry #
+#######################################
+function remove_entry()
+{
+	# Do not specify the name of a bootloader entry when removing it, thus
+	# removing all sections matching the kernel image and initrd names
+	# (either both a "linux" and a "failsafe" section, or a section
+	# installed with the kernel postinstall script).
+	#
+	# Rationale: we do not know whether the old entry has
+	#    - the product name as its name (when installed with
+	#      yast-bootloader) or
+	#    - "Kernel-<version>" (when installed with the kernel package's
+	#       postinstall script and perl-Bootloader).
+	#
+	#  So we cannot use the name to find the correct section.
+	#  This is safe, because on grub, this does still not match other 
+	#  sections on other partitions with the same name for the kernel
+	#  image and initrd (because they will still have the (hdx,y) prefix
+	#  in perl-Bootloader). Other bootloaders do not specify other
+	#  sections at all, or do only chainload them (BootLILO.ycp), and
+	#  thus do not match either. (#223030)
+
+
+	if [ $flavor == "xen" ]; then
+		update_bootloader --image /boot/$image \
+				  --initrd /boot/$initrd \
+				  --xen \
+				  --remove \
+				  --force
+	else
+		update_bootloader --image /boot/$image \
+				  --initrd /boot/$initrd \
+				  --remove \
+				  --force
+	fi
+
+	# Run the bootloader (e.g., lilo).
+	update_bootloader --refresh
+}
+
+
+
+#####################  M A I N  ###############################################
+
+
+# Checks if correct amount of arguments is given
+if [ "$#" -ne "4" -a "$#" -ne "5" ] ; then
+	usage
+fi
+
+# Get all given arguments
+getargs $@
+
+# Find out which action should be executed
+case $action in
+	add)
+		# Add a new bootloader entry
+		add_entry
+	;;
+	remove) 
+		# Remove an existing bootloader entry
+		remove_entry
+	;;
+	*)
+		# Unknown argument
+		usage
+	;;
+esac
+

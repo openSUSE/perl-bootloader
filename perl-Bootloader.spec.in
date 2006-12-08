@@ -15,14 +15,19 @@ Name:         perl-Bootloader
 Version:      --autoinserted--
 Release:      0
 Requires:     perl >= %{perl_version}
-Requires:     mdadm perl-gettext
+Requires:     perl-gettext
+Requires:     mdadm e2fsprogs
+Requires:     limal-bootloader >= 1.2.2
 Autoreqprov:  on
 Group:        System/Boot
 License:      GPL
 Summary:      Library for Configuring Boot Loaders
 Source:       perl-Bootloader-%{version}.tar.bz2
 Source1:      update-bootloader
+Source2:      bootloader_entry
 BuildRoot:    %{_tmppath}/%{name}-%{version}-build
+#!BuildIgnore: mdadm e2fsprogs limal-bootloader
+
 
 %description
 Perl modules for configuring various boot loaders.
@@ -39,7 +44,8 @@ Authors:
 %setup -q
 
 %build
-perl Makefile.PL
+touch Makefile.PL
+perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
 make
 
 %install
@@ -47,6 +53,8 @@ make DESTDIR=$RPM_BUILD_ROOT install_vendor
 %perl_process_packlist
 mkdir -p $RPM_BUILD_ROOT/sbin
 install -m 755 %_sourcedir/update-bootloader $RPM_BUILD_ROOT/sbin
+install -d -m 711 $RPM_BUILD_ROOT/usr/lib/bootloader
+install -m 755 %{SOURCE2} $RPM_BUILD_ROOT/usr/lib/bootloader
 
 %files
 %defattr(-, root, root)
@@ -56,5 +64,6 @@ install -m 755 %_sourcedir/update-bootloader $RPM_BUILD_ROOT/sbin
 %{perl_vendorlib}/Bootloader
 /var/adm/perl-modules/perl-Bootloader
 /sbin/update-bootloader
+/usr/lib/bootloader
 
 %changelog -n perl-Bootloader

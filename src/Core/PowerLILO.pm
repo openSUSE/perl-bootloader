@@ -45,7 +45,7 @@ our @ISA = qw(Bootloader::Core);
 
 #module interface
 
-sub getExports() {
+sub GetMetaData() {
     my $loader = shift;
 
     # possible global entries:
@@ -58,6 +58,7 @@ sub getExports() {
     #	progressbar (deprecated, check yaboot)
     #	bootfolder
     #	timeout
+    #	macos_timeout
     #	default
     #	append
     #	initrd
@@ -65,6 +66,7 @@ sub getExports() {
     #
     # per section entries
     #	image
+    #   optional
     #	other
     #	root
     #	copy
@@ -159,7 +161,7 @@ sub getExports() {
 	activate => "bool:Change boot-device in NV-RAM:true",
 	timeout  => "int:Timeout in 1/10th seconds:50:0:600",
 	default  => "string:Default boot section:Linux",
-	root     => "select:Default root device::" . ":" . $root_devices,
+	root     => "selectdevice:Default root device::" . ":" . $root_devices,
 	append   => "string:Append options for kernel command line",
 	initrd   => "path:Default initrd path"			  
 	};
@@ -168,7 +170,7 @@ sub getExports() {
     
     if ( "$arch" eq "chrp" ) {
 	# pSeries only
-	$go->{clone}       = "select:Partition for boot loader duplication::" . ":" . $boot_partitions;
+	$go->{clone}       = "selectdevice:Partition for boot loader duplication::" . ":" . $boot_partitions;
 	$go->{force_fat}   = "bool:Always boot from FAT partition:false";
 	$go->{force}       = "bool:Install boot loader even on errors:false";
 
@@ -179,21 +181,23 @@ sub getExports() {
 	# only on old prep machines
 	$go->{bootfolder}  = "string:Bootfolder path";
 	$go->{boot_prep_custom}
-			   = "select:PReP partition::" . $boot_partitions;
+			   = "selectdevice:PReP partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "iseries" ) {
 	# only on legacy iseries
 	$go->{boot_slot}   = "select:Write to boot slot:B:" . "A:B:C:D";
 	$go->{boot_file}   = "path:Create boot image in file:/tmp/suse_boot_image";
 	$go->{boot_iseries_custom}
-			   = "select:PReP partition::" . $boot_partitions;
+			   = "selectdevice:PReP partition::" . $boot_partitions;
     }
     elsif ( "$arch" eq "pmac" ) {
 	# only on pmac_new and pmac_old
 	$go->{bootfolder}  = "string:Bootfolder path:";
 	$go->{boot_pmac_custom}
 			   = "select:HFS boot partition::" . $boot_partitions;
-    }
+ 	$go->{no_os_chooser} = "bool:Do not use os-chooser:false";
+	$go->{macos_timeout} = "int:Timeout in seconds for MacOS/Linux selection:5:0:60",
+   }
 
     $exports{"section_options"} = {
 	type_image        => "bool:Kernel section",
@@ -202,6 +206,7 @@ sub getExports() {
 	# image_label     => "string:Name of section", # implicit
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
+	image_optional    => "bool:Skip section gracefully on errors:true",
 	};
 
     my $so = $exports{"section_options"};
@@ -226,6 +231,7 @@ sub getExports() {
     }
 
     $loader->{"exports"}=\%exports;
+    return \%exports;
 }
 
 
@@ -244,10 +250,9 @@ sub new {
     $loader->{"default_global_lines"} = [
 	{ key => "activate", value => "" },
     ];
-
     bless ($loader);
 
-    $loader->getExports();
+    $loader->GetMetaData();
     $loader->l_milestone ("PowerLILO::new: Created PowerLILO instance");
     return $loader;
 }
@@ -264,7 +269,6 @@ from the system, but returns internal structures.
 # map<string,any> GetSettings ()
 sub GetSettings {
     my $self = shift;
-    $self->getExports();
 
     return $self->SUPER::GetSettings();
 }
@@ -455,7 +459,6 @@ sub Info2Global {
 
     my @lines = @{$globinfo{"__lines"} || []};
     my @lines_new = ();
-    my @added_lines = ();
     my $go = $self->{"exports"}{"global_options"};
     my $arch = $self->{"exports"}{"arch"};
 
@@ -485,8 +488,7 @@ sub Info2Global {
 	}
 	else {
 	    if (defined ($globinfo{$key})) {
-		$line_ref->{"value"} = $globinfo{$key};
-		delete ($globinfo{$key});
+		$line_ref->{"value"} = delete $globinfo{$key};
 	    }
 	    else {
 		next;
@@ -505,7 +507,6 @@ sub Info2Global {
     };
 
     @lines = @lines_new;
-    push @lines, @added_lines;
 
 
     while ((my $key, my $value) = each (%globinfo)) {

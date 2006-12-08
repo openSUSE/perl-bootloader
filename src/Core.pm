@@ -656,7 +656,7 @@ to a list of hashed and a pending comment.
 =cut
 
 # (list<map<string,string>>, list<string> comment_before) ProcessSingleMenuFileLine
-#     (string line, string comment_before, string separator)
+#     (string line, array ref comment_before, string separator)
 sub ProcessSingleMenuFileLine($$$) {
     my $self = shift;
     my $line = shift;
@@ -664,6 +664,9 @@ sub ProcessSingleMenuFileLine($$$) {
     my $equal_sep = shift;
 
     my @ret = ();
+
+    # convert 'hidden magic' entry to normal one
+    $line =~ s/^##YaST - //;
 
     if ($self->MenuFileLineEmpty ($line))
     {
@@ -1423,8 +1426,22 @@ sub ParseMenuFileLines {
     my @global = @{+shift @sects};
 
     @sects = map {
-	$self->Section2Info ($_);
+	$self->l_debug ("Core::ParseMenuFileLines: section lines to convert :\n'" .
+			join("'\n' ",
+			     map {
+				 $_->{"key"} . " => " . $_->{"value"};
+			     } @{$_}) . "'"
+			);
+	my $s = $self->Section2Info ($_);
+	$self->l_debug ("Core::ParseMenuFileLines: parsing result :\n'" .
+			join("'\n' ",
+			     map {
+				 m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+			     } keys %{$s}) . "'"
+			);
+	$s;
     } @sects;
+
     $self->MangleSections(\@sects, \@global);
     my @sect_names = map {
 	$_->{"name"} || "";
@@ -1516,6 +1533,12 @@ sub UpdateBootloader {
     return $ok;
 }
 
+#
+# map<string,any> GetMetaData ()
+# sub GetMetaData() {
+#     return undef;
+# }
+#
 # boolean InitializeBootloader ()
 # sub InitializeBootloader {
 #     return undef;
