@@ -225,7 +225,7 @@ sub GetMetaData() {
     my $go = $exports{"global_options"};
 
     $exports{"section_options"} = {
-	type_image        => "bool:Kernel section",
+	type_image        => "bool:Image section",
 	# image_name     => "string:Name of section", # implicit
 	image_image       => "path:Kernel image:/boot/vmlinux",
 	image_root        => "selectdevice:Root device::" . $root_devices,

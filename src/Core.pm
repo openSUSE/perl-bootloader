@@ -656,7 +656,7 @@ to a list of hashed and a pending comment.
 =cut
 
 # (list<map<string,string>>, list<string> comment_before) ProcessSingleMenuFileLine
-#     (string line, string comment_before, string separator)
+#     (string line, array ref comment_before, string separator)
 sub ProcessSingleMenuFileLine($$$) {
     my $self = shift;
     my $line = shift;

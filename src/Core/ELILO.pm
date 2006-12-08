@@ -44,6 +44,116 @@ our @ISA = ('Bootloader::Core');
 
 #module interface
 
+
+sub GetMetaData() {
+    my $loader = shift;
+    
+    # possible global entries
+    #
+    #     default=value       Name the default image to boot. If not defined ELILO
+    #                         will boot the first defined image.
+    #     timeout=number      The number of 10th of seconds to wait while in
+    #                         interactive mode before auto booting default kernel.
+    #                         Default is infinity.
+    #     delay=number        The number of 10th of seconds to wait before
+    #                         auto booting when not in interactive mode. 
+    #                         Default is 0.
+    #     prompt              Force interactive mode
+    #     verbose=number      Set level of verbosity [0-5]. Default 0 (no verbose)
+    #     root=filename       Set global root filesystem for Linux/ia64
+    #     read-only           Force root filesystem to be mounted read-only
+    #     append=string       Append a string of options to kernel command line
+    #     initrd=filename     Name of initrd file
+    #     image=filename      Define a new image
+    #     chooser=name        Specify kernel chooser to use: 'simple' or 'textmenu'.
+    #     message=filename    a message that is printed on the main screen if supported by 
+    #                         the chooser.
+    #     fX=filename         Some choosers may take advantage of this option to
+    #                         display the content of a file when a certain function
+    #                         key X is pressed. X can vary from 1-12 to cover 
+    #                         function keys F1 to F12.
+    #     noedd30             do not force the EDD30 EFI variable to TRUE when FALSE. In other
+    #                         words, don't force the EDD30 mode if not set.
+    #
+    #
+    # possible section types:
+    #     image
+    #
+    # image section options:
+    #     root=filename       Set root filesystem for kernel
+    #     read-only           Force root filesystem to be mounted read-only
+    #     append=string       Append a string of options to kernel command line
+    #     initrd=filename     Name of initrd file
+    #     label=string        Logical name of image (used in interactive mode)
+    #     description=string  One line text description of the image.
+
+
+    my %exports;
+    
+    my @bootpart;
+    my @partinfo = @{$loader->{"partitions"} || []};
+    
+    # boot from any partition (really?)
+    @bootpart = map {
+        my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
+        $device;
+    } @partinfo;
+    
+    my $boot_partitions = join(":", @bootpart);
+    
+    my $root_devices = join(":",
+        map {
+            my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
+            # FIXME: weed out non-root partitions
+        } @ partinfo,
+        keys %{$loader->{"md_arrays"} || {}}
+    );
+    
+    # FIXME: is "arch" export necessary?
+    
+    $exports{"global_options"} = {
+	# maps to either deafult or default_menu
+        default => "string:Default Boot Section/Menu:linux",
+        #default_menu => "string:Default Boot Menu:",
+        #timeout => "int:Timeout in Seconds:5:0:60",
+        #prompt => "bool:Show boot menu",
+        #target => "path:Target directory for configuration/menu section:/boot/zipl",
+    };
+    
+    my $go = $exports{"global_options"};
+    
+    $exports{"section_options"} = {
+        type_image => "bool:Image Section",
+        type_dump => "bool:Dump Section (obsolete)",
+        type_menu => "bool:Menu Section",
+        # section type image; omitting implicit "label"
+        image_target => "path:Target Directory for Configuration Section:/boot/zipl",
+        image_image => "path:Kernel Image:/boot/image",
+        image_ramdisk => "path:Initial RAM Disk:/boot/initrd",
+        image_parameters => "string:Optional Kernel Parameters",
+        image_parmfile => "path:Optional Parameter File",
+        # section type image; omitting implicit "label"
+        dump_target => "path:Target Directory for Dump Section:/boot/zipl",
+        dump_dumpto => "path:Dump Device:/dev/dasd",
+        dump_dumptofs => "path:SCSI Dump Device:/dev/zfcp",
+        # section type image; omitting implicit "label"
+        menu_menuname => "string:Menu name:usermenu",
+        menu_target => "path:Target Directory for Menu Section:/boot/zipl",
+	menu_list => "string:List of Menu Entries:linux:",
+	# menu_list => "list:List of Menu Entries:linux:",
+	menu_default => "int:Number of Default Entry:1:1:10",
+        menu_timeout => "int:Timeout in seconds:5:0:60",
+        menu_prompt => "bool:Show boot menu",
+        # FIXME: dump section has a target, too
+    };
+    
+    my $so = $exports{"section_options"};
+    
+    $loader->{"exports"}=\%exports;
+    return \%exports;
+}
+
+
 =item
 C<< $obj_ref = Bootloader::Core::ELILO->new (); >>
 
@@ -62,6 +172,8 @@ sub new {
 	{ "key" => "relocatable", "value" => "" },
     ];
     bless ($loader);
+
+    $loader->GetMetaData();
     $loader->l_milestone ("ELILO::new: Created ELILO instance");
     return $loader;
 }

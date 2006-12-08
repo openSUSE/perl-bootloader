@@ -59,7 +59,7 @@ our @ISA = qw(Bootloader::Core);
 
 #module interface
 
-sub getExports() {
+sub GetMetaData() {
     my $loader = shift;
     
     # possible global entries
@@ -69,6 +69,11 @@ sub getExports() {
     #	prompt
     #	target
     #
+    # possible section types:
+    #   image
+    #   dump
+    #   menu
+    #   
     # per section entries
     #
     #	label
@@ -105,33 +110,45 @@ sub getExports() {
     # FIXME: is "arch" export necessary?
     
     $exports{"global_options"} = {
-        default => "string:Default boot section:linux",
-        timeout => "int:Timeout in seconds:0:60:5",
-        prompt => "bool:Show boot menu",
-        target => "path:Target directory for configuration/menu section:/boot/zipl",
+	# maps to either deafult or default_menu
+        default => "string:Default Boot Section/Menu:linux",
+        #default_menu => "string:Default Boot Menu:",
+        #timeout => "int:Timeout in Seconds:5:0:60",
+        #prompt => "bool:Show boot menu",
+        #target => "path:Target directory for configuration/menu section:/boot/zipl",
     };
     
     my $go = $exports{"global_options"};
     
     $exports{"section_options"} = {
-        type_image => "bool:Kernel section",
-        type_dump => "bool:Dump section (obsolete)",
-        type_menu => "bool:Menu section",
-        # omitting implicit "label"
-        menu_menuname => "string:Menu name:usermenu",
-        image_image => "path:Kernel image:/boot/image",
-        image_ramdisk => "path:Initial RAM disk:/boot/initrd",
-        dump_dumpto => "path:Dump device:/dev/dasd",
-        image_target => "path:Target directory for configuration/menu section:/boot/zipl",
-        # FIXME: dump section has a target, too
-        image_parameters => "string:Optional kernel parameters",
-        image_parmfile => "path:Optional parameter file",
-        dump_dumptofs => "path:SCSI dump device:/dev/zfcp",
+        type_image     => "bool:Image Section",
+        image_target   => "path:Target Directory for Image Section:/boot/zipl",
+        image_image    => "path:Kernel Image:/boot/image",
+        # converted from ramdisk => initrd
+        image_initrd   => "path:Initial RAM Disk:/boot/initrd",
+        # converted from parameters => append, root
+        image_append   => "string:Optional Kernel Parameters",
+	image_root     => "selectdevice:Root device::" . $root_devices,
+        image_parmfile => "path:Optional Parameter File",
+
+        type_dump      => "bool:Dump Section (obsolete)",
+        dump_target    => "path:Target Directory for Dump Section:/boot/zipl",
+        dump_dumpto    => "path:Dump Device:/dev/dasd",
+        dump_dumptofs  => "path:SCSI Dump Device:/dev/zfcp",
+
+        type_menu      => "bool:Menu Section",
+        menu_target    => "path:Target Directory for Menu Section:/boot/zipl",
+	menu_list      => "string:List of Menu Entries:linux:",
+	# menu_list => "list:List of Menu Entries:linux:",
+	menu_default   => "int:Number of Default Entry:1:1:10",
+        menu_timeout   => "int:Timeout in seconds:5:0:60",
+        menu_prompt    => "bool:Show boot menu",
     };
     
     my $so = $exports{"section_options"};
     
     $loader->{"exports"}=\%exports;
+    return \%exports;
 }
 
 
@@ -148,10 +165,10 @@ sub new {
     my $old = shift;
 
     my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [
-    ];
-    
+    $loader->{"default_global_lines"} = [ ];
     bless ($loader);
+
+    $loader->GetMetaData();
     $loader->l_milestone ("ZIPL::new: Created ZIPL instance");
     return $loader;
 }
@@ -167,7 +184,6 @@ from the system, but returns internal structures.
 # map<string,any> GetSettings ()
 sub GetSettings {
     my $self = shift;
-    $self->getExports();
 
     return $self->SUPER::GetSettings();
 }
@@ -331,10 +347,9 @@ sub Info2Section {
 #	    $line_ref->{"key"}="[".$line_ref->{"value"}."]";
 #	    $line_ref->{"value"}="";
 	}
-	elsif ($key eq "image" || $key eq "ramdisk")
+	elsif ($key eq "ramdisk")
 	{
-	    $key = "kernel" if ($key eq "image");
-	    $key = "initrd" if ($key eq "ramdisk");
+	    $key = "initrd";
             $line_ref->{"value"} = $sectinfo{$key};
             delete ($sectinfo{$key});
 	}
@@ -344,70 +359,71 @@ sub Info2Section {
 	    delete ($sectinfo{"root"});
 	    delete ($sectinfo{"append"});
         }
-	elsif ($key eq "dumpto" || $key eq "target")
+	elsif ($key eq "image" || $key eq "dumpto" || $key eq "target")
 	{
             $line_ref->{"value"} = $sectinfo{$key};
             delete ($sectinfo{$key});
 	}
 	elsif ($key eq "menuname")
 	{
-            $line_ref->{"key"}="menuname";
-            $line_ref->{"value"}="";
+            # $line_ref->{"key"}="menuname";
+            $line_ref->{"value"}=delete $sectinfo{"name"};
         }
-        elsif (!exists $so->{$type . "_" . $key})
+        elsif (not exists $so->{$type . "_" . $key})
         {
             # print $type . "_" . $key . " unknown!\n";
-            next; # only accept known section options CAVEAT!
+	    $line_ref = undef; # only accept known section options CAVEAT!
         }
         else
         {
-            next unless defined ($sectinfo{$key});
-            
-            $line_ref->{"value"} = $sectinfo{$key};
-            delete ($sectinfo{$key});
+            if (defined ($sectinfo{$key})) {
+		$line_ref->{"value"} = $sectinfo{$key};
+		delete ($sectinfo{$key});
+	    }
+	    else {
+		$line_ref = undef;
+	    }
         }
-	$line_ref;
-    } @lines;
-
-    @lines = grep {
-	defined $_;
+	defined $line_ref ? $line_ref : ();
     } @lines;
 
     my $parameters = "";
     while ((my $key, my $value) = each (%sectinfo))
     {
-	if ($key eq "name")
-	{
-	    my $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, {}, $sectinfo{"original_name"});
-	    $line_ref->{"key"} = "label";
-#	    $line_ref->{"key"}="[".$line_ref->{"value"}."]";
-#	    $line_ref->{"value"}="";
-	    push @lines, $line_ref;
-	}
-	elsif ($key eq "kernel" || $key eq "initrd" || $key eq "dumpto" || $key eq "target")
-	{
-	    $key = "image" if ($key eq "kernel");
+	if ($key eq "name") {
+	    if ($type eq "image" || $type eq "dump") {
+		my $line_ref = $self->UpdateSectionNameLine($sectinfo{"name"}, {},
+							    $sectinfo{"original_name"});
+		$line_ref->{"key"} = "label";
+		#  $line_ref->{"key"}="[".$line_ref->{"value"}."]";
+		#  $line_ref->{"value"}="";
+		push @lines, $line_ref;
+	    }
+	    elsif ($type eq "menu") {
+		push @lines, {
+		    "key" => "menuname",
+		    "value" => $value,
+		};
+	    } # else ignore for unknown section type
+        }
+	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
 	    $key = "ramdisk" if ($key eq "initrd");
 	    push @lines, {
 		"key" => $key,
 		"value" => $value,
 	    };
 	}
-	elsif ($key eq "root")
-	{
+	elsif ($key eq "root") {
 	    $parameters = "root=" . $value . " " . $parameters;
         }
-        elsif ($key eq "append")
-        {
+        elsif ($key eq "append") {
             $parameters = $parameters . $value;
         }
-        elsif (! exists ($so->{$type . "_" . $key}))
-        {
+        elsif (not exists ($so->{$type . "_" . $key})) {
             # print $type . "_" . $key . " unknown!\n";
             next; # only accept known section options CAVEAT!
         }
-        else
-        {
+        else {
             my ($stype) = split /:/, $so->{$type . "_" . $key};
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
@@ -422,8 +438,8 @@ sub Info2Section {
         }
             
     }
-    if($parameters)
-    {
+
+    if ($parameters) {
         push @lines, {
             "key" => "parameters",
             "value" => "" . $parameters . ""
@@ -431,7 +447,7 @@ sub Info2Section {
     }
 
     my $ret = $self->FixSectionLineOrder (\@lines,
-	["label","menuname"]);
+	[ "label", "menuname" ]);
 
     return $ret;
 }
@@ -453,15 +469,14 @@ sub Section2Info {
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
-	if ($key eq "label")
-	{
+	if ($key eq "label") {
 	    $ret{"name"} = $line_ref->{"value"};
 	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	}
 	elsif ($key eq "image")
 	{
-	    $ret{"kernel"} = $line_ref->{"value"};
+	    $ret{$key} = $line_ref->{"value"};
 	    $ret{"type"} = "image";
 	}
 	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
@@ -487,14 +502,19 @@ sub Section2Info {
         }
 	elsif ($key eq "menuname")
 	{
-	    $ret{"menuname"} = $line_ref->{"value"};
+	    $ret{"name"} = $line_ref->{"value"} || "menu";
 	    $ret{"type"} = "menu";
-            $ret{"target"} = "/boot/zipl" unless $ret{"target"};
-            $ret{"menuname"} = "menu" unless $ret{"menuname"};
-            $ret{"prompt"} = "1" unless $ret{"prompt"};
-            $ret{"timeout"} = "10" unless $ret{"timeout"};
         }
     }
+
+
+    # Fill menu with default values
+    if ($ret{"type"} eq "menu") {
+	$ret{"target"} = "/boot/zipl" unless $ret{"target"};
+	$ret{"prompt"} = "1" unless $ret{"prompt"};
+	$ret{"timeout"} = "10" unless $ret{"timeout"};
+    }
+
     $ret{"__lines"} = \@lines;
     return \%ret;
 }
@@ -718,7 +738,10 @@ sub MangleSections
       # print "mangling section " . $sections->[$i]->{"name"} . ", type " . $sections->[$i]->{"type"} . "\n";
 
       # menu to mangle -> global section
-      if (defined ($sections->[$i]->{"type"}) && $sections->[$i]->{"type"} eq "menu" && !$automangled_menu)
+      if (0 &&
+	  defined ($sections->[$i]->{"type"}) &&
+	  $sections->[$i]->{"type"} eq "menu" &&
+	  !$automangled_menu)
       {
         push @$global_ref, {
           "key" => "menuname",
@@ -779,20 +802,13 @@ sub MangleSections
       # defaultboot -> global section
       elsif ($sec->{"name"} eq "defaultboot")
       {
-        push @$global_ref, {
-          "key" => "default",
-          "value" => $sec->{"default"}
-        };
-        if($sec->{"defaultmenu"})
-        {
-          push @$global_ref, {
-            "key" => "defaultmenu",
-            "value" => $sec->{"defaultmenu"}
-          };
-        }
-        # delete it
-        splice(@$sections,$i,1);
-        $i--;
+	  push @$global_ref, {
+	      "key" => "default",
+	      "value" => $sec->{"default"} || $sec->{"defaultmenu"}
+	  };
+	  # delete it
+	  splice(@$sections,$i,1);
+	  $i--;
       }
     }
 
@@ -818,7 +834,7 @@ to a list of hashed and a pending comment.
 =cut
 
 # (list<map<string,string>>, list<string> comment_before) ProcessSingleMenuFileLine
-#     (string line, string comment_before, string separator)
+#     (string line, array ref comment_before, string separator)
 sub ProcessSingleMenuFileLine($$$) {
     my $self = shift;
     my $line = shift;
@@ -839,7 +855,7 @@ sub ProcessSingleMenuFileLine($$$) {
 	    "comment_before" => $comment_before,
 	    "comment_after" => ""
         );
-	return ( [\%val], "");
+	return ( [\%val], []);
     }
     elsif ($line =~ /^[ \t]*\:(.+)$/)
     {
@@ -849,7 +865,7 @@ sub ProcessSingleMenuFileLine($$$) {
 	    "comment_before" => $comment_before,
 	    "comment_after" => ""
 	);
-	return ( [\%val], "");
+	return ( [\%val], []);
     }
     else
     {
