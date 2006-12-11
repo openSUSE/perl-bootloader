@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Dec 11 15:01:05 CET 2006 - jplack@suse.de
+
+- adjust to limal-bootloader @$! versioning system
+
+-------------------------------------------------------------------
 Fri Dec  8 13:04:55 CET 2006 - jplack@suse.de
 
 - fixed comment handling for ZIPL
