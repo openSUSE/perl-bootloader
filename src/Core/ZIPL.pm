@@ -350,8 +350,7 @@ sub Info2Section {
 	elsif ($key eq "ramdisk")
 	{
 	    $key = "initrd";
-            $line_ref->{"value"} = $sectinfo{$key};
-            delete ($sectinfo{$key});
+            $line_ref->{"value"} = delete $sectinfo{$key};
 	}
 	elsif ($key eq "parameters")
 	{
@@ -359,16 +358,17 @@ sub Info2Section {
 	    delete ($sectinfo{"root"});
 	    delete ($sectinfo{"append"});
         }
-	elsif ($key eq "image" || $key eq "dumpto" || $key eq "target")
-	{
-            $line_ref->{"value"} = $sectinfo{$key};
-            delete ($sectinfo{$key});
-	}
 	elsif ($key eq "menuname")
 	{
             # $line_ref->{"key"}="menuname";
-            $line_ref->{"value"}=delete $sectinfo{"name"};
+            $line_ref->{"value"} = delete $sectinfo{"name"};
         }
+	elsif ($key eq "prompt")
+	{
+            # $line_ref->{"key"}="menuname";
+            $line_ref->{"value"} =
+		delete $sectinfo{$key} eq "true" ? "1" : "0";
+	}
         elsif (not exists $so->{$type . "_" . $key})
         {
             # print $type . "_" . $key . " unknown!\n";
@@ -377,8 +377,7 @@ sub Info2Section {
         else
         {
             if (defined ($sectinfo{$key})) {
-		$line_ref->{"value"} = $sectinfo{$key};
-		delete ($sectinfo{$key});
+		$line_ref->{"value"} = delete $sectinfo{$key};
 	    }
 	    else {
 		$line_ref = undef;
@@ -405,6 +404,16 @@ sub Info2Section {
 		    "value" => $value,
 		};
 	    } # else ignore for unknown section type
+        }
+	elsif ($key eq "list") {
+	    my $i = 1;
+	    foreach (split(/\s*,\s*/, $value)) {
+		push @lines, {
+		    "key" => "$i",
+		    "value" => "$_",
+		};
+		$i++;
+	    }
         }
 	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
 	    $key = "ramdisk" if ($key eq "initrd");
@@ -466,6 +475,7 @@ sub Section2Info {
     my @lines = @{+shift};
 
     my %ret = ();
+    my @list = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
@@ -479,8 +489,12 @@ sub Section2Info {
 	    $ret{$key} = $line_ref->{"value"};
 	    $ret{"type"} = "image";
 	}
+	elsif ($key eq "prompt")
+	{
+	    $ret{$key} = $line_ref->{"value"} eq "1" ? "true" : "false";
+	}
 	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
-	       $key eq "prompt" || $key eq "timeout" || $key eq "target")
+	       $key eq "timeout" || $key eq "target")
 	{
 	    if($key eq "ramdisk")
 	    {
@@ -505,14 +519,19 @@ sub Section2Info {
 	    $ret{"name"} = $line_ref->{"value"} || "menu";
 	    $ret{"type"} = "menu";
         }
+	elsif ($key =~ m/\d+/)
+	{
+	    $list[0+$key] = $line_ref->{"value"}
+        }
     }
 
 
     # Fill menu with default values
     if ($ret{"type"} eq "menu") {
 	$ret{"target"} = "/boot/zipl" unless $ret{"target"};
-	$ret{"prompt"} = "1" unless $ret{"prompt"};
-	$ret{"timeout"} = "10" unless $ret{"timeout"};
+	$ret{"prompt"} = "true" unless exists $ret{"prompt"};
+	$ret{"timeout"} = "10" unless exists $ret{"timeout"};
+	$ret{"list"} = join(", ", grep { $_; } @list) if (@list) ;
     }
 
     $ret{"__lines"} = \@lines;
@@ -543,9 +562,8 @@ sub Global2Info {
 	my $val = $line_ref->{"value"};
 	# my ($type) = split(/:/, $go->{$key}||""); # not used yet
 	
-	if ($key eq "default" || $key eq "timeout" || $key eq "prompt" || $key eq "menuname" || $key eq "target")
-	{
-	    $ret{$key} = $val;
+	if ($key eq "default" || $key eq "defaultmenu")	{
+	    $ret{"default"} = $val;
 	}
     }
     $ret{"__lines"} = \@lines;
@@ -641,33 +659,33 @@ sub Info2Global {
         }
     }
 
-    while ((my $key, my $value) = each (%globinfo))
-    {
-        if ($key eq "prompt" || $key eq "timeout" || $key eq "target")
-        {
-            push @lines, {
-                "key" => $key,
-                "value" => $value
-            };
-        }
-    }
+#     while ((my $key, my $value) = each (%globinfo))
+#     {
+#         if ($key eq "prompt" || $key eq "timeout" || $key eq "target")
+#         {
+#             push @lines, {
+#                 "key" => $key,
+#                 "value" => $value
+#             };
+#         }
+#     }
     
-    my $defbootsec=1;
-    my $seccount=1;
-    for (my $i = 0; $i<= $#sections ; $i++)
-    {
-        next if($sections[$i] eq "");
-        push @lines, {
-            "key" => $seccount,
-            "value" => $sections[$i]
-        };
-        $defbootsec = $seccount if ($sections[$i] eq $defbootsectionname);
-        $seccount++;
-    }
-    push @lines, {
-        "key" => "default",
-        "value" => $defbootsec
-    };
+#     my $defbootsec=1;
+#     my $seccount=1;
+#     for (my $i = 0; $i<= $#sections ; $i++)
+#     {
+#         next if($sections[$i] eq "");
+#         push @lines, {
+#             "key" => $seccount,
+#             "value" => $sections[$i]
+#         };
+#         $defbootsec = $seccount if ($sections[$i] eq $defbootsectionname);
+#         $seccount++;
+#     }
+#     push @lines, {
+#         "key" => "default",
+#         "value" => $defbootsec
+#     };
     
     return \@lines;
 }
@@ -812,7 +830,7 @@ sub MangleSections
       }
     }
 
-    if($automangled_menu == 0)
+    if(0 && $automangled_menu == 0)
     {
       # push default menu values
       push @$global_ref, { "key" => "menuname", "value" => "menu" };
