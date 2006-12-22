@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Dec 22 16:56:07 CET 2006 - jplack@suse.de
+
+- complete implementation for (Fate#300732)
+- fix config file syntax problems from #228841
+- version bump 0.4.8  
+
+-------------------------------------------------------------------
 Fri Dec  8 13:04:55 CET 2006 - jplack@suse.de
 
 - fixed comment handling for ZIPL
