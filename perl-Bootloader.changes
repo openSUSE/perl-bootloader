@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Dec 22 17:12:57 CET 2006 - aosthof@suse.de
+
+- partial fix for ELILO (#228833)
+
+-------------------------------------------------------------------
 Fri Dec 22 16:56:07 CET 2006 - jplack@suse.de
 
 - complete implementation for (Fate#300732)
