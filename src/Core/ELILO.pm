@@ -153,9 +153,7 @@ sub GetMetaData() {
     # FIXME: is "arch" export necessary?
     
     $exports{"global_options"} = {
-	# maps to either default or default_menu
-	default		=> "string:Default Boot Section/Menu:Linux",
-	#default_menu	=> "string:Default Boot Menu:",
+	default		=> "string:Default Boot Section:Linux",
 	timeout		=> "int:Timeout in Seconds:5:0:60",
 	delay		=> "int:Delay to wait before auto booting in seconds:0",
 	prompt		=> "bool:Show boot menu",
@@ -168,9 +166,9 @@ sub GetMetaData() {
 	chooser		=> "string:Specify kernel chooser to use:textmenu",
 	message		=> "string:Message printed on main screen (if supported):",
 	fX		=> "path:Display the content of a file by function keys:",
-	noedd30		=> "bool: Don't force EDD30 mode if not set:",
-	fpswa		=> "path:IA-64-only, specify the filename for a specific FPSWA to load:",
-	relocatable	=> "bool:IA-64-only, allow attempt to relocate:",
+	noedd30		=> "bool:Don't force EDD30 mode if not set:",
+	fpswa		=> "path:Specify the filename for a specific FPSWA to load:",
+	relocatable	=> "bool:Allow attempt to relocate:",
 
 	# FIXME: Do we really need this, thus can there be custom boot partitions?
 	boot_custom	=> "selectdevice:Custom Boot Partition::" .  $boot_partitions,
@@ -179,14 +177,15 @@ sub GetMetaData() {
     my $go = $exports{"global_options"};
     
     $exports{"section_options"} = {
-	#root		=> "path:Set root filesystem for kernel:/",
-	root		=> "selectdevice:Root device::" . $root_devices,
-	readonly	=> "bool:Force root filesystem to be mounted read-only:",
-	append		=> "string:Append a string of options to kernel command line:",
-	initrd		=> "path:Name of initrd file:/boot/initrd",
-	label		=> "string:Logical name of image:Linux",
-	description	=> "string:One line text description of the image:",
-	relocatable	=> "bool:Allow attempt to relocate:",
+        type_image         => "bool:Image Section",
+	image_append       => "string:Optional kernel command line parameter",
+	image_description  => "string:One line text description of the image:",
+	image_image        => "path:Kernel image:/boot/vmlinux",
+	image_initrd       => "path:Initial RAM disk:/boot/initrd",
+	image_noverifyroot => "bool:Do not verify filesystem before booting:false",
+	image_readonly	   => "bool:Force root filesystem to be mounted read-only:",
+	image_relocatable  => "bool:Allow attempt to relocate:",
+	image_root	   => "selectdevice:Root device::" . $root_devices,
     };
 
     my $so = $exports{"section_options"};

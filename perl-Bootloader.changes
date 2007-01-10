@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 10 18:12:52 CET 2007 - jplack@suse.de
+
+- mostly complete fix for #228833, wrong elilo configurator
+
+-------------------------------------------------------------------
 Fri Dec 22 17:12:57 CET 2006 - aosthof@suse.de
 
 - partial fix for ELILO (#228833)
