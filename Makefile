@@ -26,7 +26,10 @@ export:	.checkexportdir .exportdir
 build:	.checkexportdir .built
 
 rpm:	build
-	@cp -av $(BUILD_ROOT)/usr/src/packages/RPMS/*/$(PKG)* .
+	@cp -av $(BUILD_DIR)/*/$(PKG)* .
+
+diff:	export
+	@/work/src/bin/tools/diff_new_pac /work/SRC/all/$(PKG) $$(<.exportdir)/$(PKG) | less
 
 submit:	.submitted
 
@@ -43,7 +46,7 @@ submit:	.submitted
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \
 	exportdir=`mktemp -d /tmp/temp.XXXXXX` ; \
 	tmpdir=$$exportdir/$(PKG) ; \
-	lv=`cat version` ; \
+	read lv < version ; \
 	svn export $(SVNREP) $$tmpdir ; \
 	cd $$tmpdir ; \
 	chmod -R a+rX .. ; \
@@ -52,7 +55,7 @@ submit:	.submitted
 	mv COPYING $(PKG)-$$lv/; \
 	mv src $(PKG)-$$lv/lib/Bootloader; \
 	tar cfvj $(PKG)-$$lv.tar.bz2 $(PKG)-$$lv ; \
-	sed "s/^Version:.*/Version: $$lv/" < $(PKG).spec.in > $(PKG).spec ; \
+	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > $(PKG).spec ; \
 	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in; \
 	pwd ; \
 	ls -la ; \

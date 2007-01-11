@@ -232,6 +232,35 @@ sub ParseLines {
     return 1;
 }
 
+
+=item
+C<< $sections_ref Bootloader::Core->SplitLinesToSections (\@lines, \@section_starts); >>
+
+Splits the lines of the configuration file to particular sections
+As argument it takes a reference to a list of lines (each line represented
+as a hash) and a reference to a list of keys starting a new section.
+Returns a reference of a list of sections, each represented as a list of
+lines. The first section is the global section of the bootloader (without
+
+=cut
+
+# list<list<map<string,any>>> SplitLinesToSection
+#   (list<map<string,any>> lines, list<string>, section_starts)
+sub SplitLinesToSections {
+    my $self = shift;
+    my @sections = @{$self->SUPER::SplitLinesToSections(@_)};
+    my @globals = @{+shift @sections};
+    # merge defaultboot section into (propably empty) global section
+    my %lines = ( @{$sections[0]} );
+    if (exists $lines{"label"} && $lines{"label"} eq "defaultboot") {
+	push @globals, @{+shift @sections};
+	unshift @sections, \@globals;
+    }
+
+    return \@sections;
+}
+
+
 =item
 C<< $files_ref = Bootloader::Core::ZIPL->CreateLines (); >>
 
@@ -318,7 +347,7 @@ the lines (a list of hashes).
 # list<map<string,any>> Info2Section (map<string,string> info)
 sub Info2Section {
     my $self = shift;
-    my %sectinfo = %{+shift};
+    my %sectinfo = ( %{+shift} ); # make a copy of section info
     my $sect_names_ref = shift;
 
     my @lines = @{$sectinfo{"__lines"} || []};
@@ -350,8 +379,7 @@ sub Info2Section {
 	elsif ($key eq "ramdisk")
 	{
 	    $key = "initrd";
-            $line_ref->{"value"} = $sectinfo{$key};
-            delete ($sectinfo{$key});
+            $line_ref->{"value"} = delete $sectinfo{$key};
 	}
 	elsif ($key eq "parameters")
 	{
@@ -359,16 +387,17 @@ sub Info2Section {
 	    delete ($sectinfo{"root"});
 	    delete ($sectinfo{"append"});
         }
-	elsif ($key eq "image" || $key eq "dumpto" || $key eq "target")
-	{
-            $line_ref->{"value"} = $sectinfo{$key};
-            delete ($sectinfo{$key});
-	}
 	elsif ($key eq "menuname")
 	{
             # $line_ref->{"key"}="menuname";
-            $line_ref->{"value"}=delete $sectinfo{"name"};
+            $line_ref->{"value"} = delete $sectinfo{"name"};
         }
+	elsif ($key eq "prompt")
+	{
+            # $line_ref->{"key"}="menuname";
+            $line_ref->{"value"} =
+		delete $sectinfo{$key} eq "true" ? "1" : "0";
+	}
         elsif (not exists $so->{$type . "_" . $key})
         {
             # print $type . "_" . $key . " unknown!\n";
@@ -377,8 +406,7 @@ sub Info2Section {
         else
         {
             if (defined ($sectinfo{$key})) {
-		$line_ref->{"value"} = $sectinfo{$key};
-		delete ($sectinfo{$key});
+		$line_ref->{"value"} = delete $sectinfo{$key};
 	    }
 	    else {
 		$line_ref = undef;
@@ -405,6 +433,16 @@ sub Info2Section {
 		    "value" => $value,
 		};
 	    } # else ignore for unknown section type
+        }
+	elsif ($key eq "list") {
+	    my $i = 1;
+	    foreach (split(/\s*,\s*/, $value)) {
+		push @lines, {
+		    "key" => "$i",
+		    "value" => "$_",
+		};
+		$i++;
+	    }
         }
 	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
 	    $key = "ramdisk" if ($key eq "initrd");
@@ -466,6 +504,7 @@ sub Section2Info {
     my @lines = @{+shift};
 
     my %ret = ();
+    my @list = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
@@ -479,8 +518,12 @@ sub Section2Info {
 	    $ret{$key} = $line_ref->{"value"};
 	    $ret{"type"} = "image";
 	}
+	elsif ($key eq "prompt")
+	{
+	    $ret{$key} = $line_ref->{"value"} eq "1" ? "true" : "false";
+	}
 	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
-	       $key eq "prompt" || $key eq "timeout" || $key eq "target")
+	       $key eq "timeout" || $key eq "target")
 	{
 	    if($key eq "ramdisk")
 	    {
@@ -505,14 +548,19 @@ sub Section2Info {
 	    $ret{"name"} = $line_ref->{"value"} || "menu";
 	    $ret{"type"} = "menu";
         }
+	elsif ($key =~ m/\d+/)
+	{
+	    $list[0+$key] = $line_ref->{"value"}
+        }
     }
 
 
     # Fill menu with default values
     if ($ret{"type"} eq "menu") {
 	$ret{"target"} = "/boot/zipl" unless $ret{"target"};
-	$ret{"prompt"} = "1" unless $ret{"prompt"};
-	$ret{"timeout"} = "10" unless $ret{"timeout"};
+	$ret{"prompt"} = "true" unless exists $ret{"prompt"};
+	$ret{"timeout"} = "10" unless exists $ret{"timeout"};
+	$ret{"list"} = join(", ", grep { $_; } @list) if (@list) ;
     }
 
     $ret{"__lines"} = \@lines;
@@ -543,9 +591,8 @@ sub Global2Info {
 	my $val = $line_ref->{"value"};
 	# my ($type) = split(/:/, $go->{$key}||""); # not used yet
 	
-	if ($key eq "default" || $key eq "timeout" || $key eq "prompt" || $key eq "menuname" || $key eq "target")
-	{
-	    $ret{$key} = $val;
+	if ($key eq "default" || $key eq "defaultmenu")	{
+	    $ret{"default"} = $val;
 	}
     }
     $ret{"__lines"} = \@lines;
@@ -553,7 +600,9 @@ sub Global2Info {
 }
 
 =item
-C<< $lines_ref = Bootloader::Core::ZIPL->Info2Global (\%section_info, \@section_names); >>
+C<< $lines_ref = Bootloader::Core::ZIPL->Info2Global (\%section_info,
+						      \@section_names,
+						      \@sections); >>
 
 Takes the info about the global options and uses it to construct the list of lines.
 The info about global option also contains the original lines.
@@ -562,10 +611,13 @@ returns the lines (a list of hashes).
 
 =cut
 
-# list<map<string,any>> Info2Global (map<string,string> info, list<string>sections)
+# list<map<string,any>> Info2Global (map<string,string> info,
+# 				     list<string>section_names,
+#    				     list<map<string,string>>sections)
 sub Info2Global {
     my $self = shift;
     my %globinfo = %{+shift};
+    my @section_names = @{+shift};
     my @sections = @{+shift};
 
     my @lines = @{$globinfo{"__lines"} || []};
@@ -574,10 +626,10 @@ sub Info2Global {
     
     # allow to keep the section unchanged
     # FIXME: always regenerate our 'meta global' section to avoid #160595
-    #if (! ($globinfo{"__modified"} || 0))
-    #{
-    #	return \@lines;
-    #}
+    if (! ($globinfo{"__modified"} || 0))
+    {
+    	return \@lines;
+    }
     
     my @newlines;
     foreach my $ding (@lines)
@@ -591,82 +643,45 @@ sub Info2Global {
     
     if (scalar (@lines) == 0)
     {
-      @lines = @{$self->{"default_global_lines"} || []};
+	@lines = @{$self->{"default_global_lines"} || []};
     }
 
     # create [defaultboot] section
-    push @lines, {
+    unshift @lines, {
       "key" => "label",
       "value" => "defaultboot"
     };
     
-    my $defbootsectionname = "";
-    my $found_default = 0; # false
+    # Create default or defaultmenu line here depending on the section type
+    my $default_sect = delete $globinfo{"default"};
+    my $default_type = "";
 
-    while ((my $key, my $value) = each (%globinfo))
-    {
-        next unless exists $go->{$key};	# only accept known global options CAVEAT!
-	#FIXME no deafult for now, this collides with default in menu section
-	#next unless $key eq "default" || $key eq "defaultmenu";
-	next unless $key eq "defaultmenu";
+    #$self->l_milestone ("Info2Global: default_sect = $default_sect");
+    #$self->l_milestone ("Info2Global: section_names = ( " . join(",", @section_names) . " )");
+    #$self->l_milestone ("Info2Global: sections = ( " . join(",", @sections) . " )");
 
-	push @lines, {
-	    "key" => $key,
-	    "value" => $value,
-	};
-	$found_default = 1; # true
-	$defbootsectionname = $value if $key eq "default";
+    if (defined $default_sect) {
+	foreach (@sections) {
+	    if (ref($_) eq "HASH") {
+		my $s = $_;
+		#$self->l_milestone ("Info2Global: this_sect = ( " .
+		#		    join(",\n", map {"'$_' -> '$s->{$_}'";} keys %{$s})
+		#		    . " )");
+		if (exists $_->{"name"} && $_->{"name"} eq $default_sect) {
+		    $default_type = $_->{"type"};
+		    last;
+		}
+	    }
+	}
+    }
+    unless ($default_type) {
+	$default_sect = $sections[0]->{"name"};
+	$default_type = $sections[0]->{"type"};
     }
 
-    unless ( $found_default ) {
-        # zipl does not allow an empty defaultboot section
-	# so add a defaultmenu line for now
-	# FIXME: for now there´s only one menu allowed
-	push @lines, {
-	    "key" => "defaultmenu",
-	    "value" => "menu",
-	};
-    }
-    
-
-    # create auto-generated menu
-    while ((my $key, my $value) = each (%globinfo))
-    {
-        if ($key eq "menuname")
-        {
-            push @lines, {
-                "key" => "menuname",
-                "value" => "$value"
-            };
-        }
-    }
-
-    while ((my $key, my $value) = each (%globinfo))
-    {
-        if ($key eq "prompt" || $key eq "timeout" || $key eq "target")
-        {
-            push @lines, {
-                "key" => $key,
-                "value" => $value
-            };
-        }
-    }
-    
-    my $defbootsec=1;
-    my $seccount=1;
-    for (my $i = 0; $i<= $#sections ; $i++)
-    {
-        next if($sections[$i] eq "");
-        push @lines, {
-            "key" => $seccount,
-            "value" => $sections[$i]
-        };
-        $defbootsec = $seccount if ($sections[$i] eq $defbootsectionname);
-        $seccount++;
-    }
     push @lines, {
-        "key" => "default",
-        "value" => $defbootsec
+	"key" => $default_type eq "menu" ? "defaultmenu" :"default",
+	"value" => $default_sect,
     };
     
     return \@lines;
@@ -679,33 +694,20 @@ sub Info2Global {
 # -- uli
 sub PrepareMenuFileLines {
     my $self = shift;
-    my @sects = @{+shift};
-    my %glob = %{+shift};
+    my @sectinfo = @{+shift};
+    my %globinfo = %{+shift};
     my $indent = shift;
     my $separ = shift;
-
-    my @sect_names = map {
-	$_->{"name"} || "";
-    } @sects;
+    my @sect_names = map { $_->{"name"} || (); } @sectinfo;
     
-    my @sect_names_image_only = map {
-        my $n;
-        if ($_->{"type"} ne "image")
-        {
-          $n = "";
-        }
-        else
-        {
-          $n = $_->{"name"} || "";
-        }
-        $n;
-    } @sects;
-    
-    @sects = map {
+    my @sects = map {
+	local $_ = $_;
 	my $sect_ref = $self->Info2Section ($_, \@sect_names);
 	$sect_ref;
-    } @sects;
-    my @global = @{$self->Info2Global (\%glob, \@sect_names_image_only, \@sects)};
+    } @sectinfo;
+
+    my @global = @{$self->Info2Global (\%globinfo, \@sect_names, \@sectinfo)};
+
     unshift @sects, \@global;
     my @lines = $self->MergeSectionsLines (\@sects, $indent);
     return $self->CreateMenuFileLines (\@lines, $separ);
@@ -732,93 +734,21 @@ sub MangleSections
     my @to_remove = ();
     for (my $i = 0; $i <= $#$sections ; $i++)
     {
-      my $key = $sections->[$i]->{"name"};
-      my $sec = $sections->[$i];
-      
-      # print "mangling section " . $sections->[$i]->{"name"} . ", type " . $sections->[$i]->{"type"} . "\n";
-
-      # menu to mangle -> global section
-      if (0 &&
-	  defined ($sections->[$i]->{"type"}) &&
-	  $sections->[$i]->{"type"} eq "menu" &&
-	  !$automangled_menu)
-      {
-        push @$global_ref, {
-          "key" => "menuname",
-          "value" => $sections->[$i]->{"menuname"}
-        };
-        if($sec->{"prompt"})
-        {
-          push @$global_ref, {
-            "key" => "prompt",
-            "value" => $sec->{"prompt"}
-          };
-        }
-        else
-        {
-          push @$global_ref, {
-            "key" => "prompt",
-            "value" => 1
-          };
-        }
-        
-        if($sec->{"timeout"})
-        {
-          push @$global_ref, {
-            "key" => "timeout",
-            "value" => $sec->{"timeout"}
-          };
-        }
-        else
-        {
-          push @$global_ref, {
-            "key" => "timeout",
-            "value" => 10
-          };
-        }
-        if($sec->{"target"})
-        {
-          push @$global_ref, {
-            "key" => "target",
-            "value" => $sec->{"target"}
-          };
-        }
-        else
-        {
-          push @$global_ref, {
-            "key" => "target",
-            "value" => "/boot/zipl"
-          };
-        }
-        
-        # delete it
-        splice(@$sections,$i,1);
-	$i--;
-        
-        # make sure we only mangle one menu and pass thru the other ones
-        $automangled_menu = 1;
-      }
-
-      # defaultboot -> global section
-      elsif ($sec->{"name"} eq "defaultboot")
-      {
-	  push @$global_ref, {
-	      "key" => "default",
-	      "value" => $sec->{"default"} || $sec->{"defaultmenu"}
-	  };
-	  # delete it
-	  splice(@$sections,$i,1);
-	  $i--;
-      }
-    }
-
-    if($automangled_menu == 0)
-    {
-      # push default menu values
-      push @$global_ref, { "key" => "menuname", "value" => "menu" };
-      push @$global_ref, { "key" => "prompt", "value" => 1 };
-      push @$global_ref, { "key" => "timeout", "value" => 10 };
-      push @$global_ref, { "key" => "target", "value" => "/boot/zipl" };
+	my $key = $sections->[$i]->{"name"};
+	my $sec = $sections->[$i];
+	
+	# print "mangling section " . $sections->[$i]->{"name"} . ", type " . $sections->[$i]->{"type"} . "\n";
+	
+	if ($sec->{"name"} eq "defaultboot")
+	{
+	    push @$global_ref, {
+		"key" => "default",
+		"value" => $sec->{"default"} || $sec->{"defaultmenu"}
+	    };
+	    # delete it
+	    splice(@$sections,$i,1);
+	    $i--;
+	}
     }
 }
 

@@ -1,4 +1,27 @@
 -------------------------------------------------------------------
+Thu Jan 11 16:16:36 CET 2007 - jplack@suse.de
+
+- final (at least should be ) fix for ELILO (#228833)
+- version bump 0.4.9  
+
+-------------------------------------------------------------------
+Wed Jan 10 18:12:52 CET 2007 - jplack@suse.de
+
+- mostly complete fix for #228833, wrong elilo configurator
+
+-------------------------------------------------------------------
+Fri Dec 22 17:12:57 CET 2006 - aosthof@suse.de
+
+- partial fix for ELILO (#228833)
+
+-------------------------------------------------------------------
+Fri Dec 22 16:56:07 CET 2006 - jplack@suse.de
+
+- complete implementation for (Fate#300732)
+- fix config file syntax problems from #228841
+- version bump 0.4.8  
+
+-------------------------------------------------------------------
 Mon Dec 11 15:01:05 CET 2006 - jplack@suse.de
 
 - adjust to limal-bootloader @$! versioning system
