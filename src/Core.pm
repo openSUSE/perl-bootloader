@@ -100,13 +100,13 @@ C<< $canonical = Bootloader::Core->CanonicalPath ($path); >>
 
 C<< $real = Bootloader::Core->RealFileName ($filename); >>
 
-C<< Bootloader::Core->l_debug ($messake); >>
+C<< Bootloader::Core->l_debug ($message); >>
 
-C<< Bootloader::Core->l_milestone ($messake); >>
+C<< Bootloader::Core->l_milestone ($message); >>
 
-C<< Bootloader::Core->l_warning ($messake); >>
+C<< Bootloader::Core->l_warning ($message); >>
 
-C<< Bootloader::Core->l_error ($messake); >>
+C<< Bootloader::Core->l_error ($message); >>
 
 C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
 
@@ -130,7 +130,7 @@ my $headline = "# Modified by YaST2. Last modification on ";
 
 =item
 
-C<< Bootloader::Core->l_debug ($messake); >>
+C<< Bootloader::Core->l_debug ($message); >>
 
 Writes a debug message to the system log buffer.
 
@@ -149,7 +149,7 @@ sub l_debug {
 
 =item
 
-C<< Bootloader::Core->l_milestone ($messake); >>
+C<< Bootloader::Core->l_milestone ($message); >>
 
 Writes a milestone message to the system log buffer.
 
@@ -168,7 +168,7 @@ sub l_milestone {
 
 =item
 
-C<< Bootloader::Core->l_warning ($messake); >>
+C<< Bootloader::Core->l_warning ($message); >>
 
 Writes a warning message to the system log buffer.
 
@@ -187,7 +187,7 @@ sub l_warning {
 
 =item
 
-C<< Bootloader::Core->l_error ($messake); >>
+C<< Bootloader::Core->l_error ($message); >>
 
 Writes an error message to the system log buffer.
 
