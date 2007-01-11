@@ -523,20 +523,7 @@ sub Info2Global {
 	next unless exists $go->{$key};
 	#next if $key =~ /^__/;
 
-	#if ($key eq "boot_" . $arch . "_custom") {
-	#	push @lines, {
-	#	    "key" => "boot",
-	#	    "value" => $value,
-	#	}
-	#}
-	#elsif ($key eq "boot_slot") {
 	if ($key eq "boot_slot") {
-		push @lines, {
-		    "key" => "boot",
-		    "value" => $value,
-		}
-	}
-	elsif ($key eq "boot_file") {
 		push @lines, {
 		    "key" => "boot",
 		    "value" => $value,
@@ -601,6 +588,8 @@ sub Info2Section {
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
 	    # only accept known section options :-)
+	    $self->l_milestone (
+		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
 	else
@@ -635,6 +624,8 @@ sub Info2Section {
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
 	    # only accept known section options :-)
+	    $self->l_milestone (
+		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
@@ -673,22 +664,39 @@ information about the section.
 sub Section2Info {
     my $self = shift;
     my @lines = @{+shift};
+    my $so = $self->{"exports"}{"section_options"};
 
     my %ret = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
+	my $val = $line_ref->{"value"};
+
 	if ($key eq "label")
 	{
 	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
-	    $key="name";
+	    $ret{"name"} = $val;
+	    next;
 	}
 	elsif ($key eq "image" or $key eq "other")
 	{
 	    $ret{"type"} = $key;
 	}
-	$ret{$key} = $line_ref->{"value"};
+
+	unless (exists $ret{"type"} && exists $so->{$ret{"type"} . "_" . $key}) {
+	    # only accept known section options :-)
+	    $self->l_milestone (
+		"ELILO::Section2Info: Ignoring key '$key' for section"
+		. " type '" . $ret{"type"} . "'");
+	    next; 
+	}
+	
+	my ($type) = split /:/, $so->{$ret{"type"} . "_" . $key};
+	if ($type eq "bool") {
+	    $val = "true";
+	}
+	$ret{$key} = $val;
     }
     $ret{"__lines"} = \@lines;
     return \%ret;
