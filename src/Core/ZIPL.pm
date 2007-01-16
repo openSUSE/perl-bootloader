@@ -466,7 +466,7 @@ sub Info2Section {
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
 		next if $value ne "true";
-		$value = "";
+		$value = "1";
 	    }
 
 	    push @lines, {
