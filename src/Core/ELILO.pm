@@ -170,8 +170,9 @@ sub GetMetaData() {
 	fpswa		=> "path:Specify the filename for a specific FPSWA to load:",
 	relocatable	=> "bool:Allow attempt to relocate:",
 
-	# FIXME: Do we really need this, thus can there be custom boot partitions?
-	boot_custom	=> "selectdevice:Custom Boot Partition::" .  $boot_partitions,
+	# shadow entries for efi boot manager
+	boot_efilabel	=> "string:EFI boot manager label::",
+	boot_rm_efilabel => "bool:Remove existing EFI boot manager entries by name:",
     };
 
     my $go = $exports{"global_options"};
@@ -425,9 +426,14 @@ if(0){
 	"    ",
 	" = "
     );
-    if (! defined ($elilo_conf)) {
-	return undef;
-    }
+
+    return undef unless defined $elilo_conf;
+
+    # handle 'hidden magic' entries
+    map {
+	s/^/##YaST - /
+	    if /^boot_efilabel/ or /^boot_rm_efilabel/;
+    } @{$elilo_conf};
 
     return {
 	$default_conf => $elilo_conf,
