@@ -335,6 +335,37 @@ sub ParseLines {
 
 }
 
+
+=item
+C<< $line = Bootloader::Core::ELILO->CreateSingleMenuFileLine ($key, $value, $separator); >>
+
+Transforms a line (hash) to a string to save. As arguments it takes the the key, the
+value and a string to separate the key and the value. Returns a string.
+
+=cut
+
+# string CreateSingleMenuFileLine (string key, string value, string separator)
+sub CreateSingleMenuFileLine {
+    my $self = shift;
+    my $key = shift;
+    my $value = shift;
+    my $equal_sep = shift;
+
+    my $line = "$key";
+    if (! $self->HasEmptyValue ($key, $value))
+    {
+	# I like this crappy elilo thing
+	if ($key eq "append") {
+	    $value = $self->Quote ($value, "always");
+	} else {
+	    $value = $self->Quote ($value, "blanks");
+	}
+	$line = "$line$equal_sep$value";
+    }
+    return $line;
+}
+
+
 =item
 C<< $files_ref = Bootloader::Core::ELILO->CreateLines (); >>
 

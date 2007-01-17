@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 17 12:21:02 CET 2007 - jplack@suse.de
+
+- proposed fix for append quotation in elilo (#235400)
+
+-------------------------------------------------------------------
 Tue Jan 16 23:46:31 CET 2007 - jplack@suse.de
 
 - fix various zipl configuration problems (#235486)
