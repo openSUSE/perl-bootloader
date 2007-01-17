@@ -380,6 +380,7 @@ ParseLines on success, or undef on fail.
 sub CreateLines {
     my $self = shift;
 
+    # FIXME: think this is unnecessary code, no one else needs it, please check
     if ($self->{"global"}{"__modified"} || 0) {
 	my @lines = @{$self->{"global"}{"__lines"} || []};
 	my @out_lines = ();
@@ -388,36 +389,6 @@ sub CreateLines {
 	}
 	$self->{"global"}{"__lines"} = \@out_lines;
     }
-    foreach my $sect_ref (@{$self->{"sections"}} ) {
-	my %sect = %{$sect_ref};
-        my $append = undef;
-        my $title = undef;
-        my $kernel = undef;
-#        foreach my $skey (keys %sect) {
-#	    printf STDERR "%s: %s\n", $skey, $sect{$skey};
-#        }
-if(0){
-        foreach my $opt_ref (@{$sect_ref->{"__lines"}|| []}) {
-          my $key = $opt_ref->{"key"};
-          my $val = $opt_ref->{"value"};
-#	  print STDERR "$key = '$val'\n";
-          if($key eq "image") {
-            $kernel = $val;
-          } elsif ($key eq "label") {
-            $title = $val;
-          } elsif ($key eq "append") {
-            $append = $val;
-          }
-        }
-}
-	next unless defined( $title = $sect{"name"});
-#        if( defined( $append) ) {
-#          print STDERR "SECTION $title has APPEND: '$append'\n";
-#	} else {
-#          print STDERR "SECTION $title has NO APPEND!\n";
-#        }
-#	print STDERR "\n";
-     }
 
     # create /etc/elilo.conf lines
     my $elilo_conf = $self->PrepareMenuFileLines (
