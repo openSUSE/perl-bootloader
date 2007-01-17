@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 17 18:47:25 CET 2007 - aosthof@suse.de
+
+- fixed some typos (in descriptions) in ELILO.pm 
+
+-------------------------------------------------------------------
 Wed Jan 17 15:06:17 CET 2007 - aosthof@suse.de
 
 - fix for efi boot entry handling (#233537)
