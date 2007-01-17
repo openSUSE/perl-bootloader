@@ -1,7 +1,7 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/SLES10-SP1
-BUILD_DIST=sles10-ppc
+#BUILD_DIST=sles10-ppc
 ifeq ($(BUILD_DIST),sles10-ppc)
 BUILD=powerpc32 /work/src/bin/build
 else

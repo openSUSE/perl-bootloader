@@ -151,7 +151,9 @@ sub GetMetaData() {
     );
     
     # FIXME: is "arch" export necessary?
-    
+
+    # FIXME: Add quotation marks around all keys (like key "read-only")
+
     $exports{"global_options"} = {
 	default		=> "string:Default Boot Section:Linux",
 	timeout		=> "int:Timeout in Seconds:5:0:60",
@@ -159,7 +161,7 @@ sub GetMetaData() {
 	prompt		=> "bool:Show boot menu",
 	verbose		=> "int:Set level of verbosity [0-5]:0",
 	root		=> "path:Set global root filesystem:/",
-	readonly	=> "bool:Force rootfs to be mounted read-only",
+	"read-only"	=> "bool:Force rootfs to be mounted read-only",
 	append		=> "string:Append string of options to kernel command line:",
 	initrd		=> "path:Name of initrd file:/boot/initrd",
 	image		=> "path:Name of image file:/boot/vmlinuz",
