@@ -156,7 +156,7 @@ sub GetMetaData() {
 
     $exports{"global_options"} = {
 	default		=> "string:Default Boot Section:Linux",
-	timeout		=> "int:Timeout in 10th of Seconds:5:0:60",
+	timeout		=> "int:Timeout in 10th of Seconds:80:0:36000",
 	delay		=> "int:Delay to wait before Auto Booting in 10th of Seconds:0",
 	prompt		=> "bool:Show Boot Menu",
 	verbose		=> "int:Set Level of Verbosity [0-5]:0",
