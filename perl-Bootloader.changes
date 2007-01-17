@@ -1,3 +1,9 @@
+-------------------------------------------------------------------
+Wed Jan 17 15:06:17 CET 2007 - aosthof@suse.de
+
+- fix for efi boot entry handling (#233537)
+- proposed fix for append quotation in elilo (#235400)
+
 ------------------------------------------------------------------
 Tue Jan 16 23:46:31 CET 2007 - jplack@suse.de
 

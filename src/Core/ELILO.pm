@@ -172,8 +172,9 @@ sub GetMetaData() {
 	fpswa		=> "path:Specify the filename for a specific FPSWA to load:",
 	relocatable	=> "bool:Allow attempt to relocate:",
 
-	# FIXME: Do we really need this, thus can there be custom boot partitions?
-	boot_custom	=> "selectdevice:Custom Boot Partition::" .  $boot_partitions,
+	# shadow entries for efi boot manager
+	boot_efilabel	=> "string:EFI boot manager label::",
+	boot_rm_efilabel => "bool:Remove existing EFI boot manager entries by name:",
     };
 
     my $go = $exports{"global_options"};
@@ -337,6 +338,37 @@ sub ParseLines {
 
 }
 
+
+=item
+C<< $line = Bootloader::Core::ELILO->CreateSingleMenuFileLine ($key, $value, $separator); >>
+
+Transforms a line (hash) to a string to save. As arguments it takes the the key, the
+value and a string to separate the key and the value. Returns a string.
+
+=cut
+
+# string CreateSingleMenuFileLine (string key, string value, string separator)
+sub CreateSingleMenuFileLine {
+    my $self = shift;
+    my $key = shift;
+    my $value = shift;
+    my $equal_sep = shift;
+
+    my $line = "$key";
+    if (! $self->HasEmptyValue ($key, $value))
+    {
+	# I like this crappy elilo thing
+	if ($key eq "append") {
+	    $value = $self->Quote ($value, "always");
+	} else {
+	    $value = $self->Quote ($value, "blanks");
+	}
+	$line = "$line$equal_sep$value";
+    }
+    return $line;
+}
+
+
 =item
 C<< $files_ref = Bootloader::Core::ELILO->CreateLines (); >>
 
@@ -350,6 +382,7 @@ ParseLines on success, or undef on fail.
 sub CreateLines {
     my $self = shift;
 
+    # FIXME: think this is unnecessary code, no one else needs it, please check
     if ($self->{"global"}{"__modified"} || 0) {
 	my @lines = @{$self->{"global"}{"__lines"} || []};
 	my @out_lines = ();
@@ -358,36 +391,6 @@ sub CreateLines {
 	}
 	$self->{"global"}{"__lines"} = \@out_lines;
     }
-    foreach my $sect_ref (@{$self->{"sections"}} ) {
-	my %sect = %{$sect_ref};
-        my $append = undef;
-        my $title = undef;
-        my $kernel = undef;
-#        foreach my $skey (keys %sect) {
-#	    printf STDERR "%s: %s\n", $skey, $sect{$skey};
-#        }
-if(0){
-        foreach my $opt_ref (@{$sect_ref->{"__lines"}|| []}) {
-          my $key = $opt_ref->{"key"};
-          my $val = $opt_ref->{"value"};
-#	  print STDERR "$key = '$val'\n";
-          if($key eq "image") {
-            $kernel = $val;
-          } elsif ($key eq "label") {
-            $title = $val;
-          } elsif ($key eq "append") {
-            $append = $val;
-          }
-        }
-}
-	next unless defined( $title = $sect{"name"});
-#        if( defined( $append) ) {
-#          print STDERR "SECTION $title has APPEND: '$append'\n";
-#	} else {
-#          print STDERR "SECTION $title has NO APPEND!\n";
-#        }
-#	print STDERR "\n";
-     }
 
     # create /etc/elilo.conf lines
     my $elilo_conf = $self->PrepareMenuFileLines (
@@ -396,9 +399,14 @@ if(0){
 	"    ",
 	" = "
     );
-    if (! defined ($elilo_conf)) {
-	return undef;
-    }
+
+    return undef unless defined $elilo_conf;
+
+    # handle 'hidden magic' entries
+    map {
+	s/^/##YaST - /
+	    if /^boot_efilabel/ or /^boot_rm_efilabel/;
+    } @{$elilo_conf};
 
     return {
 	$default_conf => $elilo_conf,
