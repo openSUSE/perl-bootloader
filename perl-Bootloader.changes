@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan 25 15:32:13 CET 2007 - aosthof@suse.de
+
+- fixed function InitializeBootloader() in src/Core/ZIPL.pm to
+  correctly call /sbin/zipl (without param "-m menu") (#199582)
+
+-------------------------------------------------------------------
 Wed Jan 17 19:23:02 CET 2007 - aosthof@suse.de
 
 - fixed default/minimum/maximum values for timeout in ELILO.pm 

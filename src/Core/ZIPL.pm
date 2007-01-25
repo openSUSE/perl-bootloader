@@ -330,7 +330,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	"/sbin/zipl -m menu",
+	"/sbin/zipl",
 	"/var/log/YaST2/y2log_bootloader"
     );
 }
