@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Feb 14 11:31:30 CET 2007 - aosthof@suse.de
+
+- manually merge SLES10 branch with trunk, part 1/4:
+- fixed default/minimum/maximum values for timeout in ELILO.pm
+- fixed some typos (in descriptions) in ELILO.pm
+- IA 64: Added missing options in elilo.conf (#235400)
+
+-------------------------------------------------------------------
 Wed Jan 17 12:37:41 CET 2007 - jplack@suse.de
 
 - fix for efi boot entry handling (#233537)

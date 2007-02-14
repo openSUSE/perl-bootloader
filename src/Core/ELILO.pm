@@ -151,42 +151,44 @@ sub GetMetaData() {
     );
     
     # FIXME: is "arch" export necessary?
-    
+
+    # FIXME: Add quotation marks around all keys (like key "read-only")
+
     $exports{"global_options"} = {
 	default		=> "string:Default Boot Section:Linux",
-	timeout		=> "int:Timeout in Seconds:5:0:60",
-	delay		=> "int:Delay to wait before auto booting in seconds:0",
-	prompt		=> "bool:Show boot menu",
-	verbose		=> "int:Set level of verbosity [0-5]:0",
-	root		=> "path:Set global root filesystem:/",
-	readonly	=> "bool:Force rootfs to be mounted read-only",
-	append		=> "string:Append string of options to kernel command line:",
-	initrd		=> "path:Name of initrd file:/boot/initrd",
-	image		=> "path:Name of image file:/boot/vmlinuz",
-	chooser		=> "string:Specify kernel chooser to use:textmenu",
-	message		=> "string:Message printed on main screen (if supported):",
-	fX		=> "path:Display the content of a file by function keys:",
-	noedd30		=> "bool:Don't force EDD30 mode if not set:",
-	fpswa		=> "path:Specify the filename for a specific FPSWA to load:",
-	relocatable	=> "bool:Allow attempt to relocate:",
+	timeout		=> "int:Timeout in 10th of Seconds:80:0:36000",
+	delay		=> "int:Delay to wait before Auto Booting in 10th of Seconds:0",
+	prompt		=> "bool:Show Boot Menu",
+	verbose		=> "int:Set Level of Verbosity [0-5]:0",
+	root		=> "path:Set global Root Filesystem:/",
+	"read-only"	=> "bool:Force rootfs to be mounted read-only",
+	append		=> "string:Append String of Options to Kernel Command Line:",
+	initrd		=> "path:Name of initrd File:/boot/initrd",
+	image		=> "path:Name of image File:/boot/vmlinuz",
+	chooser		=> "string:Specify Kernel Chooser to use:textmenu",
+	message		=> "string:Message printed on Main Screen (if supported):",
+	fX		=> "path:Display the Content of a File by Function Keys:",
+	noedd30		=> "bool:Don't force EDD30 Mode if not set:",
+	fpswa		=> "path:Specify the Filename for a specific FPSWA to load:",
+	relocatable	=> "bool:Allow Attempt to relocate:",
 
 	# shadow entries for efi boot manager
-	boot_efilabel	=> "string:EFI boot manager label::",
-	boot_rm_efilabel => "bool:Remove existing EFI boot manager entries by name:",
+	boot_efilabel	=> "string:EFI Boot Manager Label::",
+	boot_rm_efilabel => "bool:Remove existing EFI Boot Manager Entries by Name:",
     };
 
     my $go = $exports{"global_options"};
     
     $exports{"section_options"} = {
         type_image         => "bool:Image Section",
-	image_append       => "string:Optional kernel command line parameter",
-	image_description  => "string:One line text description of the image:",
-	image_image        => "path:Kernel image:/boot/vmlinux",
-	image_initrd       => "path:Initial RAM disk:/boot/initrd",
-	image_noverifyroot => "bool:Do not verify filesystem before booting:false",
-	image_readonly	   => "bool:Force root filesystem to be mounted read-only:",
-	image_relocatable  => "bool:Allow attempt to relocate:",
-	image_root	   => "selectdevice:Root device::" . $root_devices,
+	image_append       => "string:Optional Kernel Command Line Parameter",
+	image_description  => "string:One Line Text Description of the Image:",
+	image_image        => "path:Kernel Image:/boot/vmlinux",
+	image_initrd       => "path:Initial RAM Disk:/boot/initrd",
+	image_noverifyroot => "bool:Do not verify Filesystem before Booting:false",
+	image_readonly	   => "bool:Force Root Filesystem to be mounted read-only:",
+	image_relocatable  => "bool:Allow Attempt to relocate:",
+	image_root	   => "selectdevice:Root Device::" . $root_devices,
     };
 
     my $so = $exports{"section_options"};
