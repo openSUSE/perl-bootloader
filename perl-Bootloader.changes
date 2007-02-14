@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Feb 14 11:40:20 CET 2007 - aosthof@suse.de
+
+- fixed function InitializeBootloader() in src/Core/ZIPL.pm to
+  correctly call /sbin/zipl (without param "-m menu") (#199582)
+
+-------------------------------------------------------------------
 Wed Feb 14 11:31:30 CET 2007 - aosthof@suse.de
 
 - manually merge SLES10 branch with trunk, part 1/4:
