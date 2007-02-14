@@ -72,22 +72,29 @@ function add_entry()
 		case $flavor in
 			(kdump|um)
 			;;
-			(*)
+			(xen*)
 				opt_xen_kernel=
-				case $flavor in
-					xen*)
-						set -- $flavor
-						set -- ${1#xen}
-						opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
-					;;
-				esac
+				set -- $flavor
+				set -- ${1#xen}
+				opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
 
+				# Add the new bootloader entry
+				update_bootloader --image /boot/$image \
+						  --initrd /boot/$initrd \
+						  --add \
+						  --force $opt_xen_kernel \
+						  --name "Kernel-$release"
+
+				# Run the bootloader (e.g., lilo).
+				update_bootloader --refresh
+			;;
+			(*)
 				# Add the new bootloader entry
 				update_bootloader --image /boot/$image \
 						  --initrd /boot/$initrd \
 						  --default \
 						  --add \
-						  --force $opt_xen_kernel \
+						  --force \
 						  --name "Kernel-$release"
 
 				# Run the bootloader (e.g., lilo).

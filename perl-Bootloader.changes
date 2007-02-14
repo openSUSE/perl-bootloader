@@ -1,6 +1,14 @@
 -------------------------------------------------------------------
+Wed Feb 14 11:44:14 CET 2007 - aosthof@suse.de
+
+- manually merge SLES10 branch with trunk, part 3/4:
+- Reverted to make Xen kernel default boot kernel if Xen pattern
+  or Xen RPMs are installed. (Fate #301384)
+
+-------------------------------------------------------------------
 Wed Feb 14 11:40:20 CET 2007 - aosthof@suse.de
 
+- manually merge SLES10 branch with trunk, part 2/4:
 - fixed function InitializeBootloader() in src/Core/ZIPL.pm to
   correctly call /sbin/zipl (without param "-m menu") (#199582)
 
