@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Feb 14 11:51:49 CET 2007 - aosthof@suse.de
+
+- manually merge SLES10 branch with trunk, part 4/4:
+- fixed function SplitDevPath() in src/Core.pm to avoid an endless
+  loop (#228570) & (#236777)
+- version bump 0.4.11 (skipped 0.4.10 to be consistent again)
+
+-------------------------------------------------------------------
 Wed Feb 14 11:44:14 CET 2007 - aosthof@suse.de
 
 - manually merge SLES10 branch with trunk, part 3/4:
