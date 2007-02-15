@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Feb 15 16:41:15 CET 2007 - jplack@suse.de
+
+- handle boolean options correctly in GRUB (#244530)
+
+-------------------------------------------------------------------
 Wed Feb 14 11:51:49 CET 2007 - aosthof@suse.de
 
 - manually merge SLES10 branch with trunk, part 4/4:
