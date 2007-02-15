@@ -1563,7 +1563,6 @@ sub Info2Global {
 	{
 	    # FIXME: Do md5 encryption
 	    $line_ref->{"value"} = delete $globinfo{$key};
-
 	}
 	elsif ($type eq "path")
 	{
@@ -1572,7 +1571,12 @@ sub Info2Global {
 	# bool values appear in a config file or not. there might be types
 	# like 'yesno' or 'truefalse' in the future which behave differently
 	elsif ($type eq "bool") {
-	    $line_ref->{"value"} =  delete $globinfo{$key} ne "true" ? undef : "";
+	    if (delete $globinfo{$key} ne "true") {
+		$line_ref = undef;
+	    }
+	    else {
+		$line_ref->{"value"} = "";
+	    }
 	}
 	else
 	{
