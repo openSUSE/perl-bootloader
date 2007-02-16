@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Feb 16 16:45:48 CET 2007 - jplack@suse.de
+
+- Fallback to first section as default boot if bogus value is given
+
+-------------------------------------------------------------------
 Thu Feb 15 16:41:15 CET 2007 - jplack@suse.de
 
 - handle boolean options correctly in GRUB (#244530)
