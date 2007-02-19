@@ -1557,7 +1557,8 @@ sub Info2Global {
 	}
 	elsif ($key eq "default")
 	{
-	    $line_ref->{"value"} = $self->IndexOfSection (delete $globinfo{$key}, $sections_ref);
+	    $line_ref->{"value"} = $self->IndexOfSection (
+		delete $globinfo{$key}, $sections_ref) || 0;
 	}
 	elsif ($key eq "password")
 	{
@@ -1594,7 +1595,7 @@ sub Info2Global {
 	my ($type) = split /:/, $go->{$key};
 
 	if ($key eq "default") {
-	    $value = $self->IndexOfSection ($value, $sections_ref);
+	    $value = $self->IndexOfSection ($value, $sections_ref) || 0;
 	}
 	# bool values appear in a config file or not
 	elsif ($type eq "bool") {

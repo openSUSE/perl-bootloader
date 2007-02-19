@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Feb 19 16:56:06 CET 2007 - aosthof@suse.de
+
+- Fixed error treatment in usage of function IndexOfSection() in
+  GRUB.pm (#214468)
+- Adapted Makefile
+
+-------------------------------------------------------------------
 Thu Feb 15 16:41:15 CET 2007 - jplack@suse.de
 
 - handle boolean options correctly in GRUB (#244530)

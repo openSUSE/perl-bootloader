@@ -1,14 +1,14 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/SLES10-SP1
-#BUILD_DIST=sles10-ppc
-ifeq ($(BUILD_DIST),sles10-ppc)
+#BUILD_DIST=sle10-sp-ppc
+ifeq ($(BUILD_DIST),sle10-sp-ppc)
 BUILD=powerpc32 /work/src/bin/build
 else
 BUILD=/work/src/bin/build
 endif
 MBUILD=/work/src/bin/mbuild
-MBUILDC=$(MBUILD) -l $(LOGNAME) -d sles10
+MBUILDC=$(MBUILD) -l $(LOGNAME) -d sle10-sp
 MBUILDQ=$(MBUILD) -q
 BUILD_ROOT=/abuild/buildsystem.$(HOST).$(LOGNAME)
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
