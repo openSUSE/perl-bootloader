@@ -366,7 +366,7 @@ sub SplitDevPath {
 	}
  	if ($mp eq "") {
 	    unless (exists $self->{"mountpoints"}{"/"}) {
-	    	$self->l_error ("Core::SplitDevPath: Cannot get device for $path, not root mount point set");
+	    	$self->l_error ("Core::SplitDevPath: Cannot get device for $path, no root mount point set");
 	    	return undef;
 	    }
 	    $mp = "/";

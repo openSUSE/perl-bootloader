@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Feb 21 14:37:40 CET 2007 - aosthof@suse.de
+
+- Corrected a typo in Core.pm
+
+-------------------------------------------------------------------
 Mon Feb 19 16:56:06 CET 2007 - aosthof@suse.de
 
 - Fixed error treatment in usage of function IndexOfSection() in
