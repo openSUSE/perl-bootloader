@@ -1482,7 +1482,7 @@ sub Global2Info {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
 	my ($type) = split(/:/, $go->{$key}||"");
-	if (($key eq "root") or ($key eq "rootnoverify")) {
+	if (defined ($key) and (($key eq "root") or ($key eq "rootnoverify"))) {
 	    $grub_root = $val;
 	    $ret{"verifyroot"} = ($key eq "root");
 	}
