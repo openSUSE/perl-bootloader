@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Feb 28 11:44:29 CET 2007 - aosthof@suse.de
+
+- Fixed a perl warning bug in Core/GRUB.pm (#248211)
+
+-------------------------------------------------------------------
 Wed Feb 21 14:37:40 CET 2007 - aosthof@suse.de
 
 - Corrected a typo in Core.pm
