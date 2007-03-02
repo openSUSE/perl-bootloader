@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Mar  2 18:43:37 CET 2007 - aosthof@suse.de
+
+- Fixed removal of obsolete entries in /boot/grub/menu.lst
+- Exluded kernel-debug from getting default (#241370)
+
+-------------------------------------------------------------------
 Wed Feb 28 11:44:29 CET 2007 - aosthof@suse.de
 
 - Fixed a perl warning bug in Core/GRUB.pm (#248211)

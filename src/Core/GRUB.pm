@@ -22,6 +22,8 @@ C<< $unquoted = Bootloader::Core::GRUB->Unquote ($text); >>
 
 C<< $quoted = Bootloader::Core::GRUB->Quote ($text, $when); >>
 
+C<< $unix_dev = Bootloader::Core::GRUB->UnixFile2UnixDev ($unix_file); >>
+
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
 
 C<< $grub_dev = Bootloader::Core::GRUB->UnixDev2GrubDev ($unix_dev); >>
@@ -315,6 +317,53 @@ sub Quote {
     my $when = shift;
 
     return $text;
+}
+
+=item
+C<< $unix_dev = Bootloader::Core::GRUB->UnixFile2UnixDev ($unix_file); >>
+
+Detects the underlying partition (e.g. '/dev/sda1') a given UNIX file 
+(e.g. '/boot') is located on. Takes a UNIX file as argument and returns 
+the corresponding UNIX device.
+
+=cut
+
+# string UnixFile2UnixDev (string unix_file)
+sub UnixFile2UnixDev {
+    my $self = shift;
+    my $unix_file = shift;
+    my $unix_dev = "";
+
+    # Collect information about device using "stat"
+    my ($temp_unix_dev, undef, undef, undef, undef, undef, undef, undef,
+	undef, undef, undef, undef, undef)
+    = stat ($unix_file);
+
+    # Open "/proc/partitions" to look up the partition corresponding to
+    # major and minor device numbers
+    open (PARTITIONS, "</proc/partitions");
+    while (<PARTITIONS>) {
+	chomp;
+
+	# Omit header and empty lines in /proc/partitions
+        unless ($_ =~ /^\s+\d+\s+\d+.*$/) {
+	    next;
+        }
+
+	my ($empty1 , $major, $minor, $empty2, $dev_name) = split (/\s+/, $_);
+
+	# Assemble major and minor device numbers to be able to compare the
+        # result with $temp_unix_dev
+	my $majmin = ($major << 8 | $minor);
+
+	if ($majmin == $temp_unix_dev) {
+	    $unix_dev = "/dev/" . $dev_name;
+            last;
+	}
+    }
+    close (PARTITIONS);
+
+    return $unix_dev;
 }
 
 =item

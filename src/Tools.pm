@@ -425,6 +425,20 @@ sub RemoveSections {
     my $glob_ref = $lib_ref->GetGlobalSettings();
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
+    my $loader = GetBootloader ();
+
+    # Examines if image and initrd strings already contain a grub device
+    # prefix. If it is not the case, attach it.
+    if ($loader eq "grub") {
+        foreach my $key (sort keys %option) {
+	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
+	        if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
+                    my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
+		    $option{$key} = $grub_dev . $option{$key};
+		}
+	    }
+	}
+    }
 
     normalize_options(\%option);
     @sections = grep {
@@ -605,6 +619,20 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 
 sub GetSectionList {
     my %option = @_;
+    my $loader = GetBootloader ();
+
+    # Examines if image and initrd strings already contain a grub device
+    # prefix. If it is not the case, attach it.
+    if ($loader eq "grub") {
+	foreach my $key (sort keys %option) {
+	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
+		if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
+		    my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
+		    $option{$key} = $grub_dev . $option{$key};
+		}
+	    }
+        }
+    }
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
