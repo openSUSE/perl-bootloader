@@ -81,6 +81,7 @@ function add_entry()
 				# Add the new bootloader entry (xen kernel)
 				update_bootloader --image /boot/$image \
 						  --initrd /boot/$initrd \
+						  --default \
 						  --add \
 						  --force $opt_xen_kernel \
 						  --name "Kernel-$release"

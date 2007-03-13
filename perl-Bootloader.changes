@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Mar 13 16:16:56 CET 2007 - aosthof@suse.de
+
+- Display labels of boot entries correctly, e.g. "openSUSE 10.2 --
+  Kernel-2.6.20-9-default" (#252911)
+- Fixed handling concerning which kernel will be the default entry
+  in bootloader menu (#252911)
+
+-------------------------------------------------------------------
 Tue Mar 13 13:09:18 CET 2007 - aosthof@suse.de
 
 - Following changes merged from branch SLES10-SP1 to trunk:
