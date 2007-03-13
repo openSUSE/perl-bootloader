@@ -78,7 +78,7 @@ function add_entry()
 				set -- ${1#xen}
 				opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
 
-				# Add the new bootloader entry
+				# Add the new bootloader entry (xen kernel)
 				update_bootloader --image /boot/$image \
 						  --initrd /boot/$initrd \
 						  --add \
@@ -87,7 +87,20 @@ function add_entry()
 
 				# Run the bootloader (e.g., lilo).
 				update_bootloader --refresh
+			;;			
+			
+			(debug)
+				# Add the new bootloader entry (debug kernel)
+				update_bootloader --image /boot/$image \
+						  --initrd /boot/$initrd \
+						  --add \
+						  --force \
+						  --name "Kernel-$release"
+
+				# Run the bootloader (e.g., lilo).
+				update_bootloader --refresh
 			;;
+
 			(*)
 				# Add the new bootloader entry
 				update_bootloader --image /boot/$image \

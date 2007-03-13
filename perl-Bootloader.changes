@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Mar 13 13:09:18 CET 2007 - aosthof@suse.de
+
+- Following changes merged from branch SLES10-SP1 to trunk:
+- Fixed removal of obsolete entries in /boot/grub/menu.lst
+- Exluded kernel-debug from getting default (#241370)
+
+-------------------------------------------------------------------
 Wed Feb 28 11:46:53 CET 2007 - aosthof@suse.de
 
 - Fixed a perl warning bug in Core/GRUB.pm (#248211)

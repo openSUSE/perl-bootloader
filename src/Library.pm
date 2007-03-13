@@ -63,6 +63,8 @@ C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
 
 C<< $status = Bootloader::Library->SetDeviceMapping ($device_map_ref); >>
 
+C<< $grub_dev = Bootloader::Library->UnixFile2GrubDev ($unix_file); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -818,6 +820,28 @@ sub SetDeviceMapping {
 	"device_map" => $device_mapping_ref
     );
     return $self->SetSettings (\%settings)
+}
+
+=item
+C<< $grub_dev = Bootloader::Library->UnixFile2GrubDev ($unix_file); >>
+
+Detects the underlying partition (e.g. '/dev/sda1') a given UNIX file 
+(e.g. '/boot') is located on and translates it to the corresponding GRUB 
+device (e.g. '(hd0,0)'). Takes a UNIX file as argument and returns the
+corresponding GRUB device.
+
+=cut
+
+# string UnixFile2GrubDev (string unix_file)
+sub UnixFile2GrubDev {
+    my $self = shift;
+    my $unix_file = shift;
+    my $loader = $self->{loader} || return undef;
+
+    my $unix_dev = $loader->UnixFile2UnixDev ($unix_file);
+    my $grub_dev = $loader->UnixDev2GrubDev ($unix_dev);
+
+    return $grub_dev;
 }
 
 1;
