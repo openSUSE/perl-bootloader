@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Mar 13 17:05:09 CET 2007 - aosthof@suse.de
+
+- Display labels of boot entries correctly, e.g. "openSUSE 10.2 --
+  Kernel-2.6.20-9-default" (#252911)
+- Fixed handling concerning which kernel will be the default entry
+  in bootloader menu (#252911)
+
+-------------------------------------------------------------------
 Fri Mar  2 18:43:37 CET 2007 - aosthof@suse.de
 
 - Fixed removal of obsolete entries in /boot/grub/menu.lst
