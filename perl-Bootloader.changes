@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Mar 14 09:47:40 CET 2007 - aosthof@suse.de
+
+- New kernels will now be put on top of menu.lst 
+
+-------------------------------------------------------------------
 Tue Mar 13 16:16:56 CET 2007 - aosthof@suse.de
 
 - Display labels of boot entries correctly, e.g. "openSUSE 10.2 --

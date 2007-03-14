@@ -715,7 +715,7 @@ sub AddSection {
     $new{"name"} = $name;
 
     $new{"__modified"} = 1;
-    push @sections, \%new;
+    unshift @sections, \%new;
 
     $lib_ref->SetSections (\@sections);
 
