@@ -50,7 +50,7 @@ C<< Bootloader::Tools::GetSection($name); >>
 
 C<< Bootloader::Tools::AddSection($name, @params); >>
 
-C<< Bootloader::Tools::RemoveSection($name); >>
+C<< Bootloader::Tools::RemoveSections($name); >>
 
 =head1 DESCRIPTION
 
@@ -398,70 +398,6 @@ sub CountSections {
 
 
 =item
-C<< Bootloader::Tools::RemoveImageSections ($image); >>
-
-removes all sections in the bootloader menu referring to the
-specified kernel.
-
-EXAMPLE:
-
-  Bootloader::Tools::InitLibrary ();
-  Bootloader::Tools::RemoveImageSections ("/boot/vmlinuz-2.6.11");
-  Bootloader::Tools::UpdateBootloader();
-
-=cut
-
-sub RemoveImageSections {
-    my $image = shift;
-
-    return unless $image;
-    RemoveSections(type=>"image", image => $image);
-}
-
-
-sub RemoveSections {
-    my %option = @_;
-    my @sections = @{$lib_ref->GetSections()};
-    my $glob_ref = $lib_ref->GetGlobalSettings();
-    my $default_section = $glob_ref->{"default"} || "";
-    my $default_removed = 0;
-    my $loader = GetBootloader ();
-
-    # Examines if image and initrd strings already contain a grub device
-    # prefix. If it is not the case, attach it.
-    if ($loader eq "grub") {
-        foreach my $key (sort keys %option) {
-	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
-	        if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
-                    my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
-		    $option{$key} = $grub_dev . $option{$key};
-		}
-	    }
-	}
-    }
-
-    normalize_options(\%option);
-    @sections = grep {
-	my $match = match_section($_, \%option);
-	$default_removed = 1
-	    if $match and $default_section eq $_->{"name"};
-	!$match;
-    } @sections;
-    $lib_ref->SetSections (\@sections);
-    if ($default_removed) {
-	$glob_ref->{"default"} = $sections[0]{"name"};
-    }
-    $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
-				   # may change even if not deleted
-    $lib_ref->SetGlobalSettings ($glob_ref);
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
-    DumpLog ();
-}
-
-
-=item
 C<<  Bootloader::Tools::UpdateBootloader (); >>
 
 Updates the bootloader settings meaning do whatever it takes for the actual
@@ -631,7 +567,7 @@ sub GetSectionList {
 		    $option{$key} = $grub_dev . $option{$key};
 		}
 	    }
-        }
+	}
     }
 
     normalize_options(\%option);
@@ -664,7 +600,18 @@ sub GetSection($) {
 =item
 C<< Bootloader::Tools::AddSection($name, @params); >>
 
-# FIXME: Add documentation
+Add a new section (boot entry) to config file, e.g. to /boot/grub/menu.lst
+
+EXAMPLE:
+
+  my $opt_name = "LabelOfSection";
+  my @params = (type   => $type,
+              	image  => $opt_image,
+		initrd => $opt_initrd,
+  );
+
+  Bootloader::Tools::AddSection ($opt_name, @params);
+
 =cut
 
 sub AddSection {
@@ -675,12 +622,13 @@ sub AddSection {
     return unless exists $option{"type"};
 
     my $default = delete $option{"default"} || 0;
-	
+
     my $mp = $lib_ref->GetMountPoints ();
     my @sections = @{$lib_ref->GetSections ()};
     my %new = (
 	"root" => $mp->{"/"} || "/dev/null",
     );
+
     my %def = ();
     foreach my $s (@sections)
     {
@@ -714,22 +662,94 @@ sub AddSection {
     }
     $new{"name"} = $name;
 
+    my $failsafe_modified = 0;
+
+    # FIXME: Failsafe parameters should be set dynamically in the future
+    if ($name =~ m/^Failsafe -- .*$/) {
+	my $arch = `uname --machine`;
+	chomp ($arch);
+
+	if ($arch eq "i386") {
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off";
+	}
+	elsif ($arch eq "x86_64") {
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off";
+	}
+	elsif ($arch eq "ia64") {
+	    $new{"append"} = "ide=nodma nohalt noresume";
+	}
+	else {
+	    print ("Architecture $arch does not support failsafe entries.\n");
+	}
+
+	# Set vgamode to "normal" for failsafe entries
+	if (exists $new{"vgamode"} && defined $new{"vgamode"}) {
+	    $new{"vgamode"} = "normal";
+	}
+
+	$failsafe_modified = 1;
+
+	# Don't make the failsafe entry the default one
+	$default = 0;
+    }
     $new{"__modified"} = 1;
+
+    # Put new entries on top
     unshift @sections, \%new;
 
+    # Switch the first 2 entries in @sections array to put the normal entry on
+    # top of corresponding failsafe entry
+    if (($failsafe_modified == 1) && scalar (@sections) >= 2) {
+	my $failsafe_entry = shift (@sections);
+	my $normal_entry = shift (@sections);
+	unshift @sections, $failsafe_entry;
+	unshift @sections, $normal_entry;
+    }
     $lib_ref->SetSections (\@sections);
 
+    # If the former default boot entry is updated, the new one will become now
+    # the new default entry...
+    my $glob_ref = $lib_ref->GetGlobalSettings ();
     if ($default) {
-	my $glob_ref = $lib_ref->GetGlobalSettings ();
 	$glob_ref->{"default"} = $name;
 	$glob_ref->{"__modified"} = 1;
+	$lib_ref->SetGlobalSettings ($glob_ref);
+    }
+    # ... Else (a non default entry is updated), the index of the current
+    # default entry has to be increased, because it is shifted down in the
+    # array of sections.
+    else {
+	$glob_ref->{"__lines"}[0]->{"value"} += 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }
 
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
+
     DumpLog ();
+}
+
+
+=item
+C<< Bootloader::Tools::RemoveImageSections ($image); >>
+
+removes all sections in the bootloader menu referring to the
+specified kernel.
+
+EXAMPLE:
+
+  Bootloader::Tools::InitLibrary ();
+  Bootloader::Tools::RemoveImageSections ("/boot/vmlinuz-2.6.11");
+  Bootloader::Tools::UpdateBootloader();
+
+=cut
+
+sub RemoveImageSections {
+    my $image = shift;
+
+    return unless $image;
+    RemoveSections(type=>"image", image => $image);
 }
 
 
@@ -738,16 +758,16 @@ C<< Bootloader::Tools::RemoveSection($name); >>
 
 =cut
 
-sub RemoveSection {
-    my $name = shift or return;
-
+sub RemoveSections {
+    my %option = @_;
     my @sections = @{$lib_ref->GetSections()};
     my $glob_ref = $lib_ref->GetGlobalSettings();
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
+    normalize_options(\%option);
     @sections = grep {
-	my $match = $_->{"name"} eq $name;
+	my $match = match_section($_, \%option);
 	$default_removed = 1
 	    if $match and $default_section eq $_->{"name"};
 	!$match;
@@ -762,9 +782,9 @@ sub RemoveSection {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
+
     DumpLog ();
 }
-
 
 
  

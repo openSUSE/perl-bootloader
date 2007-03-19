@@ -10,7 +10,8 @@ use strict;
 my %oper;
 my ($opt_default, $opt_force, $opt_help, $opt_man, $opt_previous, $opt_xen)
     = (0,0,0,0,0,0);
-my ($opt_image, $opt_initrd, $opt_name, $opt_xen_kernel) = ('','','',undef);
+my ($opt_image, $opt_initrd, $opt_name, $opt_xen_name, $opt_failsafe, $opt_xen_kernel) 
+    = ('','','','','',undef);
 my $add_product = 0;
 
 =head1 NAME
@@ -233,7 +234,14 @@ if (defined $oper{add}) {
 	}
     }
     if (($opt_name =~ /.*-default$/) || ($opt_name =~ /.*-bigsmp$/)) {
+	$opt_name =~ s/-[^-]*$//;
+	$opt_failsafe = "Failsafe -- " . $opt_name;
 	$opt_name = GetProduct() . " -- " . $opt_name;
+    }
+    elsif ($opt_xen) {
+	#$opt_name =~ s/^\(.*\)-xen.*$/%1/;
+	$opt_name =~ s/-xen.*$//;
+	$opt_xen_name = "Xen -- " . GetProduct() . " - " . $opt_name;
     }
     else {
 	$opt_name .= " -- " . GetProduct() if $add_product;
@@ -261,13 +269,30 @@ if (defined $oper{add}) {
 	# meaning now flavor of current default matches new one
 	my $flavor = GetDefaultImage();
 	$flavor =~ s/^.*-//;
+
 	if ($opt_image =~ m/.*-${flavor}$/) {
 	    push @params, default => $opt_default;
     	}
 	push @params, xen     => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd  => $opt_initrd if $opt_initrd;
-			  
-	AddSection($opt_name, @params);
+
+	if ($opt_xen) { 
+	    # Add "xen" section
+	    AddSection($opt_xen_name, @params);
+	}
+	else {
+	    # Add "normal" sections
+	    AddSection($opt_name, @params);
+	}
+
+	my $arch = `uname --machine`;
+	chomp ($arch);
+
+	# Add a "Failsafe" section
+	if ((($arch eq "i386") || ($arch eq "x86_64") || ($arch eq "ia64")) 
+	&& $opt_xen != 1) {
+	    AddSection($opt_failsafe, @params);
+	}
     }
 }
 

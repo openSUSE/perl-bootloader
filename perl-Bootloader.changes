@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Mar 19 18:59:06 CET 2007 - aosthof@suse.de
+
+- Added mechanism to create failsafe boot entries appropriately
+- Corrected handling for default boot entries
+
+-------------------------------------------------------------------
 Wed Mar 14 09:47:40 CET 2007 - aosthof@suse.de
 
 - New kernels will now be put on top of menu.lst 
