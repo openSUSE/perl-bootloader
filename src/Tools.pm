@@ -20,6 +20,28 @@ C<< $mp_ref = Bootloader::Tools::ReadMountPoints (); >>
 
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
+C<< $numDM = Bootloader::Tools::DMRaidAvailable (); >>
+
+C<< $part_ref = Bootloader::Tools::ReadDMRaidPartitions (); >>
+
+C<< $part_ref = Bootloader::Tools::ReadDMRaidDisks (); >>
+
+C<< Bootloader::Tools::IsDMRaidSlave ($kernel_disk); >>
+
+C<< Bootloader::Tools::IsDMDevice($dev); >>
+
+C<< $dm_dev = Bootloader::Udev2DMDev($udevdevice); >>
+
+C<< $udev_dev = Bootloader::Tools::DMDev2Udev($dmdev); >>
+
+C<< $majmin = Bootloader::Tools::DMDev2MajMin($dmdev); >>
+
+C<< $majmin = Bootloader::Tools::Udev2MajMin($udev); >>
+
+C<< $udev_dev = Bootloader::Tools::MajMin2Udev($majmin); >>
+
+C<< $dm_dev = Bootloader::Tools::MajMin2DMDev($majmin); >>
+
 C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
 
 C<< $loader = Bootloader::Tools::GetBootloader (); >>
@@ -187,30 +209,345 @@ sub ReadPartitions {
     closedir BLOCK_DEVICES;
 
     my @devices = ();
+    # Add DM RAID Partitions to @devices
+    if (DMRaidAvailable()){
+        my $dev_ref = ReadDMRaidPartitions();   
+        push (@devices, @{$dev_ref});
+
+    }
+
     foreach my $disk (@disks)
     {
 	my $dev_disk = Udev2Dev ($disk);
-	opendir(BLOCK_DEVICES, "$sb/$disk") ||
-	    die ("Failed to open dir $sb/$disk");
-	my @parts = grep {
-	    !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
-	} readdir (BLOCK_DEVICES);
-	closedir BLOCK_DEVICES;
+        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)){
+	    opendir(BLOCK_DEVICES, "$sb/$disk") ||
+	        die ("Failed to open dir $sb/$disk");
 
-	foreach my $part (@parts)
-	{
-	    chomp ($part);
-	    $part = Udev2Dev ("$disk/$part");
-	    my $index = substr ($part, length ($dev_disk));
-	    while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
+	    my @parts = grep {
+	        !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
+	    }  readdir (BLOCK_DEVICES);
+	    closedir BLOCK_DEVICES;
+
+	    foreach my $part (@parts)
 	    {
-		$index = substr ($index, 1);
-	    }
-	    push @devices, [$part, $dev_disk, $index];
+	        chomp ($part);
+	        $part = Udev2Dev ("$disk/$part");
+	        my $index = substr ($part, length ($dev_disk));
+	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
+	        {
+		    $index = substr ($index, 1);
+	        }
+	        push @devices, [$part, $dev_disk, $index];
+            }
 	}
     }
     return \@devices;
 }
+
+=item
+C<< Bootloader::Tools::DMRaidAvailable (); >>
+
+Tests wether DMRAID is available.
+Return 0 if no device, 1 if there are any.
+
+=cut
+
+sub DMRaidAvailable (){
+    my $dm_devices = qx{dmsetup info -c --noheadings -o uuid};
+    chomp($dm_devices);
+
+    if ("$dm_devices" eq "No devices found"){
+        return 0;
+    }
+    return 1;
+}
+
+=item
+C<< $part_ref = Bootloader::Tools::ReadDMRaidPartitions (); >>
+
+reads partitions belonging to a Devicemapper RAID device.
+needed to be able to put get the correct translation
+into Grub notation
+DMRaid Devices look like:
+dmraid-<strange name>
+
+DMRaid Partitions look like:
+partX-dmraid-<strange name>
+
+
+=cut
+
+#FIXME: this has to be done through Storage
+sub ReadDMRaidPartitions() {
+
+    my @dmdisks = ();
+    my @dmparts = ();
+    my $dmdev;
+
+
+    open(DMDEV, "dmsetup info -c --noheadings -o name |") || die ("FOOBAR");
+
+       while(<DMDEV>){
+           $dmdev = $_;
+           chomp($dmdev);
+
+           #FIXME: I should not need to do this twice
+           if ($dmdev !~ m/part/){
+               # $dmdev is the base device
+               $dmdev = "/dev/mapper/" . $dmdev;
+               push @dmdisks, $dmdev;
+           }
+           else{ #FIXME: need to check what needs to be removed
+              $dmdev = "/dev/mapper/" . $dmdev;
+              push @dmparts, $dmdev;
+           }
+       }
+       close DMDEV;
+       my @devices = ();
+       my $dmpart;
+       my $tmp_part;
+
+      foreach $dmdev (@dmdisks){
+           foreach $dmpart (@dmparts){
+               my $index = substr ($dmpart, length($dmpart)-1,1);
+
+               while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
+               {
+                   $index = substr ($index, 1);
+               }
+               push @devices, [$dmpart, $dmdev, $index];
+           }
+       }
+    return \@devices;
+}
+
+=item
+C<< $part_ref = Bootloader::Tools::ReadDMRaidDisks (); >>
+
+returns a refenrence to a list of DMRaid devices
+
+=cut
+
+sub ReadDMRaidDisks(){
+
+    my @dmdisks = ();
+    my @dmparts = ();
+    my $dmdev;
+
+
+    open(DMDEV, "dmsetup info -c --noheadings -oname |") || die ("FOOBAR");
+
+    while(<DMDEV>){
+        $dmdev = $_;
+        chomp($dmdev);
+
+        if ($dmdev !~ m/part/){
+            # $dmdev is the base device
+            $dmdev = "/dev/mapper/" . $dmdev;
+            push @dmdisks, $dmdev;
+        }
+    }
+    return \@dmdisks;
+}
+
+=item
+C<< Bootloader::Tools::IsDMRaidSlave ($kernel_disk); >>
+
+checks wether a kernel_device is part of a DMRAID
+returns 1 if yes, 0 if no
+
+=cut
+
+sub IsDMRaidSlave(){
+
+    my $disk = shift;
+    my $majmin_disk = Udev2MajMin($disk);
+    my @dmparts = ();
+    my @dm_devs = qx{dmsetup info -c --noheadings -o name | grep -v part};
+
+    if ($dm_devs[0] !~ /No devices found/){
+        foreach my $dmdisk (@dm_devs){
+            my @tables = qx{dmsetup table $dmdisk};
+
+            foreach my $line (@tables){
+                my @content = split(/ /, $line);
+
+                foreach my $majmins (@content){
+                    if ("$majmins" eq "$majmin_disk"){
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+=item
+
+C<<  Bootloader::Tools:IsDMDevice ($device); >>
+
+ returns 1 if $device is a Devicemapper device,
+ otherwise 0.
+=cut
+
+sub IsDMDevice(){
+    my $dev = shift;
+
+    my $cmd = "dmsetup info -c --noheadings -oname $dev";
+    if (my $test = qx{i$cmd 2>/dev/null}){
+        chomp $test;
+
+        if ($dev =~ m/$test/){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+=item
+C<< $dm_dev = Bootloader::Tools::Udev2DMDev($udevdevice); >>
+
+takes a udev device (dm-X)
+returns the devicemapper device like dmsetup returns  
+
+=cut
+
+sub Bootloader::Tools::Udev2DMDev(){
+
+    my $udevd = shift;
+    my $majmin = Udev2MajMin($udevd);
+    my $dmdev = MajMin2DMDev($majmin);
+
+    return $dmdev
+}
+
+=item
+C<< $udev_dev = Bootloader::Tools::DMDev2Udev($dmdev); >>
+
+takes a devicemapper device as reported from dmsetup
+returns a udev device (dm-X)
+
+=cut
+
+sub Bootloader::Tools::DMDev2Udev(){
+
+    my $dmdev = shift;
+    my $majmin = DMDev2MajMin($dmdev);
+    my $udevdev = MajMin2Udev($majmin);
+
+    return $udevdev;
+}
+
+=item
+C<< $majmin = Bootloader::Tools::DMDev2MajMin($dmdev); >>
+
+takes a devicemapper device as reported from dmsetup
+returns a string containing major:minor
+
+=cut
+
+sub Bootloader::Tools::DMDev2MajMin(){
+
+    my $dmdev = shift;
+    my $majmin;
+    $majmin =  qx{dmsetup info -c  --noheadings -o major,minor $dmdev};
+
+    return $majmin;
+}
+
+
+=item
+C<< $majmin = Bootloader::Tools::Udev2MajMin($udev); >>
+takes a udev device as reported from udevinfo
+returns a string containing major:minor
+
+=cut
+
+sub Bootloader::Tools::Udev2MajMin(){
+
+    my $udev_dev = shift;
+    my $majmin;
+    my $cmd = "udevinfo -qpath -n $udev_dev";
+
+    if (my $udev_path = qx{$cmd 2>/dev/null}){
+       chomp ($udev_path);
+       $majmin = qx{cat /sys$udev_path/dev};
+    }
+    return $majmin;
+}
+
+=item
+C<< $udev_dev = Bootloader::Tools::MajMin2Udev($majmin); >>
+takes a string major:minor as reported from udevinfo
+returns a string containing the udev device as reported 
+by udevinfo
+
+=cut
+
+sub Bootloader::Tools::MajMin2Udev(){
+
+my $majmin = shift;
+
+my ($major,  $minor) = split (/:/, $majmin );
+my $udevdev;
+my $sb="/sys/block";
+my $devmajmin;
+#print ("Major: $major; Minor: $minor\n");
+opendir (SYSBLOCK, "$sb");
+
+foreach my $dirent (readdir(SYSBLOCK)){
+    next if $dirent =~ m/^\./;
+    next if -r "$sb/$dirent/range" and qx{ cat $sb/$dirent/range } == 1;
+    $devmajmin = qx{cat $sb/$dirent/dev};
+    my ($p, undef) = (split(/:/, $devmajmin));
+
+    if ("$p" eq "$major" ){
+        $udevdev = "$sb/$dirent";
+        last;
+    }
+}
+closedir (SYSBLOCK);
+opendir (SYSBLOCK, "$udevdev");
+my $part;
+
+foreach my $dirent (readdir(SYSBLOCK)){
+    next if $dirent =~ m/^\./;
+
+    if (-r "$udevdev/$dirent/dev"){
+        my $mm = qx{cat $udevdev/$dirent/dev};
+        chomp ($mm);
+
+        if ("$mm" eq "$majmin"){
+            $part = $dirent;
+            last;
+        }
+    }
+}
+closedir (SYSBLOCK);
+return $part;
+
+}
+
+=item
+C<< $dm_dev = Bootloader::Tools::DMDev2MajMin($majmin); >>
+takes a string major:minor as reported from udevinfo
+returns a string containing the device as reported by 
+dmsetup
+
+=cut
+
+sub Bootloader::Tools::MajMin2DMDev(){
+
+    my $majmin = shift;
+    my $dm_name  =  qx{devmap_name $majmin};
+
+    return $dm_name;
+
+}
+
+
 
 =item
 C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
