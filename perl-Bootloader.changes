@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 20 12:41:23 CET 2007 - sf@suse.de
+
+- implemented DM RAID functionality, using devicemapper instead
+  of udev (to "emulate" yast2-storage)
+
+-------------------------------------------------------------------
 Mon Mar 19 18:59:06 CET 2007 - aosthof@suse.de
 
 - Added mechanism to create failsafe boot entries appropriately
