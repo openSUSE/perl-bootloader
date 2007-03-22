@@ -112,13 +112,25 @@ sub GetProduct {
     # First try: Does yast work these days?
     $namever = `yast2 print-product 2>&1`;	
     chomp $namever;
-    return "$namever" if $namever != '' and $namever !~ /\n/;
+
+    # Determine the bootloader type, because long product names may only 
+    # be used in case of grub
+    my $loader = Bootloader::Tools::GetBootloader();
+
+    # Substitude whitespaces with an underscore
+    if ($loader ne "grub") {
+	$namever =~ s/\s/_/;
+    }
+    return "$namever" if $namever ne '' and $namever !~ /\n/;
 
     # Second try: Is there a usable /etc/SuSE-release?
-    if (open(RELEASE, "</etc/SuSE-release")) {
+    if (open(RELEASE, "</etc/SuSE-release") && $loader eq "grub") {
 	# first line is sufficient
-	$namever = <RELEASE>;	
-	$namever =~ s/\s*\(.*//; # delete everything starting with the first parenthesis
+	$namever = <RELEASE>;
+
+	# delete everything starting with the first parenthesis
+	$namever =~ s/\s*\(.*//; 
+
 	close(RELEASE);
 	chomp $namever;
 	return "$namever";
@@ -233,18 +245,40 @@ if (defined $oper{add}) {
 	    $opt_name = $opt_trans;
 	}
     }
-    if (($opt_name =~ /.*-default$/) || ($opt_name =~ /.*-bigsmp$/)) {
-	$opt_name =~ s/-[^-]*$//;
-	$opt_failsafe = "Failsafe -- " . $opt_name;
-	$opt_name = GetProduct() . " -- " . $opt_name;
+
+    # Naming scheme for default, smp and bigsmp kernels
+    if (($opt_name =~ /.*-default$/) ||
+	($opt_name =~ /.*-smp$/) ||
+	($opt_name =~ /.*-bigsmp$/)) {
+
+	if ($loader eq "grub") {
+	    $opt_name =~ s/-[^-]*$//;
+	    $opt_failsafe = "Failsafe -- " . $opt_name;
+	    $opt_name = GetProduct() . " -- " . $opt_name;
+	}
+	else {
+	    $opt_failsafe = "Failsafe";
+	    $opt_name = GetProduct();
+	}
     }
+    # Naming scheme for all xen kernels, thus xen and xenpae
     elsif ($opt_xen) {
-	#$opt_name =~ s/^\(.*\)-xen.*$/%1/;
-	$opt_name =~ s/-xen.*$//;
-	$opt_xen_name = "Xen -- " . GetProduct() . " - " . $opt_name;
+	if ($loader eq "grub") {
+	    $opt_name =~ s/-xen.*$//;
+	    $opt_xen_name = "Xen -- " . GetProduct() . " - " . $opt_name;
+	}
+	else {
+	    $opt_name = "Xen";
+	}
     }
+    # Naming scheme for all other kernels
     else {
-	$opt_name .= " -- " . GetProduct() if $add_product;
+	if ($loader eq "grub") {
+	    $opt_name = GetProduct() if $add_product;
+	}
+	else {
+	    $opt_name .= " -- " . GetProduct() if $add_product;
+	}
     }
 }
 

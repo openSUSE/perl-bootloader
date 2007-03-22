@@ -26,8 +26,6 @@ C<< $loader = Bootloader::Tools::GetBootloader (); >>
 
 C<< Bootloader::Tools::InitLibrary (); >>
 
-C<< Bootloader::Tools::AddNewImageSection ($name, $image, $initrd, $default); >>
-
 C<< Bootloader::Tools::CountImageSections ($image); >>
 
 C<< Bootloader::Tools::RemoveImageSections ($image); >>
@@ -65,10 +63,10 @@ use strict;
 use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
-		 RemoveImageSections RemoveSections GetDefaultImage
+		 RemoveImageSections GetDefaultImage
 		 GetDefaultInitrd GetBootloader UpdateBootloader
 		 GetGlobals SetGlobals
-		 GetSectionList GetSection AddSection RemoveSection
+		 GetSectionList GetSection AddSection RemoveSections
 );
 
 use Bootloader::Library;
@@ -297,32 +295,6 @@ sub InitLibrary {
     $lib_ref->ReadSettings();
 
     DumpLog ();
-}
-
-=item
-C<< Bootloader::Tools::AddNewImageSection ($name, $image, $initrd, $default); >>
-
-Adds a new section to the bootloader menu via one function call (just the
-library needs to be initialized before). C<$initrd> and C<$default> are
-optional, if C<$default> is defined and nonzero, the new section is marked
-as default.
-
-EXAMPLE:
-
-  Bootloader::Tools::InitLibrary();
-  Bootloader::Tools::AddNewImageSection("2.6.11", "/boot/vmlinuz-2.6.11", "/boot/initrd-2.6.11", 1);
-  Bootloader::Tools::UpdateBootloader();
-
-=cut
-
-sub AddNewImageSection {
-    my $name = shift;
-    my $image = shift;
-    my $initrd = shift;
-    my $default = shift;
-
-    # old broken stuff
-    exit 1;
 }
 
 
@@ -665,7 +637,7 @@ sub AddSection {
     my $failsafe_modified = 0;
 
     # FIXME: Failsafe parameters should be set dynamically in the future
-    if ($name =~ m/^Failsafe -- .*$/) {
+    if ($name =~ m/^Failsafe.*$/) {
 	my $arch = `uname --machine`;
 	chomp ($arch);
 
@@ -694,31 +666,143 @@ sub AddSection {
     }
     $new{"__modified"} = 1;
 
+    my $match = '';
+    my $new_name = '';
+
+    my $loader = Bootloader::Tools::GetBootloader ();
+
+    if ($loader ne "grub") {
+        # Search for duplicate boot entry label and rename them in a unique way
+	foreach my $s (@sections) {
+	    while ((my $k, my $v) = each (%$s)) {
+		if ($k eq "name" && index ($v, $new{"name"}) >= 0) {
+		    $match += 1;
+		    $new_name = $new{"name"} . "V" . $match;
+
+		    if ($new_name eq $v) {
+			$match += 1;
+			$new_name = $new{"name"} . "V" . $match;
+		    }
+		    $new{"name"} = $new_name;
+		}
+	    }
+	}
+    }
+
     # Put new entries on top
     unshift @sections, \%new;
+
+    my $link_target = '';
+    my $section_index = 0;
+    #print ("AddSection 1 =====================================\n");
+    foreach my $s (@sections) {
+	while ((my $k, my $v) = each (%$s)) {
+	    if ($k eq "kernel") {
+		if ($link_target = `readlink $v`) {
+		    chomp ($link_target);
+		    #print ("kernel: $link_target\n");
+		    $s->{"kernel"} = "/boot/" . $link_target;
+
+		#    if ($new{"kernel"} eq $s->{"kernel"}) {
+		#	delete $sections[$section_index];
+		#    }
+		}
+            }
+	    if ($k eq "image") {
+		if ($link_target = `readlink $v`) {
+		    chomp ($link_target);
+		    #print ("image: $link_target\n");
+		    $s->{"image"} = "/boot/" . $link_target;
+
+		#    if ($new{"image"} eq $s->{"image"}) {
+		#	delete $sections[$section_index];
+		#    }
+		}
+	    }
+	    if ($k eq "initrd") {
+		if ($link_target = `readlink $v`) {
+		    chomp ($link_target);
+		    #print ("initrd: $link_target\n");
+		    $s->{"initrd"} = "/boot/" . $link_target;
+		}
+	    }
+	    if ($k eq "__lines") {
+		my $index = 0;
+		foreach my $elem (@$v) {
+		    while ((my $k, my $v) = each (%$elem)) {
+			#print ("1. call elem: key: $k,\tval: $v\n");
+			if ((index ($v, "vmlinuz") >= 0 || index ($v, "initrd") >= 0)
+				&& ($link_target = `readlink $v`)) {
+			    $v = (split (/ /, $v))[0];
+			    chomp ($link_target);
+			    $s->{"__lines"}[$index]->{$k} = "/boot/" . $link_target;
+			    #print ("2. call elem: key: $k,\tval: $v\n");
+			}
+		    }
+		    $index += 1;
+		}
+	    }
+	    #print ("key: $k,\tval: $v\n");
+	}
+	#if (exists $new{"kernel"} && exists $s->{"kernel"} 
+	#&& $new{"kernel"} eq $s->{"kernel"}) {
+	#    delete $sections[$section_index];
+	#}
+	#elsif (exists $new{"image"} && exists $s->{"image"} 
+	#&& $new{"image"} eq $s->{"image"}) {
+	#    delete $sections[$section_index];
+	#}
+	#if (exists %new{"initrd"} && exists $s->{"initrd"} 
+	#&& %new{"initrd"} eq $s->{"initrd"}) {
+	#    delete $sections[$section_index];
+	#}
+	#$section_index += 1;
+	#print ("-------------------------------\n");
+    }
+    #$lib_ref->SetSections(\@sections);
+
 
     # Switch the first 2 entries in @sections array to put the normal entry on
     # top of corresponding failsafe entry
     if (($failsafe_modified == 1) && scalar (@sections) >= 2) {
 	my $failsafe_entry = shift (@sections);
 	my $normal_entry = shift (@sections);
+
+	my $section_index = 0;
+	foreach my $s (@sections) {
+	    if ($normal_entry->{"kernel"} eq $s->{"kernel"}) {
+		delete $sections[$section_index];
+	    }
+	    elsif ($normal_entry->{"image"} eq $s->{"image"}) {
+		delete $sections[$section_index];
+	    }
+	    if ($failsafe_entry->{"kernel"} eq $s->{"kernel"}) {
+		delete $sections[$section_index];
+	    }
+	    elsif ($failsafe_entry->{"image"} eq $s->{"image"}) {
+		delete $sections[$section_index];
+	    }
+	    $section_index += 1;
+	}
+
 	unshift @sections, $failsafe_entry;
 	unshift @sections, $normal_entry;
     }
+
     $lib_ref->SetSections (\@sections);
 
     # If the former default boot entry is updated, the new one will become now
-    # the new default entry...
+    # the new default entry.
     my $glob_ref = $lib_ref->GetGlobalSettings ();
     if ($default) {
-	$glob_ref->{"default"} = $name;
+	$glob_ref->{"default"} = $new{"name"};
 	$glob_ref->{"__modified"} = 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }
-    # ... Else (a non default entry is updated), the index of the current
+    # If a non default entry is updated, the index of the current
     # default entry has to be increased, because it is shifted down in the
-    # array of sections.
-    else {
+    # array of sections. Only do this for grub.
+    elsif ($loader eq "grub") {
 	$glob_ref->{"__lines"}[0]->{"value"} += 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }
@@ -726,6 +810,14 @@ sub AddSection {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
+
+    #print ("AddSection 2 =====================================\n");
+    #foreach my $s (@sections) {
+    #    while ((my $k, my $v) = each (%$s)) {
+    #            print ("key: $k,\tval: $v\n");
+    #    }
+    #    print ("-------------------------------\n");
+    #}
 
     DumpLog ();
 }
@@ -765,6 +857,15 @@ sub RemoveSections {
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
+#    print ("RemoveSections 2 =====================================\n");
+#    foreach my $s (@sections) {
+#        while ((my $k, my $v) = each (%$s)) {
+#		print ("key: $k,\tval: $v\n");
+#        }
+#        print ("-------------------------------\n");
+#    }
+
+
     normalize_options(\%option);
     @sections = grep {
 	my $match = match_section($_, \%option);
@@ -772,6 +873,17 @@ sub RemoveSections {
 	    if $match and $default_section eq $_->{"name"};
 	!$match;
     } @sections;
+
+#    print ("RemoveSections 2 =====================================\n");
+#    foreach my $s (@sections) {
+#        while ((my $k, my $v) = each (%$s)) {
+#	    if ($k eq "name") {
+#		print ("key: $k,\tval: $v\n");
+#	    }
+#        }
+#        print ("-------------------------------\n");
+#    }
+
     $lib_ref->SetSections (\@sections);
     if ($default_removed) {
 	$glob_ref->{"default"} = $sections[0]{"name"};

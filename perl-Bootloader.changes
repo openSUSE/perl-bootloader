@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Mar 22 17:36:50 CET 2007 - aosthof@suse.de
+
+- Added mechanism to name boot entries in a unique way
+- Added mechanism to resolve symlinks in boot entries to be able to
+  remove them properly if needed
+- Corrected naming scheme appropriate to corresponding bootloader
+
+-------------------------------------------------------------------
 Mon Mar 19 18:51:16 CET 2007 - aosthof@suse.de
 
 - Added mechanism to create failsafe boot entries appropriately
