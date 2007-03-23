@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Mar 23 14:26:58 CET 2007 - aosthof@suse.de
+
+- Removed function AddNewImageSection() because it's obsolete
+- Corrected resolution of symlinks in Tools.pm
+- Corrected deletion of obsolete entries in Tools.pm
+- Removed commented out code sections
+
+-------------------------------------------------------------------
 Thu Mar 22 17:11:47 CET 2007 - aosthof@suse.de
 
 - Added mechanism to name boot entries in a unique way
