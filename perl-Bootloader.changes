@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Mar 23 19:25:14 CET 2007 - aosthof@suse.de
+
+- Commented out wrong code in update-bootloader and Tools.pm
+
+-------------------------------------------------------------------
 Fri Mar 23 14:26:58 CET 2007 - aosthof@suse.de
 
 - Removed function AddNewImageSection() because it's obsolete
