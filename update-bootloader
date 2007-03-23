@@ -301,12 +301,12 @@ if (defined $oper{add}) {
 	# FIXME: Subject of change (depending on how the weather is)
 	# only add default if "appropriate"
 	# meaning now flavor of current default matches new one
-	my $flavor = GetDefaultImage();
-	$flavor =~ s/^.*-//;
-
-	if ($opt_image =~ m/.*-${flavor}$/) {
-	    push @params, default => $opt_default;
-    	}
+	#my $flavor = GetDefaultImage();
+	#$flavor =~ s/^.*-//;
+	#
+	#if ($opt_image =~ m/.*-${flavor}$/) {
+	#    push @params, default => $opt_default;
+    	#}
 	push @params, xen     => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd  => $opt_initrd if $opt_initrd;
 
@@ -340,6 +340,7 @@ if (defined $oper{remove}) {
     push @params, name   => $opt_name if $opt_name;
 		      
     my $num = CountSections(@params);
+
     if ($num > 0) {
         if ($num > 1 and not $opt_force) {
 	    pod2usage("There is more than one section with image '$opt_image'");

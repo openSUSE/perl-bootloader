@@ -529,6 +529,9 @@ sub GetSectionList {
     my %option = @_;
     my $loader = GetBootloader ();
 
+# FIXME: Maybe activate this part of code later if - against all expectations
+# - still needed, but this shouldn't happen.
+=cut    
     # Examines if image and initrd strings already contain a grub device
     # prefix. If it is not the case, attach it.
     if ($loader eq "grub") {
@@ -541,6 +544,7 @@ sub GetSectionList {
 	    }
 	}
     }
+=cut
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
@@ -692,75 +696,33 @@ sub AddSection {
     # Put new entries on top
     unshift @sections, \%new;
 
+    # Resolve kernel symlinks (if available) to full names
     my $link_target = '';
-    my $section_index = 0;
-    #print ("AddSection 1 =====================================\n");
     foreach my $s (@sections) {
 	while ((my $k, my $v) = each (%$s)) {
-	    if ($k eq "kernel") {
-		if ($link_target = `readlink $v`) {
+	    if ($k eq "kernel" || $k eq "image" || $k eq "initrd") {
+		$v =~ s/^\(.*\)//;
+		if ($link_target = readlink ($v)) {
 		    chomp ($link_target);
-		    #print ("kernel: $link_target\n");
-		    $s->{"kernel"} = "/boot/" . $link_target;
-
-		#    if ($new{"kernel"} eq $s->{"kernel"}) {
-		#	delete $sections[$section_index];
-		#    }
+		    $s->{$k} = "/boot/" . $link_target;
 		}
             }
-	    if ($k eq "image") {
-		if ($link_target = `readlink $v`) {
-		    chomp ($link_target);
-		    #print ("image: $link_target\n");
-		    $s->{"image"} = "/boot/" . $link_target;
-
-		#    if ($new{"image"} eq $s->{"image"}) {
-		#	delete $sections[$section_index];
-		#    }
-		}
-	    }
-	    if ($k eq "initrd") {
-		if ($link_target = `readlink $v`) {
-		    chomp ($link_target);
-		    #print ("initrd: $link_target\n");
-		    $s->{"initrd"} = "/boot/" . $link_target;
-		}
-	    }
 	    if ($k eq "__lines") {
 		my $index = 0;
 		foreach my $elem (@$v) {
 		    while ((my $k, my $v) = each (%$elem)) {
-			#print ("1. call elem: key: $k,\tval: $v\n");
 			if ((index ($v, "vmlinuz") >= 0 || index ($v, "initrd") >= 0)
-				&& ($link_target = `readlink $v`)) {
+				&& ($link_target = readlink ($v))) {
 			    $v = (split (/ /, $v))[0];
 			    chomp ($link_target);
 			    $s->{"__lines"}[$index]->{$k} = "/boot/" . $link_target;
-			    #print ("2. call elem: key: $k,\tval: $v\n");
 			}
 		    }
 		    $index += 1;
 		}
 	    }
-	    #print ("key: $k,\tval: $v\n");
 	}
-	#if (exists $new{"kernel"} && exists $s->{"kernel"} 
-	#&& $new{"kernel"} eq $s->{"kernel"}) {
-	#    delete $sections[$section_index];
-	#}
-	#elsif (exists $new{"image"} && exists $s->{"image"} 
-	#&& $new{"image"} eq $s->{"image"}) {
-	#    delete $sections[$section_index];
-	#}
-	#if (exists %new{"initrd"} && exists $s->{"initrd"} 
-	#&& %new{"initrd"} eq $s->{"initrd"}) {
-	#    delete $sections[$section_index];
-	#}
-	#$section_index += 1;
-	#print ("-------------------------------\n");
     }
-    #$lib_ref->SetSections(\@sections);
-
 
     # Switch the first 2 entries in @sections array to put the normal entry on
     # top of corresponding failsafe entry
@@ -768,21 +730,32 @@ sub AddSection {
 	my $failsafe_entry = shift (@sections);
 	my $normal_entry = shift (@sections);
 
+	# Delete obsolete (normal) boot entries from section array
 	my $section_index = 0;
 	foreach my $s (@sections) {
-	    if ($normal_entry->{"kernel"} eq $s->{"kernel"}) {
+	    if (exists $normal_entry->{"kernel"} && $normal_entry->{"kernel"} eq $s->{"kernel"}) {
 		delete $sections[$section_index];
 	    }
-	    elsif ($normal_entry->{"image"} eq $s->{"image"}) {
+	    elsif (exists $normal_entry->{"image"} && $normal_entry->{"image"} eq $s->{"image"}) {
 		delete $sections[$section_index];
 	    }
-	    if ($failsafe_entry->{"kernel"} eq $s->{"kernel"}) {
+	    else {
+		$section_index++;
+	    }
+	}
+
+	# Delete obsolete (failsafe) boot entries from section array
+	$section_index = 0;
+	foreach my $s (@sections) {
+	    if (exists $failsafe_entry->{"kernel"} && $failsafe_entry->{"kernel"} eq $s->{"kernel"}) {
 		delete $sections[$section_index];
 	    }
-	    elsif ($failsafe_entry->{"image"} eq $s->{"image"}) {
+	    elsif (exists $failsafe_entry->{"image"} && $failsafe_entry->{"image"} eq $s->{"image"}) {
 		delete $sections[$section_index];
 	    }
-	    $section_index += 1;
+	    else {
+		$section_index += 1;
+	    }
 	}
 
 	unshift @sections, $failsafe_entry;
@@ -810,14 +783,6 @@ sub AddSection {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
-
-    #print ("AddSection 2 =====================================\n");
-    #foreach my $s (@sections) {
-    #    while ((my $k, my $v) = each (%$s)) {
-    #            print ("key: $k,\tval: $v\n");
-    #    }
-    #    print ("-------------------------------\n");
-    #}
 
     DumpLog ();
 }
@@ -857,14 +822,25 @@ sub RemoveSections {
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
-#    print ("RemoveSections 2 =====================================\n");
-#    foreach my $s (@sections) {
-#        while ((my $k, my $v) = each (%$s)) {
-#		print ("key: $k,\tval: $v\n");
-#        }
-#        print ("-------------------------------\n");
-#    }
 
+# FIXME: Maybe activate this part of code later if - against all expectations 
+# - still needed, but this shouldn't happen.
+=cut
+    my $loader = GetBootloader ();
+    
+    # Examines if image and initrd strings already contain a grub device
+    # prefix. If it is not the case, attach it.
+    if ($loader eq "grub") {
+	foreach my $key (sort keys %option) {
+	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
+		if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
+		    my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
+		    $option{$key} = $grub_dev . $option{$key};
+		}
+	    }
+	}
+    }
+=cut
 
     normalize_options(\%option);
     @sections = grep {
@@ -873,16 +849,6 @@ sub RemoveSections {
 	    if $match and $default_section eq $_->{"name"};
 	!$match;
     } @sections;
-
-#    print ("RemoveSections 2 =====================================\n");
-#    foreach my $s (@sections) {
-#        while ((my $k, my $v) = each (%$s)) {
-#	    if ($k eq "name") {
-#		print ("key: $k,\tval: $v\n");
-#	    }
-#        }
-#        print ("-------------------------------\n");
-#    }
 
     $lib_ref->SetSections (\@sections);
     if ($default_removed) {
