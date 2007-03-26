@@ -828,25 +828,31 @@ sub RemoveSections {
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
-
 # FIXME: Maybe activate this part of code later if - against all expectations 
 # - still needed, but this shouldn't happen.
-=cut
     my $loader = GetBootloader ();
-    
     # Examines if image and initrd strings already contain a grub device
     # prefix. If it is not the case, attach it.
     if ($loader eq "grub") {
 	foreach my $key (sort keys %option) {
 	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
-		if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
-		    my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
-		    $option{$key} = $grub_dev . $option{$key};
+                # In case /boot is resided on an own partition, the function
+                # UnixPath2GrubPath (in GRUB.pm) doesn't substitute "/boot"
+                # with the corresponding grub device, but keeps it.
+                #
+                # So the image, kernel and initrd values in the @sections
+                # array don't contain such a grub device prefix. Thus, to
+                # match sections to be deleted, a grub device prefix must not
+                # be attached to the given @option elements.
+                if ($lib_ref->UnixFile2GrubDev ("/boot") eq $lib_ref->UnixFile2GrubDev ("/")){
+		    if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
+			my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
+			$option{$key} = $grub_dev . $option{$key};
+		    }
 		}
 	    }
 	}
     }
-=cut
 
     normalize_options(\%option);
     @sections = grep {

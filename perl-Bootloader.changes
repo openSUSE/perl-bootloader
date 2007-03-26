@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Mar 26 17:59:27 CEST 2007 - aosthof@suse.de
+
+- Corrected mechanism for removal of sections in Tools.pm
+
+-------------------------------------------------------------------
 Mon Mar 26 11:25:38 CEST 2007 - aosthof@suse.de
 
 - Corrected mechanism for adapting default value in Tools.pm
