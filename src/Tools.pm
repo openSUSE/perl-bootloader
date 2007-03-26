@@ -394,7 +394,7 @@ sub IsDMDevice(){
     my $dev = shift;
 
     my $cmd = "dmsetup info -c --noheadings -oname $dev";
-    if (my $test = qx{i$cmd 2>/dev/null}){
+    if (my $test = qx{$cmd 2>/dev/null}){
         chomp $test;
 
         if ($dev =~ m/$test/){

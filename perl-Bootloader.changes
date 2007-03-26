@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Mar 26 13:57:04 CEST 2007 - sf@suse.de
+
+- fixed typo 
+
+-------------------------------------------------------------------
 Mon Mar 26 11:23:35 CEST 2007 - aosthof@suse.de
 
 - Corrected mechanism for adapting default value in Tools.pm
