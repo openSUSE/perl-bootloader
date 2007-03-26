@@ -776,8 +776,14 @@ sub AddSection {
     # default entry has to be increased, because it is shifted down in the
     # array of sections. Only do this for grub.
     elsif ($loader eq "grub") {
-	$glob_ref->{"__lines"}[0]->{"value"} += 1;
-	$lib_ref->SetGlobalSettings ($glob_ref);
+        my $array_ref = $glob_ref->{"__lines"};
+
+        foreach my $line (@$array_ref) {
+            if ($line->{"key"} eq "default") {
+                $line->{"value"} += 1;
+            }
+        }
+        $lib_ref->SetGlobalSettings ($glob_ref);
     }
 
     $lib_ref->WriteSettings (1);

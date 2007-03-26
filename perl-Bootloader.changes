@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Mar 26 11:25:38 CEST 2007 - aosthof@suse.de
+
+- Corrected mechanism for adapting default value in Tools.pm
+
+-------------------------------------------------------------------
 Fri Mar 23 19:50:41 CET 2007 - aosthof@suse.de
 
 - Commented out wrong code in update-bootloader and Tools.pm
