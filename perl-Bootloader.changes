@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Mar 26 17:54:54 CEST 2007 - aosthof@suse.de
+
+- Corrected mechanism for removal of sections in Tools.pm
+
+-------------------------------------------------------------------
 Mon Mar 26 13:57:04 CEST 2007 - sf@suse.de
 
 - fixed typo 
