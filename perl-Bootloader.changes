@@ -1,4 +1,23 @@
 -------------------------------------------------------------------
+Mon Apr  2 11:38:57 CEST 2007 - aosthof@suse.de
+
+- Added function GrubDev2MountPoint() to GRUB.pm to be able to
+  retrieve mountpoints of grub devices
+- Fixed functions GrubDev2UnixDev(), UnixDev2GrubDev(),
+  GrubPath2UnixPath() and ParseLines() in GRUB.pm
+
+- Added wrapper for GrubDev2UnixDev() to Library.pm to be able to
+  call it from Tools.pm
+
+- Fixed functions ReadDMRaidPartitions(), IsDMRaidSlave(),
+  Udev2MajMin() and AddSection() in Tools.pm
+- Commented out obsolete code in GetSectionList() and
+  RemoveSections() in Tools.pm
+
+- Fixed 'uname' call in update-bootloader due to return of false
+  architectures (e.g. i586 instead of i386)
+
+-------------------------------------------------------------------
 Mon Mar 26 19:06:17 CEST 2007 - aosthof@suse.de
 
 - Corrected mechanism for removal of sections in Tools.pm - part 2

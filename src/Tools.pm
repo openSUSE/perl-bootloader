@@ -103,11 +103,11 @@ sub DumpLog {
 	my $level = $rec->{"level"};
 	if ($level eq "debug")
 	{
-#	    print STDERR ("DEBUG: $message\n");
+	    print STDERR ("DEBUG: $message\n");
 	}
 	elsif ($level eq "milestone")
 	{
-#	    print STDERR ("MILESTONE: $message\n");
+	    print STDERR ("MILESTONE: $message\n");
 	}
 	elsif ($level eq "warning")
 	{
@@ -250,7 +250,7 @@ Return 0 if no device, 1 if there are any.
 
 =cut
 
-sub DMRaidAvailable (){
+sub DMRaidAvailable {
     my $dm_devices = qx{dmsetup info -c --noheadings -o uuid};
     chomp($dm_devices);
 
@@ -276,7 +276,7 @@ partX-dmraid-<strange name>
 =cut
 
 #FIXME: this has to be done through Storage
-sub ReadDMRaidPartitions() {
+sub ReadDMRaidPartitions {
 
     my @dmdisks = ();
     my @dmparts = ();
@@ -285,37 +285,41 @@ sub ReadDMRaidPartitions() {
 
     open(DMDEV, "dmsetup info -c --noheadings -o name |") || die ("FOOBAR");
 
-       while(<DMDEV>){
-           $dmdev = $_;
-           chomp($dmdev);
+    while (<DMDEV>) {
+	$dmdev = $_;
+	chomp($dmdev);
 
-           #FIXME: I should not need to do this twice
-           if ($dmdev !~ m/part/){
-               # $dmdev is the base device
-               $dmdev = "/dev/mapper/" . $dmdev;
-               push @dmdisks, $dmdev;
-           }
-           else{ #FIXME: need to check what needs to be removed
-              $dmdev = "/dev/mapper/" . $dmdev;
-              push @dmparts, $dmdev;
-           }
-       }
-       close DMDEV;
-       my @devices = ();
-       my $dmpart;
-       my $tmp_part;
+	#FIXME: I should not need to do this twice
+	if ($dmdev !~ m/part/) {
+	    # $dmdev is the base device
+	    $dmdev = "/dev/mapper/" . $dmdev;
+	    push @dmdisks, $dmdev;
+	}
+	#FIXME: need to check what needs to be removed
+	else {
+	    $dmdev = "/dev/mapper/" . $dmdev;
+	    push @dmparts, $dmdev;
+	}
+    }
+    close DMDEV;
 
-      foreach $dmdev (@dmdisks){
-           foreach $dmpart (@dmparts){
-               my $index = substr ($dmpart, length($dmpart)-1,1);
+    my @devices = ();
+    my $dmpart;
+    my $tmp_part;
 
-               while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
-               {
-                   $index = substr ($index, 1);
-               }
-               push @devices, [$dmpart, $dmdev, $index];
-           }
-       }
+    foreach $dmdev (@dmdisks) {
+	foreach $dmpart (@dmparts) {
+	    if ($dmpart =~ m/$dmdev/) {
+		my $index = substr ($dmpart, length($dmpart)-2,2);
+
+		while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/) {
+		    $index = substr ($index, 1);
+		}
+		push @devices, [$dmpart, $dmdev, $index];
+	    }
+	}
+    }
+
     return \@devices;
 }
 
@@ -326,7 +330,7 @@ returns a refenrence to a list of DMRaid devices
 
 =cut
 
-sub ReadDMRaidDisks(){
+sub ReadDMRaidDisks {
 
     my @dmdisks = ();
     my @dmparts = ();
@@ -356,23 +360,26 @@ returns 1 if yes, 0 if no
 
 =cut
 
-sub IsDMRaidSlave(){
+sub IsDMRaidSlave {
 
     my $disk = shift;
     my $majmin_disk = Udev2MajMin($disk);
+    chomp($majmin_disk);
     my @dmparts = ();
     my @dm_devs = qx{dmsetup info -c --noheadings -o name | grep -v part};
 
-    if ($dm_devs[0] !~ /No devices found/){
-        foreach my $dmdisk (@dm_devs){
+    if ($dm_devs[0] !~ /No devices found/) {
+        foreach my $dmdisk (@dm_devs) {
             my @tables = qx{dmsetup table $dmdisk};
 
-            foreach my $line (@tables){
+            foreach my $line (@tables) {
                 my @content = split(/ /, $line);
 
                 foreach my $majmins (@content){
-                    if ("$majmins" eq "$majmin_disk"){
-                        return 1;
+                    if ($majmins =~ m/(\d+):(\d+)/) {
+                    	if ("$majmins" eq "$majmin_disk") {
+			    return 1;
+		    	}
                     }
                 }
             }
@@ -390,7 +397,7 @@ C<<  Bootloader::Tools:IsDMDevice ($device); >>
  otherwise 0.
 =cut
 
-sub IsDMDevice(){
+sub IsDMDevice {
     my $dev = shift;
 
     my $cmd = "dmsetup info -c --noheadings -oname $dev";
@@ -412,7 +419,7 @@ returns the devicemapper device like dmsetup returns
 
 =cut
 
-sub Bootloader::Tools::Udev2DMDev(){
+sub Bootloader::Tools::Udev2DMDev {
 
     my $udevd = shift;
     my $majmin = Udev2MajMin($udevd);
@@ -429,7 +436,7 @@ returns a udev device (dm-X)
 
 =cut
 
-sub Bootloader::Tools::DMDev2Udev(){
+sub Bootloader::Tools::DMDev2Udev {
 
     my $dmdev = shift;
     my $majmin = DMDev2MajMin($dmdev);
@@ -446,7 +453,7 @@ returns a string containing major:minor
 
 =cut
 
-sub Bootloader::Tools::DMDev2MajMin(){
+sub Bootloader::Tools::DMDev2MajMin {
 
     my $dmdev = shift;
     my $majmin;
@@ -463,7 +470,7 @@ returns a string containing major:minor
 
 =cut
 
-sub Bootloader::Tools::Udev2MajMin(){
+sub Bootloader::Tools::Udev2MajMin {
 
     my $udev_dev = shift;
     my $majmin;
@@ -473,6 +480,7 @@ sub Bootloader::Tools::Udev2MajMin(){
        chomp ($udev_path);
        $majmin = qx{cat /sys$udev_path/dev};
     }
+    chomp ($majmin);
     return $majmin;
 }
 
@@ -484,48 +492,49 @@ by udevinfo
 
 =cut
 
-sub Bootloader::Tools::MajMin2Udev(){
+sub Bootloader::Tools::MajMin2Udev {
 
-my $majmin = shift;
+    my $majmin = shift;
 
-my ($major,  $minor) = split (/:/, $majmin );
-my $udevdev;
-my $sb="/sys/block";
-my $devmajmin;
-#print ("Major: $major; Minor: $minor\n");
-opendir (SYSBLOCK, "$sb");
+    my ($major,  $minor) = split (/:/, $majmin );
+    my $udevdev;
+    my $sb="/sys/block";
+    my $devmajmin;
 
-foreach my $dirent (readdir(SYSBLOCK)){
-    next if $dirent =~ m/^\./;
-    next if -r "$sb/$dirent/range" and qx{ cat $sb/$dirent/range } == 1;
-    $devmajmin = qx{cat $sb/$dirent/dev};
-    my ($p, undef) = (split(/:/, $devmajmin));
+    opendir (SYSBLOCK, "$sb");
 
-    if ("$p" eq "$major" ){
-        $udevdev = "$sb/$dirent";
-        last;
+    foreach my $dirent (readdir(SYSBLOCK)) {
+	next if $dirent =~ m/^\./;
+	next if -r "$sb/$dirent/range" and qx{ cat $sb/$dirent/range } == 1;
+	$devmajmin = qx{cat $sb/$dirent/dev};
+	my ($p, undef) = (split(/:/, $devmajmin));
+
+	if ("$p" eq "$major" ) {
+	    $udevdev = "$sb/$dirent";
+	    last;
+	}
     }
-}
-closedir (SYSBLOCK);
-opendir (SYSBLOCK, "$udevdev");
-my $part;
+    closedir (SYSBLOCK);
 
-foreach my $dirent (readdir(SYSBLOCK)){
-    next if $dirent =~ m/^\./;
+    opendir (SYSBLOCK, "$udevdev");
+    my $part;
 
-    if (-r "$udevdev/$dirent/dev"){
-        my $mm = qx{cat $udevdev/$dirent/dev};
-        chomp ($mm);
+    foreach my $dirent (readdir(SYSBLOCK)) {
+	next if $dirent =~ m/^\./;
 
-        if ("$mm" eq "$majmin"){
-            $part = $dirent;
-            last;
-        }
+	if (-r "$udevdev/$dirent/dev") {
+	    my $mm = qx{cat $udevdev/$dirent/dev};
+	    chomp ($mm);
+
+	    if ("$mm" eq "$majmin") {
+		$part = $dirent;
+		last;
+	    }
+	}
     }
-}
-closedir (SYSBLOCK);
-return $part;
+    closedir (SYSBLOCK);
 
+    return $part;
 }
 
 =item
@@ -536,7 +545,7 @@ dmsetup
 
 =cut
 
-sub Bootloader::Tools::MajMin2DMDev(){
+sub Bootloader::Tools::MajMin2DMDev {
 
     my $majmin = shift;
     my $dm_name  =  qx{devmap_name $majmin};
@@ -570,6 +579,7 @@ sub ReadRAID1Arrays {
     my @members = ();
     open (MD, "/sbin/mdadm --detail --verbose --scan |") ||
         die ("Failed getting information about MD arrays");
+
     my ($array, $level, $num_devices);
     while (my $line = <MD>)
     {
@@ -583,11 +593,11 @@ sub ReadRAID1Arrays {
         {
             # we could test $num_device against number of found devices to
             # detect degradedmode but that does not matter here (really?) 
-
              $mapping{$array} = [ split(/,/, $1) ];
         }
     }
     close( MD );
+
     return \%mapping;
 }
 
@@ -642,6 +652,8 @@ sub match_section {
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
 	# FIXME: avoid "kernel"
+	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
+        # FIXME: to compare !!
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
@@ -800,7 +812,7 @@ sub GetDefaultImage {
     my $ref = GetDefaultSection();
     # FIXME: all modules under .../Core should use "image" as a key tag to the
     # kernel image
-   return $ref->{"image"} || $ref->{"kernel"};  
+    return $ref->{"image"} || $ref->{"kernel"};
 }
 
 =item
@@ -869,6 +881,7 @@ sub GetSectionList {
 # - still needed, but this shouldn't happen.
     # Examines if image and initrd strings already contain a grub device
     # prefix. If it is not the case, attach it.
+=cut
     if ($loader eq "grub") {
 	foreach my $key (sort keys %option) {
 	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
@@ -889,6 +902,7 @@ sub GetSectionList {
 	    }
 	}
     }
+=cut
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
@@ -907,7 +921,7 @@ C<< Bootloader::Tools::GetSection($name); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSection($) {
+sub GetSection {
     my $name = shift or return undef;
 
     foreach (@{$lib_ref->GetSections ()}) {
@@ -948,23 +962,22 @@ sub AddSection {
     my %new = (
 	"root" => $mp->{"/"} || "/dev/null",
     );
-
+    # FIXME: sf@: what is this code good for?
+    # FIXME: removed resetting root parameter if it's already set
     my %def = ();
-    foreach my $s (@sections)
-    {
-	if (defined ($s->{"initial"}) && $s->{"initial"})
-	{
+    foreach my $s (@sections) {
+	if (defined ($s->{"initial"}) && $s->{"initial"}) {
 	    %def = %{$s};
 	    last;
 	}
     }
 
-    while ((my $k, my $v) = each (%def))
-    {
+    while ((my $k, my $v) = each (%def)) {
 	if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
-	    && $k ne "initrd")
-	{
-	    $new{$k} = $v;
+		&& $k ne "initrd") {
+	    if (!defined $new{$k}) {
+		$new{$k} = $v;
+	    }	
 	}
     }
 
@@ -1040,18 +1053,42 @@ sub AddSection {
     # Put new entries on top
     unshift @sections, \%new;
 
+    my $mp_ref = ReadMountPoints ();
+    my $root_mp = '';
+    my $boot_mp = '';
+    my $valid_part = 0;
+
+    while ((my $k, my $v) = each (%$mp_ref)) {
+	$root_mp = $v if ($k eq "/");
+	$boot_mp = $v if ($k eq "/boot");
+    }
+
     # Resolve kernel symlinks (if available) to full names
     my $link_target = '';
     foreach my $s (@sections) {
 	while ((my $k, my $v) = each (%$s)) {
-	    if ($k eq "kernel" || $k eq "image" || $k eq "initrd") {
-		$v =~ s/^\(.*\)//;
+	    if ($k eq "initrd" || $k eq "image" || $k eq "kernel") {
+
+		if (($v =~ s#\/.*$##) && $v ne '') {
+		    my $unix_dev = $lib_ref->GrubDev2UnixDev($v);
+
+		    if ($unix_dev eq $root_mp || $unix_dev eq $boot_mp) {
+			$valid_part = 1;
+		    }
+		    else {
+			$valid_part = 0;
+		    }
+		}
+	    }
+
+	    if (($k eq "kernel" || $k eq "image" || $k eq "initrd") && $valid_part) {
 		if ($link_target = readlink ($v)) {
 		    chomp ($link_target);
 		    $s->{$k} = "/boot/" . $link_target;
 		}
             }
-	    if ($k eq "__lines") {
+
+	    if (($k eq "__lines") && $valid_part) {
 		my $index = 0;
 		foreach my $elem (@$v) {
 		    while ((my $k, my $v) = each (%$elem)) {
@@ -1116,6 +1153,7 @@ sub AddSection {
 	$glob_ref->{"__modified"} = 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }
+
     # If a non default entry is updated, the index of the current
     # default entry has to be increased, because it is shifted down in the
     # array of sections. Only do this for grub.
@@ -1177,9 +1215,11 @@ sub RemoveSections {
     my $loader = GetBootloader ();
     # Examines if image and initrd strings already contain a grub device
     # prefix. If it is not the case, attach it.
+=cut
     if ($loader eq "grub") {
 	foreach my $key (sort keys %option) {
 	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
+		print ("(hdx,y) not detected, key = $key,\tval = $option{$key}\n");
 		# In case /boot is resided on an own partition, the function
 		# UnixPath2GrubPath (in GRUB.pm) doesn't substitute "/boot"
 		# with the corresponding grub device, but keeps it.
@@ -1189,6 +1229,7 @@ sub RemoveSections {
 		# match sections to be deleted, a grub device prefix must not
 		# be attached to the given @option elements.
 		if ($lib_ref->UnixFile2GrubDev ("/boot") eq $lib_ref->UnixFile2GrubDev ("/")){
+		    print("equal\n");			
 		    if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
 			my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
 			$option{$key} = $grub_dev . $option{$key};
@@ -1197,6 +1238,7 @@ sub RemoveSections {
 	    }
 	}
     }
+=cut
 
     normalize_options(\%option);
     @sections = grep {
