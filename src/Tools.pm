@@ -103,11 +103,11 @@ sub DumpLog {
 	my $level = $rec->{"level"};
 	if ($level eq "debug")
 	{
-	    print STDERR ("DEBUG: $message\n");
+	    #print STDERR ("DEBUG: $message\n");
 	}
 	elsif ($level eq "milestone")
 	{
-	    print STDERR ("MILESTONE: $message\n");
+	    #print STDERR ("MILESTONE: $message\n");
 	}
 	elsif ($level eq "warning")
 	{
@@ -999,7 +999,7 @@ sub AddSection {
 
     # FIXME: Failsafe parameters should be set dynamically in the future
     if ($name =~ m/^Failsafe.*$/) {
-	my $arch = `uname --machine`;
+	my $arch = `uname --hardware-platform`;
 	chomp ($arch);
 
 	if ($arch eq "i386") {
