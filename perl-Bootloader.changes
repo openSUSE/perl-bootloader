@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Apr  2 14:07:55 CEST 2007 - aosthof@suse.de
+
+- Fixed typo in GRUB.pm
+
+-------------------------------------------------------------------
 Mon Apr  2 11:38:57 CEST 2007 - aosthof@suse.de
 
 - Added function GrubDev2MountPoint() to GRUB.pm to be able to

@@ -562,7 +562,8 @@ sub GrubPath2UnixPath {
     }
 =cut
 
-    if ($mountpoint eq $dev) # no mount point found {
+    # no mount point found 
+    if ($mountpoint eq $dev) {
 	$self->l_milestone ("GRUB::GrubPath2UnixPath: Device $dev does not have mount point, keeping GRUB path $orig_path");
 	return $orig_path;
     }
