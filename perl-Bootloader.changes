@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Apr  3 16:36:29 CEST 2007 - aosthof@suse.de
+
+- Improved error handling in Tools.pm
+
+-------------------------------------------------------------------
 Mon Apr  2 19:22:20 CEST 2007 - aosthof@suse.de
 
 - Fixed 'uname' call in Tools.pm due to return of false

@@ -72,6 +72,8 @@ C<< Bootloader::Tools::AddSection($name, @params); >>
 
 C<< Bootloader::Tools::RemoveSections($name); >>
 
+C<< $exec_with_path = Bootloader::Tools::AddPathToExecutable($executable); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -95,6 +97,7 @@ use Bootloader::Library;
 use Bootloader::Core;
 
 my $lib_ref = undef;
+my $dmsetup = undef;
 
 sub DumpLog {
     foreach my $rec (@{$lib_ref->GetLogRecords ()})
@@ -144,7 +147,9 @@ See InitLibrary function for example.
 =cut
 
 sub ReadMountPoints {
-    open (FILE, "/etc/fstab") || die ("Failed to open /etc/fstab");
+    open (FILE, "/etc/fstab") || 
+	die ("ReadMountPoints(): Failed to open /etc/fstab");
+
     my %mountpoints = ();
     while (my $line = <FILE>)
     {
@@ -156,7 +161,9 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
-		    open (BLKID, "/sbin/blkid -t $dev |") || die ("Failed to run blkid");
+		    open (BLKID, "/sbin/blkid -t $dev |") || 
+			die ("ReadMountPoints(): Failed to run blkid");
+
 		    my $line = <BLKID>;
 		    close (BLKID);
 		    chomp ($line);
@@ -200,7 +207,9 @@ See InitLibrary function for example.
 # FIXME: this has to be read through yast::storage
 sub ReadPartitions {
     my $sb="/sys/block";
-    opendir(BLOCK_DEVICES, "$sb") || die ("Failed to open dir $sb");
+    opendir(BLOCK_DEVICES, "$sb") || 
+	die ("ReadPartitions(): Failed to open dir $sb");
+
     my @disks = grep {
 	!m/^\./ and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
     } readdir(BLOCK_DEVICES);
@@ -219,7 +228,7 @@ sub ReadPartitions {
 	my $dev_disk = Udev2Dev ($disk);
         if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)){
 	    opendir(BLOCK_DEVICES, "$sb/$disk") ||
-	        die ("Failed to open dir $sb/$disk");
+	        die ("ReadPartitions(): Failed to open dir $sb/$disk");
 
 	    my @parts = grep {
 	        !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
@@ -251,13 +260,24 @@ Return 0 if no device, 1 if there are any.
 =cut
 
 sub DMRaidAvailable {
-    my $dm_devices = qx{dmsetup info -c --noheadings -o uuid};
-    chomp($dm_devices);
+    my $retval = 1;
 
-    if ("$dm_devices" eq "No devices found"){
-        return 0;
+    $dmsetup = AddPathToExecutable("dmsetup");
+
+    if (-e $dmsetup) {
+	my $dm_devices = qx{$dmsetup info -c --noheadings -o uuid};
+	chomp($dm_devices);
+
+	if ($dm_devices eq "No devices found") {
+	    $retval = 0;
+	}
     }
-    return 1;
+    else {
+	print ("The command \"dmsetup\" is not available.\n");
+	print ("Is the package \"device-mapper\" installed?\n");
+    }
+    
+    return $retval;
 }
 
 =item
@@ -283,7 +303,8 @@ sub ReadDMRaidPartitions {
     my $dmdev;
 
 
-    open(DMDEV, "dmsetup info -c --noheadings -o name |") || die ("FOOBAR");
+    open(DMDEV, "$dmsetup info -c --noheadings -o name |") || 
+	die ("ReadDMRaidPartitions(): dmsetup failed.");
 
     while (<DMDEV>) {
 	$dmdev = $_;
@@ -337,7 +358,8 @@ sub ReadDMRaidDisks {
     my $dmdev;
 
 
-    open(DMDEV, "dmsetup info -c --noheadings -oname |") || die ("FOOBAR");
+    open(DMDEV, "$dmsetup info -c --noheadings -oname |") || 
+	die ("ReadDMRaidDisks(): dmsetup failed.");
 
     while(<DMDEV>){
         $dmdev = $_;
@@ -366,11 +388,11 @@ sub IsDMRaidSlave {
     my $majmin_disk = Udev2MajMin($disk);
     chomp($majmin_disk);
     my @dmparts = ();
-    my @dm_devs = qx{dmsetup info -c --noheadings -o name | grep -v part};
+    my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
 
     if ($dm_devs[0] !~ /No devices found/) {
         foreach my $dmdisk (@dm_devs) {
-            my @tables = qx{dmsetup table $dmdisk};
+            my @tables = qx{$dmsetup table $dmdisk};
 
             foreach my $line (@tables) {
                 my @content = split(/ /, $line);
@@ -400,7 +422,7 @@ C<<  Bootloader::Tools:IsDMDevice ($device); >>
 sub IsDMDevice {
     my $dev = shift;
 
-    my $cmd = "dmsetup info -c --noheadings -oname $dev";
+    my $cmd = "$dmsetup info -c --noheadings -oname $dev";
     if (my $test = qx{$cmd 2>/dev/null}){
         chomp $test;
 
@@ -457,7 +479,7 @@ sub Bootloader::Tools::DMDev2MajMin {
 
     my $dmdev = shift;
     my $majmin;
-    $majmin =  qx{dmsetup info -c  --noheadings -o major,minor $dmdev};
+    $majmin =  qx{$dmsetup info -c  --noheadings -o major,minor $dmdev};
 
     return $majmin;
 }
@@ -578,7 +600,7 @@ sub ReadRAID1Arrays {
 
     my @members = ();
     open (MD, "/sbin/mdadm --detail --verbose --scan |") ||
-        die ("Failed getting information about MD arrays");
+        die ("ReadRAID1Arrays(): Failed getting information about MD arrays");
 
     my ($array, $level, $num_devices);
     while (my $line = <MD>)
@@ -614,7 +636,7 @@ See InitLibrary function for example.
 # FIXME: this has to be read through yast::storage or such
 sub GetBootloader {
     my $lt = qx{ . /etc/sysconfig/bootloader && echo \$LOADER_TYPE } or
-	die "Cannot determine the loader type";
+	die ("GetBootloader(): Cannot determine the loader type");
     chomp ($lt);
     return $lt;
 }   
@@ -748,7 +770,7 @@ EXAMPLE:
 sub GetSystemLanguage {
  
    open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |")
-          || die "Cannot determine the system language";
+          || die ("GetSystemLanguage(): Cannot determine the system language");
 
     my $lang = <FILE>;
     close (FILE);
@@ -773,7 +795,7 @@ sub GetDefaultSection {
 
    if (! defined ($glob_ref))
    {
-      die "Getting global data failed";
+      die ("GetDefaultSection(): Getting global data failed");
    }
 
    # This doesn't return the index of the default section, but the title of it.         
@@ -785,7 +807,7 @@ sub GetDefaultSection {
 
    if (! defined ($section_ref))
    {
-      die "Getting sections failed";
+      die ("GetDefaultSection(): Getting sections failed");
    }
 
    # get the hash of the default section, identified by key 'name'
@@ -1263,6 +1285,38 @@ sub RemoveSections {
 }
 
 
+=item
+C<< Bootloader::Tools::AddPathToExecutable ($executable); >>
+
+Prepends the corresponding (absolute) path to the given executable and returns
+the result. If not found in path, function returns undef.
+
+EXAMPLE:
+
+  my $executable = "dmsetup";
+
+  my $exec_with_path = Bootloader::Tools::AddPathToExecutable ($executable);
+
+  if (-e $exec_with_path) {
+      print ("The desired executable is located here: $exec_with_path");
+  }
+
+=cut
+
+sub AddPathToExecutable {
+    my $executable = shift;
+    my $retval = undef;
+
+    foreach my $dir ( split(/:/, $ENV{PATH})) {
+	# Check if executable exists in current path
+	if (-x "$dir/$executable") {
+	    $retval = "$dir/$executable";
+	    last;
+	}
+    }
+
+    return $retval; 
+}
  
 1;
 
