@@ -768,9 +768,8 @@ EXAMPLE:
 
 
 sub GetSystemLanguage {
- 
-   open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |")
-          || die ("GetSystemLanguage(): Cannot determine the system language");
+    open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |") || 
+	die ("GetSystemLanguage(): Cannot determine the system language");
 
     my $lang = <FILE>;
     close (FILE);

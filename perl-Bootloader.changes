@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Apr  3 17:26:31 CEST 2007 - aosthof@suse.de
+
+- Cosmetic correction in Tools.pm
+
+-------------------------------------------------------------------
 Tue Apr  3 16:36:29 CEST 2007 - aosthof@suse.de
 
 - Improved error handling in Tools.pm
