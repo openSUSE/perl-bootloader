@@ -64,6 +64,9 @@ C<< $status = Bootloader::Core::GRUB->InitializeBootloader (); >>
 
 C<< $opt_types_ref = BootGrub->GetOptTypes (); >>
 
+C<< $mountpoint = Bootloader::Core::GRUB->GrubDev2MountPoint ($grub_dev); >>
+
+
 =head1 DESCRIPTION
 
 =over 2
@@ -387,36 +390,42 @@ sub GrubDev2UnixDev {
 	$self->l_debug ("GRUB::GrubDev2UnixDev: Not translating device $dev");
 	return $dev;
     }
+
     my $original = $dev;
     my $partition = undef;
-    if ($dev =~ /\(([^,]+),([^,]+)\)/)
-    {
+
+    # Check if $dev consists of something like (hd0,0), thus a grub device
+    if ($dev =~ /\(([^,]+),([^,]+)\)/) {
 	$dev = $1;
 	$partition = $2 + 1;
     }
-    elsif ($dev =~ /\(([^,]+)\)/)
-    {
+    elsif ($dev =~ /\(([^,]+)\)/) {
 	$dev = $1;
     }
-    # $dev = UnixDevName($dev)
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
-    {
+
+    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
 	if ($dev eq $fw) {
 	    $dev = $unix;
 	}
     }
-    if (defined ($partition))
-    {
-	foreach my $dev_ref (@{$self->{"partitions"}})
-	{
-	    if ($dev_ref->[1] eq $dev && $dev_ref->[2] == $partition)
-	    {
+
+    # resolve symlinks.....
+    my $cmd = "udevinfo  -q name -n $dev";
+    if (my $resolved_link = qx{$cmd 2> /dev/null}) {
+	chomp ($resolved_link);
+	$dev = "/dev/" . $resolved_link; 
+    }
+
+    if (defined ($partition)) {
+	foreach my $dev_ref (@{$self->{"partitions"}}) {
+	    if ($dev_ref->[1] eq $dev && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
 		$self->l_debug ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
 		return $dev;
 	    }
 	}
     }
+
     $dev = $self->Member2MD ($dev);
     $self->l_debug ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
     return $dev;
@@ -439,33 +448,60 @@ sub UnixDev2GrubDev {
 	$self->l_debug ("GRUB::UnixDev2GrubDev: Empty device to translate");
 	return $dev;
     }
-    if ($dev =~ /^\(.*\)$/) { # seems to be a grub device already 
+    # Seems to be a grub device already 
+    if ($dev =~ /^\(.*\)$/) {
 	$self->l_debug ("GRUB::UnixDev2GrubDev: Not translating device $dev");
 	return $dev;
     }
+
+    # This gives me the devicename, wether $dev is the device or a link!
+    # This works for udev (kernel) devices only, devicemapper doesn't 
+    # need to be changed here 
     my $original = $dev;
+    my $kernel_dev;
+    my $cmd = "udevinfo  -q name -n $dev";
+    if ($kernel_dev = qx{$cmd 2> /dev/null}) {
+	chomp $kernel_dev;
+	$kernel_dev = "/dev/" . $kernel_dev;
+    }
+    else {
+	$kernel_dev = $dev;
+    }
+    
     my $partition = undef;
-    if ($dev =~ m:/dev/md\d+:) {
+    if ($dev =~ m#/dev/md\d+#) {
 	my @members = @{$self->MD2Members ($dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
 	$dev = $members[0] || $dev;
     }
-    # check for symbolic links as they are used for dev-by-id and such
-    if ( -l $dev) {
-	$dev = sprintf("%s/%s", $dev=~m:^(.+)/[^/]*$:, readlink($dev));
-	$dev = $self->CanonicalPath($dev);
-    }
-    foreach my $dev_ref (@{$self->{"partitions"}})
-    {
-	if ($dev_ref->[0] eq $dev)
-	{
-	    $dev = $dev_ref->[1];
+
+    # fetch the underlying device (sda1 --> sda)
+    foreach my $dev_ref (@{$self->{"partitions"}}) {
+	if ($dev_ref->[0] eq $kernel_dev) {
+	    $kernel_dev = $dev_ref->[1];
 	    $partition = $dev_ref->[2] - 1;
+	    last;
 	}
     }
 
-    if ( exists $self->{"device_map"}->{$dev} ) {
-	$dev = $self->{"device_map"}->{$dev};
+    # get the symbolic link from udev, it might be used in device.map
+    # udevinfo returns a space separated list of strings
+    $cmd = "udevinfo  -q symlink -n $kernel_dev";
+
+    my @udev_links = split (/ /, qx{$cmd 2>/dev/null});
+
+    # now check kernel devices / devicemapper devices 
+    if ( exists $self->{"device_map"}->{$kernel_dev} ) {
+	$dev = $self->{"device_map"}->{$kernel_dev};
+    }
+    else {
+	foreach my $udev_link (@udev_links) { 
+	    chomp ($udev_link);
+	    $udev_link = "/dev/" . $udev_link;
+	    if (exists $self->{"device_map"}->{$udev_link} ) {
+		$dev = $self->{"device_map"}->{$udev_link};
+	    }
+	}
     }
 
     $dev = defined ($partition)
@@ -493,35 +529,41 @@ sub GrubPath2UnixPath {
     my $dev = shift;
 
     my $orig_path = $path;
-    if ($path =~ /^(\(.+\))(.+)$/)
-    {
+    if ($path =~ /^(\(.+\))(.+)$/) {
 	$dev = $1;
 	$path = $2;
     }
-    else
-    {
+    else {
 	$orig_path = $dev . $path;
     }
 
-    if ($dev eq "")
-    {
+    if ($dev eq "") {
 	$self->l_warning ("GRUB::GrubPath2UnixPath: Path $orig_path in UNIX form, not modifying it");
 	return $orig_path;
     }
 
-    $dev = $self->GrubDev2UnixDev ($dev);
-    $dev = $self->Member2MD ($dev);
+    #FIXME: sf@ need to check for udev links here as well
+    #$dev = $self->GrubDev2UnixDev ($dev);
+    #$dev = $self->Member2MD ($dev);
 
-    my $mountpoint = $dev;
-    while ((my $mp, my $d) = each (%{$self->{"mountpoints"}}))
-    {
-	if ($d eq $dev)
-	{
+    my $mountpoint;
+    if ($dev) {
+	 $mountpoint = $self->GrubDev2MountPoint($dev)
+    }
+    else {
+	$mountpoint = $dev;
+    }
+
+=cut
+    while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
+	if ($d eq $dev) {
 	    $mountpoint = $mp;
 	}
     }
-    if ($mountpoint eq $dev) # no mount point found
-    {
+=cut
+
+    # no mount point found 
+    if ($mountpoint eq $dev) {
 	$self->l_milestone ("GRUB::GrubPath2UnixPath: Device $dev does not have mount point, keeping GRUB path $orig_path");
 	return $orig_path;
     }
@@ -550,8 +592,7 @@ sub UnixPath2GrubPath {
     my $orig_path = shift;
     my $preset_dev = shift;
 
-    if ($orig_path =~ /^\(.+\).+$/)
-    {
+    if ($orig_path =~ /^\(.+\).+$/) {
 	$self->l_milestone ("GRUB::UnixPath2GrubPath: Path $orig_path in GRUB form, keeping it");
 	return $orig_path;
     }
@@ -559,10 +600,10 @@ sub UnixPath2GrubPath {
     (my $dev, my $path) = $self->SplitDevPath ($orig_path);
 
     $dev = $self->UnixDev2GrubDev ($dev);
-    if ($dev eq $preset_dev)
-    {
+    if ($dev eq $preset_dev) {
 	$dev = "";
     }
+
     $path = $dev . $path;
     $self->l_debug ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
     return $path;
@@ -754,7 +795,7 @@ sub ParseLines {
     my ($boot_dev,) = $self->SplitDevPath ("/boot");
     my ($root_dev,) = $self->SplitDevPath ("/");
     # mbr_dev is the first bios device
-    my $mbr_dev =  $self->GrubDev2UnixDev("hd0");
+    my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
 
     foreach my $dev (@devices) {
 	$self->l_milestone ("GRUB::Parselines: checking boot device $dev");
@@ -854,7 +895,7 @@ sub CreateGrubConfLines() {
 	if (defined $flag and $flag eq "true") {
 	    # if /boot mountpoint exists add($disk(/boot) else add disk(/)
 	    # mbr_dev is the first bios device
-	    $dev =  $self->GrubDev2UnixDev("hd0");
+	    $dev =  $self->GrubDev2UnixDev("(hd0)");
 	    $s1_devices{$dev} = 1 if defined $dev;
 	}
 
@@ -1748,6 +1789,48 @@ sub InitializeBootloader {
 	close (LOG);
     }
     return $ret == 0;
+}
+
+=item
+C<< $mountpoint = Bootloader::Core::GRUB->GrubDev2MountPoint (); >>
+
+creates the mountpoint from a Grub Device (hdX,Y), be it
+a udev device, a udev link or a device mapper device
+
+returns the mountpoint or the grub device, if it couldn't be resolved
+
+=cut
+
+sub GrubDev2MountPoint {
+    my $self = shift;
+    my $grub_dev = shift;
+    my @devices = ();
+    my $device = $self->GrubDev2UnixDev($grub_dev);
+
+    push (@devices, $device);
+
+    #FIXME: sf@ need handling for /dev/dm-X devices here
+    if ($device !~ /mapper/) {
+	my $cmd = "udevinfo  -q symlink -n $device";
+	my @udev_links = split (/ /, qx{$cmd 2>/dev/null});
+
+	foreach $device (@udev_links) {
+	    chomp $device;
+	    $device = "/dev/" . $device; 
+	    push (@devices, $device);
+	}    
+    }
+
+    my $mountpoint = $grub_dev;
+    foreach $device (@devices) {
+	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
+	    if ($d eq $device) {
+		$mountpoint = $mp;
+	    }
+	}
+    }
+
+    return $mountpoint;  
 }
 
 1;

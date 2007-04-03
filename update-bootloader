@@ -319,7 +319,7 @@ if (defined $oper{add}) {
 	    AddSection($opt_name, @params);
 	}
 
-	my $arch = `uname --machine`;
+ 	my $arch = `uname --hardware-platform`;
 	chomp ($arch);
 
 	# Add a "Failsafe" section

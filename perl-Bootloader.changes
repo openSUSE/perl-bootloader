@@ -1,4 +1,24 @@
 -------------------------------------------------------------------
+Tue Apr  3 17:10:53 CEST 2007 - aosthof@suse.de
+
+- Fixed typo in GRUB.pm
+- Added function GrubDev2MountPoint() to GRUB.pm to be able to
+  retrieve mountpoints of grub devices
+- Fixed functions GrubDev2UnixDev(), UnixDev2GrubDev(),
+  GrubPath2UnixPath() and ParseLines() in GRUB.pm
+
+- Added wrapper for GrubDev2UnixDev() to Library.pm to be able to
+  call it from Tools.pm
+
+- Improved error handling in Tools.pm
+- Fixed function AddSection() in Tools.pm
+- Commented out obsolete code in GetSectionList() and
+  RemoveSections() in Tools.pm
+
+- Fixed 'uname' call in update-bootloader and Tools.pm due to 
+  return of false architectures (e.g. i586 instead of i386)
+
+-------------------------------------------------------------------
 Mon Mar 26 19:16:27 CEST 2007 - aosthof@suse.de
 
 - Corrected mechanism for removal of sections in Tools.pm - part 2

@@ -122,7 +122,9 @@ See InitLibrary function for example.
 =cut
 
 sub ReadMountPoints {
-    open (FILE, "/etc/fstab") || die ("Failed to open /etc/fstab");
+    open (FILE, "/etc/fstab") || 
+	die ("ReadMountPoints(): Failed to open /etc/fstab");
+
     my %mountpoints = ();
     while (my $line = <FILE>)
     {
@@ -134,7 +136,9 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
-		    open (BLKID, "/sbin/blkid -t $dev |") || die ("Failed to run blkid");
+		    open (BLKID, "/sbin/blkid -t $dev |") || 
+			die ("ReadMoountPoints(): Failed to run blkid");
+
 		    my $line = <BLKID>;
 		    close (BLKID);
 		    chomp ($line);
@@ -178,7 +182,9 @@ See InitLibrary function for example.
 # FIXME: this has to be read through yast::storage
 sub ReadPartitions {
     my $sb="/sys/block";
-    opendir(BLOCK_DEVICES, "$sb") || die ("Failed to open dir $sb");
+    opendir(BLOCK_DEVICES, "$sb") || 
+	die ("ReadPartitions(): Failed to open dir $sb");
+
     my @disks = grep {
 	!m/^\./ and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
     } readdir(BLOCK_DEVICES);
@@ -189,7 +195,8 @@ sub ReadPartitions {
     {
 	my $dev_disk = Udev2Dev ($disk);
 	opendir(BLOCK_DEVICES, "$sb/$disk") ||
-	    die ("Failed to open dir $sb/$disk");
+	    die ("ReadPartitions(): Failed to open dir $sb/$disk");
+
 	my @parts = grep {
 	    !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
 	} readdir (BLOCK_DEVICES);
@@ -232,7 +239,8 @@ sub ReadRAID1Arrays {
 
     my @members = ();
     open (MD, "/sbin/mdadm --detail --verbose --scan |") ||
-        die ("Failed getting information about MD arrays");
+        die ("ReadRAID1Arrays(): Failed getting information about MD arrays");
+
     my ($array, $level, $num_devices);
     while (my $line = <MD>)
     {
@@ -267,7 +275,7 @@ See InitLibrary function for example.
 # FIXME: this has to be read through yast::storage or such
 sub GetBootloader {
     my $lt = qx{ . /etc/sysconfig/bootloader && echo \$LOADER_TYPE } or
-	die "Cannot determine the loader type";
+	die ("GetBootloader(): Cannot determine the loader type");
     chomp ($lt);
     return $lt;
 }   
@@ -306,6 +314,8 @@ sub match_section {
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
 	# FIXME: avoid "kernel"
+	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
+        # FIXME: to compare !!
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
@@ -398,9 +408,8 @@ EXAMPLE:
 
 
 sub GetSystemLanguage {
- 
-   open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |")
-          || die "Cannot determine the system language";
+    open (FILE, ". /etc/sysconfig/language && echo \$RC_LANG |") || 
+	die ("GetSystemLanguage(): Cannot determine the system language");
 
     my $lang = <FILE>;
     close (FILE);
@@ -425,7 +434,7 @@ sub GetDefaultSection {
 
    if (! defined ($glob_ref))
    {
-      die "Getting global data failed";
+      die ("GetDefaultSection(): Getting global data failed");
    }
 
    # This doesn't return the index of the default section, but the title of it.         
@@ -437,7 +446,7 @@ sub GetDefaultSection {
 
    if (! defined ($section_ref))
    {
-      die "Getting sections failed";
+      die ("GetDefaultSection(): Getting sections failed");
    }
 
    # get the hash of the default section, identified by key 'name'
@@ -464,7 +473,7 @@ sub GetDefaultImage {
     my $ref = GetDefaultSection();
     # FIXME: all modules under .../Core should use "image" as a key tag to the
     # kernel image
-   return $ref->{"image"} || $ref->{"kernel"};  
+    return $ref->{"image"} || $ref->{"kernel"};
 }
 
 =item
@@ -533,6 +542,7 @@ sub GetSectionList {
 # - still needed, but this shouldn't happen.
     # Examines if image and initrd strings already contain a grub device
     # prefix. If it is not the case, attach it.
+=cut
     if ($loader eq "grub") {
 	foreach my $key (sort keys %option) {
 	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
@@ -553,6 +563,7 @@ sub GetSectionList {
 	    }
 	}
     }
+=cut
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
@@ -571,7 +582,7 @@ C<< Bootloader::Tools::GetSection($name); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSection($) {
+sub GetSection {
     my $name = shift or return undef;
 
     foreach (@{$lib_ref->GetSections ()}) {
@@ -612,23 +623,22 @@ sub AddSection {
     my %new = (
 	"root" => $mp->{"/"} || "/dev/null",
     );
-
+    # FIXME: sf@: what is this code good for?
+    # FIXME: removed resetting root parameter if it's already set
     my %def = ();
-    foreach my $s (@sections)
-    {
-	if (defined ($s->{"initial"}) && $s->{"initial"})
-	{
+    foreach my $s (@sections) {
+	if (defined ($s->{"initial"}) && $s->{"initial"}) {
 	    %def = %{$s};
 	    last;
 	}
     }
 
-    while ((my $k, my $v) = each (%def))
-    {
+    while ((my $k, my $v) = each (%def)) {
 	if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
-	    && $k ne "initrd")
-	{
-	    $new{$k} = $v;
+		&& $k ne "initrd") {
+	    if (!defined $new{$k}) {
+		$new{$k} = $v;
+	    }	
 	}
     }
 
@@ -650,7 +660,7 @@ sub AddSection {
 
     # FIXME: Failsafe parameters should be set dynamically in the future
     if ($name =~ m/^Failsafe.*$/) {
-	my $arch = `uname --machine`;
+	my $arch = `uname --hardware-platform`;
 	chomp ($arch);
 
 	if ($arch eq "i386") {
@@ -704,18 +714,42 @@ sub AddSection {
     # Put new entries on top
     unshift @sections, \%new;
 
+    my $mp_ref = ReadMountPoints ();
+    my $root_mp = '';
+    my $boot_mp = '';
+    my $valid_part = 0;
+
+    while ((my $k, my $v) = each (%$mp_ref)) {
+	$root_mp = $v if ($k eq "/");
+	$boot_mp = $v if ($k eq "/boot");
+    }
+
     # Resolve kernel symlinks (if available) to full names
     my $link_target = '';
     foreach my $s (@sections) {
 	while ((my $k, my $v) = each (%$s)) {
-	    if ($k eq "kernel" || $k eq "image" || $k eq "initrd") {
-		$v =~ s/^\(.*\)//;
+	    if ($k eq "initrd" || $k eq "image" || $k eq "kernel") {
+
+		if (($v =~ s#\/.*$##) && $v ne '') {
+		    my $unix_dev = $lib_ref->GrubDev2UnixDev($v);
+
+		    if ($unix_dev eq $root_mp || $unix_dev eq $boot_mp) {
+			$valid_part = 1;
+		    }
+		    else {
+			$valid_part = 0;
+		    }
+		}
+	    }
+
+	    if (($k eq "kernel" || $k eq "image" || $k eq "initrd") && $valid_part) {
 		if ($link_target = readlink ($v)) {
 		    chomp ($link_target);
 		    $s->{$k} = "/boot/" . $link_target;
 		}
             }
-	    if ($k eq "__lines") {
+
+	    if (($k eq "__lines") && $valid_part) {
 		my $index = 0;
 		foreach my $elem (@$v) {
 		    while ((my $k, my $v) = each (%$elem)) {
@@ -780,6 +814,7 @@ sub AddSection {
 	$glob_ref->{"__modified"} = 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }
+
     # If a non default entry is updated, the index of the current
     # default entry has to be increased, because it is shifted down in the
     # array of sections. Only do this for grub.
@@ -841,18 +876,21 @@ sub RemoveSections {
     my $loader = GetBootloader ();
     # Examines if image and initrd strings already contain a grub device
     # prefix. If it is not the case, attach it.
+=cut
     if ($loader eq "grub") {
 	foreach my $key (sort keys %option) {
 	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
-                # In case /boot is resided on an own partition, the function
-                # UnixPath2GrubPath (in GRUB.pm) doesn't substitute "/boot"
-                # with the corresponding grub device, but keeps it.
-                #
-                # So the image, kernel and initrd values in the @sections
-                # array don't contain such a grub device prefix. Thus, to
-                # match sections to be deleted, a grub device prefix must not
-                # be attached to the given @option elements.
-                if ($lib_ref->UnixFile2GrubDev ("/boot") eq $lib_ref->UnixFile2GrubDev ("/")){
+		print ("(hdx,y) not detected, key = $key,\tval = $option{$key}\n");
+		# In case /boot is resided on an own partition, the function
+		# UnixPath2GrubPath (in GRUB.pm) doesn't substitute "/boot"
+		# with the corresponding grub device, but keeps it.
+		#
+		# So the image, kernel and initrd values in the @sections
+		# array don't contain such a grub device prefix. Thus, to
+		# match sections to be deleted, a grub device prefix must not
+		# be attached to the given @option elements.
+		if ($lib_ref->UnixFile2GrubDev ("/boot") eq $lib_ref->UnixFile2GrubDev ("/")){
+		    print("equal\n");			
 		    if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
 			my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
 			$option{$key} = $grub_dev . $option{$key};
@@ -861,6 +899,7 @@ sub RemoveSections {
 	    }
 	}
     }
+=cut
 
     normalize_options(\%option);
     @sections = grep {
