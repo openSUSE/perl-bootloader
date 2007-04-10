@@ -1,5 +1,16 @@
 -------------------------------------------------------------------
+Tue Apr 10 18:10:38 CEST 2007 - aosthof@suse.de
+
+- Adapted EFI Bootloader Label code in ELILO.pm (#242985)
+  --> Renamed "boot_efilabel" flag to "efilabel"
+  --> Removed "boot_rm_efilabel" flag because it's now obsolete
+
+-------------------------------------------------------------------
 Tue Apr  3 17:10:53 CEST 2007 - aosthof@suse.de
+
+Following changes all refer to #252911 and #255851 (which indeed
+are bugs against openSUSE 10.2 & 10.3, but those bugs will occur in
+SLES10-SP1 with the first kernel update as well):
 
 - Fixed typo in GRUB.pm
 - Added function GrubDev2MountPoint() to GRUB.pm to be able to
