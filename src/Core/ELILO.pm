@@ -404,7 +404,7 @@ sub CreateLines {
 
     # handle 'hidden magic' entries
     map {
-	s/^/##YaST - /if /^efilabel/; 
+	s/^/##YaST - / if /^efilabel/; 
 	    #if /^boot_efilabel/ or /^boot_rm_efilabel/;
     } @{$elilo_conf};
 
