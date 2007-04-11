@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Apr 11 18:19:45 CEST 2007 - aosthof@suse.de
+
+- Corrected resolution of symlinks in Tools.pm (#244033)
+
+-------------------------------------------------------------------
 Tue Apr 10 18:10:38 CEST 2007 - aosthof@suse.de
 
 - Adapted EFI Bootloader Label code in ELILO.pm (#242985)
@@ -8,9 +13,12 @@ Tue Apr 10 18:10:38 CEST 2007 - aosthof@suse.de
 -------------------------------------------------------------------
 Tue Apr  3 17:10:53 CEST 2007 - aosthof@suse.de
 
-Following changes all refer to #252911 and #255851 (which indeed
-are bugs against openSUSE 10.2 & 10.3, but those bugs will occur in
-SLES10-SP1 with the first kernel update as well):
+Following changes all refer to bugs #252911 and #255851 which
+indeed are bugs against openSUSE 10.2 & 10.3, however those bugs
+will occur in SLES10-SP1 as well. Thus, those fixes are necessary
+to not mess up configuration after kernel-updates.
+
+Related (fixes) features: #232, #2154, #11011, #300543
 
 - Fixed typo in GRUB.pm
 - Added function GrubDev2MountPoint() to GRUB.pm to be able to
