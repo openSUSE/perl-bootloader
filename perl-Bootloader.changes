@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Wed Apr 11 18:36:37 CEST 2007 - aosthof@suse.de
+
+- Corrected resolution of symlinks in Tools.pm (#244033)
+
+-------------------------------------------------------------------
+Wed Apr 11 18:32:45 CEST 2007 - aosthof@suse.de
+
+- Adapted EFI Bootloader Label code in ELILO.pm (#242985)
+  --> Renamed "boot_efilabel" flag to "efilabel"
+  --> Removed "boot_rm_efilabel" flag because it's now obsolete
+
+-------------------------------------------------------------------
 Tue Apr  3 17:26:31 CEST 2007 - aosthof@suse.de
 
 - Cosmetic correction in Tools.pm
@@ -21,6 +33,12 @@ Mon Apr  2 14:07:55 CEST 2007 - aosthof@suse.de
 
 -------------------------------------------------------------------
 Mon Apr  2 11:38:57 CEST 2007 - aosthof@suse.de
+Following changes all refer to bugs #252911 and #255851 which
+indeed are bugs against openSUSE 10.2 & 10.3, however those bugs
+will occur in SLES10-SP1 as well. Thus, those fixes are necessary
+to not mess up configuration after kernel-updates.
+
+Related (fixes) features: #232, #2154, #11011, #300543
 
 - Added function GrubDev2MountPoint() to GRUB.pm to be able to
   retrieve mountpoints of grub devices

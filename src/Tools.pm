@@ -1077,7 +1077,7 @@ sub AddSection {
     my $mp_ref = ReadMountPoints ();
     my $root_mp = '';
     my $boot_mp = '';
-    my $valid_part = 0;
+    my $valid_part = 1;
 
     while ((my $k, my $v) = each (%$mp_ref)) {
 	$root_mp = $v if ($k eq "/");
@@ -1089,14 +1089,11 @@ sub AddSection {
     foreach my $s (@sections) {
 	while ((my $k, my $v) = each (%$s)) {
 	    if ($k eq "initrd" || $k eq "image" || $k eq "kernel") {
-
+		# Check if $v has a grub device prefix
 		if (($v =~ s#\/.*$##) && $v ne '') {
 		    my $unix_dev = $lib_ref->GrubDev2UnixDev($v);
 
-		    if ($unix_dev eq $root_mp || $unix_dev eq $boot_mp) {
-			$valid_part = 1;
-		    }
-		    else {
+		    unless ($unix_dev eq $root_mp || $unix_dev eq $boot_mp) {
 			$valid_part = 0;
 		    }
 		}
@@ -1113,7 +1110,7 @@ sub AddSection {
 		my $index = 0;
 		foreach my $elem (@$v) {
 		    while ((my $k, my $v) = each (%$elem)) {
-			if ((index ($v, "vmlinuz") >= 0 || index ($v, "initrd") >= 0)
+			if (($v =~ m/vmlinu[xz]/ || index ($v, "initrd") >= 0)
 				&& ($link_target = readlink ($v))) {
 			    $v = (split (/ /, $v))[0];
 			    chomp ($link_target);
