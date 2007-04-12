@@ -260,7 +260,7 @@ Return 0 if no device, 1 if there are any.
 =cut
 
 sub DMRaidAvailable {
-    my $retval = 1;
+    my $retval = 0;
 
     $dmsetup = AddPathToExecutable("dmsetup");
 
@@ -268,9 +268,7 @@ sub DMRaidAvailable {
 	my $dm_devices = qx{$dmsetup info -c --noheadings -o uuid};
 	chomp($dm_devices);
 
-	if ($dm_devices eq "No devices found") {
-	    $retval = 0;
-	}
+	$retval = $dm_devices ne "No devices found";
     }
     else {
 	print ("The command \"dmsetup\" is not available.\n");
@@ -388,6 +386,11 @@ sub IsDMRaidSlave {
     my $majmin_disk = Udev2MajMin($disk);
     chomp($majmin_disk);
     my @dmparts = ();
+
+    unless (-e $dmsetup) {
+        return 0;
+    }
+
     my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
 
     if ($dm_devs[0] !~ /No devices found/) {
@@ -421,6 +424,10 @@ C<<  Bootloader::Tools:IsDMDevice ($device); >>
 
 sub IsDMDevice {
     my $dev = shift;
+
+    unless (-e $dmsetup) {
+        return 0;
+    }
 
     my $cmd = "$dmsetup info -c --noheadings -oname $dev";
     if (my $test = qx{$cmd 2>/dev/null}){

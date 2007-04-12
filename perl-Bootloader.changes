@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Apr 12 18:08:58 CEST 2007 - aosthof@suse.de
+
+- Fixed error handling for "dmsetup" calls in DMRaidAvailable(),
+  IsDMDevice() and IsDMRaidSlave() in Tools.pm
+
+-------------------------------------------------------------------
 Wed Apr 11 18:36:37 CEST 2007 - aosthof@suse.de
 
 - Corrected resolution of symlinks in Tools.pm (#244033)
