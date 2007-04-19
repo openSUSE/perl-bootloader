@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Apr 19 11:16:43 CEST 2007 - sf@suse.de
+
+- use underlying device instead of md RAID-device (Bug #265867) 
+
+-------------------------------------------------------------------
 Thu Apr 12 18:08:58 CEST 2007 - aosthof@suse.de
 
 - Fixed error handling for "dmsetup" calls in DMRaidAvailable(),
