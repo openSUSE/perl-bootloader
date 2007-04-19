@@ -472,7 +472,8 @@ sub UnixDev2GrubDev {
     if ($dev =~ m#/dev/md\d+#) {
 	my @members = @{$self->MD2Members ($dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
-	$dev = $members[0] || $dev;
+	$kernel_dev = $members[0] || $kernel_dev;
+	$self->l_debug ("GRUB::UnixDev2GrubDev: First device of MDRaid:: $original --> $kernel_dev");
     }
 
     # fetch the underlying device (sda1 --> sda)
@@ -480,6 +481,7 @@ sub UnixDev2GrubDev {
 	if ($dev_ref->[0] eq $kernel_dev) {
 	    $kernel_dev = $dev_ref->[1];
 	    $partition = $dev_ref->[2] - 1;
+	    $self->l_debug ("GRUB::UnixDev2GrubDev: dev_ref:  ".$dev_ref->[0]." ".$dev_ref->[1]." ".$dev_ref->[2]);		
 	    last;
 	}
     }
