@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Apr 19 10:06:42 CEST 2007 - sf@suse.de
+
+- use detected first underlying device instead of md device
+  (#265867) 
+
+-------------------------------------------------------------------
 Wed Apr 11 18:19:45 CEST 2007 - aosthof@suse.de
 
 - Corrected resolution of symlinks in Tools.pm (#244033)
