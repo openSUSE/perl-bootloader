@@ -472,7 +472,7 @@ sub UnixDev2GrubDev {
     if ($dev =~ m#/dev/md\d+#) {
 	my @members = @{$self->MD2Members ($dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
-	$dev = $members[0] || $dev;
+	$kernel_dev = $members[0] || $kernel_dev;
     }
 
     # fetch the underlying device (sda1 --> sda)
