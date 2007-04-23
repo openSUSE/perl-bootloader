@@ -155,7 +155,7 @@ sub ReadMountPoints {
                 # about the to-be used mount-by link
 		elsif($dev =~ m,^/dev/disk/by-,){
 		    my $cmd = "udevinfo -q name -n $dev";
-		    if (my $k_dev = qx{$cmd 2>/dev/null}{
+		    if (my $k_dev = qx{$cmd 2>/dev/null}) {
 			$dev = "/dev/" . $k_dev;	
 		    }
 		}
