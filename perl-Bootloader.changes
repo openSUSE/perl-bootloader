@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Apr 23 23:10:59 CEST 2007 - aosthof@suse.de
+
+- Fixed naming scheme of product name for boot menu entries, so
+  that Xen or Failsafe entries for instance get displayed correctly
+
+-------------------------------------------------------------------
 Mon Apr 23 23:09:00 CEST 2007 - aosthof@suse.de
 
 - Fixed usage of md raids for ia64 (#233255)

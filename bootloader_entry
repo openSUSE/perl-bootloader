@@ -84,7 +84,7 @@ function add_entry()
 						  --default \
 						  --add \
 						  --force $opt_xen_kernel \
-						  --name "Kernel-$release"
+						  --name "$release"
 
 				# Run the bootloader (e.g., lilo).
 				update_bootloader --refresh
@@ -96,7 +96,7 @@ function add_entry()
 						  --initrd /boot/$initrd \
 						  --add \
 						  --force \
-						  --name "Kernel-$release"
+						  --name "$release"
 
 				# Run the bootloader (e.g., lilo).
 				update_bootloader --refresh
@@ -109,7 +109,7 @@ function add_entry()
 						  --default \
 						  --add \
 						  --force \
-						  --name "Kernel-$release"
+						  --name "$release"
 
 				# Run the bootloader (e.g., lilo).
 				update_bootloader --refresh

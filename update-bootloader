@@ -111,11 +111,11 @@ sub GetProduct {
      
     # first try: new zypp-query-pool adopted to our needs
     my @product_query = split ('\|', qx{/usr/lib/zypp/zypp-query-pool products \@system});
-    my $found = 0;  
+    my $found = 0;
     my $i = 0;
 
-    for($i = 0; $i <=  @product_query; $i += 1){
-	if ($product_query[$i] eq  "base"){	
+    for ($i = 0; $i <=  @product_query; $i++){
+	if ($product_query[$i] eq "base"){
             $found = 1;
 	    last;
 	}
@@ -269,8 +269,8 @@ if (defined $oper{add}) {
 
 	if ($loader eq "grub") {
 	    $opt_name =~ s/-[^-]*$//;
-	    $opt_failsafe = "Failsafe -- " . $opt_name;
-	    $opt_name = GetProduct() . " -- " . $opt_name;
+	    $opt_failsafe = "Failsafe -- " . GetProduct() . " - " . $opt_name;
+	    $opt_name = GetProduct() . " - " . $opt_name;
 	}
 	else {
 	    $opt_failsafe = "Failsafe";
@@ -281,10 +281,10 @@ if (defined $oper{add}) {
     elsif ($opt_xen) {
 	if ($loader eq "grub") {
 	    $opt_name =~ s/-xen.*$//;
-	    $opt_xen_name = "Xen -- " . GetProduct() . " - " . $opt_name;
+	    $opt_xen_name = "XEN -- " . GetProduct() . " - " . $opt_name;
 	}
 	else {
-	    $opt_name = "Xen";
+	    $opt_name = "XEN";
 	}
     }
     # Naming scheme for all other kernels
@@ -293,7 +293,7 @@ if (defined $oper{add}) {
 	    $opt_name = GetProduct() if $add_product;
 	}
 	else {
-	    $opt_name .= " -- " . GetProduct() if $add_product;
+	    $opt_name = GetProduct() . " -- " . $opt_name if $add_product;
 	}
     }
 }
