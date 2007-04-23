@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Apr 23 23:29:46 CEST 2007 - aosthof@suse.de
+
+- Version bump to 0.4.15
+
+-------------------------------------------------------------------
 Mon Apr 23 23:10:59 CEST 2007 - aosthof@suse.de
 
 - Fixed naming scheme of product name for boot menu entries, so
