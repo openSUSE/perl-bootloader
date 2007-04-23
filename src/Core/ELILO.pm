@@ -142,12 +142,13 @@ sub GetMetaData() {
     
     my $boot_partitions = join(":", @bootpart);
     
+    my @md_arrays = keys %{$loader->{"md_arrays"} || {}};
     my $root_devices = join(":",
         map {
             my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
             # FIXME: weed out non-root partitions
         } @partinfo,
-        keys %{$loader->{"md_arrays"} || {}}
+	\@md_arrays
     );
     
     # FIXME: is "arch" export necessary?

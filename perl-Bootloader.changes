@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Apr 23 23:09:00 CEST 2007 - aosthof@suse.de
+
+- Fixed usage of md raids for ia64 (#233255)
+
+-------------------------------------------------------------------
 Mon Apr 23 23:05:14 CEST 2007 - aosthof@suse.de
 
 - Reverted EFI Bootloader Label code in ELILO.pm to display gui
