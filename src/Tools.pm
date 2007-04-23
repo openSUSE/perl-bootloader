@@ -137,26 +137,15 @@ sub ReadMountPoints {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
 		    open (BLKID, "/sbin/blkid -t $dev |") || 
-			die ("ReadMountPoints(): Failed to run blkid");
+			die ("ReadMoountPoints(): Failed to run blkid");
 
 		    my $line = <BLKID>;
 		    close (BLKID);
 		    chomp ($line);
-		    #FIXME: this is ycp2perl code	
 		    my $index = index ($line, ":");
 		    if ($index != -1)
 		    {
 			$dev = substr ($line, 0, $index);
-		    }
-		}
-		# use only kernel-devices as mountpoints
-                # to do the same as YaST does. 
-                # the partitions array contains the information 
-                # about the to-be used mount-by link
-		elsif($dev =~ m,^/dev/disk/by-,){
-		    my $cmd = "udevinfo -q name -n $dev";
-		    if (my $k_dev = qx{$cmd 2>/dev/null}) {
-			$dev = "/dev/" . $k_dev;	
 		    }
 		}
 		$mountpoints{$mp} = $dev;
