@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Apr 23 09:29:46 CEST 2007 - sf@suse.de
+
+- adopt update-bootloader to zypp-query-pool (Bug #265819),
+  as due to the zypp lock no second YaST must be started 
+
+-------------------------------------------------------------------
 Thu Apr 19 10:06:42 CEST 2007 - sf@suse.de
 
 - use detected first underlying device instead of md device
