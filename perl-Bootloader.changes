@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Apr 23 22:58:53 CEST 2007 - aosthof@suse.de
+
+- Fix for booting from extended partitions (#246161, #259050)
+
+-------------------------------------------------------------------
 Mon Apr 23 20:44:30 CEST 2007 - od@suse.de
 
 - reverted last change, because the interface change for

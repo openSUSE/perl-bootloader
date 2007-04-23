@@ -380,6 +380,48 @@ sub SplitDevPath {
 }
 
 =item
+C<< $extended_part_dev = Bootloader::Core->GetExtendedPartition ($part_dev); >>
+
+Takes a device name (string, eg. C<'/dev/sda7'>) and returns the device name
+of the extended partition on the same disk (string, eg. C<'/dev/sda3'>). If no
+extended partition exists on that disk, returns undef.
+
+=cut
+
+# string GetExtendedPartition (string part_dev)
+sub GetExtendedPartition {
+    my $self = shift;
+    my $part_dev = shift;
+    my $extended_part_dev = undef;
+
+    # Check for valid devices
+    unless ($part_dev =~ m/^\/dev\/[sh]d[a-z](\d+)?$/) {
+	$self->l_debug ("Core::GetExtendedPartition: Specified device
+	    $part_dev is not valid and cannot be used as base for detecting an
+	    extended partition on the same disk.");
+	return $extended_part_dev;
+    }
+
+    # Cut the partition number (if any) to get the corresponding disk
+    my $disk_dev = $part_dev;
+    $disk_dev =~ s/\d+$//;
+
+    # Partitioninfo is a list of list references of the format:
+    #   Device,   disk,    nr, fsid, fstype,   part_type, start_cyl, size_cyl
+    #   /dev/sda9 /dev/sda 9   258   Apple_HFS `primary   0          18237
+
+    foreach my $part_ref (@{$self->{"partitions"}}) {
+	if ($part_ref->[1] eq $disk_dev and
+	    $part_ref->[5] eq "`extended") {
+	    $extended_part_dev = $part_ref->[0];
+	    last;
+	}
+    }
+
+    return $extended_part_dev;
+}
+
+=item
 C<< $quoted = Bootloader::Core->Quote ($text, $when); >>
 
 Puts a text to quotes. As arguments takes the text (string) and information

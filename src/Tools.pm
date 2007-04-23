@@ -181,19 +181,64 @@ See InitLibrary function for example.
 
 # FIXME: this has to be read through yast::storage
 sub ReadPartitions {
-    my $sb="/sys/block";
+    my $sb = "/sys/block";
     opendir(BLOCK_DEVICES, "$sb") || 
 	die ("ReadPartitions(): Failed to open dir $sb");
 
+    # get disk devices
     my @disks = grep {
 	!m/^\./ and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
+    # get partition info for all partitions on all @disks
     my @devices = ();
     foreach my $disk (@disks)
     {
+	# get kernel device name for this device
 	my $dev_disk = Udev2Dev ($disk);
+
+	# get additional info from parted for the partitions on this $disk
+	#
+	# Disk geometry for /dev/sdb: 0cyl - 14593cyl
+	# BIOS cylinder,head,sector geometry: 14593,255,63.  Each cylinder is 8225kB.
+	# Disk label type: msdos
+	# Number  Start   End     Size    Type      File system  Flags
+	# 1       0cyl    63cyl   63cyl   primary   reiserfs     raid, type=fd
+	# 2       64cyl   2022cyl 1959cyl primary   ext3         boot, raid, type=fd
+	# 3       2023cyl 3067cyl 1045cyl primary   linux-swap   raid, type=fd
+	# 4       3068cyl 14592cyl 11525cyl extended               lba, type=0f
+	# 5       3068cyl 3198cyl 130cyl  logical   reiserfs     type=83
+	#
+	my @parted_info_list = ();
+	my $parted_info = `parted -s $dev_disk unit cyl print`;
+	if ( $? == 0 ) {
+	    my @parted_info_split = split(/\n/, $parted_info);
+	    # skip header lines
+
+
+	    while ($#parted_info_split >=0 and $parted_info_split[0] !~ /^\s*\d/) {
+		shift @parted_info_split;
+	    }
+
+	    foreach $parted_info (@parted_info_split) {
+		# FIXME: parse the rest of the lines
+		chomp($parted_info);
+		my ($p_nr, $p_startcyl, $p_endcyl, $p_sizecyl, $p_type, $rest) =
+		    split(' ', $parted_info);
+
+		$p_startcyl =~ s/cyl$//;
+		$p_endcyl   =~ s/cyl$//;
+		$p_sizecyl  =~ s/cyl$//;
+		$p_type	    =~ s/^/`/;
+
+		# array: part_nr -> (startcyl, endcyl, sizecyl, type)
+		$parted_info_list[$p_nr] =
+		    [$p_startcyl, $p_endcyl, $p_sizecyl, $p_type];
+	    }
+	}
+
+	# get partitions of $disk
 	opendir(BLOCK_DEVICES, "$sb/$disk") ||
 	    die ("ReadPartitions(): Failed to open dir $sb/$disk");
 
@@ -202,6 +247,7 @@ sub ReadPartitions {
 	} readdir (BLOCK_DEVICES);
 	closedir BLOCK_DEVICES;
 
+	# generate proper device names and other info for all @part[ition]s
 	foreach my $part (@parts)
 	{
 	    chomp ($part);
@@ -211,7 +257,26 @@ sub ReadPartitions {
 	    {
 		$index = substr ($index, 1);
 	    }
-	    push @devices, [$part, $dev_disk, $index];
+	    # The @devices array will contain the following members:
+	    #
+	    # index type	    value (example)
+	    #
+	    #  0    device	    /dev/sda9
+	    #  1    disk	    /dev/sda
+	    #  2    nr		    9
+	    #  3    fsid	    258
+	    #  4    fstype	    Apple_HFS
+	    #  5    part_type	    `primary
+	    #  6    start_cyl	    0
+	    #  7    size_cyl	    18237
+
+	    push @devices, [$part, $dev_disk, $index, 0, "",
+		defined( $parted_info_list[$index]->[3] ) ?
+		    $parted_info_list[$index]->[3] : "",
+		defined( $parted_info_list[$index]->[0] ) ?
+		    $parted_info_list[$index]->[0] : 0,
+		defined( $parted_info_list[$index]->[1] ) ?
+		    $parted_info_list[$index]->[1] : 0];
 	}
     }
     return \@devices;
