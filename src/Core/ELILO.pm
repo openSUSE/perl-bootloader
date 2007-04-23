@@ -173,7 +173,7 @@ sub GetMetaData() {
 	relocatable	=> "bool:Allow Attempt to relocate:",
 
 	# shadow entries for efi boot manager
-	efilabel	=> "string:EFI Boot Manager Label::",
+	boot_efilabel	=> "string:EFI Boot Manager Label::",
 	#boot_rm_efilabel => "bool:Remove existing EFI Boot Manager Entries by Name:",
     };
 
@@ -404,7 +404,7 @@ sub CreateLines {
 
     # handle 'hidden magic' entries
     map {
-	s/^/##YaST - / if /^efilabel/;
+	s/^/##YaST - / if /^boot_efilabel/;
 	    #if /^boot_efilabel/ or /^boot_rm_efilabel/;
     } @{$elilo_conf};
 
