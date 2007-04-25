@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Apr 25 13:32:01 CEST 2007 - jplack@suse.de
+
+- do section type checking cleanly for ZIPL (#261551)
+
+-------------------------------------------------------------------
 Thu Apr 19 11:16:43 CEST 2007 - sf@suse.de
 
 - use underlying device instead of md RAID-device (Bug #265867) 

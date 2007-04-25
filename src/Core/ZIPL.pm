@@ -434,6 +434,10 @@ sub Info2Section {
 		};
 	    } # else ignore for unknown section type
         }
+        elsif (not exists ($so->{$type . "_" . $key})) {
+            # print $type . "_" . $key . " unknown!\n";
+            next; # only accept known section options CAVEAT!
+        }
 	elsif ($key eq "list") {
 	    my $i = 1;
 	    foreach (split(/\s*,\s*/, $value)) {
@@ -456,10 +460,6 @@ sub Info2Section {
         }
         elsif ($key eq "append") {
             $parameters = $parameters . $value;
-        }
-        elsif (not exists ($so->{$type . "_" . $key})) {
-            # print $type . "_" . $key . " unknown!\n";
-            next; # only accept known section options CAVEAT!
         }
         else {
             my ($stype) = split /:/, $so->{$type . "_" . $key};
