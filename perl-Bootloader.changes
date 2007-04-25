@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Apr 25 19:07:47 CEST 2007 - aosthof@suse.de
+
+- Fix for booting from extended partitions (#246161, #259050)
+
+-------------------------------------------------------------------
 Wed Apr 25 13:32:01 CEST 2007 - jplack@suse.de
 
 - do section type checking cleanly for ZIPL (#261551)
