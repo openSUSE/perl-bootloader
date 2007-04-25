@@ -104,6 +104,7 @@ sub GetMetaData() {
     # boot_custom	# data for grub.conf
     # boot_mbr
     # boot_root
+    # boot_boot
 
     # map
     # unhide
@@ -206,6 +207,7 @@ sub GetMetaData() {
 	boot_mbr => "bool:Boot from Master Boot Record:false",
 	boot_root => "bool:Boot from Root Partition:true",
 	boot_boot => "bool:Boot from Boot Partition:true",
+	boot_extended => "bool:Boot from Extended Partition:true",
 
 	# map
 	# unhide
@@ -473,6 +475,7 @@ sub UnixDev2GrubDev {
 	my @members = @{$self->MD2Members ($dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
 	$kernel_dev = $members[0] || $kernel_dev;
+	$self->l_debug ("GRUB::UnixDev2GrubDev: First device of MDRaid:: $original --> $kernel_dev");
     }
 
     # fetch the underlying device (sda1 --> sda)
@@ -480,6 +483,7 @@ sub UnixDev2GrubDev {
 	if ($dev_ref->[0] eq $kernel_dev) {
 	    $kernel_dev = $dev_ref->[1];
 	    $partition = $dev_ref->[2] - 1;
+	    $self->l_debug ("GRUB::UnixDev2GrubDev: dev_ref:  ".$dev_ref->[0]." ".$dev_ref->[1]." ".$dev_ref->[2]);
 	    last;
 	}
     }
@@ -794,6 +798,7 @@ sub ParseLines {
     # in glob_ref accordingly
     my ($boot_dev,) = $self->SplitDevPath ("/boot");
     my ($root_dev,) = $self->SplitDevPath ("/");
+    my $extended_dev = $self->GetExtendedPartition($boot_dev);
     # mbr_dev is the first bios device
     my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
 
@@ -811,6 +816,10 @@ sub ParseLines {
 	elsif ($dev eq $boot_dev) {
 	    $glob_ref->{"boot_boot"} = "true";
 	    $self->l_milestone ("GRUB::Parselines: detected boot_boot");
+	}
+	elsif ($dev eq $extended_dev) {
+	    $glob_ref->{"boot_extended"} = "true";
+	    $self->l_milestone ("GRUB::Parselines: detected boot_extended");
 	}
 	else {
 	    $glob_ref->{"boot_custom"} = $dev;
@@ -912,6 +921,14 @@ sub CreateGrubConfLines() {
 	if (defined $flag and $flag eq "true") {
 	    # add partition(/boot)
 	    ($dev,) = $self->SplitDevPath ("/boot");
+	    $s1_devices{$dev} = 1 if defined $dev;
+	}
+
+	# boot_extended   => "bool:Boot from Extended Partition:true",
+	$flag = delete $glob{"boot_extended"};
+	if (defined $flag and $flag eq "true") {
+	    # add partition(extended)
+	    $dev = $self->GetExtendedPartition($self->SplitDevPath("/boot"));
 	    $s1_devices{$dev} = 1 if defined $dev;
 	}
 
