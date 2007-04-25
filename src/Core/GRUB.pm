@@ -938,7 +938,7 @@ sub CreateGrubConfLines() {
 
     # keep the first bootloader setup command for every boot device and drop
     # all other
-    # FIXME: shouldn't we make comments from that? commment handling here at all?
+    # FIXME: shouldn't we make comments from that? comment handling here at all?
     my @grub_conf_items = grep {
 	my $keep = 1;
 	if ($_->{"command"} eq "install"|| $_->{"command"} eq "setup")
