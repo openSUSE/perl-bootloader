@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Apr 25 19:09:18 CEST 2007 - aosthof@suse.de
+
+- Fixed naming scheme of product name for boot menu entries, so
+  that Xen or Failsafe entries for instance get displayed correctly
+
+-------------------------------------------------------------------
 Wed Apr 25 19:07:47 CEST 2007 - aosthof@suse.de
 
 - Fix for booting from extended partitions (#246161, #259050)
