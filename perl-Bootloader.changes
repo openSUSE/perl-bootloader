@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Apr 25 19:11:25 CEST 2007 - aosthof@suse.de
+
+- Fixed usage of md raids for ia64 (#233255)
+- Reverted EFI Bootloader Label code in ELILO.pm to display gui
+  wigets in YaST as they used to be displayed (#242985)
+- Version bump to 0.4.15
+
+-------------------------------------------------------------------
 Wed Apr 25 19:09:18 CEST 2007 - aosthof@suse.de
 
 - Fixed naming scheme of product name for boot menu entries, so

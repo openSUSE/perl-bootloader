@@ -142,12 +142,13 @@ sub GetMetaData() {
     
     my $boot_partitions = join(":", @bootpart);
     
+    my @md_arrays = keys %{$loader->{"md_arrays"} || {}};
     my $root_devices = join(":",
         map {
             my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
             # FIXME: weed out non-root partitions
         } @partinfo,
-        keys %{$loader->{"md_arrays"} || {}}
+	\@md_arrays
     );
     
     # FIXME: is "arch" export necessary?
@@ -173,7 +174,7 @@ sub GetMetaData() {
 	relocatable	=> "bool:Allow Attempt to relocate:",
 
 	# shadow entries for efi boot manager
-	efilabel	=> "string:EFI Boot Manager Label::",
+	boot_efilabel	=> "string:EFI Boot Manager Label::",
 	#boot_rm_efilabel => "bool:Remove existing EFI Boot Manager Entries by Name:",
     };
 
@@ -404,7 +405,7 @@ sub CreateLines {
 
     # handle 'hidden magic' entries
     map {
-	s/^/##YaST - / if /^efilabel/; 
+	s/^/##YaST - / if /^boot_efilabel/;
 	    #if /^boot_efilabel/ or /^boot_rm_efilabel/;
     } @{$elilo_conf};
 
