@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Apr 26 13:41:38 CEST 2007 - aosthof@suse.de
+
+- Fixed failsafe parameters to boot in runlevel 3 instead of 5
+
+-------------------------------------------------------------------
 Wed Apr 25 19:11:25 CEST 2007 - aosthof@suse.de
 
 - Fixed usage of md raids for ia64 (#233255)
