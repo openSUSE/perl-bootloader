@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Apr 26 16:45:39 CEST 2007 - aosthof@suse.de
+
+- Reverted last fix for failsafe parameters
+
+-------------------------------------------------------------------
 Thu Apr 26 13:44:03 CEST 2007 - aosthof@suse.de
 
 - Fixed failsafe parameters to boot in runlevel 3 instead of 5
