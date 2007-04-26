@@ -4,6 +4,13 @@ Thu Apr 26 13:44:03 CEST 2007 - aosthof@suse.de
 - Fixed failsafe parameters to boot in runlevel 3 instead of 5
 
 -------------------------------------------------------------------
+Thu Apr 26 13:39:29 CEST 2007 - jplack@suse.de
+
+- implement FixSectionName funtion for ZIPL module according to the
+  zipl sources (#267866)
+- adjust inline interface documentation accordingly 
+
+-------------------------------------------------------------------
 Mon Apr 23 23:29:46 CEST 2007 - aosthof@suse.de
 
 - Version bump to 0.4.15
