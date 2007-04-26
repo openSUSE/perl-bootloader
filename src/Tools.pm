@@ -1098,13 +1098,13 @@ sub AddSection {
 	chomp ($arch);
 
 	if ($arch eq "i386") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off";
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off 3";
 	}
 	elsif ($arch eq "x86_64") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off";
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off 3";
 	}
 	elsif ($arch eq "ia64") {
-	    $new{"append"} = "ide=nodma nohalt noresume";
+	    $new{"append"} = "ide=nodma nohalt noresume 3";
 	}
 	else {
 	    print ("Architecture $arch does not support failsafe entries.\n");
