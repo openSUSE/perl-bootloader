@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu May 31 15:46:13 CEST 2007 - aosthof@suse.de
+
+- Fixed creation of failsafe sections in boot menu, this issue is
+  also related to bugs #272236, #272208 and #277405
+- Verion bump to 0.4.16
+
+-------------------------------------------------------------------
 Thu May 31 15:16:46 CEST 2007 - aosthof@suse.de
 
 - The last commit is also related to bugs #272236 and #272208
