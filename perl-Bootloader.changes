@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu May 31 15:51:41 CEST 2007 - aosthof@suse.de
+
+- Fixed creation of failsafe sections in boot menu, this issue is
+  related to bugs #272236, #272208 and #277405
+- Version bump to 0.4.16
+- Adapted Makefile to suit SLE10-SP2
+
+-------------------------------------------------------------------
 Thu May 31 14:51:27 CEST 2007 - aosthof@suse.de
 
 - Fixed label naming scheme for boot entries so that debug or
