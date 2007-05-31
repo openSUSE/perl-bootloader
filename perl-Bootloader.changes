@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May 31 14:51:27 CEST 2007 - aosthof@suse.de
+
+- Fixed label naming scheme for boot entries so that debug or
+  vanilla kernel entries for instance get named correctly (#277405)
+
+-------------------------------------------------------------------
 Thu Apr 26 16:45:39 CEST 2007 - aosthof@suse.de
 
 - Reverted last fix for failsafe parameters
