@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jun 13 10:51:09 CEST 2007 - aosthof@suse.de
+
+- Version bump to 0.4.15
+
+-------------------------------------------------------------------
 Wed Jun 13 10:43:51 CEST 2007 - aosthof@suse.de
 
 - Fixed creation of failsafe sections in boot menu (#272267)
