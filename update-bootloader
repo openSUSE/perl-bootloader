@@ -273,12 +273,14 @@ if (defined $oper{add}) {
     }
     # Naming scheme for all other kernels
     else {
-	if ($loader eq "grub") {
-	    $opt_name = GetProduct() if $add_product;
-	}
-	else {
-	    $opt_name = GetProduct() . " -- " . $opt_name if $add_product;
-	}
+	my $flavor = $opt_name;
+	$flavor =~ s/.*-(\w+)/\1/;
+	$flavor = ucfirst ($flavor);
+
+	my $version = $opt_name;
+	$version =~ s/-[^-]*$//;
+
+	$opt_name = $flavor . " -- " . GetProduct() . " - " . $version;
     }
 }
 

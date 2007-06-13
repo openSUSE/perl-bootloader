@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jun 13 10:41:04 CEST 2007 - aosthof@suse.de
+
+- Fixed label naming scheme for boot entries so that debug or
+  vanilla kernel entries for instance get named correctly (#272267)
+
+-------------------------------------------------------------------
 Thu Apr 26 13:43:25 CEST 2007 - aosthof@suse.de
 
 - Fixed failsafe parameters to boot in runlevel 3 instead of 5
