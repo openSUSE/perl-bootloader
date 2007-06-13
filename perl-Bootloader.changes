@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jun 13 10:35:25 CEST 2007 - aosthof@suse.de
+
+- Minor corrections on naming scheme of boot entries
+
+-------------------------------------------------------------------
 Thu May 31 15:46:13 CEST 2007 - aosthof@suse.de
 
 - Fixed creation of failsafe sections in boot menu, this issue is
