@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Jun 14 21:12:11 CEST 2007 - aosthof@suse.de
+
+- Fixed inconsistent zipl.conf and ZIPL.pm respectively (#284308)
+
+-------------------------------------------------------------------
 Thu Jun 14 11:37:26 CEST 2007 - aosthof@suse.de
 
 - detect wether we have an entry with non existing initrd (#276923)

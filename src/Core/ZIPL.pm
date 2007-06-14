@@ -36,7 +36,7 @@ C<< $status = Bootloader::Core::ZIPL->UpdateBootloader ($avoid_init); >>
 
 C<< $status = Bootloader::Core::ZIPL->InitializeBootloader (); >>
 
-C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info); >>
+C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info, \@sect_names); >>
 
 C<< $sectin_info_ref = Bootloader::Core::ZIPL->Section2Info (\@section_lines); >>
 
@@ -237,11 +237,75 @@ sub FixSectionName {
     }
 
     # replace unwanted characters as defined above to underscore or delete
-    # them, no length limit.
+    # them, no length limit. fix name_ref if needed
     $name =~ s/[^$allowed_chars]/$replacement_char/g;
 
     # and make the section name unique
-    $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
+    #$name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
+    $name = $self->CoreFixSectionName($name, $names_ref, $orig_name);
+
+    # do it again
+    $name =~ s/[^$allowed_chars]/$replacement_char/g;
+
+    return $name;
+}
+
+=item
+
+C<< $label = Bootloader::Core::ZIPL->CoreFixSectionName ($name, \@existing, $orig_name); >>
+
+FIXME
+
+Oh, my dear, this is an ugly hack. We copied a fixed version of the below
+function to here to avoid the need of fixing the common code in this stage of
+the product cycle. FIX THIS ASAP AFTER SP1 RELEASE!
+
+Update the section name so that it does not break anything (is in compliance
+with the bootloader and is unique). As arguments takes suggested section name
+and list of existing sections, returns updated section name and updates the
+list of section names as a side effect. Optional parameter orig_name is
+intended for internal use of the loader specific modules
+
+=cut
+
+# string CoreFixSectionName (string name, list<string> existing, optional orig_name)
+sub CoreFixSectionName {
+    my $self = shift;
+    my $name = shift;
+    my $names_ref = shift;
+    my $orig_name = shift || $name;
+
+    my $index = 0;	# 0 means not-found, 1 is_unique, else index to be
+    			# appended
+    my $name_ix = -1;
+
+    # make the section name unique, if you find a duplicate then make it
+    # distinguishable by appending an underscore followed by a number
+    for (my $i = 0; $i <= $#$names_ref; $i++) {
+	$_ = $names_ref->[$i];
+	$name_ix = $i
+	    if $_ eq $orig_name; # remember index of original name
+	# Does the name start with $name? -> cut off and calc $index
+	if (s/^\Q$name\E//) {
+	    if ($_ eq '') {
+		# count one up for every identical entry, should be
+		# maximum one but who knows ...
+		$index++;
+		next;
+	    }
+	    s/^_//;	# cut off an optional leading underscore
+	    if (/^\d*$/) {
+		my $new_index = $_ + 1;	# interprete the remainder string as
+	    				# integer index and try next number
+		# finally take the maximum as index to append to $name
+		$index = $new_index if $index < $new_index;
+	    }
+	}
+    }
+
+    # update $name and list of section names if neccessary
+    $name .= "_" . $index if $index>1;
+    $names_ref->[$name_ix] = $name if $name_ix>=0;
 
     return $name;
 }
@@ -380,7 +444,7 @@ sub InitializeBootloader {
 }
 
 =item
-C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info); >>
+C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info, \@sect_names); >>
 
 Takes the info about the section and uses it to construct the list of lines.
 The info about the section also contains the original lines.
@@ -388,11 +452,12 @@ As parameter, takes the section info (reference to a hash), returns
 the lines (a list of hashes).
 =cut
 
-# list<map<string,any>> Info2Section (map<string,string> info)
+# list<map<string,any>> Info2Section (map<string,string> info), list<string> sect_names)
 sub Info2Section {
     my $self = shift;
     my %sectinfo = ( %{+shift} ); # make a copy of section info
     my $sect_names_ref = shift;
+
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
@@ -401,7 +466,7 @@ sub Info2Section {
     # print "info2section, section " . $sectinfo{"name"} . ", type " . $type . ".\n";
 
     # allow to keep the section unchanged
-    if (! ($sectinfo{"__modified"} || 0))
+    if ((($sectinfo{"__modified"} || 0) == 0) and ($type ne "menu"))
     {
 	return \@lines;
     }
@@ -481,11 +546,17 @@ sub Info2Section {
 	elsif ($key eq "list") {
 	    my $i = 1;
 	    foreach (split(/\s*,\s*/, $value)) {
-		push @lines, {
-		    "key" => "$i",
-		    "value" => "$_",
-		};
-		$i++;
+		# check for valid section references
+		foreach my $section (@{$sect_names_ref}) {
+		    if ($_ eq $section) {
+			push @lines, {
+			    "key" => "$i",
+			    "value" => "$_",
+			};
+			$i++;
+			last;
+		    }
+		}
 	    }
         }
 	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
