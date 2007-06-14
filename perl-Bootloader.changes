@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Jun 14 11:37:26 CEST 2007 - aosthof@suse.de
+
+- detect wether we have an entry with non existing initrd (#276923)
+
+-------------------------------------------------------------------
 Thu Apr 26 16:45:39 CEST 2007 - aosthof@suse.de
 
 - Reverted last fix for failsafe parameters
