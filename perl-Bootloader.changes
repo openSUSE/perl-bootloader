@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jun 18 15:28:32 CEST 2007 - aosthof@suse.de
+
+- Fixed label naming scheme for boot entries so that debug or
+  vanilla kernel entries for instance get named correctly (#277405)
+
+-------------------------------------------------------------------
 Thu Jun 14 21:12:11 CEST 2007 - aosthof@suse.de
 
 - Fixed inconsistent zipl.conf and ZIPL.pm respectively (#284308)
