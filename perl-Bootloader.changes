@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jun 18 15:31:27 CEST 2007 - aosthof@suse.de
+
+- Fixed creation of failsafe sections in boot menu (#277405)
+
+-------------------------------------------------------------------
 Mon Jun 18 15:28:32 CEST 2007 - aosthof@suse.de
 
 - Fixed label naming scheme for boot entries so that debug or
