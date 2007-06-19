@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Jun 19 10:33:37 CEST 2007 - aosthof@suse.de
+
+- Fixed a typo concerning the naming scheme of labels (#277405)
+
+-------------------------------------------------------------------
 Mon Jun 18 15:31:27 CEST 2007 - aosthof@suse.de
 
 - Fixed creation of failsafe sections in boot menu (#277405)

@@ -296,7 +296,7 @@ if (defined $oper{add}) {
 	my $version = $opt_name;
 	$version =~ s/-[^-]*$//;
 
-	$opt_name = $flavor . " -- " . GetProduct() . " - " . $opt_name;
+	$opt_name = $flavor . " -- " . GetProduct() . " - " . $version;
     }
 }
 
