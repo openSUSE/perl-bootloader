@@ -16,7 +16,6 @@ Release:        0
 Requires:       perl >= %{perl_version}
 Requires:       perl-gettext
 Requires:       mdadm e2fsprogs
-Requires:       limal-bootloader >= 1.2.2
 Autoreqprov:    on
 Group:          System/Boot
 License:        GNU General Public License (GPL)
@@ -36,6 +35,7 @@ Authors:
 --------
     Jiri Srain <jsrain@suse.cz>
     Joachim Plack <jplack@suse.de>
+    Alexander Osthof <aosthof@suse.de>
 
 %prep
 %setup -q

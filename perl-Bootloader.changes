@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Jul  2 14:29:10 CEST 2007 - aosthof@suse.de
+
+- Removed require for limal-bootloader in .spec due to drop of
+  limal-bootloader package in openSUSE 10.3
+- Added my name to the list of authors
+
+-------------------------------------------------------------------
 Wed Jun 13 10:35:25 CEST 2007 - aosthof@suse.de
 
 - Minor corrections on naming scheme of boot entries
