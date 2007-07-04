@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jul  4 18:05:56 CEST 2007 - aosthof@suse.de
+
+- Fixed resolution of kernel and initrd symlinks in Tools.pm
+  (#276923)
+
+-------------------------------------------------------------------
 Wed Jul  4 18:04:30 CEST 2007 - aosthof@suse.de
 
 - Implemented a special handling to make sure that all image

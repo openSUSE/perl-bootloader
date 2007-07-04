@@ -798,6 +798,7 @@ sub AddSection {
 		if (($v =~ s#\/.*$##) && $v ne '') {
 		    my $unix_dev = $lib_ref->GrubDev2UnixDev($v);
 
+		    $valid_part = 1;
 		    unless ($unix_dev eq $root_mp || $unix_dev eq $boot_mp) {
 			$valid_part = 0;
 		    }
@@ -813,13 +814,45 @@ sub AddSection {
 
 	    if (($k eq "__lines") && $valid_part) {
 		my $index = 0;
-		foreach my $elem (@$v) {
-		    while ((my $k, my $v) = each (%$elem)) {
-			if (($v =~ m/vmlinu[xz]/ || index ($v, "initrd") >= 0)
-				&& ($link_target = readlink ($v))) {
-			    $v = (split (/ /, $v))[0];
+
+		# Print the whole __lines structure
+		# Comment out this area for debug purposes
+		#foreach my $elem (@$v) {
+		#    print ("__lines contains: $elem\n");
+		#    while ((my $k, my $v) = each (%$elem)) {
+		#	print ("key = $k,\tvalue = $v\n");
+		#    }
+		#    print ("\n");
+		#}
+
+		foreach my $lineref (@$v) {
+		    # Search in lines cache for possible kernel symlinks
+		    # and resolve them if found
+		    if ($lineref->{"key"} eq "kernel") {
+			my $kernel_symlink = (split (/ /, $lineref->{"value"}))[0];
+			if ($link_target = readlink ($kernel_symlink)) {
 			    chomp ($link_target);
-			    $s->{"__lines"}[$index]->{$k} = "/boot/" . $link_target;
+
+			    # Create the new kernel line with long (resolved)
+			    # kernel filename
+			    my $kernel_line = $s->{"__lines"}[$index]->{"value"};
+			    $kernel_line =~ s/(^\S*)vmlinu[xz](\s*)/\1$link_target\2/;
+			    $s->{"__lines"}[$index]->{"value"} = $kernel_line;
+			}
+		    }
+
+		    # Search in lines cache for possible kernel symlinks
+		    # and resolve them if found
+		    if ($lineref->{"key"} eq "initrd") {
+			my $initrd_symlink = (split (/ /, $lineref->{"value"}))[0];
+			if ($link_target = readlink ($initrd_symlink)) {
+			    chomp ($link_target);
+
+			    # Create the new initrd line with long (resolved)
+			    # initrd filename
+			    my $initrd_line = $s->{"__lines"}[$index]->{"value"};
+			    $initrd_line =~ s/(^\S*)initrd(\s*)/\1$link_target\2/;
+			    $s->{"__lines"}[$index]->{"value"} = $initrd_line;
 			}
 		    }
 		    $index += 1;
