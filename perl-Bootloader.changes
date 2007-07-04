@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jul  4 17:54:00 CEST 2007 - aosthof@suse.de
+
+- Fixed function FixSectionName() in ZIPL.pm to fix section names
+  on s390 properly (also related to #284308)
+
+-------------------------------------------------------------------
 Wed Jul  4 17:40:30 CEST 2007 - aosthof@suse.de
 
 - Removed an "o" suffix from a perl s/foo/bar/ expression that it

@@ -36,7 +36,7 @@ C<< $status = Bootloader::Core::ZIPL->UpdateBootloader ($avoid_init); >>
 
 C<< $status = Bootloader::Core::ZIPL->InitializeBootloader (); >>
 
-C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info); >>
+C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info, \@sect_names); >>
 
 C<< $sectin_info_ref = Bootloader::Core::ZIPL->Section2Info (\@section_lines); >>
 
@@ -237,13 +237,53 @@ sub FixSectionName {
     }
 
     # replace unwanted characters as defined above to underscore or delete
-    # them, no length limit.
+    # them, no length limit. fix name_ref if needed
     $name =~ s/[^$allowed_chars]/$replacement_char/g;
 
-    # and make the section name unique
-    $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
+    my $new_name = undef;
+    my $new_name_ix = 2;
+    my $new_name_arr_ix = undef;
 
-    return $name;
+    for (my $i = 0; $i <= $#$names_ref; $i++) {
+	$_ = $names_ref->[$i];
+	if ($_ eq $orig_name) {
+	    $names_ref->[$i] = $name;
+	    $new_name = $name;
+	    $new_name_arr_ix = $i;
+	}
+    }
+
+    LOOP:
+    my $count = 0;
+    for (my $i = 0; $i <= $#$names_ref; $i++) {
+	$_ = $names_ref->[$i];
+	if ($_ eq $new_name) {
+	    $count++;
+	}
+    }
+
+    if ($count >= 2) {
+	for (my $i = 0; $i <= $#$names_ref; $i++) {
+	    $_ = $names_ref->[$i];
+	    if ($_ eq $new_name) {
+		$new_name =~ s/_\d+$//;
+		$new_name .= "_" . $new_name_ix;
+		$names_ref->[$new_name_arr_ix] = $new_name;
+		$new_name_ix++;
+	    }
+	}
+	goto LOOP;
+    }
+
+    #$orig_name = $name;
+
+    # and make the section name unique
+    #$name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
+
+    # do it again
+    #$name =~ s/[^$allowed_chars]/$replacement_char/g;
+
+    return $new_name;
 }
 
 
@@ -380,7 +420,7 @@ sub InitializeBootloader {
 }
 
 =item
-C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info); >>
+C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info, \@sect_names); >>
 
 Takes the info about the section and uses it to construct the list of lines.
 The info about the section also contains the original lines.
@@ -388,11 +428,12 @@ As parameter, takes the section info (reference to a hash), returns
 the lines (a list of hashes).
 =cut
 
-# list<map<string,any>> Info2Section (map<string,string> info)
+# list<map<string,any>> Info2Section (map<string,string> info), list<string> sect_names)
 sub Info2Section {
     my $self = shift;
     my %sectinfo = ( %{+shift} ); # make a copy of section info
     my $sect_names_ref = shift;
+
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
@@ -401,7 +442,7 @@ sub Info2Section {
     # print "info2section, section " . $sectinfo{"name"} . ", type " . $type . ".\n";
 
     # allow to keep the section unchanged
-    if (! ($sectinfo{"__modified"} || 0))
+    if ((($sectinfo{"__modified"} || 0) == 0) and ($type ne "menu"))
     {
 	return \@lines;
     }
@@ -481,11 +522,17 @@ sub Info2Section {
 	elsif ($key eq "list") {
 	    my $i = 1;
 	    foreach (split(/\s*,\s*/, $value)) {
-		push @lines, {
-		    "key" => "$i",
-		    "value" => "$_",
-		};
-		$i++;
+		# check for valid section references
+		foreach my $section (@{$sect_names_ref}) {
+		    if ($_ eq $section) {
+			push @lines, {
+			    "key" => "$i",
+			    "value" => "$_",
+			};
+			$i++;
+			last;
+		    }
+		}
 	    }
         }
 	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
