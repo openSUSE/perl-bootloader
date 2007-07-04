@@ -447,8 +447,8 @@ sub Info2Section {
 	return \@lines;
     }
     
-    $sectinfo{"name"} = $self->FixSectionName ($sectinfo{"name"},
-					       $sect_names_ref, $type);
+#    $sectinfo{"name"} = $self->FixSectionName ($sectinfo{"name"},
+#                                             $sect_names_ref, $type);
     @lines = map {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
@@ -791,6 +791,72 @@ sub PrepareMenuFileLines {
     my $separ = shift;
     my @sect_names = map { $_->{"name"} || (); } @sectinfo;
     
+    #
+    # A special handling like the following is needed to make sure
+    # that all image sections are referenced at least in the base menu
+    # name "menu":
+    #
+    # If the global default section is
+    #   a) a menu section
+    #   b) named "menu"
+    # then
+    #   check all image sections to be in its "list" member
+    #   if not append.
+    #
+
+    foreach my $sect (@sectinfo) {
+       my $type = $sect->{"type"} || "";
+       $sect->{"name"} = $self->FixSectionName ($sect->{"name"},
+                                                \@sect_names, $type);
+    }
+
+    my $menu_list = '';
+
+    # Check all image sections to be in the "list" member of the base menu and
+    # append them if they're not already in it.
+    if (($globinfo{"default"} eq "menu")) {
+       foreach my $sect (@sectinfo) {
+           if (($sect->{"type"} eq "menu") and ($sect->{"name"} eq "menu")) {
+               $menu_list = $sect->{"list"};
+           }
+       }
+    }
+
+    # Transform $menu_list into an array to be able to bettter compare it with
+    # the @sect_names array
+    my @menu_list_array = split (/, /, $menu_list);
+    my @sect_names_to_append = ();
+
+    # Search for sections in @sect_names array which are not yet in "list" of
+    # menu section and which are not a menu section theirselves. If found,
+    # append them to the "list" of the menu section.
+    foreach my $sect_name (@sect_names) {
+       my $found = 0;
+
+       foreach my $entry (@menu_list_array) {
+           if ($entry eq $sect_name) {
+               $found = 1;
+           }
+       }
+
+       if (!$found and $sect_name ne "menu") {
+           push @sect_names_to_append, $sect_name;
+       }
+    }
+    if (scalar @sect_names_to_append > 0) {
+       unshift @menu_list_array, @sect_names_to_append;
+       $menu_list = join (', ', @menu_list_array);
+    }
+
+    # Write back the new "list" to menu section
+    if ($globinfo{"default"} eq "menu") {
+       foreach my $sect (@sectinfo) {
+           if (($sect->{"type"} eq "menu") and ($sect->{"name"} eq "menu")) {
+               $sect->{"list"} = $menu_list;
+           }
+       }
+    }
+
     my @sects = map {
 	local $_ = $_;
 	my $sect_ref = $self->Info2Section ($_, \@sect_names);
