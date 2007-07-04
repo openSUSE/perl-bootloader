@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul  2 14:32:35 CEST 2007 - aosthof@suse.de
+
+- Added my name to the list of authors
+
+-------------------------------------------------------------------
 Thu May 31 15:51:41 CEST 2007 - aosthof@suse.de
 
 - Fixed creation of failsafe sections in boot menu, this issue is
