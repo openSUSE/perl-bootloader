@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jul  4 17:32:24 CEST 2007 - aosthof@suse.de
+
+- Corrected naming scheme for boot entry labels to display long
+  ones in case of GRUB and short ones for all other loaders
+  (#277405)
+
+-------------------------------------------------------------------
 Wed Jul  4 17:14:18 CEST 2007 - aosthof@suse.de
 
 - detect wether we have an entry with non existing initrd (#276923)
