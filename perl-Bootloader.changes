@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jul  4 18:43:38 CEST 2007 - aosthof@suse.de
+
+- Corrected whitespaces in ZIPL.pm to be compatible to SLES10-SP1
+
+-------------------------------------------------------------------
 Wed Jul  4 18:08:24 CEST 2007 - aosthof@suse.de
 
 - Version bump to 0.4.17
