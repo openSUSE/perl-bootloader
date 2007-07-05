@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Jul  5 10:02:22 CEST 2007 - aosthof@suse.de
+
+- Fixed failsafe parameters to boot in runlevel 3 instead of 5
+
+-------------------------------------------------------------------
 Wed Jul  4 18:43:38 CEST 2007 - aosthof@suse.de
 
 - Corrected whitespaces in ZIPL.pm to be compatible to SLES10-SP1
