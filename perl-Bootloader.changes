@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jul  6 10:26:42 CEST 2007 - aosthof@suse.de
+
+- Removed an "o" suffix from a perl s/foo/bar/ expression that it
+  gets compiled every time, not only once. This enables section
+  names to get fixed properly. (related to ##284308)
+
+-------------------------------------------------------------------
 Fri Jul  6 10:25:06 CEST 2007 - aosthof@suse.de
 
 - Removed a line in update-bootloader which replaced spaces by
