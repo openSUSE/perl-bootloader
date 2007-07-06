@@ -322,15 +322,26 @@ if (defined $oper{add}) {
 	    pod2usage("There are already sections with image '$opt_image'");
 	}
     } else {
-	# FIXME: Subject of change (depending on how the weather is)
-	# only add default if "appropriate"
-	# meaning now flavor of current default matches new one
-	#my $flavor = GetDefaultImage();
-	#$flavor =~ s/^.*-//;
-	#
-	#if ($opt_image =~ m/.*-${flavor}$/) {
-	#    push @params, default => $opt_default;
-    	#}
+	my $default_image = GetDefaultImage();
+
+	# Check if default image is a symlink. If this is the case, let the new
+	# kernel be the default one.
+	if (-l $default_image) {
+	    $default_image = readlink ($default_image);
+	    push @params, default => $opt_default;
+	}
+
+	# Else, find out the flavor of the default kernel. If it is the same
+	# flavor as the one of the new kernel, let the new kernel be the
+	# default one.
+	else {
+	    $default_image =~ s/^.*-//;
+
+	    if ($opt_image =~ m/.*-${default_image}$/) {
+		push @params, default => $opt_default;
+	    }
+	}
+
 	push @params, xen     => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd  => $opt_initrd if $opt_initrd;
 
