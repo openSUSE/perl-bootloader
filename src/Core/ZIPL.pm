@@ -16,11 +16,19 @@ This package is the ZIPL library of the bootloader configuration
 
 use Bootloader::Core::ZIPL;
 
+
+
 C<< $obj_ref = Bootloader::Core::ZIPL->new (); >>
+
+C<< $settings_ref = Bootloader::Core::ZIPL->GetSettings (); >>
 
 C<< $files_ref = Bootloader::Core::ZIPL->ListFiles (); >>
 
+C<< $status = Bootloader::Core::ZIPL->FixSectionName ($name, \$names_ref, $type); >>
+
 C<< $status = Bootloader::Core::ZIPL->ParseLines (\%files); >>
+
+C<< $sections_ref Bootloader::Core->SplitLinesToSections (\@lines, \@section_starts); >>
 
 C<< $files_ref = Bootloader::Core::ZIPL->CreateLines (); >>
 
@@ -28,19 +36,20 @@ C<< $status = Bootloader::Core::ZIPL->UpdateBootloader ($avoid_init); >>
 
 C<< $status = Bootloader::Core::ZIPL->InitializeBootloader (); >>
 
-C<< $sectin_info_ref = Bootloader::Core::ZIPL->Section2Info (\@section_lines); >>
-
 C<< $lines_ref = Bootloader::Core::ZIPL->Info2Section (\%section_info); >>
+
+C<< $sectin_info_ref = Bootloader::Core::ZIPL->Section2Info (\@section_lines); >>
 
 C<< $glob_info = $Bootloader::Core::ZIPL->Global2Info (\@glob_lines, \@section_names); >>
 
-C<< $lines_ref = Bootloader::Core::ZIPL->Info2Global (\%section_info, \@section_names); >>
+C<< $lines_ref = Bootloader::Core::ZIPL->Info2Global (\%section_info, \@section_names, \@sections); >>
 
 C<< Bootloader::Core::ZIPL->MangleSections (\@sections, \%global); >>
 
 C<< ($lines_ref, $com_bef) Bootloader::Core::ZIPL->ProcessSingleMenuFileLine ($lines, $com_bef, $separator); >>
 
 C<< $line = Bootloader::Core::ZIPL->CreateSingleMenuFileLine ($key, $value, $separator); >>
+
 
 =head1 DESCRIPTION
 
@@ -203,6 +212,41 @@ sub ListFiles {
     return [ "/etc/zipl.conf" ];
 }
 
+
+=item
+C<< $status = Bootloader::Core::ZIPL->FixSectionName ($name, \$names_ref, $type); >>
+
+=cut
+
+sub FixSectionName {
+    my $self = shift;
+    my $name = shift;
+    my $names_ref = shift;
+    my $type = shift;
+
+    my $orig_name = $name;
+    my $allowed_chars = "[:alnum:]";
+    my $replacement_char = '';
+
+    # Within zipl.conf: (from src/scan.c in zipl sources)
+    #   - menu section name may only contain alphanumeric characters
+    #   - other section name may contain punctuation characters in addition
+    if ($type ne "menu") {
+	$allowed_chars .= "[:punct:]";
+	$replacement_char = '_';
+    }
+
+    # replace unwanted characters as defined above to underscore or delete
+    # them, no length limit.
+    $name =~ s/[^$allowed_chars]/$replacement_char/g;
+
+    # and make the section name unique
+    $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
+
+    return $name;
+}
+
+
 =item
 C<< $status = Bootloader::Core::ZIPL->ParseLines (\%files); >>
 
@@ -362,8 +406,8 @@ sub Info2Section {
 	return \@lines;
     }
     
-    $sectinfo{"name"} = $self->FixSectionName ($sectinfo{"name"}, $sect_names_ref);
-
+    $sectinfo{"name"} = $self->FixSectionName ($sectinfo{"name"},
+					       $sect_names_ref, $type);
     @lines = map {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};

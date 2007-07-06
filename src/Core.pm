@@ -64,7 +64,7 @@ C<< $line_ref = Bootloader::Core->UpdateSectionNameLine ($name, \%line, $origina
 
 C<< $sectin_info_ref = Bootloader::Core->Section2Info (\@section_lines); >>
 
-C<< $label = Bootloader::Core->FixSectionName ($name, \@existing); >>
+C<< $label = Bootloader::Core->FixSectionName ($name, \@existing, $orig_name); >>
 
 C<< $lines_ref = Bootloader::Core->Info2Section (\%section_info, @section_names); >>
 
@@ -1065,7 +1065,7 @@ sub Section2Info {
 
 =item
 
-C<< $label = Bootloader::Core->FixSectionName ($name, \@existing); >>
+C<< $label = Bootloader::Core->FixSectionName ($name, \@existing, $orig_name); >>
 
 Update the section name so that it does not break anything (is in compliance
 with the bootloader and is unique). As arguments takes suggested section name

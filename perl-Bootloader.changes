@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jul  6 10:29:55 CEST 2007 - aosthof@suse.de
+
+- implement FixSectionName funtion for ZIPL module according to the
+  zipl sources (#267866)
+- adjust inline interface documentation accordingly
+
+-------------------------------------------------------------------
 Fri Jul  6 10:26:42 CEST 2007 - aosthof@suse.de
 
 - Removed an "o" suffix from a perl s/foo/bar/ expression that it
