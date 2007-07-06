@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jul  6 10:25:06 CEST 2007 - aosthof@suse.de
+
+- Removed a line in update-bootloader which replaced spaces by
+  underscores, because this functionality is done by
+  FixSectionName() in the according bootloader modules (#284308)
+
+-------------------------------------------------------------------
 Fri Jul  6 10:23:05 CEST 2007 - aosthof@suse.de
 
 - Corrected naming scheme for boot entry labels to display long
