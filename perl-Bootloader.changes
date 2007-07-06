@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jul  6 10:20:03 CEST 2007 - aosthof@suse.de
+
+- detect wether we have an entry with non existing initrd (#276923)
+
+-------------------------------------------------------------------
 Mon Jul  2 14:29:10 CEST 2007 - aosthof@suse.de
 
 - Removed require for limal-bootloader in .spec due to drop of
