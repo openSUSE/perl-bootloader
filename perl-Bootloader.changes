@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jul  6 10:31:45 CEST 2007 - aosthof@suse.de
+
+- Implemented a special handling to make sure that all image
+  sections are referenced at least in the base menu (#266605)
+
+-------------------------------------------------------------------
 Fri Jul  6 10:30:42 CEST 2007 - aosthof@suse.de
 
 - Fixed function FixSectionName() in ZIPL.pm to fix section names
