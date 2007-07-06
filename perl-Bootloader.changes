@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jul  6 10:30:42 CEST 2007 - aosthof@suse.de
+
+- Fixed function FixSectionName() in ZIPL.pm to fix section names
+  on s390 properly (also related to #284308)
+
+-------------------------------------------------------------------
 Fri Jul  6 10:29:55 CEST 2007 - aosthof@suse.de
 
 - implement FixSectionName funtion for ZIPL module according to the
