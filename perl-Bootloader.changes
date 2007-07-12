@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jul 12 17:35:52 CEST 2007 - aosthof@suse.de
+
+- Generalized last fix to not touch any unknown or user-specified
+  sections (#272625)
+
+-------------------------------------------------------------------
 Thu Jul 12 15:13:44 CEST 2007 - aosthof@suse.de
 
 - Implemented a mechanism to not throw out user defined grub setup
