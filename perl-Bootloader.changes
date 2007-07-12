@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jul 12 16:28:32 CEST 2007 - aosthof@suse.de
+
+- Implemented a mechanism to not throw out user defined grub setup
+  sections in menu.lst (#272625)
+
+-------------------------------------------------------------------
 Thu Jul  5 10:02:22 CEST 2007 - aosthof@suse.de
 
 - Fixed failsafe parameters to boot in runlevel 3 instead of 5
