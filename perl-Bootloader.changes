@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jul 20 17:31:24 CEST 2007 - aosthof@suse.de
+
+- Ported fix for clean section type checking for ZIPL (#261551)
+
+-------------------------------------------------------------------
 Thu Jul 12 17:39:43 CEST 2007 - aosthof@suse.de
 
 - Generalized last fix to not touch any unknown or user-specified
