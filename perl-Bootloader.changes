@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 23 17:15:10 CEST 2007 - aosthof@suse.de
+
+- Fixed boot entries of self compiled kernels (#265564)
+
+-------------------------------------------------------------------
 Thu Jul 12 17:35:52 CEST 2007 - aosthof@suse.de
 
 - Generalized last fix to not touch any unknown or user-specified
