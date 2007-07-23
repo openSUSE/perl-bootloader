@@ -262,9 +262,9 @@ if (defined $oper{add}) {
     }
 
     # Naming scheme for default, smp and bigsmp kernels
-    if (($opt_name =~ /.*-default$/) ||
-	($opt_name =~ /.*-smp$/) ||
-	($opt_name =~ /.*-bigsmp$/)) {
+    if (($opt_name =~ /-default/) ||
+	($opt_name =~ /-smp/) ||
+	($opt_name =~ /-bigsmp/)) {
 
 	if ($loader eq "grub") {
 	    $opt_name =~ s/-[^-]*$//;

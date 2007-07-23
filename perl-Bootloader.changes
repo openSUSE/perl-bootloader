@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 23 17:24:00 CEST 2007 - aosthof@suse.de
+
+- Fixed boot entries of self compiled kernels (#265564)
+
+-------------------------------------------------------------------
 Fri Jul 20 17:31:24 CEST 2007 - aosthof@suse.de
 
 - Ported fix for clean section type checking for ZIPL (#261551)
