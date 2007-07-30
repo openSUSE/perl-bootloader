@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:49:03 CEST 2007 - aosthof@suse.de
+
+- Version bump to 0.4.18
+
+-------------------------------------------------------------------
 Mon Jul 30 11:13:17 CEST 2007 - aosthof@suse.de
 
 - Avoid duplicate entries in elilo.conf (#294717)
