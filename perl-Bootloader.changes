@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:37:53 CEST 2007 - aosthof@suse.de
+
+- Implemented a mechanism to not throw out any user defined
+  sections in menu.lst (#272625)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:26:01 CEST 2007 - aosthof@suse.de
 
 - Fixed default value handling in update-bootloader. Check if

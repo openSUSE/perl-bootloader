@@ -1346,6 +1346,7 @@ sub EvalSectionType {
     my $kernel_xen = 0;
     my $chainloader = 0;
     my $configfile = 0;
+    my $image = 0;
 
     foreach my $line_ref (@lines) {
 	if ($line_ref->{"key"} eq "module") {
@@ -1360,6 +1361,9 @@ sub EvalSectionType {
 	elsif ($line_ref->{"key"} eq "configfile") {
 	    $configfile = 1;
 	}
+        elsif ($line_ref->{"key"} eq "kernel" or $line_ref->{"key"} eq "image") {
+            $image = 1;
+        }
     }
     if ($configfile) {
 	return "menu";
@@ -1370,9 +1374,12 @@ sub EvalSectionType {
     elsif ($chainloader and $modules == 0 and $kernel_xen == 0) {
 	return "other";
     }
+    elsif ($image) {
+        return "image";
+    }
 
-    # return "image" type as a fallback even on errors
-    return "image";
+    # return "custom" type as a fallback (for unknown or custom section types)
+    return "custom";
 }
 
 =item
