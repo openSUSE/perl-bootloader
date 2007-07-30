@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:23:19 CEST 2007 - aosthof@suse.de
+
+- Removed an "o" suffix from a perl s/foo/bar/ expression that it
+  gets compiled every time, not only once. This enables section
+  names to get fixed properly. (related to #284308)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:19:13 CEST 2007 - aosthof@suse.de
 
 - detect wether we have an entry with non existing initrd (#276923)
