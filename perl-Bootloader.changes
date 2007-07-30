@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:26:01 CEST 2007 - aosthof@suse.de
+
+- Fixed default value handling in update-bootloader. Check if
+  default image is a symlink. If this is the case, let the new
+  kernel be the default one. Else, if the flavor is the same as
+  the one of the new kernel, let the new kernel become the default
+  one. (#276923)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:24:49 CEST 2007 - aosthof@suse.de
 
 - Fixed resolution of kernel and initrd symlinks in Tools.pm
