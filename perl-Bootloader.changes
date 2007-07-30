@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:46:18 CEST 2007 - aosthof@suse.de
+
+- Avoid duplicate entries in lilolike bootloaders (#294717)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:40:08 CEST 2007 - aosthof@suse.de
 
 - Added yast2-bootloader-style comment to sections created by

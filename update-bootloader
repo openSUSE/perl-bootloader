@@ -119,7 +119,7 @@ sub GetProduct {
 
     # Substitude whitespaces with an underscore
     if ($loader ne "grub") {
-	$namever =~ s/\s/_/;
+	$namever =~ s/\s/_/g;
     }
     return "$namever" if $namever ne '' and $namever !~ /\n/;
 
