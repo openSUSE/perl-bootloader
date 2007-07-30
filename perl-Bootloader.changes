@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:38:54 CEST 2007 - aosthof@suse.de
+
+- Fixed boot entries of self compiled kernels (#265564)
+
+------------------------------------------------------------------
 Mon Jul 30 13:37:53 CEST 2007 - aosthof@suse.de
 
 - Implemented a mechanism to not throw out any user defined
