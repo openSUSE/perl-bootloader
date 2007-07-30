@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul 30 14:28:34 CEST 2007 - aosthof@suse.de
+
+- Use small letters in YaST-style comments due to case sensitive
+  parser (#283709)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:49:03 CEST 2007 - aosthof@suse.de
 
 - Version bump to 0.4.18
