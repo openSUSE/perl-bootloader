@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 30 11:13:17 CEST 2007 - aosthof@suse.de
+
+- Avoid duplicate entries in elilo.conf (#294717)
+
+-------------------------------------------------------------------
 Mon Jul 30 10:18:05 CEST 2007 - aosthof@suse.de
 
 - Added yast2-bootloader-style comment to sections created by
