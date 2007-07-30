@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul 30 13:40:08 CEST 2007 - aosthof@suse.de
+
+- Added yast2-bootloader-style comment to sections created by
+  perl-Bootloader (bug #283709 and fate #302407)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:38:54 CEST 2007 - aosthof@suse.de
 
 - Fixed boot entries of self compiled kernels (#265564)
