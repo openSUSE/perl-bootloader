@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul 30 14:26:06 CEST 2007 - aosthof@suse.de
+
+- Version bump to 0.4.18
+
+-------------------------------------------------------------------
 Mon Jul 30 14:23:49 CEST 2007 - aosthof@suse.de
 
 - Use small letters in YaST-style comments due to case sensitive
