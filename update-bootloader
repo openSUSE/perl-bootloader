@@ -330,7 +330,7 @@ if (defined $oper{add}) {
 
 	if ($opt_xen) { 
 	    # Add original_name to params to be able to create comment line
-	    $original_name = "Xen-" . $version_and_flavor;
+	    $original_name = "xen-" . $version_and_flavor;
 	    push @params, original_name => $original_name;
 
 	    # Add "xen" section
@@ -338,7 +338,7 @@ if (defined $oper{add}) {
 	}
 	else {
 	    # Add original_name to params to be able to create comment line
-	    $original_name = "Linux-" . $version_and_flavor;
+	    $original_name = "linux-" . $version_and_flavor;
 	    push @params, original_name => $original_name;
 
 	    # Add "normal" sections
@@ -359,7 +359,7 @@ if (defined $oper{add}) {
 	    ($opt_image =~ /-bigsmp/)) &&
 	    ($opt_xen != 1)) {
 	    # Add original_name to params to be able to create comment line
-	    $original_name = "Failsafe-" . $version_and_flavor;
+	    $original_name = "failsafe-" . $version_and_flavor;
 	    push @params, original_name => $original_name;
 
 	    AddSection($opt_failsafe, @params);

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul 30 14:23:49 CEST 2007 - aosthof@suse.de
+
+- Use small letters in YaST-style comments due to case sensitive
+  parser (#283709)
+
+-------------------------------------------------------------------
 Mon Jul 30 13:46:18 CEST 2007 - aosthof@suse.de
 
 - Avoid duplicate entries in lilolike bootloaders (#294717)
