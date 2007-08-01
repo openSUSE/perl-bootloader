@@ -1184,6 +1184,16 @@ sub AddSection {
 	}
     }
 
+    my $core_lib = $lib_ref->{"loader"};
+
+    # Print new section to be added to logfile
+    $core_lib->l_milestone ("Tools::AddSection: New section to be added :\n\n' " .
+			join("'\n' ",
+			     map {
+				 $_ . " => '" . $new{$_} . "'";
+			     } keys %new) . "'\n"
+		       );
+
     # Put new entries on top
     unshift @sections, \%new;
 
@@ -1307,6 +1317,21 @@ sub AddSection {
 	unshift @sections, $normal_entry;
     }
 
+    # Print all available sections to logfile
+    $core_lib->l_milestone (
+	"Tools::AddSection: All available sections (including new ones):\n");
+
+    my $section_count = 1;
+    foreach my $s (@sections) {
+	$core_lib->l_milestone ("$section_count. section :\n' " .
+			    join("'\n' ",
+				 map {
+				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+				 } keys %{$s}) . "'\n"
+			   );
+	$section_count++;
+    }
+
     $lib_ref->SetSections (\@sections);
 
     # If the former default boot entry is updated, the new one will become now
@@ -1331,6 +1356,14 @@ sub AddSection {
         }
         $lib_ref->SetGlobalSettings ($glob_ref);
     }
+
+    # Print globals to logfile
+    $core_lib->l_milestone ("Tools::AddSection: Global section of config :\n\n' " .
+			join("'\n' ",
+			     map {
+				 m/^__/ ? () : $_ . " => '" . $glob_ref->{$_} . "'";
+			     } keys %{$glob_ref}) . "'\n"
+		       );
 
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
@@ -1404,6 +1437,31 @@ sub RemoveSections {
     }
 =cut
 
+    my $core_lib = $lib_ref->{"loader"};
+
+    # Print section to be removed to logfile
+    $core_lib->l_milestone ("Tools::RemoveSections: Old section to be removed :\n\n' " .
+			join("'\n' ",
+			     map {
+				 $_ . " => '" . $option{$_} . "'";
+			     } keys %option) . "'\n"
+		       );
+
+    # Print all available sections (before removal) to logfile
+    $core_lib->l_milestone (
+	"Tools::RemoveSections: All available sections (before removal):\n");
+
+    my $section_count = 1;
+    foreach my $s (@sections) {
+	$core_lib->l_milestone ("$section_count. section :\n' " .
+			    join("'\n' ",
+				 map {
+				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+				 } keys %{$s}) . "'\n"
+			   );
+	$section_count++;
+    }
+
     normalize_options(\%option);
     @sections = grep {
 	my $match = match_section($_, \%option);
@@ -1438,6 +1496,21 @@ sub RemoveSections {
 		if !$match and $default_section eq $_->{"name"};
 	    $match;
 	} @sections;
+    }
+
+    # Print all available sections (after removal) to logfile
+    $core_lib->l_milestone (
+	"Tools::RemoveSections: All available sections (after removal):\n");
+
+    $section_count = 1;
+    foreach my $s (@sections) {
+	$core_lib->l_milestone ("$section_count. section :\n' " .
+			    join("'\n' ",
+				 map {
+				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+				 } keys %{$s}) . "'\n"
+			   );
+	$section_count++;
     }
 
     $lib_ref->SetSections (\@sections);
