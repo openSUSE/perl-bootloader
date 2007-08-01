@@ -100,32 +100,71 @@ my $lib_ref = undef;
 my $dmsetup = undef;
 
 sub DumpLog {
+    my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
+
+    # If YaST is running, write to /var/log/YaST2/y2log...
+    if (defined $ENV{'YAST_IS_RUNNING'}) {
+	open LOGFILE, ">&STDERR" or die "Can’t dup STDERR: $!";
+    }
+
+    # ... else (standalone mode) write to seperate logfile
+    else {
+	if (not open LOGFILE, ">>$perl_logfile") {
+	    open LOGFILE, ">&STDERR" or die "Can’t dup STDERR: $!";
+	    print LOGFILE ("WARNING: Can't open $perl_logfile, using STDERR instead.\n");
+	}
+    }
+
     foreach my $rec (@{$lib_ref->GetLogRecords ()})
     {
 	my $message = $rec->{"message"};
 	my $level = $rec->{"level"};
-	if ($level eq "debug")
+
+	# If debug messages should be printed, the environment variable
+	# Y2DEBUG has to be set ("export Y2DEBUG=1").
+	if ($level eq "debug" and exists $ENV{'Y2DEBUG'})
 	{
-#	    print STDERR ("DEBUG: $message\n");
+	    print LOGFILE ("DEBUG: $message\n");
+	}
+	elsif ($level eq "debug" and not exists $ENV{'Y2DEBUG'})
+	{
+	    # Omit debug messages
 	}
 	elsif ($level eq "milestone")
 	{
-#	    print STDERR ("MILESTONE: $message\n");
+	    print LOGFILE ("MILESTONE: $message\n");
 	}
 	elsif ($level eq "warning")
 	{
-	    print STDERR ("WARNING: $message\n");
+	    print LOGFILE ("WARNING: $message\n");
+
+	    # If running in standalone mode, also print warnings to STDERR
+	    if (not defined $ENV{'YAST_IS_RUNNING'}) {
+		print STDERR ("WARNING: $message\n");
+	    }
 	}
 	elsif ($level eq "error")
 	{
-	    print STDERR ("ERROR: $message\n");
+	    print LOGFILE ("ERROR: $message\n");
+
+	    # If running in standalone mode, also print errors to STDERR
+	    if (not defined $ENV{'YAST_IS_RUNNING'}) {
+		print STDERR ("ERROR: $message\n");
+	    }
 	}
 	else
 	{
-	    print STDERR ("ERROR: Uncomplete log record\n");
-	    print STDERR ("ERROR: $message\n");
+	    print LOGFILE ("ERROR: Uncomplete log record\n");
+	    print LOGFILE ("ERROR: $message\n");
+
+	    # If running in standalone mode, also print errors to STDERR
+	    if (not defined $ENV{'YAST_IS_RUNNING'}) {
+		print STDERR ("ERROR: Uncomplete log record\n");
+		print STDERR ("ERROR: $message\n");
+	    }
 	}
     }
+    close LOGFILE;
 }
 
 sub ResolveCrossDeviceSymlinks {
