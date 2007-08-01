@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Aug  1 11:09:18 CEST 2007 - aosthof@suse.de
+
+- Added milestones to functions AddSection() and RemoveSections()
+  to print new section entries, already existing section entries
+  and section entries to be removed
+
+-------------------------------------------------------------------
 Wed Aug  1 11:07:52 CEST 2007 - aosthof@suse.de
 
 - Improved logging mechanism to write log messages either to
