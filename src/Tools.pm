@@ -101,18 +101,12 @@ my $dmsetup = undef;
 
 sub DumpLog {
     my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
+    my $using_logfile = 1;
 
-    # If YaST is running, write to /var/log/YaST2/y2log...
-    if (defined $ENV{'YAST_IS_RUNNING'}) {
+    if (not open LOGFILE, ">>$perl_logfile") {
+	$using_logfile = 0;
 	open LOGFILE, ">&STDERR" or die "Can’t dup STDERR: $!";
-    }
-
-    # ... else (standalone mode) write to seperate logfile
-    else {
-	if (not open LOGFILE, ">>$perl_logfile") {
-	    open LOGFILE, ">&STDERR" or die "Can’t dup STDERR: $!";
-	    print LOGFILE ("WARNING: Can't open $perl_logfile, using STDERR instead.\n");
-	}
+	print LOGFILE ("WARNING: Can't open $perl_logfile, using STDERR instead.\n");
     }
 
     foreach my $rec (@{$lib_ref->GetLogRecords ()})
@@ -122,11 +116,11 @@ sub DumpLog {
 
 	# If debug messages should be printed, the environment variable
 	# Y2DEBUG has to be set ("export Y2DEBUG=1").
-	if ($level eq "debug" and exists $ENV{'Y2DEBUG'})
+	if ($level eq "debug" and defined $ENV{'Y2DEBUG'})
 	{
 	    print LOGFILE ("DEBUG: $message\n");
 	}
-	elsif ($level eq "debug" and not exists $ENV{'Y2DEBUG'})
+	elsif ($level eq "debug" and not defined $ENV{'Y2DEBUG'})
 	{
 	    # Omit debug messages
 	}
@@ -138,8 +132,8 @@ sub DumpLog {
 	{
 	    print LOGFILE ("WARNING: $message\n");
 
-	    # If running in standalone mode, also print warnings to STDERR
-	    if (not defined $ENV{'YAST_IS_RUNNING'}) {
+	    # If writing to perl logfile, also print warnings to STDERR
+	    if ($using_logfile) {
 		print STDERR ("WARNING: $message\n");
 	    }
 	}
@@ -147,8 +141,8 @@ sub DumpLog {
 	{
 	    print LOGFILE ("ERROR: $message\n");
 
-	    # If running in standalone mode, also print errors to STDERR
-	    if (not defined $ENV{'YAST_IS_RUNNING'}) {
+	    # If writing to perl logfile, also print errors to STDERR
+	    if ($using_logfile) {
 		print STDERR ("ERROR: $message\n");
 	    }
 	}
@@ -157,8 +151,8 @@ sub DumpLog {
 	    print LOGFILE ("ERROR: Uncomplete log record\n");
 	    print LOGFILE ("ERROR: $message\n");
 
-	    # If running in standalone mode, also print errors to STDERR
-	    if (not defined $ENV{'YAST_IS_RUNNING'}) {
+	    # If writing to perl logfile, also print errors to STDERR
+	    if ($using_logfile) {
 		print STDERR ("ERROR: Uncomplete log record\n");
 		print STDERR ("ERROR: $message\n");
 	    }
