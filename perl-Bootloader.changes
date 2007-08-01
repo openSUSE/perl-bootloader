@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Wed Aug  1 10:50:49 CEST 2007 - aosthof@suse.de
+
+- Improved logging mechanism to write log messages either to
+  /var/log/YaST2/y2log or to /var/log/YaST2/perl-BL-standalone-log,
+  depending on the state of the environment variable
+  YAST_IS_RUNNING. In addition to that, the printing of log
+  messages with level DEBUG can be switched on/off by
+  setting/unsetting the environment variable Y2DEBUG.
+
+-------------------------------------------------------------------
 Mon Jul 30 14:26:06 CEST 2007 - aosthof@suse.de
 
 - Version bump to 0.4.18
