@@ -1831,6 +1831,19 @@ sub GrubDev2MountPoint {
     my @devices = ();
     my $device = $self->GrubDev2UnixDev($grub_dev);
 
+    # MD-RAID handling: find the corresponding /dev/mdX if any.
+    while ((my $md, my $members_ref) = each (%{$self->{"md_arrays"}})) {
+
+	my $members = join ", ", @{$members_ref};
+	$self->l_debug ("GRUB::GrubDev2MountPoint : MD Array: $md ; Members: $members");
+
+	foreach my $md_member (@{$members_ref}) {
+	    if ($device eq $md_member) {
+		push (@devices, $md);
+	    }
+	}
+    }
+
     push (@devices, $device);
 
     #FIXME: sf@ need handling for /dev/dm-X devices here

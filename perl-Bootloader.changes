@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug  2 14:25:22 CEST 2007 - aosthof@suse.de
+
+- Determine md device corresponding to md member device, e.g.
+  if /dev/md0 consists of /dev/sda1 and /dev/sda2, then /dev/md0
+  corresponds to both /dev/sda1 and /dev/sda2 (#271797)
+
+-------------------------------------------------------------------
 Wed Aug  1 17:31:42 CEST 2007 - aosthof@suse.de
 
 - Adapt function DumpLog() to only write to perl-BL-standalone-log,
