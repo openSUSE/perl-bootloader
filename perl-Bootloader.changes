@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug  2 14:50:11 CEST 2007 - aosthof@suse.de
+
+- Determine md device corresponding to md member device, e.g.
+  if /dev/md0 consists of /dev/sda1 and /dev/sda2, then /dev/md0
+  corresponds to both /dev/sda1 and /dev/sda2 (#271797)
+
+-------------------------------------------------------------------
 Mon Jul 23 17:24:00 CEST 2007 - aosthof@suse.de
 
 - Fixed boot entries of self compiled kernels (#265564)
