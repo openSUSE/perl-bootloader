@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Aug  6 15:51:28 CEST 2007 - aosthof@suse.de
+
+- Adapted yast2-bootloader-style comments to be correctly detected
+  by yast2-bootloader (fate #302407)
+
+-------------------------------------------------------------------
 Thu Aug  2 14:25:22 CEST 2007 - aosthof@suse.de
 
 - Determine md device corresponding to md member device, e.g.
