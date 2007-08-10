@@ -1111,6 +1111,8 @@ sub Section2Info {
 	{
 	    if ($type eq "menu") {
 		$ret{"root"} = $self->GrubDev2UnixDev ($val);
+		# FIXME: do we need to set $grub_root here?
+#		$grub_root = $val;
 	    }
 	    else {
 		$grub_root = $val;
@@ -1453,7 +1455,7 @@ sub Info2Section {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
 
-	if ($key eq "root" or $key eq "rootnoverify" or $key eq "configfile")
+	if ($key eq "root" or $key eq "rootnoverify")
 	{
 	    # always remove old root line
 	    $line_ref = undef;
@@ -1494,6 +1496,8 @@ sub Info2Section {
 	elsif ($key eq "chainloader")
 	{
 	    if ($type eq "other" and defined ($sectinfo{$key})) {
+		# create a translated chainloader line in the line_ref, but
+		# delete it (and the blockoffset entry) in the sectinfo hash
 		$line_ref->{"value"} = $self->CreateChainloaderLine (\%sectinfo, $grub_root);
 		delete ($sectinfo{$key});
 		delete ($sectinfo{"blockoffset"});
@@ -1543,6 +1547,7 @@ sub Info2Section {
 	};
     }
 
+    # adapt entries if the menu.lst uses different key names etc.
     while ((my $key, my $value) = each (%sectinfo))
     {
 	if ($key eq "name")
@@ -1553,6 +1558,8 @@ sub Info2Section {
 	}
 	elsif ($key eq "chainloader")
 	{
+	    # FIXME: is this necessary? It seems this is already handled in a
+	    # loop above (where the sectinfo stuff for chainloader is deleted).
 	    push @lines, {
 		"key" => $key,
 		"value" => $self->CreateChainloaderLine (\%sectinfo, $grub_root), 
@@ -1560,6 +1567,7 @@ sub Info2Section {
 	}
 	elsif ($key eq "configfile")
 	{
+	    # dummy/placeholder entry: do we need this?
 	    push @lines, {
 		"key" => $key,
 		"value" => $value,
