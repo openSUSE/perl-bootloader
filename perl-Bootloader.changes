@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Aug 10 15:08:23 CEST 2007 - sf@suse.de
+
+- enable configfile sections:
+    - add CreateConfigFileLine()
+    - some comments 
+
+-------------------------------------------------------------------
 Mon Aug  6 15:51:28 CEST 2007 - aosthof@suse.de
 
 - Adapted yast2-bootloader-style comments to be correctly detected

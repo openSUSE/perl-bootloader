@@ -1312,6 +1312,37 @@ sub CreateChainloaderLine {
     }
 }
 
+
+=item
+C<< $line = Bootloader::Core::Grub->CreateConfigfileLine (\%sectinfo, $grub_root); >>
+
+Creates a line with the configfile command for GRUB's menu.lst. As arguments.
+it takes a hash containing information about the section and the root
+device specified by the GRUB's root command. Returns the line to be written
+to menu.lst (without the leading configfile keyword).
+
+=cut
+
+#string CreateConfigfileLine (map sectinfo, string grub_root)
+sub CreateConfigfileLine {
+    my $self = shift;
+    my $sectinfo_ref = shift;
+    my $grub_root = shift || "";
+
+    my $line = $sectinfo_ref->{"configfile"};
+
+    $self->l_milestone ("GRUB::CreateConfigfileLine: $line");
+    $line = $self->UnixDev2GrubDev ($line);
+    
+    if (substr ($line, 0, length ($grub_root)) eq $grub_root)
+    {
+	$line = substr ($line, length ($grub_root));
+    }        
+
+    return $line;
+}
+
+
 =item
 C<< $disk = Bootloader::Core::Grub->Partition2Disk ($partition); >>
 
@@ -1506,6 +1537,16 @@ sub Info2Section {
 		$line_ref = undef;
 	    }
 	}
+	elsif ($key eq "configfile")
+        {
+            if ($type eq "other" and defined ($sectinfo{$key})) {
+                $line_ref->{"value"} = $self->CreateConfigfileLine (\%sectinfo, $grub_root);
+                delete ($sectinfo{$key});
+            }
+            else {
+                $line_ref = undef;
+            }
+        }
 	defined $line_ref ? $line_ref : ();
     } @lines;
 
