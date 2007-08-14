@@ -1,4 +1,25 @@
 -------------------------------------------------------------------
+Mon Aug 13 22:53:26 CEST 2007 - od@suse.de
+
+- feature #302302:
+  - removed CreateChainloaderLine() function and call again:
+    - we use a "root" entry now in a configfile section
+    - perl-Bootloader cannot pass a value consisting of both a Unix
+      device name and a file name between yast2-bootloader and
+      perl-Bootloader (i.e.
+      "/dev/disk/by-label/testing/boot/grub/menu.lst"), this is not
+      safely analyzable
+    - during the last tests, the line was disabled anyway because
+      it triggered on "other" instead of "menu" section type
+  - fetching grub_root device (to be used in re-created "root" key)
+    from "root" key in "other" section now as well
+- never use a hardcoded device like "(hd0,0)" in a "rootnoverify"
+  key as a fallback for a missing "root" specification from
+  yast2-bootloader: using "(hd)" now, which will generate an error
+  when the section is selected during boot
+- version bump to 0.4.20
+
+-------------------------------------------------------------------
 Mon Aug 13 13:12:20 CEST 2007 - aosthof@suse.de
 
 - Version bump to 0.4.19

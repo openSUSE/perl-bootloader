@@ -1424,6 +1424,9 @@ sub Info2Section {
 	$grub_root = $self->UnixDev2GrubDev ($grub_root);
     }
     elsif ($type eq "menu" or $type eq "other") {
+	# FIXME: using the boot device of the current installation as the
+	# "root" parameter in sections for other installations does not make
+	# sense to me -- are there cases where this does make sense?
 	my ($boot_dev,) = $self->SplitDevPath ("/boot");
 	$grub_root = $self->UnixDev2GrubDev (
 	    exists $sectinfo{"root"} ? delete($sectinfo{"root"}) : $boot_dev
@@ -1496,6 +1499,29 @@ sub Info2Section {
 	}
 	elsif ($key eq "chainloader")
 	{
+	    # This handles chainloader lines that specify a device name only --
+	    # a single block offset may have been passed down in our internal
+	    # variable "blockoffset": this will be added to the constructed
+	    # "chainloader" line.
+	    #
+	    # The general case, i.e. translating between
+	    # "/dev/disk/by-label/testlabel/boot/grub/stage1" and
+	    # "(hd0,1)/boot/grub/stage1" cannot be handled with our device name
+	    # translation scheme. There is no reliable way to find the end of
+	    # the device name in the above string, esp. since the device does
+	    # not necessarily exist yet.
+	    #
+	    # Probably a different interface is needed to reliably pass
+	    # "converted GRUB paths" that include UNIX device names between us
+	    # and the upper layers.
+	    # 
+	    # The same problem exists e.g. for "configfile" entries, but there
+	    # we have no "common simple case" that we could still handle (as we
+	    # do in the "chainloader" case). We usually would need to translate
+	    # between "/dev/disk/by-label/testlabel/boot/grub/menu.lst" and
+	    # "(hd0,3)/boot/grub/menu.lst". We rather choose to require the
+	    # device in the "root" key and do not expect and handle UNIX device
+	    # names in the "configfile" value at all.
 	    if ($type eq "other" and defined ($sectinfo{$key})) {
 		$line_ref->{"value"} = $self->CreateChainloaderLine (\%sectinfo, $grub_root);
 		delete ($sectinfo{$key});
