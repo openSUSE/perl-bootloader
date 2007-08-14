@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Aug 14 18:01:21 CEST 2007 - aosthof@suse.de
+
+- Implemented new function AdaptCommentLine in Tools.pm which
+  adapts YaST-like comments in existing sections to be handled
+  properly by yast-bootloader (#283709)
+- Version bump to 0.4.21
+
+-------------------------------------------------------------------
 Mon Aug 13 22:53:26 CEST 2007 - od@suse.de
 
 - feature #302302:

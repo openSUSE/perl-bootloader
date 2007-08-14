@@ -68,6 +68,8 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 
 C<< Bootloader::Tools::GetSection($name); >>
 
+C<< Bootloader::Tools::AdaptCommentLine($old_sections_ref, $original_name); >>
+
 C<< Bootloader::Tools::AddSection($name, @params); >>
 
 C<< Bootloader::Tools::RemoveSections($name); >>
@@ -90,7 +92,8 @@ our @EXPORT = qw(InitLibrary CountImageSections CountSections
 		 RemoveImageSections GetDefaultImage
 		 GetDefaultInitrd GetBootloader UpdateBootloader
 		 GetGlobals SetGlobals
-		 GetSectionList GetSection AddSection RemoveSections
+		 GetSectionList GetSection AdaptCommentLine
+		 AddSection RemoveSections
 );
 
 use Bootloader::Library;
@@ -1060,6 +1063,74 @@ sub GetSection {
 
 
 =item
+C<< Bootloader::Tools::AdaptCommentLine($old_sections_ref, $original_name); >>
+
+Adapt YaST-like comments in already existing sections to be handled correctly
+by yast2-bootloader. Returns reference to sections array with adapted comment
+lines.
+
+EXAMPLE:
+
+  my $old_sections_ref = $lib_ref->GetSections ();
+  my $adapted_sections_ref = "";
+  my $original_name = "linux";
+
+  $adapted_sections = Bootloader::Tools::AdaptCommentLine ($old_sections_ref, $original_name);
+
+=cut
+
+sub AdaptCommentLine {
+    my $sections_ref = shift;
+    my $original_name = shift;
+
+    return unless defined $sections_ref;
+    return unless defined $original_name;
+
+    my $comment_string = "###Don't change this comment - YaST2 identifier: Original name: ";
+
+    # Adapt YaST-like comment in __lines member of sections array
+    foreach my $sect_ref (@$sections_ref) {
+
+	my $lines_ref = $sect_ref->{"__lines"};
+
+	# Only check sections referring to a real kernel or xen image
+	if ($sect_ref->{"type"} eq "image" or $sect_ref->{"type"} eq "xen") {
+	    foreach my $line_ref (@$lines_ref) {
+
+		my $comment = $line_ref->{"comment_before"};
+		my @temp = grep m/$original_name###/, @$comment;
+
+		# Only lines containing the section title need to be checked
+		if ($line_ref->{"key"} eq "title" and scalar @temp > 0) {
+
+		    # Determine version and flavor of section to be adapted
+		    my $version_and_flavor = $sect_ref->{"initrd"};
+		    $version_and_flavor =~ s/^[^-]+//;
+
+		    my $adapted_comment = $comment_string . $original_name . $version_and_flavor . "###";
+
+		    # Finally, adapt the comment line
+		    $line_ref->{"comment_before"} = [$adapted_comment];
+		}
+	    }
+	}
+
+	# Remove empty lines
+	foreach my $line_ref (@$lines_ref) {
+	    if ($line_ref->{"key"} eq "title") {
+		@{$line_ref->{"comment_before"}}  = grep m/\S/, @{$line_ref->{"comment_before"}};
+	    }
+	}
+
+	# Set new comment line, thus commit changes made
+	$sect_ref->{"__lines"} = $lines_ref;
+    }
+
+    return @$sections_ref;
+}
+
+
+=item
 C<< Bootloader::Tools::AddSection($name, @params); >>
 
 Add a new section (boot entry) to config file, e.g. to /boot/grub/menu.lst
@@ -1087,6 +1158,10 @@ sub AddSection {
 
     my $mp = $lib_ref->GetMountPoints ();
     my @sections = @{$lib_ref->GetSections ()};
+
+    # Adapt YaST-like comment lines in old sections
+    @sections = AdaptCommentLine (\@sections, $option{"original_name"});
+
     my %new = (
 	"root" => $mp->{"/"} || "/dev/null",
     );
