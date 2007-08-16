@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Aug 15 20:35:25 CEST 2007 - od@suse.de
+
+- accept all "original_name"s, not only alphanumeric (fate #302302)
+
+-------------------------------------------------------------------
 Tue Aug 14 18:01:21 CEST 2007 - aosthof@suse.de
 
 - Implemented new function AdaptCommentLine in Tools.pm which
