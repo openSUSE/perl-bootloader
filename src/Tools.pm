@@ -101,6 +101,7 @@ use Bootloader::Core;
 
 my $lib_ref = undef;
 my $dmsetup = undef;
+my $mdadm = undef;
 
 sub DumpLog {
     my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
@@ -707,9 +708,19 @@ sub ReadRAID1Arrays {
     #	    devices=/dev/sda1,/dev/sdb1
     #
 
-    my @members = ();
-    open (MD, "/sbin/mdadm --detail --verbose --scan |") ||
-        die ("ReadRAID1Arrays(): Failed getting information about MD arrays");
+    $mdadm = AddPathToExecutable("mdadm");
+
+    if (-e $mdadm) {
+	open (MD, "$mdadm --detail --verbose --scan |");
+    }
+    else {
+	print ("The command \"mdadm\" is not available.\n");
+	print ("Is the package \"mdadm\" installed?\n");
+
+	# If the command "mdadm" isn't available, return a reference to an
+	# empty hash
+	return \%mapping;
+    }
 
     my ($array, $level, $num_devices);
     while (my $line = <MD>)

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Aug 16 11:16:37 CEST 2007 - aosthof@suse.de
+
+- Improved error handling for mdadm call in Tools.pm (#288842)
+
+-------------------------------------------------------------------
 Wed Aug 15 20:35:25 CEST 2007 - od@suse.de
 
 - accept all "original_name"s, not only alphanumeric (fate #302302)
