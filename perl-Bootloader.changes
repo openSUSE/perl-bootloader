@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Aug 16 17:24:30 CEST 2007 - aosthof@suse.de
+
+- Provided functionality for removal of old boot entries (#300930)
+
+-------------------------------------------------------------------
 Thu Aug 16 11:16:37 CEST 2007 - aosthof@suse.de
 
 - Improved error handling for mdadm call in Tools.pm (#288842)
