@@ -68,7 +68,11 @@ function update_bootloader()
 function add_entry()
 {
 	# Set up the new kernel
-	if [ "$YAST_IS_RUNNING" != instsys ]; then
+	#if [ "$YAST_IS_RUNNING" != instsys ]; then
+	if [ -f /boot/grub/menu.lst -o \
+	     -f /etc/lilo.conf	    -o \
+	     -f /etc/elilo.conf	    -o \
+	     -f /etc/zipl.conf ]; then
 		case $flavor in
 			(kdump|um)
 			;;

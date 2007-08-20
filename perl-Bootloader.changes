@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Aug 20 16:54:34 CEST 2007 - aosthof@suse.de
+
+- Provided functionality for adding of new boot entries (#300930)
+
+-------------------------------------------------------------------
 Thu Aug 16 17:24:30 CEST 2007 - aosthof@suse.de
 
 - Provided functionality for removal of old boot entries (#300930)
