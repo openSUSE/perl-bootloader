@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug 21 18:16:41 CEST 2007 - aosthof@suse.de
+
+- Check for defined keys in GRUB.pm to prevent perl warnings
+  (#302174)
+
+-------------------------------------------------------------------
 Tue Aug 21 15:22:05 CEST 2007 - aosthof@suse.de
 
 - Removed requirement of mdadm (#302052)
