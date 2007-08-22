@@ -330,25 +330,18 @@ if (defined $oper{add}) {
 	    `rm $perl_logfile`;
 	}
 
-	# Parse version and flavor out of $opt_image
-	my $version_and_flavor = $opt_image;
-	$version_and_flavor =~ s/^[^-]+-//;
-	my $original_name = "";
-
+	# Add "xen" section
 	if ($opt_xen) { 
 	    # Add original_name to params to be able to create comment line
-	    $original_name = "xen-" . $version_and_flavor;
-	    push @params, original_name => $original_name;
+	    push @params, original_name => "xen";
 
-	    # Add "xen" section
 	    AddSection($opt_xen_name, @params);
 	}
+	# Add "normal" section
 	else {
 	    # Add original_name to params to be able to create comment line
-	    $original_name = "linux-" . $version_and_flavor;
-	    push @params, original_name => $original_name;
+	    push @params, original_name => "linux";
 
-	    # Add "normal" sections
 	    AddSection($opt_name, @params);
 	}
 
@@ -366,8 +359,7 @@ if (defined $oper{add}) {
 	    ($opt_image =~ /-bigsmp/)) &&
 	    ($opt_xen != 1)) {
 	    # Add original_name to params to be able to create comment line
-	    $original_name = "failsafe-" . $version_and_flavor;
-	    push @params, original_name => $original_name;
+	    push @params, original_name => "failsafe";
 
 	    AddSection($opt_failsafe, @params);
 	}
