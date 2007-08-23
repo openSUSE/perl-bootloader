@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug 23 12:48:58 CEST 2007 - aosthof@suse.de
+
+- Added check for /etc/sysconfig/bootloader in bootloader_entry
+  preventing installation errors in case of shared boot partitions
+  (#303734)
+
+-------------------------------------------------------------------
 Wed Aug 22 15:16:33 CEST 2007 - aosthof@suse.de
 
 - Check for defined types in GRUB.pm to prevent perl warnings
