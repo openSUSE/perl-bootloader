@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Wed Sep 12 16:18:04 CEST 2007 - od@suse.de
+
+- Needed for #309837 and #304515 and others:
+  - Added (pseudo-)timestamps to standalone logging
+  - Removed code from update-bootloader to remove old standalone
+    log file: with the timestamps now the log entries from
+    different runs of update-bootloader can be discerned 
+- Minor correction of error message: use ASCII "'" instead of
+  similar Unicode character
+
+-------------------------------------------------------------------
 Thu Aug 23 12:48:58 CEST 2007 - aosthof@suse.de
 
 - Added check for /etc/sysconfig/bootloader in bootloader_entry

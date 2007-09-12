@@ -346,13 +346,6 @@ if (defined $oper{add}) {
 	push @params, xen     => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd  => $opt_initrd if $opt_initrd;
 
-	# If logfile already exists, remove it to prevent duplicate info
-	my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
-
-	if (-e $perl_logfile) {
-	    `rm $perl_logfile`;
-	}
-
 	# Add "xen" section
 	if ($opt_xen) { 
 	    # Add original_name to params to be able to create comment line
