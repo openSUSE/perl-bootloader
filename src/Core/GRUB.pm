@@ -385,11 +385,11 @@ sub GrubDev2UnixDev {
     my $dev = shift;
 
     unless ($dev) {
-	$self->l_debug ("GRUB::GrubDev2UnixDev: Empty device to translate");
+	$self->l_milestone ("GRUB::GrubDev2UnixDev: Empty device to translate");
 	return $dev;
     }
     if ($dev !~ /^\(.*\)$/) {
-	$self->l_debug ("GRUB::GrubDev2UnixDev: Not translating device $dev");
+	$self->l_milestone ("GRUB::GrubDev2UnixDev: Not translating device $dev");
 	return $dev;
     }
 
@@ -429,7 +429,7 @@ sub GrubDev2UnixDev {
     }
 
     $dev = $self->Member2MD ($dev);
-    $self->l_debug ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
     return $dev;
 }
 
@@ -447,12 +447,12 @@ sub UnixDev2GrubDev {
     my $dev = shift;
 
     unless (defined($dev) and $dev) {
-	$self->l_debug ("GRUB::UnixDev2GrubDev: Empty device to translate");
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Empty device to translate");
 	return $dev;
     }
     # Seems to be a grub device already 
     if ($dev =~ /^\(.*\)$/) {
-	$self->l_debug ("GRUB::UnixDev2GrubDev: Not translating device $dev");
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Not translating device $dev");
 	return $dev;
     }
 
@@ -511,7 +511,7 @@ sub UnixDev2GrubDev {
     $dev = defined ($partition)
 	? "($dev,$partition)"
 	: "($dev)";
-    $self->l_debug ("GRUB::UnixDev2GrubDev: Translated UNIX->GRUB: $original to $dev");
+    $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX->GRUB: $original to $dev");
     return $dev;
 }
 
@@ -998,7 +998,12 @@ sub CreateGrubConfLines() {
 	foreach my $new_dev (keys (%s1_devices))
 	{
 	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch, 1);
-	    $self->l_milestone ("GRUB::CreateGrubConfLines: new line created: $line");
+	    $self->l_milestone ("GRUB::CreateGrubConfLines: new line created:\n\n' " .
+				join("'\n' ",
+				     map {
+					 $_ . " => '" . $line->{$_} . "'";
+				     } keys %$line) . "'\n"
+	    			);
 
 	    push @grub_conf_items, $line;
 	}
