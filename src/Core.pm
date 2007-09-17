@@ -62,6 +62,10 @@ C<< $original_name = Bootloader::Core->Comment2OriginalName ($comment); >>
 
 C<< $line_ref = Bootloader::Core->UpdateSectionNameLine ($name, \%line, $original_name); >>
 
+C<< $original_name = Bootloader::Core->Comment2FormerFlavor ($comment); >>
+
+C<< $line_ref = Bootloader::Core->CreateFormerDefaultImageLine (\%line, $former_flavor); >>
+
 C<< $sectin_info_ref = Bootloader::Core->Section2Info (\@section_lines); >>
 
 C<< $label = Bootloader::Core->FixSectionName ($name, \@existing, $orig_name); >>
@@ -1015,6 +1019,55 @@ sub UpdateSectionNameLine {
 	    ! m/^${orig_name_comment}/o;
 	}  @{$line_ref->{"comment_before"} || []};
 	push @comment_before, "${orig_name_comment}${original_name}###";
+	$line_ref->{"comment_before"} = \@comment_before;
+    }
+    return $line_ref;
+}
+
+=item
+C<< $original_name = Bootloader::Core->Comment2FormerFlavor ($comment); >>
+
+Gets the flavor of the former default image from the comment. As argument, takes
+the comment, returns the former flavor (if found in the comment), or empty
+string (otherwise).
+
+=cut
+
+my $former_flavor_comment = "###YaST update: former default image flavor: ";
+
+# string Comment2FormerFlavor (list<string> comment)
+sub Comment2FormerFlavor($) {
+    my $self = shift;
+    my $comment_lines_ref = shift || [];
+    foreach (@{$comment_lines_ref}) {
+	return $1
+	    if m/${former_flavor_comment}([^#]+?) *###/o;
+    }
+    return "";
+}
+
+=item
+C<< $line_ref = Bootloader::Core->CreateFormerDefaultImageLine (\%line, $former_flavor); >>
+
+Updates the 'default line' in globals so that it contains the former default
+image flavor inside the comment. As arguments, takes the line (hash reference)
+and the former flavor (string). If former flavor is set to undef or empty
+string, it is not set in the comment. Returns the updated line reference.
+
+=cut
+
+# map<string,any> CreateFormerDefaultImageLine (map<string,any> line, string former_flavor)
+sub CreateFormerDefaultImageLine {
+    my $self = shift;
+    my $line_ref = shift || {};
+    my $former_flavor = shift;
+
+    if (defined ($former_flavor) && $former_flavor ne "")
+    {
+	my @comment_before;
+
+	push @comment_before, "${former_flavor_comment}${former_flavor}###";
+
 	$line_ref->{"comment_before"} = \@comment_before;
     }
     return $line_ref;

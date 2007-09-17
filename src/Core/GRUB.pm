@@ -202,6 +202,7 @@ sub GetMetaData() {
 	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
 	timeout  => "int:Timeout in Seconds:8:0:3600",
 	default  => "string:Default Boot Section:Linux",
+	former_default_image_flavor => "string:Former default Image Flavor:default",
 	generic_mbr => "bool:Write generic Boot Code to MBR:true",
 	boot_custom => "selectdevice:Custom Boot Partition::" . $boot_partitions,
 	boot_mbr => "bool:Boot from Master Boot Record:false",
@@ -1652,6 +1653,10 @@ sub Global2Info {
 	    no warnings "numeric"; # this is neccessary to avoid to trigger a perl bug
 	    my $defindex = 0+ $val;
 	    $ret{"default"} = $sections[$defindex];
+
+	    # Parse flavor of former default image out of comment
+	    my $ff = $self->Comment2FormerFlavor ($line_ref->{"comment_before"});
+	    $ret{"former_default_image_flavor"} = $ff if ($ff ne "");
 	}
 	elsif (defined ($type) and $type eq "path") {
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
@@ -1719,6 +1724,11 @@ sub Info2Global {
 	{
 	    $line_ref->{"value"} = $self->IndexOfSection (
 		delete $globinfo{$key}, $sections_ref) || 0;
+
+	    $line_ref = $self->CreateFormerDefaultImageLine (
+		$line_ref, $globinfo{"former_default_image_flavor"});
+	    delete ($globinfo{"former_default_image_flavor"});
+
 	}
 	elsif ($key eq "password")
 	{

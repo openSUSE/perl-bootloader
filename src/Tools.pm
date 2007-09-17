@@ -1602,6 +1602,13 @@ sub RemoveSections {
     $lib_ref->SetSections (\@sections);
     if ($default_removed) {
 	$glob_ref->{"default"} = $sections[0]{"name"};
+
+	# If the default kernel is removed, add a comment to the globals so
+	# yast2-bootloader is able to set the new default value appropriately.
+	my $former_flavor = $option{"image"};
+	$former_flavor =~ s/.*-(\w+)/\1/;
+
+	$glob_ref->{"former_default_image_flavor"} = $former_flavor;
     }
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
 				   # may change even if not deleted
