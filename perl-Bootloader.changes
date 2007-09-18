@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Sep 18 10:12:53 CEST 2007 - od@suse.de
+
+- Add comment for former default value only if it does not yet
+  exist (#309837)
+- Version bump to 0.4.27
+
+-------------------------------------------------------------------
 Mon Sep 17 20:35:15 CEST 2007 - aosthof@suse.de
 
 - Added comment line to default value in globals of menu.lst, so
