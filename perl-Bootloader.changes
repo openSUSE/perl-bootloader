@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Sep 18 20:35:18 CEST 2007 - od@suse.de
+
+- Add comment for former default value only during update (related
+  to #309837, prevents accumulating wrong information that may be
+  used during a later update)
+- Version bump to 0.4.29
+
+-------------------------------------------------------------------
 Tue Sep 18 14:11:17 CEST 2007 - aosthof@suse.de
 
 - Adapted timestamps for log files (#309837)
