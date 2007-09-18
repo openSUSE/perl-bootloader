@@ -57,6 +57,9 @@ function getargs()
 # Wrapper for the update-bootloader function
 function update_bootloader() 
 {
+        echo "bootloader_entry: This is (wrapper) function update_bootloader" >> \
+            /var/log/YaST2/perl-BL-standalone-log
+
 	[ -x /sbin/update-bootloader ] || return 0
 		/sbin/update-bootloader "$@"
 }
@@ -67,6 +70,9 @@ function update_bootloader()
 ##############################
 function add_entry()
 {
+        echo "bootloader_entry: This is function add_entry()" >> \
+            /var/log/YaST2/perl-BL-standalone-log
+
 	# Set up the new kernel
         if [ -f /etc/sysconfig/bootloader ] &&
            [ -f /boot/grub/menu.lst -o \
@@ -147,6 +153,8 @@ function remove_entry()
 	#  sections at all, or do only chainload them (BootLILO.ycp), and
 	#  thus do not match either. (#223030)
 
+        echo "bootloader_entry: This is function remove_entry()" >> \
+            /var/log/YaST2/perl-BL-standalone-log
 
 	if [ $flavor == "xen" ]; then
 		update_bootloader --image /boot/$image \

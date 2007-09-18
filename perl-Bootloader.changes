@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Sep 18 20:56:03 CEST 2007 - aosthof@suse.de
+
+- Added more verbose logging to update-bootloader and
+  bootloader_entry to be able to better analyze occurring
+  problems (#309837)
+
+-------------------------------------------------------------------
 Tue Sep 18 20:35:18 CEST 2007 - od@suse.de
 
 - Add comment for former default value only during update (related
