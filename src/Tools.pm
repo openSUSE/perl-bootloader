@@ -113,11 +113,12 @@ sub DumpLog {
 	print LOGFILE ("WARNING: Can't open $perl_logfile, using STDERR instead.\n");
     }
 
-    # the time should have been recorded when the action was taken... but this
-    # is still useful as a hint
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
-    my $timestamp = sprintf("%u-%02u-%02u %02u:%02u:%02u",
-	    $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+    # Adding timestamp to log messages
+    use POSIX qw(strftime);
+
+    sub timestamp () {
+	return strftime ( "%Y-%m-%d %H:%M:%S", localtime);
+    }
 
     foreach my $rec (@{$lib_ref->GetLogRecords ()})
     {
@@ -128,7 +129,7 @@ sub DumpLog {
 	# Y2DEBUG has to be set ("export Y2DEBUG=1").
 	if ($level eq "debug" and defined $ENV{'Y2DEBUG'})
 	{
-	    print LOGFILE ("$timestamp DEBUG: $message\n");
+	    print LOGFILE (timestamp() . " DEBUG: $message\n");
 	}
 	elsif ($level eq "debug" and not defined $ENV{'Y2DEBUG'})
 	{
@@ -136,35 +137,35 @@ sub DumpLog {
 	}
 	elsif ($level eq "milestone")
 	{
-	    print LOGFILE ("$timestamp MILESTONE: $message\n");
+	    print LOGFILE (timestamp() . " MILESTONE: $message\n");
 	}
 	elsif ($level eq "warning")
 	{
-	    print LOGFILE ("$timestamp WARNING: $message\n");
+	    print LOGFILE (timestamp() . " WARNING: $message\n");
 
 	    # If writing to perl logfile, also print warnings to STDERR
 	    if ($using_logfile) {
-		print STDERR ("$timestamp WARNING: $message\n");
+		print STDERR (timestamp() . " WARNING: $message\n");
 	    }
 	}
 	elsif ($level eq "error")
 	{
-	    print LOGFILE ("$timestamp ERROR: $message\n");
+	    print LOGFILE (timestamp() . " ERROR: $message\n");
 
 	    # If writing to perl logfile, also print errors to STDERR
 	    if ($using_logfile) {
-		print STDERR ("ERROR: $message\n");
+		print STDERR (timestamp() . " ERROR: $message\n");
 	    }
 	}
 	else
 	{
-	    print LOGFILE ("$timestamp ERROR: Uncomplete log record\n");
-	    print LOGFILE ("$timestamp ERROR: $message\n");
+	    print LOGFILE (timestamp() . " ERROR: Uncomplete log record\n");
+	    print LOGFILE (timestamp() . " ERROR: $message\n");
 
 	    # If writing to perl logfile, also print errors to STDERR
 	    if ($using_logfile) {
-		print STDERR ("ERROR: Uncomplete log record\n");
-		print STDERR ("ERROR: $message\n");
+		print STDERR (timestamp() . " ERROR: Uncomplete log record\n");
+		print STDERR (timestamp() . " ERROR: $message\n");
 	    }
 	}
     }

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Sep 18 14:11:17 CEST 2007 - aosthof@suse.de
+
+- Adapted timestamps for log files (#309837)
+- Version bump to 0.4.28
+
+-------------------------------------------------------------------
 Tue Sep 18 10:12:53 CEST 2007 - od@suse.de
 
 - Add comment for former default value only if it does not yet
