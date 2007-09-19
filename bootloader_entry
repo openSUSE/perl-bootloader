@@ -61,7 +61,8 @@ function update_bootloader()
             /var/log/YaST2/perl-BL-standalone-log
 
 	[ -x /sbin/update-bootloader ] || return 0
-		/sbin/update-bootloader "$@"
+	    ((/sbin/update-bootloader "$@") 3>&1 1>&2 2>&3 3>&- | tee -a \
+	    /var/log/YaST2/perl-BL-standalone-log ) 3>&1 1>&2 2>&3 3>&-
 }
 
 
@@ -177,6 +178,9 @@ function remove_entry()
 
 #####################  M A I N  ###############################################
 
+# Log how program was called
+echo "bootloader_entry was called as: $*" >> \
+    /var/log/YaST2/perl-BL-standalone-log
 
 # Checks if correct amount of arguments is given
 if [ "$#" -ne "4" -a "$#" -ne "5" ] ; then

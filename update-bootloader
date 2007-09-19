@@ -156,6 +156,9 @@ sub GetProduct {
     return "Linux";
 }
 
+open (LOG, ">>/var/log/YaST2/perl-BL-standalone-log");
+print LOG ("update-bootloader called:\n" . $0 . " " . join (" ", @ARGV) .  "\n");
+close LOG;
 
 GetOptions (\%oper,
     'add|a'    	 ,
