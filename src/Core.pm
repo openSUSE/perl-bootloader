@@ -1795,6 +1795,7 @@ sub SymlinkCrossesDevice($$) {
 
     my ($dev_file,)  = stat($path);
     my ($dev_symlink,) = lstat($path);
+    $self->l_milestone ("Core::SymlinkCrossesDevice: dev_file: $dev_file, dev_symlink: $dev_symlink");
 
     if (defined ($dev_file) && defined ($dev_symlink))
     {
@@ -1820,17 +1821,26 @@ sub ResolveCrossDeviceSymlinks($$) {
     my $resolved = '';
 
     while ($path =~ s#^(/*)[^/]+##) {
+	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: path: $path, \$1: $1, \$&: $&");
+
 	my $here = $self->ConcatPath($resolved, $&);
+	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: here: $here, resolved: $resolved");
+
 	if (-l $here && $self->SymlinkCrossesDevice($here)) {
 	    my $readlink = readlink($here);
+	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: readlink: $readlink");
 	    $resolved = ""
 	    	if ($readlink =~ m#^/#);
+	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: \$&: $&");
 	    $path = $self->ConcatPath(($1 || '') . $readlink, $path);
+	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: path: $path, \$1: $1");
 	    next;
 	}
 	$resolved = $self->ConcatPath($resolved, $&);
+	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: resolved: $path, \$&: $&");
     }
     $resolved = $self->ConcatPath($resolved, $path);
+    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: returns resolved: $resolved, path: $path");
     return $resolved;
 }
 
@@ -1854,6 +1864,7 @@ sub CanonicalPath($$) {
     while ($path =~ s#/[^/]+/\.\.(/|$)#$1#) { }
     while ($path =~ s#/\.(/|$)#$1#) { }
     while ($path =~ s#//#/#) { }
+    $self->l_milestone ("Core::CanonicalPath: ret path: $path");
     return $path;
 }
 
@@ -1875,6 +1886,7 @@ sub RealFileName {
     return "" unless $filename;
 
     my $ret = "";
+    $self->l_milestone ("Core::RealFileName: resolve_symlinks:" . $self->{"resolve_symlinks"});
     if ($self->{"resolve_symlinks"})
     {
 	$ret = $self->CanonicalPath($self->ResolveCrossDeviceSymlinks ($filename));

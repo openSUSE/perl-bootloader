@@ -104,6 +104,8 @@ my $dmsetup = undef;
 my $mdadm = undef;
 
 sub DumpLog {
+    my $core_lib = shift;
+
     my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
     my $using_logfile = 1;
 
@@ -120,7 +122,7 @@ sub DumpLog {
 	return strftime ( "%Y-%m-%d %H:%M:%S", localtime);
     }
 
-    foreach my $rec (@{$lib_ref->GetLogRecords ()})
+    foreach my $rec (@{$core_lib->GetLogRecords ()})
     {
 	my $message = $rec->{"message"};
 	my $level = $rec->{"level"};
@@ -177,6 +179,8 @@ sub ResolveCrossDeviceSymlinks {
 
     my $core_lib = Bootloader::Core->new ();
     $path = $core_lib->RealFileName ($path);
+
+    DumpLog ($core_lib);
     return $path;
 }
 
@@ -790,7 +794,7 @@ sub InitLibrary {
     # parse Bootloader configuration files   
     $lib_ref->ReadSettings();
 
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -799,20 +803,33 @@ sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
     my $match = 0;
 
+    my $core_lib = $lib_ref->{"loader"};
+
+    $core_lib->l_milestone ("Tools::match_section: matching section name: " . $sect_ref->{"name"});
+
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
 	# FIXME: avoid "kernel"
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
+	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
+	    # Print info for this match
+	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
+		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
+		", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
+	    # Print info for this match
+	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
+		$sect_ref->{"$opt"} . ", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	last unless $match;
     }
+    $core_lib->l_milestone ("Tools::match_section: end result: $match");
     return $match;
 }
 
@@ -821,9 +838,14 @@ sub match_section {
 sub normalize_options {
     my $opt_ref = shift;
 
+    my $core_lib = $lib_ref->{"loader"};
+
     foreach ("image", "initrd" ) {
+	# Print found sections to logfile
+	$core_lib->l_milestone ("Tools::normalize_options: key: $_, resolving if exists:" . $opt_ref->{"$_"});
 	$opt_ref->{"$_"} = ResolveCrossDeviceSymlinks($opt_ref->{"$_"})
 	    if exists $opt_ref->{"$_"};
+	$core_lib->l_milestone ("Tools::normalize_options: resolved result:" . $opt_ref->{"$_"});
     }
 
     # FIXME: some have "kernel" some have "image" tag, latter makes more sense
@@ -1012,7 +1034,7 @@ sub SetGlobals {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1025,6 +1047,8 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 sub GetSectionList {
     my %option = @_;
     my $loader = GetBootloader ();
+
+    my $core_lib = $lib_ref->{"loader"};
 
 # FIXME: Maybe activate this part of code later if - against all expectations
 # - still needed, but this shouldn't happen.
@@ -1055,11 +1079,25 @@ sub GetSectionList {
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
+
+    # Print sections from file to logfile
+    $core_lib->l_milestone ("Tools::GetSectionList: sections from file:\n' " .
+			join("'\n' ",
+			     map {
+				 $_->{"name"};
+			     } @sections) . "'\n"
+		       );
+
     my @section_names = map {
 	match_section($_, \%option) ? $_->{"name"} : ();
     } @sections;
 
-    DumpLog ();
+    # Print found sections to logfile
+    $core_lib->l_milestone ("Tools::GetSectionList: Found sections:\n' " .
+			join("'\n' ", @section_names) . "'\n"
+		       );
+
+    DumpLog ($lib_ref->{"loader"});
     return @section_names;
 }
 
@@ -1456,7 +1494,7 @@ sub AddSection {
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
 
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1625,7 +1663,7 @@ sub RemoveSections {
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
 
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 

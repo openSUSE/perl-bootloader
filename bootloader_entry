@@ -57,12 +57,12 @@ function getargs()
 # Wrapper for the update-bootloader function
 function update_bootloader() 
 {
-        echo "bootloader_entry: This is (wrapper) function update_bootloader" >> \
-            /var/log/YaST2/perl-BL-standalone-log
+        echo "bootloader_entry: This is (wrapper) function update_bootloader" >> $logname
 
 	[ -x /sbin/update-bootloader ] || return 0
+	    # call update-bootloader and also append stderr to the log file
 	    ((/sbin/update-bootloader "$@") 3>&1 1>&2 2>&3 3>&- | tee -a \
-	    /var/log/YaST2/perl-BL-standalone-log ) 3>&1 1>&2 2>&3 3>&-
+	    $logname ) 3>&1 1>&2 2>&3 3>&-
 }
 
 
@@ -71,8 +71,7 @@ function update_bootloader()
 ##############################
 function add_entry()
 {
-        echo "bootloader_entry: This is function add_entry()" >> \
-            /var/log/YaST2/perl-BL-standalone-log
+        echo "bootloader_entry: This is function add_entry()" >> $logname
 
 	# Set up the new kernel
         if [ -f /etc/sysconfig/bootloader ] &&
@@ -154,8 +153,7 @@ function remove_entry()
 	#  sections at all, or do only chainload them (BootLILO.ycp), and
 	#  thus do not match either. (#223030)
 
-        echo "bootloader_entry: This is function remove_entry()" >> \
-            /var/log/YaST2/perl-BL-standalone-log
+        echo "bootloader_entry: This is function remove_entry()" >> $logname
 
 	if [ $flavor == "xen" ]; then
 		update_bootloader --image /boot/$image \
@@ -179,8 +177,23 @@ function remove_entry()
 #####################  M A I N  ###############################################
 
 # Log how program was called
-echo "bootloader_entry was called as: $*" >> \
-    /var/log/YaST2/perl-BL-standalone-log
+logname="/var/log/YaST2/perl-BL-standalone-log"
+echo "bootloader_entry was called as: $*" >> $logname
+
+# Log parts of the current system configuration
+(
+echo "/proc/mounts:"
+cat /proc/mounts
+echo "/sys:"
+ls -l /sys
+echo "excerpts of /dev:"
+ls -l /dev/{[hs]d[ab]?,md[0-3],.udev}
+device_map="/boot/grub/device.map"
+if [ -e $device_map ] ; then
+	echo "device.map:"
+	cat $device_map
+fi
+) >> $logname
 
 # Checks if correct amount of arguments is given
 if [ "$#" -ne "4" -a "$#" -ne "5" ] ; then
