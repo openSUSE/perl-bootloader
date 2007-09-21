@@ -73,58 +73,77 @@ function add_entry()
 {
         echo "bootloader_entry: This is function add_entry()" >> $logname
 
-	# Set up the new kernel
-        if [ -f /etc/sysconfig/bootloader ] &&
-           [ -f /boot/grub/menu.lst -o \
-             -f /etc/lilo.conf      -o \
-             -f /etc/elilo.conf     -o \
-             -f /etc/zipl.conf ]; then
-                case $flavor in
-			(kdump|um)
-			;;
-			(xen*)
-				opt_xen_kernel=
-				set -- $flavor
-				set -- ${1#xen}
-				opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
+	# If running in instsys, write command(s) to be executed in a file
+	# which will be executed by yast2-bootloader after installation of
+	# packages is finished.
+	#
+	# This is to prevent inconsistencies triggered by libata migration.
 
-				# Add the new bootloader entry (xen kernel)
-				update_bootloader --image /boot/$image \
-						  --initrd /boot/$initrd \
-						  --default \
-						  --add \
-						  --force $opt_xen_kernel \
-						  --name "$release"
+	if [ "$YAST_IS_RUNNING" == instsys -a "$DELAYED_RUN_UPDATE_BOOTLOADER" != yes ]; then
+		cat - >> $delayed_exec_file <<-EOF
+		#!/bin/sh
 
-				# Run the bootloader (e.g., lilo).
-				update_bootloader --refresh
-			;;			
-			
-			(debug)
-				# Add the new bootloader entry (debug kernel)
-				update_bootloader --image /boot/$image \
-						  --initrd /boot/$initrd \
-						  --add \
-						  --force \
-						  --name "$release"
+		export DELAYED_RUN_UPDATE_BOOTLOADER=yes
 
-				# Run the bootloader (e.g., lilo).
-				update_bootloader --refresh
-			;;
+		/usr/lib/bootloader/bootloader_entry $@
 
-			(*)
-				# Add the new bootloader entry
-				update_bootloader --image /boot/$image \
-						  --initrd /boot/$initrd \
-						  --default \
-						  --add \
-						  --force \
-						  --name "$release"
+		EOF
 
-				# Run the bootloader (e.g., lilo).
-				update_bootloader --refresh
-			;;
-		esac
+		chmod 755 $delayed_exec_file
+	else
+		# Set up the new kernel
+		if [ -f /etc/sysconfig/bootloader ] &&
+		   [ -f /boot/grub/menu.lst -o \
+		     -f /etc/lilo.conf      -o \
+		     -f /etc/elilo.conf     -o \
+		     -f /etc/zipl.conf ]; then
+			case $flavor in
+				(kdump|um)
+				;;
+				(xen*)
+					opt_xen_kernel=
+					set -- $flavor
+					set -- ${1#xen}
+					opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
+
+					# Add the new bootloader entry (xen kernel)
+					update_bootloader --image /boot/$image \
+							  --initrd /boot/$initrd \
+							  --default \
+							  --add \
+							  --force $opt_xen_kernel \
+							  --name "$release"
+
+					# Run the bootloader (e.g., lilo).
+					update_bootloader --refresh
+				;;
+
+				(debug)
+					# Add the new bootloader entry (debug kernel)
+					update_bootloader --image /boot/$image \
+							  --initrd /boot/$initrd \
+							  --add \
+							  --force \
+							  --name "$release"
+
+					# Run the bootloader (e.g., lilo).
+					update_bootloader --refresh
+				;;
+
+				(*)
+					# Add the new bootloader entry
+					update_bootloader --image /boot/$image \
+							  --initrd /boot/$initrd \
+							  --default \
+							  --add \
+							  --force \
+							  --name "$release"
+
+					# Run the bootloader (e.g., lilo).
+					update_bootloader --refresh
+				;;
+			esac
+		fi
 	fi
 }
 
@@ -140,11 +159,9 @@ function remove_entry()
 	# which will be executed by yast2-bootloader after installation of
 	# packages is finished.
 	#
-	# This is to prevent inconsistencies triggered by libata merge.
+	# This is to prevent inconsistencies triggered by libata migration.
 
 	if [ "$YAST_IS_RUNNING" == instsys -a "$DELAYED_RUN_UPDATE_BOOTLOADER" != yes ]; then
-		delayed_exec_file="/boot/perl-BL_delayed_exec"
-
 		cat - >> $delayed_exec_file <<-EOF
 		#!/bin/sh
 
@@ -206,16 +223,33 @@ echo "bootloader_entry was called as: $*" >> $logname
 (
 echo "/proc/mounts:"
 cat /proc/mounts
+echo
+
 echo "/sys:"
 ls -l /sys
+echo
+
+fstab="/etc/fstab"
+if [ -e $fstab ] ; then
+	echo "fstab:"
+	cat $fstab
+	echo
+fi
+
 echo "excerpts of /dev:"
 ls -l /dev/{[hs]d[ab]?,md[0-3],.udev}
+echo
+
 device_map="/boot/grub/device.map"
 if [ -e $device_map ] ; then
 	echo "device.map:"
 	cat $device_map
+	echo
 fi
 ) >> $logname
+
+# File containing commands for later execution
+delayed_exec_file="/boot/perl-BL_delayed_exec"
 
 # Checks if correct amount of arguments is given
 if [ "$#" -ne "4" -a "$#" -ne "5" ] ; then
@@ -229,7 +263,7 @@ getargs $@
 case $action in
 	add)
 		# Add a new bootloader entry
-		add_entry
+		add_entry "$@"
 	;;
 	remove) 
 		# Remove an existing bootloader entry

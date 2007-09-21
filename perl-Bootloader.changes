@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Sep 21 19:12:35 CEST 2007 - aosthof@suse.de
+
+- Save command for adding new section(s) (also multiple kernels) in
+  /boot/perl-BL_delayed_exec for delayed execution in the target 
+  system. This script will be run by yast2-bootloader after the 
+  installation of packages is finished (#309837) 
+
+-------------------------------------------------------------------
 Fri Sep 21 15:13:09 CEST 2007 - aosthof@suse.de
 
 - Save command for removal of old sections in
