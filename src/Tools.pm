@@ -1649,6 +1649,7 @@ sub RemoveSections {
 	# kernels are updated during an update).
 	if (defined $ENV{'YAST_IS_RUNNING'} and
 	    $ENV{'YAST_IS_RUNNING'} == "instsys" and
+	    ! defined $ENV{'DELAYED_RUN_UPDATE_BOOTLOADER'} and
 	    ! defined $glob_ref->{"former_default_image_flavor"}) {
 	    my $former_flavor = $option{"image"};
 	    $former_flavor =~ s/.*-(\w+)/\1/;

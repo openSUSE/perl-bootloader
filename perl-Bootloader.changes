@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Sep 21 15:13:09 CEST 2007 - aosthof@suse.de
+
+- Save command for removal of old sections in
+  /boot/perl-BL_delayed_exec for delayed execution in the target
+  system, script will be run by yast2-bootloader after installation
+  of packages is finished (#309837)
+- Version bump to 0.4.30
+
+-------------------------------------------------------------------
 Wed Sep 19 21:55:09 CEST 2007 - aosthof@suse.de
 
 - Again added more logging - also related to #309837
