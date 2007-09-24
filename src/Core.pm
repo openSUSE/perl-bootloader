@@ -1251,7 +1251,7 @@ sub Info2Section {
 	}
 	elsif ($key eq "kernel" || $key eq "initrd" || $key eq "root"
 	    || $key eq "vga" || $key eq "append" || $key eq "chainloader"
-	    || $key eq "wildcard")
+	    || $key eq "wildcard" || $key eq "image" || $key eq "other")
 	{
 	    $key = "image" if ($key eq "kernel");
 	    $key = "other" if ($key eq "chainloader");

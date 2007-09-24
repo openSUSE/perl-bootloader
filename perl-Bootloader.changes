@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Sep 24 17:56:48 CEST 2007 - aosthof@suse.de
+
+- Fixed missing image line in lilo (#294432)
+
+-------------------------------------------------------------------
 Fri Sep 21 19:12:35 CEST 2007 - aosthof@suse.de
 
 - Save command for adding new section(s) (also multiple kernels) in
