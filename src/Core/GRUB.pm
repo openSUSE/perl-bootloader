@@ -36,7 +36,7 @@ C<< $grub_conf_line_ref = Bootloader::Core::GRUB->CreateGrubConfLine ($target, $
 
 C<< $files_ref = Bootloader::Core::GRUB->ListFiles (); >>
 
-C<< $status = Bootloader::Core::GRUB->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::GRUB->ParseLines (\%files, $avoid_reading_device_map); >>
 
 C<< $files_ref = Bootloader::Core::GRUB->CreateLines (); >>
 
@@ -418,12 +418,13 @@ sub GrubDev2UnixDev {
 	chomp ($resolved_link);
 	$dev = "/dev/" . $resolved_link; 
     }
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevinfo returned: $dev");
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
 	    if ($dev_ref->[1] eq $dev && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
-		$self->l_debug ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
+		$self->l_milestone ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
 		return $dev;
 	    }
 	}
@@ -685,20 +686,23 @@ sub ListMenuFiles {
 }
 
 =item
-C<< $status = Bootloader::Core::GRUB->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::GRUB->ParseLines (\%files, $avoid_reading_device_map); >>
 
 Parses the contents of all files and stores the settings in the
-internal structures. As argument, it takes a hash reference, where
-keys are file names and values are references to lists, each member is
-one line of the file. Returns undef on fail, defined nonzero value on
-success.
+internal structures. As first argument, it takes a hash reference, where
+keys are file names and values are references to lists, each
+member is one line of the file. As second argument, it takes a
+boolean flag that, if set to a true value, causes it to skip
+updating the internal device_map information. Returns undef on
+fail, defined nonzero value on success.
 
 =cut
 
-# void ParseLines (map<string,list<string>>)
+# void ParseLines (map<string,list<string>>, boolean)
 sub ParseLines {
     my $self = shift;
     my %files = %{+shift};
+    my $avoid_reading_device_map = shift;
 
     #first set the device map - other parsing uses it
     my @device_map = @{$files{"/boot/grub/device.map"} || []};
@@ -710,7 +714,7 @@ sub ParseLines {
 	    $devmap{$2} = $1;
 	}
     };
-    $self->{"device_map"} = \%devmap;
+    $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
 
     # and now proceed with menu.lst
     my @menu_lst = @{$files{"/boot/grub/menu.lst"} || []};

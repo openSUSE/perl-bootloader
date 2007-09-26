@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Sep 26 21:01:33 CEST 2007 - od@suse.de
+
+- Added flag avoid_reading_device_map to Library::ReadSettings()
+  and to all ParseLines() (#328448)
+- Added more logging to GrubDev2UnixDev()
+- Version bump to 0.4.32
+
+-------------------------------------------------------------------
 Mon Sep 24 17:56:48 CEST 2007 - aosthof@suse.de
 
 - Fixed missing image line in lilo (#294432)

@@ -298,6 +298,7 @@ EXAMPLE:
 
 sub ReadSettings {
     my $self = shift;
+    my $avoid_reading_device_map = shift;
 
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
@@ -307,7 +308,7 @@ sub ReadSettings {
     {
 	return undef;
     }
-    $loader->ParseLines ($files_ref);
+    $loader->ParseLines ($files_ref, $avoid_reading_device_map);
     return 1;
 }
 

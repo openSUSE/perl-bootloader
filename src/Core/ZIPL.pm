@@ -26,7 +26,7 @@ C<< $files_ref = Bootloader::Core::ZIPL->ListFiles (); >>
 
 C<< $status = Bootloader::Core::ZIPL->FixSectionName ($name, \$names_ref, $type); >>
 
-C<< $status = Bootloader::Core::ZIPL->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::ZIPL->ParseLines (\%files, $avoid_reading_device_map); >>
 
 C<< $sections_ref Bootloader::Core->SplitLinesToSections (\@lines, \@section_starts); >>
 
@@ -288,20 +288,24 @@ sub FixSectionName {
 
 
 =item
-C<< $status = Bootloader::Core::ZIPL->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::ZIPL->ParseLines (\%files, $avoid_reading_device_map); >>
 
 Parses the contents of all files and stores the settings in the
-internal structures. As argument, it takes a hash reference, where
-keys are file names and values are references to lists, each member is
-one line of the file. Returns undef on fail, defined nonzero value on
-success.
+internal structures. As first argument, it takes a hash reference,
+where keys are file names and values are references to lists, each
+member is one line of the file. As second argument, it takes a
+boolean flag that, if set to a true value, causes it to skip
+updating the internal device_map information. The latter argument
+is not used for ZIPL. Returns undef on fail, defined nonzero value
+on success.
 
 =cut
 
-# void ParseLines (map<string,list<string>>)
+# void ParseLines (map<string,list<string>>, boolean)
 sub ParseLines {
     my $self = shift;
     my %files = %{+shift};
+    my $avoid_reading_device_map = shift;
 
     # the only file is /etc/zipl.conf
     my @zipl_conf = @{$files{"/etc/zipl.conf"} || []};

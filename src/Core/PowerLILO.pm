@@ -20,7 +20,7 @@ C<< $obj_ref = Bootloader::Core::PowerLILO->new (); >>
 
 C<< $files_ref = Bootloader::Core::PowerLILO->ListFiles (); >>
 
-C<< $status = Bootloader::Core::PowerLILO->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::PowerLILO->ParseLines (\%files, $avoid_reading_device_map); >>
 
 C<< $files_ref = Bootloader::Core::PowerLILO->CreateLines (); >>
 
@@ -309,20 +309,24 @@ sub FixSectionName {
 
 
 =item
-C<< $status = Bootloader::Core::PowerLILO->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::PowerLILO->ParseLines (\%files, $avoid_reading_device_map); >>
 
 Parses the contents of all files and stores the settings in the
-internal structures. As argument, it takes a hash reference, where
+internal structures. As first argument, it takes a hash reference, where
 keys are file names and values are references to lists, each member is
-one line of the file. Returns undef on fail, defined nonzero value on
+one line of the file. As second argument, it takes a boolean flag
+that, if set to a true value, causes it to skip updating the
+internal device_map information. The latter argument is not used
+for PowerLILO. Returns undef on fail, defined nonzero value on
 success.
 
 =cut
 
-# void ParseLines (map<string,list<string>>)
+# void ParseLines (map<string,list<string>>, boolean)
 sub ParseLines {
     my $self = shift;
     my %files = %{+shift};
+    my $avoid_reading_device_map = shift;
 
     # the only file is /etc/lilo.conf
     my @lilo_conf = @{$files{"/etc/lilo.conf"} || []};

@@ -20,7 +20,7 @@ C<< $obj_ref = Bootloader::Core::ELILO->new (); >>
 
 C<< $files_ref = Bootloader::Core::ELILO->ListFiles (); >>
 
-C<< $status = Bootloader::Core::ELILO->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::ELILO->ParseLines (\%files, $avoid_reading_device_map); >>
 
 C<< $files_ref = Bootloader::Core::ELILO->CreateLines (); >>
 
@@ -267,20 +267,24 @@ sub FixSectionName {
 
 
 =item
-C<< $status = Bootloader::Core::ELILO->ParseLines (\%files); >>
+C<< $status = Bootloader::Core::ELILO->ParseLines (\%files, $avoid_reading_device_map); >>
 
 Parses the contents of all files and stores the settings in the
-internal structures. As argument, it takes a hash reference, where
-keys are file names and values are references to lists, each member is
-one line of the file. Returns undef on fail, defined nonzero value on
-success.
+internal structures. As first argument, it takes a hash reference,
+where keys are file names and values are references to lists, each
+member is one line of the file. As second argument, it takes a
+boolean flag that, if set to a true value, causes it to skip
+updating the internal device_map information. The latter argument
+is not used for ELILO. Returns undef on fail, defined nonzero
+value on success.
 
 =cut
 
-# void ParseLines (map<string,list<string>>)
+# void ParseLines (map<string,list<string>>, boolean)
 sub ParseLines {
     my $self = shift;
     my %files = %{+shift};
+    my $avoid_reading_device_map = shift;
 
     # the only file is /etc/elilo.conf
     my @elilo_conf = @{$files{$default_conf} || []};
