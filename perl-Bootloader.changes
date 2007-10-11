@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Oct 11 11:00:13 CEST 2007 - aosthof@suse.de
+
+- Added new parameter "force-default" to both bootloader_entry and
+  update-bootloader. This parameter (if used) forces the new boot
+  entry to be the default one (#327308)
+- Version bump to 0.4.18
+
+-------------------------------------------------------------------
 Thu Aug  2 14:50:11 CEST 2007 - aosthof@suse.de
 
 - Determine md device corresponding to md member device, e.g.
