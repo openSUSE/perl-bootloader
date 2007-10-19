@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Oct 19 12:58:18 CEST 2007 - aosthof@suse.de
+
+- Moved former change to function RemoveSections(), this is the
+  right place
+
+-------------------------------------------------------------------
 Fri Oct 19 11:43:54 CEST 2007 - aosthof@suse.de
 
 - detect wether there is an entry with a non existing initrd and

@@ -1457,33 +1457,6 @@ sub AddSection {
 	$section_count++;
     }
 
-    # FIXME: detect wether we have an entry with non existing initrd (#276923)
-    # and remove this section.
-    if ($loader eq "grub") {
-	@sections = grep {
-	    my $match = 0;
-
-	    my $initrd_name = $_->{"initrd"};
-	    my $other_part = 0;
-
-	    $other_part = 1 if $initrd_name =~ m/\(hd.+\)/;
-	    $initrd_name =~ s/^.*(initrd-.+)$/$1/;
-	    $initrd_name = "/boot/" . $initrd_name;
-
-	    if (-f $initrd_name or $other_part or $_->{"type"} ne "image") {
-		$match = 1;
-
-		if (!-f $initrd_name and $_->{"type"} eq "xen") {
-		    $match = 0;
-		}
-	    }
-
-	    $default_removed = 1
-		if !$match and $default_section eq $_->{"name"};
-	    $match;
-	} @sections;
-    }
-
     $lib_ref->SetSections (\@sections);
 
     # If the former default boot entry is updated, the new one will become now
@@ -1625,6 +1598,33 @@ sub RemoveSections {
     # FIXME: detect wether we have an entry with non existing initrd (bug
     # #276923) and remove this section. Only needed for update SLE10 GA -->
     # SP1
+    if ($loader eq "grub") {
+	@sections = grep {
+	    my $match = 0;
+
+	    my $initrd_name = $_->{"initrd"};
+	    my $other_part = 0;
+
+	    $other_part = 1 if $initrd_name =~ m/\(hd.+\)/;
+	    $initrd_name =~ s/^.*(initrd-.+)$/$1/;
+	    $initrd_name = "/boot/" . $initrd_name;
+
+	    if (-f $initrd_name or $other_part or $_->{"type"} ne "image") {
+		$match = 1;
+
+		if (!-f $initrd_name and $_->{"type"} eq "xen") {
+		    $match = 0;
+		}
+	    }
+
+	    $default_removed = 1
+		if !$match and $default_section eq $_->{"name"};
+	    $match;
+	} @sections;
+    }
+
+    # FIXME: detect wether we have an entry with non existing initrd (#276923)
+    # and remove this section.
     if ($loader eq "grub") {
 	@sections = grep {
 	    my $match = 0;
