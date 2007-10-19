@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Oct 19 11:43:54 CEST 2007 - aosthof@suse.de
+
+- detect wether there is an entry with a non existing initrd and
+  remove the corresponding section (#276923)
+- Version bump to 0.4.35
+
+-------------------------------------------------------------------
 Fri Oct 19 11:01:24 CEST 2007 - aosthof@suse.de
 
 - Added new parameter "force-default" to both bootloader_entry and
