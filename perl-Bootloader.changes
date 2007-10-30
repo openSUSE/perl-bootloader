@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:37:14 CET 2007 - aosthof@suse.de
+
+- Adapted timestamps for log files (#309837)
+- Version bump to 0.4 18.10
+
+-------------------------------------------------------------------
 Tue Oct 30 16:20:15 CET 2007 - aosthof@suse.de
 
 - Convert debug messages to milestones in GrubDev2UnixDev() and
