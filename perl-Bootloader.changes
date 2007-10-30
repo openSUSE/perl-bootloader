@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:13:27 CET 2007 - aosthof@suse.de
+
+- Fixed perl warning in Core.pm (#302174)
+- Version bump to 0.4.18.7
+
+-------------------------------------------------------------------
 Tue Oct 30 16:11:07 CET 2007 - aosthof@suse.de
 
 - Removed requirement of mdadm (#302052)

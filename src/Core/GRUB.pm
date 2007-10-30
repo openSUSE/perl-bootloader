@@ -1595,8 +1595,15 @@ sub Global2Info {
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
+
+	# Check if key is defined to prevent perl warnings
+	if (!defined($key)) {
+	    next;
+	}
+
 	my ($type) = split(/:/, $go->{$key}||"");
-	if (defined ($key) and (($key eq "root") or ($key eq "rootnoverify"))) {
+
+	if ($key eq "root" or $key eq "rootnoverify") {
 	    $grub_root = $val;
 	    $ret{"verifyroot"} = ($key eq "root");
 	}
@@ -1607,10 +1614,10 @@ sub Global2Info {
 	    my $defindex = 0+ $val;
 	    $ret{"default"} = $sections[$defindex];
 	}
-	elsif ($type eq "path") {
+	elsif (defined ($type) and $type eq "path") {
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
-	elsif ($type eq "bool") {
+	elsif (defined ($type) and $type eq "bool") {
 	    $ret{$key} = "true";
 	}
 	elsif ($key =~ m/^boot_/) {
