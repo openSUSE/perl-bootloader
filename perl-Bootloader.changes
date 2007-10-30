@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:03:57 CET 2007 - aosthof@suse.de
+
+- accept all "original_name"s in comments, not only alphanumeric
+- Version bump to 0.4.18.4
+
+-------------------------------------------------------------------
 Tue Oct 30 15:43:09 CET 2007 - aosthof@suse.de
 
 - Adapt function DumpLog() to only write to perl-BL-standalone-log,
