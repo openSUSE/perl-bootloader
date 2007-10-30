@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:17:59 CET 2007 - aosthof@suse.de
+
+- Removed code from update-bootloader to remove old standalone
+  log file
+- Version bump to 0.4.18.8
+
+-------------------------------------------------------------------
 Tue Oct 30 16:13:27 CET 2007 - aosthof@suse.de
 
 - Fixed perl warning in Core.pm (#302174)
