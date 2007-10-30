@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:20:15 CET 2007 - aosthof@suse.de
+
+- Convert debug messages to milestones in GrubDev2UnixDev() and
+  UnixDev2GrubDev(): we always want to have logs available when
+  device translation goes wrong
+- Actually log contents of new lines in CreateGrubConfLines()
+- Version bump to 0.4.18.9
+
+-------------------------------------------------------------------
 Tue Oct 30 16:17:59 CET 2007 - aosthof@suse.de
 
 - Removed code from update-bootloader to remove old standalone
