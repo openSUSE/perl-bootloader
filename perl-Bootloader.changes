@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:11:07 CET 2007 - aosthof@suse.de
+
+- Removed requirement of mdadm (#302052)
+- Version bump to 0.4.18.6
+
+-------------------------------------------------------------------
 Tue Oct 30 16:06:32 CET 2007 - aosthof@suse.de
 
 - Improved error handling for mdadm call in Tools.pm (#288842)
