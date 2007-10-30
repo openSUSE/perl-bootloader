@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 15:31:53 CET 2007 - aosthof@suse.de
+
+- Avoid duplicate entries in elilo.conf (#294717)
+- Version bump to 0.4.18.2
+
+-------------------------------------------------------------------
 Tue Oct 30 15:19:55 CET 2007 - aosthof@suse.de
 
 - Implemented new function AdaptCommentLine in Tools.pm which

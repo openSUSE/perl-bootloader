@@ -134,6 +134,7 @@ sub GetProduct {
     if ($found){
         if ($loader ne "grub") {
             $namever = $product_query[$i+1];
+	    $namever =~ s/\s/_/g;
         }
         else{
             $namever = $product_query[$i+2];
