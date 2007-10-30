@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:47:33 CET 2007 - aosthof@suse.de
+
+- Fixed missing image line in lilo (#294432)
+- Version bump to 0.4.12
+
+-------------------------------------------------------------------
 Tue Oct 30 16:41:26 CET 2007 - aosthof@suse.de
 
 - Improved logging in bootloader_entry, update-bootloader, Core.pm
