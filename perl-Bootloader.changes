@@ -1,4 +1,21 @@
 -------------------------------------------------------------------
+Tue Oct 30 15:43:09 CET 2007 - aosthof@suse.de
+
+- Adapt function DumpLog() to only write to perl-BL-standalone-log,
+  because against expectations yast2-bootloader does logging of
+  called perl-Bootloader functions on its own
+- Added milestones to functions AddSection() and RemoveSections()
+  to print new section entries, already existing section entries
+  and section entries to be removed
+- Improved logging mechanism to write log messages either to
+  /var/log/YaST2/y2log or to /var/log/YaST2/perl-BL-standalone-log,
+  depending on the state of the environment variable
+  YAST_IS_RUNNING. In addition to that, the printing of log
+  messages with level DEBUG can be switched on/off by
+  setting/unsetting the environment variable Y2DEBUG.
+- Version bump to 0.4.18.3 
+
+-------------------------------------------------------------------
 Tue Oct 30 15:31:53 CET 2007 - aosthof@suse.de
 
 - Avoid duplicate entries in elilo.conf (#294717)
