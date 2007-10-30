@@ -218,14 +218,28 @@ echo "bootloader_entry was called as: $*" >> $logname
 (
 echo "/proc/mounts:"
 cat /proc/mounts
+echo
+
 echo "/sys:"
 ls -l /sys
+echo
+
+fstab="/etc/fstab"
+if [ -e $fstab ] ; then
+	echo "fstab:"
+	cat $fstab
+	echo
+fi
+
 echo "excerpts of /dev:"
 ls -l /dev/{[hs]d[ab]?,md[0-3],.udev}
+echo
+
 device_map="/boot/grub/device.map"
 if [ -e $device_map ] ; then
 	echo "device.map:"
 	cat $device_map
+	echo
 fi
 ) >> $logname
 

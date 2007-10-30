@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Oct 30 17:12:39 CET 2007 - aosthof@suse.de
+
+- Improved logging in bootloader_entry one more time to log
+  contents of /etc/fstab, too (#309837)
+- Version bump to 0.4.13
+
+-------------------------------------------------------------------
 Tue Oct 30 16:47:33 CET 2007 - aosthof@suse.de
 
 - Fixed missing image line in lilo (#294432)
