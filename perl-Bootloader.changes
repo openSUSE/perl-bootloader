@@ -1,15 +1,22 @@
 -------------------------------------------------------------------
+Tue Oct 30 17:24:34 CET 2007 - aosthof@suse.de
+
+- Fixed another perl warning in Core.pm (#302174)
+- Corrected typos in .changes file
+- Version bump to 0.4.18.14
+
+-------------------------------------------------------------------
 Tue Oct 30 17:12:39 CET 2007 - aosthof@suse.de
 
 - Improved logging in bootloader_entry one more time to log
   contents of /etc/fstab, too (#309837)
-- Version bump to 0.4.13
+- Version bump to 0.4.18.13
 
 -------------------------------------------------------------------
 Tue Oct 30 16:47:33 CET 2007 - aosthof@suse.de
 
 - Fixed missing image line in lilo (#294432)
-- Version bump to 0.4.12
+- Version bump to 0.4.18.12
 
 -------------------------------------------------------------------
 Tue Oct 30 16:41:26 CET 2007 - aosthof@suse.de

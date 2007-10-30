@@ -1833,9 +1833,9 @@ sub RealFileName {
     return "" unless $filename;
 
     my $ret = "";
-    $self->l_milestone ("Core::RealFileName: resolve_symlinks:" . $self->{"resolve_symlinks"});
     if ($self->{"resolve_symlinks"})
     {
+	$self->l_milestone ("Core::RealFileName: resolve_symlinks:" . $self->{"resolve_symlinks"});
 	$ret = $self->CanonicalPath($self->ResolveCrossDeviceSymlinks ($filename));
     }
     else
