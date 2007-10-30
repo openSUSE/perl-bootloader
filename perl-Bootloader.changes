@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 16:06:32 CET 2007 - aosthof@suse.de
+
+- Improved error handling for mdadm call in Tools.pm (#288842)
+- Version bump to 0.4.18.5
+
+-------------------------------------------------------------------
 Tue Oct 30 16:03:57 CET 2007 - aosthof@suse.de
 
 - accept all "original_name"s in comments, not only alphanumeric
