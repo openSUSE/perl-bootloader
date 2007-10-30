@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Oct 30 15:19:55 CET 2007 - aosthof@suse.de
+
+- Implemented new function AdaptCommentLine in Tools.pm which
+  adapts YaST-like comments in existing sections to be handled
+  properly by yast-bootloader (#283709)
+- Version bump to 0.4.18.1
+
+-------------------------------------------------------------------
 Thu Oct 11 11:00:13 CEST 2007 - aosthof@suse.de
 
 - Added new parameter "force-default" to both bootloader_entry and
