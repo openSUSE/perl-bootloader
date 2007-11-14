@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Nov 14 14:57:09 CET 2007 - aosthof@suse.de
+
+- Reverted last patch (non existing initrd) because it's already
+  implemented and I've overseen it during patch session.
+- Version bump to 0.4.36
+
+-------------------------------------------------------------------
 Fri Oct 19 12:58:18 CEST 2007 - aosthof@suse.de
 
 - Moved former change to function RemoveSections(), this is the
