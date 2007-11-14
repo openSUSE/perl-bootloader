@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov 14 15:51:35 CET 2007 - aosthof@suse.de
+
+- Fixed perl warning in Core.pm (#302174)
+- Version bump to 0.4.32.2
+
+-------------------------------------------------------------------
 Wed Nov 14 14:30:29 CET 2007 - aosthof@suse.de
 
 - Adapted Makefile to suit the openSUSE 10.3 branch
