@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov 14 14:30:29 CET 2007 - aosthof@suse.de
+
+- Adapted Makefile to suit the openSUSE 10.3 branch
+- Version bump to 0.4.32.1
+
+-------------------------------------------------------------------
 Wed Sep 26 21:01:33 CEST 2007 - od@suse.de
 
 - Added flag avoid_reading_device_map to Library::ReadSettings()
