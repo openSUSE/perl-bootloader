@@ -20,7 +20,7 @@
 function usage()
 {
 	echo "Unknown or missing parameter."
-	echo "Usage: $0 [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name>"
+	echo "Usage: $0 [add|remove] <kernel-flavor> <kernel-release> <image-name> <initrd-name> [force-default]"
 	echo
 	echo "The old interface with 4 parameters is still supported, but deprecated."
 	echo "This interface will be dropped in the near future."
@@ -43,13 +43,16 @@ function getargs()
 		image=${3}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
 		initrd=${4}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
 		
-	# new interface with 5 parameters
+	# new interface with 5 or 6 parameters, depends whether option
+	# "force-default" is used or not
 	else
 		action=${1}		# contains the action to be executed, e.g. "add" or "remove"
 		flavor=${2}		# contains the kernel-flavor, e.g. "default" or "xen"
 		release=${3}		# contains the kernel-release, e.g. "2.6.18-4-default"
 		image=${4}		# contains the full image name, e.g. "vmlinuz-2.6.18-4-default"
 		initrd=${5}		# contains the full initrd name, e.g. "initrd-2.6.18-4-default"
+		forcedefault=${6}	# contains action which forces corresponding boot entry beeing the
+					# default boot entry, enabled by given parameter "force-default"
 	fi
 }
 
@@ -106,6 +109,17 @@ function add_entry()
 					set -- ${1#xen}
 					opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
 
+				if [ "$forcedefault" == "force-default" ]; then
+					# Add the new bootloader entry (xen kernel)
+					# and force it beeing the default entry
+					update_bootloader --image /boot/$image \
+							  --initrd /boot/$initrd \
+							  --default \
+							  --force-default \
+							  --add \
+							  --force $opt_xen_kernel \
+							  --name "$release"
+				else
 					# Add the new bootloader entry (xen kernel)
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
@@ -113,24 +127,47 @@ function add_entry()
 							  --add \
 							  --force $opt_xen_kernel \
 							  --name "$release"
+				fi
 
 					# Run the bootloader (e.g., lilo).
 					update_bootloader --refresh
 				;;
 
 				(debug)
+				if [ "$forcedefault" == "force-default" ]; then
+					# Add the new bootloader entry (debug kernel)
+					# and force it beeing the default entry
+					update_bootloader --image /boot/$image \
+							  --initrd /boot/$initrd \
+							  --force-default \
+							  --add \
+							  --force \
+							  --name "$release"
+				else
 					# Add the new bootloader entry (debug kernel)
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
 							  --add \
 							  --force \
 							  --name "$release"
+				fi
 
 					# Run the bootloader (e.g., lilo).
 					update_bootloader --refresh
 				;;
 
 				(*)
+				if [ "$forcedefault" == "force-default" ]; then
+					# Add the new bootloader entry
+					# and force it beeing the default entry
+					update_bootloader --image /boot/$image \
+							  --initrd /boot/$initrd \
+							  --default \
+							  --force-default \
+							  --add \
+							  --force \
+							  --name "$release"
+				else
 					# Add the new bootloader entry
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
@@ -138,6 +175,7 @@ function add_entry()
 							  --add \
 							  --force \
 							  --name "$release"
+				fi
 
 					# Run the bootloader (e.g., lilo).
 					update_bootloader --refresh
@@ -252,7 +290,7 @@ fi
 delayed_exec_file="/boot/perl-BL_delayed_exec"
 
 # Checks if correct amount of arguments is given
-if [ "$#" -ne "4" -a "$#" -ne "5" ] ; then
+if [ "$#" -lt "4" -o "$#" -gt "6" ] ; then
 	usage
 fi
 

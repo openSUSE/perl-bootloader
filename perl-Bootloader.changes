@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Nov 14 15:55:32 CET 2007 - aosthof@suse.de
+
+- Added new parameter "force-default" to both bootloader_entry and
+  update-bootloader. This parameter (if used) forces the new boot
+  entry to be the default one (#327308)
+- Version bump to 0.4.32.3
+
+-------------------------------------------------------------------
 Wed Nov 14 15:51:35 CET 2007 - aosthof@suse.de
 
 - Fixed perl warning in Core.pm (#302174)
