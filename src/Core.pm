@@ -444,7 +444,8 @@ sub Quote {
 
     if ($when eq "always"
 	|| ($when eq "blanks" && index ($text, " ") >= 0)
-	|| ($when eq "blanks" && $text eq ""))
+	|| ($when eq "blanks" && $text eq "")
+	|| index ($text, "=") >= 0)
     {
 	$text = "\"$text\"";
     }

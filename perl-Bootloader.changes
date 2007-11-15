@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Nov 15 13:31:06 CET 2007 - aosthof@suse.de
+
+- Fixed quoting of single arguments (#276464)
+- Version bump to 0.4.37
+
+-------------------------------------------------------------------
 Wed Nov 14 14:57:09 CET 2007 - aosthof@suse.de
 
 - Reverted last patch (non existing initrd) because it's already
