@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Nov 15 13:46:12 CET 2007 - aosthof@suse.de
+
+- Fixed quoting of single arguments (#276464)
+- Version bump to 0.4.32.4
+
+-------------------------------------------------------------------
 Wed Nov 14 15:55:32 CET 2007 - aosthof@suse.de
 
 - Added new parameter "force-default" to both bootloader_entry and
