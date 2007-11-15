@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Nov 15 13:49:49 CET 2007 - aosthof@suse.de
+
+- Fixed quoting of single arguments (#276464)
+- Version bump to 0.4.18.15
+
+-------------------------------------------------------------------
 Tue Oct 30 17:24:34 CET 2007 - aosthof@suse.de
 
 - Fixed another perl warning in Core.pm (#302174)
