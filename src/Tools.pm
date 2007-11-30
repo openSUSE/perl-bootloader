@@ -844,19 +844,16 @@ sub AddSection {
     return unless exists $option{"type"};
 
     my $default = delete $option{"default"} || 0;
+    my %new = ();
+    my %def = ();
 
-    my $mp = $lib_ref->GetMountPoints ();
     my @sections = @{$lib_ref->GetSections ()};
 
     # Adapt YaST-like comment lines in old sections
     @sections = AdaptCommentLine (\@sections, $option{"original_name"});
 
-    my %new = (
-	"root" => $mp->{"/"} || "/dev/null",
-    );
     # FIXME: sf@: what is this code good for?
     # FIXME: removed resetting root parameter if it's already set
-    my %def = ();
     foreach my $s (@sections) {
 	if (defined ($s->{"initial"}) && $s->{"initial"}) {
 	    %def = %{$s};
