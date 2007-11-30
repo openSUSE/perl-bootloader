@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Nov 30 10:14:21 CET 2007 - aosthof@suse.de
+
+- Prevent changing root device in kernel append line (#344447)
+- Version bump to 0.4.32.5
+
+-------------------------------------------------------------------
 Thu Nov 15 13:46:12 CET 2007 - aosthof@suse.de
 
 - Fixed quoting of single arguments (#276464)
