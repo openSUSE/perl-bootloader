@@ -205,7 +205,16 @@ if ($opt_initrd and $opt_initrd !~ m;^/;) {
 if (defined $opt_xen_kernel) {
     $opt_xen = 1;
 } elsif ($opt_xen) {
-    $opt_xen_kernel = "/boot/xen.gz";
+    my $xen_flavor = $opt_image;
+    $xen_flavor =~ s/.*-(\w+)/\1/;
+
+    if ($xen_flavor eq "xenpae") {
+        $opt_xen_kernel = "/boot/xen-pae.gz";
+    }
+    else {
+        $opt_xen_kernel = "/boot/xen.gz";
+    }
+
 }
 my $type = $opt_xen ? "xen" : "image";
 

@@ -189,7 +189,7 @@ function remove_entry()
 
         echo "bootloader_entry: This is function remove_entry()" >> $logname
 
-	if [ $flavor == "xen" ]; then
+	if [[ $flavor =~ xen ]]; then
 		update_bootloader --image /boot/$image \
 				  --initrd /boot/$initrd \
 				  --xen \
