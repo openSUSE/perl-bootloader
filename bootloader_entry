@@ -231,7 +231,7 @@ function remove_entry()
 		#  thus do not match either. (#223030)
 
 
-		if [ "$flavor" == "xen" ]; then
+		if [[ "$flavor" =~ xen ]]; then
 			update_bootloader --image /boot/$image \
 					  --initrd /boot/$initrd \
 					  --xen \

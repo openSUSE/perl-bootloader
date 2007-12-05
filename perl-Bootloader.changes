@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec  5 14:53:20 CET 2007 - aosthof@suse.de
+
+- Fixed removal of xen (-pae) entries (#345188)
+- Version bump to 0.4.39
+
+-------------------------------------------------------------------
 Fri Nov 30 10:19:02 CET 2007 - aosthof@suse.de
 
 - Prevent changing root device in kernel append line (#344447)
