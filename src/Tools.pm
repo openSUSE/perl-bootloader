@@ -1592,29 +1592,31 @@ sub RemoveSections {
 	!$match;
     } @sections;
 
-    # FIXME: detect wether we have an entry with non existing initrd (#276923)
-    # and remove this section.
+    # Detect wether we have an entry with an initrd line referring to a non
+    # existing initrd file and remove this section respectively.
     if ($loader eq "grub") {
 	@sections = grep {
-	    my $match = 0;
+	    my $match = 1;
 
-	    my $initrd_name = $_->{"initrd"};
-	    my $other_part = 0;
+	    # Check if there is a member called "initrd". If this is not the
+	    # case, do not throw out the corresponding section because boot
+	    # entries without an initrd are allowed, too.
+	    if (exists $_->{"initrd"}) {
+		my $initrd_name = $_->{"initrd"};
+		my $other_part = 0;
 
-	    $other_part = 1 if $initrd_name =~ m/\(hd.+\)/;
-	    $initrd_name =~ s/^.*(initrd-.+)$/$1/;
-	    $initrd_name = "/boot/" . $initrd_name;
+		$other_part = 1 if $initrd_name =~ m/\(hd.+\)/;
+		$initrd_name =~ s/^.*(initrd-.+)$/$1/;
+		$initrd_name = "/boot/" . $initrd_name;
 
-	    if (-f $initrd_name or $other_part or $_->{"type"} ne "image") {
-		$match = 1;
-
-		if (!-f $initrd_name and $_->{"type"} eq "xen") {
+		if (!$other_part and !-f $initrd_name and
+		    ($_->{"type"} eq "image" or $_->{"type"} eq "xen")) {
 		    $match = 0;
 		}
-	    }
 
-	    $default_removed = 1
-		if !$match and $default_section eq $_->{"name"};
+		$default_removed = 1
+		    if !$match and $default_section eq $_->{"name"};
+	    }
 	    $match;
 	} @sections;
     }

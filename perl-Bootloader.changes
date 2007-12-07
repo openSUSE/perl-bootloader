@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Dec  7 17:21:02 CET 2007 - aosthof@suse.de
+
+- Corrected mechanism of removing obsolete boot entries (#285421)
+- Version bump to 0.4.40
+
+-------------------------------------------------------------------
 Wed Dec  5 14:53:20 CET 2007 - aosthof@suse.de
 
 - Fixed removal of xen (-pae) entries (#345188)
