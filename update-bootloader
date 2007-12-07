@@ -303,11 +303,17 @@ if (defined $oper{add}) {
     # Naming scheme for all xen kernels, thus xen and xenpae
     elsif ($opt_xen) {
 	if ($loader eq "grub") {
-	    $opt_name =~ s/-xen.*$//;
-	    $opt_xen_name = "XEN -- " . GetProduct() . " - " . $opt_name;
+	    my $opt_version = $opt_name;
+	    $opt_version =~ s/-xen.*$//;
+
+	    $opt_name =~ s/^.*(xen.*)$/$1/;
+	    $opt_name = ucfirst ($opt_name);
+
+	    $opt_xen_name = "$opt_name -- " . GetProduct() . " - " . $opt_name;
 	}
 	else {
-	    $opt_name = "XEN";
+	    $opt_name =~ s/^.*(xen.*)$/$1/;
+	    $opt_name = ucfirst ($opt_name);
 	}
     }
     # Naming scheme for all other kernels

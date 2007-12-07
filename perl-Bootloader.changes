@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Dec  7 16:59:17 CET 2007 - aosthof@suse.de
+
+- Distinguish between various xen kernel names (#340922)
+- Version bump to 0.4.18.19
+
+-------------------------------------------------------------------
 Fri Dec  7 16:56:14 CET 2007 - aosthof@suse.de
 
 - Corrected mechanism of removing obsolete boot entries (#285421)
