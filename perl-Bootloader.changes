@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Dec 18 15:27:38 CET 2007 - aosthof@suse.de
+
+- Version bump to 0.4.19.1 (for a clean differentiation)
+
+-------------------------------------------------------------------
 Tue Dec 18 13:25:18 CET 2007 - aosthof@suse.de
 
 - Fixed last checkin so that labels for xen entries get displayed
