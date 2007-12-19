@@ -544,7 +544,7 @@ sub GrubPath2UnixPath {
     }
 
     if ($dev eq "") {
-	$self->l_warning ("GRUB::GrubPath2UnixPath: Path $orig_path in UNIX form, not modifying it");
+	$self->l_milestone ("GRUB::GrubPath2UnixPath: Path $orig_path in UNIX form, not modifying it");
 	return $orig_path;
     }
 
