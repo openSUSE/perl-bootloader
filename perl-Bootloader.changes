@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 15:19:34 CET 2007 - aosthof@suse.de
+
+- Fixed appending already existing sections to zipl menu (#266605)
+- Version bump to 0.4.17.2
+
+-------------------------------------------------------------------
 Wed Dec 19 14:48:52 CET 2007 - aosthof@suse.de
 
 - Removed the "o" suffix from a perl s/foo/bar/ expression that it
