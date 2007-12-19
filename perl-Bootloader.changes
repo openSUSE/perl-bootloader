@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 17:33:51 CET 2007 - aosthof@suse.de
+
+- Prevent changing root device in kernel append line (#344447)
+- Version bump to 0.4.18.8
+
+-------------------------------------------------------------------
 Wed Dec 19 17:17:42 CET 2007 - aosthof@suse.de
 
 - Added distinction of various xen flavours (#340922)
