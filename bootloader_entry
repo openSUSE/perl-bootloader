@@ -275,7 +275,7 @@ if [ -e $fstab ] ; then
 fi
 
 echo "excerpts of /dev:"
-ls -l /dev/{[hs]d[ab]?,md[0-3],.udev}
+ls -l /dev/{[hs]d[ab]?,md[0-3],.udev,disk/by-*} 2>/dev/null
 echo
 
 device_map="/boot/grub/device.map"
