@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Dec 19 15:50:01 CET 2007 - aosthof@suse.de
+
+- Determine md device corresponding to md member device, e.g.
+  if /dev/md0 consists of /dev/sda1 and /dev/sda2, then /dev/md0
+  corresponds to both /dev/sda1 and /dev/sda2 (#271797)
+- Version bump to 0.4.18.4
+
+-------------------------------------------------------------------
 Wed Dec 19 15:48:09 CET 2007 - aosthof@suse.de
 
 - Implemented a mechanism to not throw out any user defined
