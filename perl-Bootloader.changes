@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 17:37:40 CET 2007 - aosthof@suse.de
+
+- Fixed booting from EVMS on OES2 (#304515)
+- Version bump to 0.4.18.10
+
+-------------------------------------------------------------------
 Wed Dec 19 17:35:55 CET 2007 - aosthof@suse.de
 
 - Fixed removal of xenpae entries in boot menu (#345188)
