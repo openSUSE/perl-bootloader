@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 17:17:42 CET 2007 - aosthof@suse.de
+
+- Added distinction of various xen flavours (#340922)
+- Version bump to 0.4.18.7
+
+-------------------------------------------------------------------
 Wed Dec 19 17:06:49 CET 2007 - aosthof@suse.de
 
 - Corrected mechanism of removing obsolete boot entries (#285421)
