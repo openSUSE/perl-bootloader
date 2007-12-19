@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 15:23:04 CET 2007 - aosthof@suse.de
+
+- Added clean section type checking in zipl menu (#261551)
+- Version bump to 0.4.17.3
+
+-------------------------------------------------------------------
 Wed Dec 19 15:19:34 CET 2007 - aosthof@suse.de
 
 - Fixed appending already existing sections to zipl menu (#266605)
