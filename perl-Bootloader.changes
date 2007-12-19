@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 15:45:48 CET 2007 - aosthof@suse.de
+
+- Fixed failsafe parameters to boot in runlevel 3 instead of 5
+- Version bump to 0.4.18.2
+
+-------------------------------------------------------------------
 Wed Dec 19 15:26:56 CET 2007 - aosthof@suse.de
 
 - Corrected naming scheme for boot entry labels to display long
