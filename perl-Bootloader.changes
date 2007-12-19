@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 11:13:10 CET 2007 - aosthof@suse.de
+
+- Omit error messages on console when looking for devices
+- Version bump to 0.4.32.11
+
+-------------------------------------------------------------------
 Wed Dec 19 10:38:26 CET 2007 - aosthof@suse.de
 
 - Changed a (misleading) warning to a milestone (#345848)
