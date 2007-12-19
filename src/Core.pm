@@ -1093,7 +1093,7 @@ sub FixSectionName {
 	$name_ix = $i
 	    if $_ eq $orig_name; # remember index of original name
 	# Does the name start with $name? -> cut off and calc $index
-	if (s/^\Q$name\E//o) {
+	if (s/^\Q$name\E//) {
 	    if ($_ eq '') {
 		# count one up for every identical entry, should be
 		# maximum one but who knows ...

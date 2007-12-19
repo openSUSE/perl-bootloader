@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Wed Dec 19 14:48:52 CET 2007 - aosthof@suse.de
+
+- Removed the "o" suffix from a perl s/foo/bar/ expression that it
+  gets compiled every time, not only once. This enables section
+  names to get fixed properly (#284308)
+- Removed a line in update-bootloader which replaced spaces by
+  underscores, because this functionality is done by
+  FixSectionName() in the according bootloader modules (#284308)
+- Fixed function FixSectionName() in ZIPL.pm to fix section names
+  on s390 properly (#284308)
+- Version bump to 0.4.17.1
+
+-------------------------------------------------------------------
 Mon Dec 17 15:35:36 CET 2007 - aosthof@suse.de
 
 - Added myself to the list of authors

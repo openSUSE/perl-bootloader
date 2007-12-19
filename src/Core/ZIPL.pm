@@ -240,74 +240,50 @@ sub FixSectionName {
     # them, no length limit. fix name_ref if needed
     $name =~ s/[^$allowed_chars]/$replacement_char/g;
 
-    # and make the section name unique
-    #$name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
-    $name = $self->CoreFixSectionName($name, $names_ref, $orig_name);
+    my $new_name = undef;
+    my $new_name_ix = 2;
+    my $new_name_arr_ix = undef;
 
-    # do it again
-    $name =~ s/[^$allowed_chars]/$replacement_char/g;
-
-    return $name;
-}
-
-=item
-
-C<< $label = Bootloader::Core::ZIPL->CoreFixSectionName ($name, \@existing, $orig_name); >>
-
-FIXME
-
-Oh, my dear, this is an ugly hack. We copied a fixed version of the below
-function to here to avoid the need of fixing the common code in this stage of
-the product cycle. FIX THIS ASAP AFTER SP1 RELEASE!
-
-Update the section name so that it does not break anything (is in compliance
-with the bootloader and is unique). As arguments takes suggested section name
-and list of existing sections, returns updated section name and updates the
-list of section names as a side effect. Optional parameter orig_name is
-intended for internal use of the loader specific modules
-
-=cut
-
-# string CoreFixSectionName (string name, list<string> existing, optional orig_name)
-sub CoreFixSectionName {
-    my $self = shift;
-    my $name = shift;
-    my $names_ref = shift;
-    my $orig_name = shift || $name;
-
-    my $index = 0;	# 0 means not-found, 1 is_unique, else index to be
-    			# appended
-    my $name_ix = -1;
-
-    # make the section name unique, if you find a duplicate then make it
-    # distinguishable by appending an underscore followed by a number
     for (my $i = 0; $i <= $#$names_ref; $i++) {
 	$_ = $names_ref->[$i];
-	$name_ix = $i
-	    if $_ eq $orig_name; # remember index of original name
-	# Does the name start with $name? -> cut off and calc $index
-	if (s/^\Q$name\E//) {
-	    if ($_ eq '') {
-		# count one up for every identical entry, should be
-		# maximum one but who knows ...
-		$index++;
-		next;
-	    }
-	    s/^_//;	# cut off an optional leading underscore
-	    if (/^\d*$/) {
-		my $new_index = $_ + 1;	# interprete the remainder string as
-	    				# integer index and try next number
-		# finally take the maximum as index to append to $name
-		$index = $new_index if $index < $new_index;
-	    }
+	if ($_ eq $orig_name) {
+	    $names_ref->[$i] = $name;
+	    $new_name = $name;
+	    $new_name_arr_ix = $i;
 	}
     }
 
-    # update $name and list of section names if neccessary
-    $name .= "_" . $index if $index>1;
-    $names_ref->[$name_ix] = $name if $name_ix>=0;
+    LOOP:
+    my $count = 0;
+    for (my $i = 0; $i <= $#$names_ref; $i++) {
+	$_ = $names_ref->[$i];
+	if ($_ eq $new_name) {
+	    $count++;
+	}
+    }
 
-    return $name;
+    if ($count >= 2) {
+	for (my $i = 0; $i <= $#$names_ref; $i++) {
+	    $_ = $names_ref->[$i];
+	    if ($_ eq $new_name) {
+		$new_name =~ s/_\d+$//;
+		$new_name .= "_" . $new_name_ix;
+		$names_ref->[$new_name_arr_ix] = $new_name;
+		$new_name_ix++;
+	    }
+	}
+	goto LOOP;
+    }
+
+    #$orig_name = $name;
+
+    # and make the section name unique
+    #$name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
+
+    # do it again
+    #$name =~ s/[^$allowed_chars]/$replacement_char/g;
+
+    return $new_name;
 }
 
 
