@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 10:27:14 CET 2007 - aosthof@suse.de
+
+- Changed a (misleading) warning to a milestone (#345848)
+- Version bump to 04.19.2
+
+-------------------------------------------------------------------
 Tue Dec 18 15:27:38 CET 2007 - aosthof@suse.de
 
 - Version bump to 0.4.19.1 (for a clean differentiation)
