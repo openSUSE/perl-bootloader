@@ -8,8 +8,8 @@ use Locale::gettext;
 use strict;
 
 my %oper;
-my ($opt_default, $opt_force, $opt_help, $opt_man, $opt_previous, $opt_xen)
-    = (0,0,0,0,0,0);
+my ($opt_default, $opt_force, $opt_force_default, $opt_help, $opt_man, $opt_previous, $opt_xen)
+    = (0,0,0,0,0,0,0);
 my ($opt_image, $opt_initrd, $opt_name, $opt_xen_name, $opt_failsafe, $opt_xen_kernel) 
     = ('','','','','',undef);
 my $add_product = 0;
@@ -26,7 +26,8 @@ update-bootloader [operation] [options]
 operation is one of --add, --remove or --refresh.
 
 valid options are --help, --man, --image <file>, --initrd <file>,
---xen-kernel <file>, --xen, --default, --previous, --name <string>, --force.
+--xen-kernel <file>, --xen, --default, --previous, --name <string>, --force,
+--force-default.
 
 =head1 OPERATIONS
 
@@ -90,6 +91,11 @@ specify the name of the section to be added/removed
 =item B<--force>
 
 dont complain, just do the right thing
+
+=item B<--force-default>
+
+force the new section to be added to be the default section. Only
+allowed together with --add operation
 
 =back
 
@@ -161,6 +167,7 @@ GetOptions (\%oper,
     'refresh'    ,
     'remove|r' 	 ,
     'default|d'  => \$opt_default,
+    'force-default' => \$opt_force_default,
     'help|h'   	 => \$opt_help,
     'force'      => \$opt_force,
     'image=s'  	 => \$opt_image,
@@ -179,6 +186,9 @@ pod2usage("Specify exactly one operation, either 'add', 'remove' or 'refresh'")
 
 pod2usage("Option 'default' is only allowed for operation 'add'")
     if ($opt_default and not defined $oper{add});
+
+pod2usage("Option 'force-default' is only allowed for operation 'add'")
+    if ($opt_force_default and not defined $oper{add});
 
 if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
@@ -343,6 +353,12 @@ if (defined $oper{add}) {
 	# kernel be the default one.
 	if (-l $default_image) {
 	    $default_image = readlink ($default_image);
+	    push @params, default => $opt_default;
+	}
+
+	# Else, if option $opt_force_default is set, let this new kernel be
+	# the default one.
+	elsif ($opt_force_default) {
 	    push @params, default => $opt_default;
 	}
 
