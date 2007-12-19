@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 17:06:49 CET 2007 - aosthof@suse.de
+
+- Corrected mechanism of removing obsolete boot entries (#285421)
+- Version bump to 0.4.18.6
+
+-------------------------------------------------------------------
 Wed Dec 19 15:55:45 CET 2007 - aosthof@suse.de
 
 - Fixed default value handling in update-bootloader. Check if
