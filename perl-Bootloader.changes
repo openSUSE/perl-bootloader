@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Dec 19 15:26:56 CET 2007 - aosthof@suse.de
+
+- Corrected naming scheme for boot entry labels to display long
+  ones in case of GRUB and short ones for all other loaders 
+  (#277405)
+- Version bump to 0.4.18.1
+
+-------------------------------------------------------------------
 Wed Dec 19 15:23:04 CET 2007 - aosthof@suse.de
 
 - Added clean section type checking in zipl menu (#261551)

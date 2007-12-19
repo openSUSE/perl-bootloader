@@ -292,10 +292,17 @@ if (defined $oper{add}) {
 	$flavor =~ s/.*-(\w+)/\1/;
 	$flavor = ucfirst ($flavor);
 
-	my $version = $opt_name;
-	$version =~ s/-[^-]*$//;
+	# Create long labels for grub
+	if ($loader eq "grub") {
+	    my $version = $opt_name;
+	    $version =~ s/-[^-]*$//;
 
-	$opt_name = $flavor . " -- " . GetProduct() . " - " . $version;
+	    $opt_name = $flavor . " -- " . GetProduct() . " - " . $version;
+	}
+	# Create short labels for all other loaders
+	else {
+	    $opt_name = $flavor;
+	}
     }
 }
 
