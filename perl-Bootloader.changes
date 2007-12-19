@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec 19 17:35:55 CET 2007 - aosthof@suse.de
+
+- Fixed removal of xenpae entries in boot menu (#345188)
+- Version bump to 0.4.18.9
+
+-------------------------------------------------------------------
 Wed Dec 19 17:33:51 CET 2007 - aosthof@suse.de
 
 - Prevent changing root device in kernel append line (#344447)
