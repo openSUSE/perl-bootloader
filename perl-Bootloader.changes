@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Dec 19 15:48:09 CET 2007 - aosthof@suse.de
+
+- Implemented a mechanism to not throw out any user defined
+  sections in menu.lst (#272625)
+- Version bump to 0.4.18.3
+
+-------------------------------------------------------------------
 Wed Dec 19 15:45:48 CET 2007 - aosthof@suse.de
 
 - Fixed failsafe parameters to boot in runlevel 3 instead of 5
