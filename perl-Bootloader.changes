@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 11 17:33:36 CET 2008 - aosthof@suse.de
+
+- Inherit appended xen parameters from previous xen entry if
+  existent (#349207)
+- Version bump to 0.4.19.4
+
+-------------------------------------------------------------------
 Wed Dec 19 11:16:30 CET 2007 - aosthof@suse.de
 
 - Omit error messages on console when looking for devices
