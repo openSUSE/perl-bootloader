@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 25 16:24:06 CET 2008 - aosthof@suse.de
+
+- Enhanced distinction in section labels in a way to append the
+  flavors to the labels if necessary (#351126)
+- Version bump to 0.4.46
+
+-------------------------------------------------------------------
 Fri Jan 11 17:37:48 CET 2008 - aosthof@suse.de
 
 - Inherit appended xen parameters from previous xen entry if
