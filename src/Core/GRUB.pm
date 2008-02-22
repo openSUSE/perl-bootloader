@@ -470,13 +470,15 @@ sub UnixDev2GrubDev {
     else {
 	$kernel_dev = $dev;
     }
-    
+
+    $self->l_milestone ("GRUB::UnixDev2GrubDev: kernel device: $kernel_dev");
+
     my $partition = undef;
     if ($dev =~ m#/dev/md\d+#) {
 	my @members = @{$self->MD2Members ($dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
 	$kernel_dev = $members[0] || $kernel_dev;
-	$self->l_debug ("GRUB::UnixDev2GrubDev: First device of MDRaid:: $original --> $kernel_dev");
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: First device of MDRaid: $original --> $kernel_dev");
     }
 
     # fetch the underlying device (sda1 --> sda)
@@ -484,7 +486,7 @@ sub UnixDev2GrubDev {
 	if ($dev_ref->[0] eq $kernel_dev) {
 	    $kernel_dev = $dev_ref->[1];
 	    $partition = $dev_ref->[2] - 1;
-	    $self->l_debug ("GRUB::UnixDev2GrubDev: dev_ref:  ".$dev_ref->[0]." ".$dev_ref->[1]." ".$dev_ref->[2]);
+	    $self->l_milestone ("GRUB::UnixDev2GrubDev: dev_ref: ".$dev_ref->[0]." ".$dev_ref->[1]." ".$dev_ref->[2]);
 	    last;
 	}
     }
@@ -509,10 +511,33 @@ sub UnixDev2GrubDev {
 	}
     }
 
+    # print all entries of device.map. This is rather for debugging
+    if (exists $self->{"device_map"}) {
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Read from internal structure device_map:");
+
+	while ((my $unix_dev, my $grub_dev) = each (%{$self->{"device_map"}})) {
+	    $self->l_milestone ("unix device: $unix_dev <==> grub device: $grub_dev");
+	}
+    }
+    else {
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Internal structure device_map doesn't exist.");
+    }
+
+    $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX
+	device/partition -> GRUB device: $original to $dev");
+
+    # fallback to grub device hd0 if translation has failed - this is good
+    # enough for many cases
+    if ($dev !=~ /^hd\d+$/) {
+	$dev = "hd0";
+    }
+
     $dev = defined ($partition)
 	? "($dev,$partition)"
 	: "($dev)";
+
     $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX->GRUB: $original to $dev");
+
     return $dev;
 }
 

@@ -1,9 +1,17 @@
 -------------------------------------------------------------------
+Fri Feb 22 15:34:51 CET 2008 - aosthof@suse.de
+
+- Changed some l_debug output to l_milestone to be always present
+- Added some additional milestones
+- Added a fallback for grub devices if translation fails
+- Version bump to 0.4.19.6
+
+-------------------------------------------------------------------
 Fri Jan 25 16:20:59 CET 2008 - aosthof@suse.de
 
 - Enhanced distinction in section labels in a way to append the
   flavors to the labels if necessary (#351126)
-- Version bump to 0.4.19.4
+- Version bump to 0.4.19.5
 
 -------------------------------------------------------------------
 Fri Jan 11 17:33:36 CET 2008 - aosthof@suse.de
