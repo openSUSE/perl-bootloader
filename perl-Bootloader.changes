@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Mar  7 13:57:18 CET 2008 - aosthof@suse.de
+
+- Enhanced distinction in section labels in a way to append the
+  flavors to the labels if necessary (#351126)
+- Version bump to 0.4.18.12
+
+-------------------------------------------------------------------
 Wed Dec 19 17:43:27 CET 2007 - aosthof@suse.de
 
 - Added new parameter "force-default" to both bootloader_entry and
