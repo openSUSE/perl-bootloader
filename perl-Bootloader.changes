@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Mar  7 14:06:25 CET 2008 - aosthof@suse.de
+
+- Changed some l_debug output to l_milestone to be always present
+- Added some additional milestones
+- Added a fallback for grub devices if translation fails
+- Version bump to 0.4.18.15
+
+-------------------------------------------------------------------
 Fri Mar  7 14:03:35 CET 2008 - aosthof@suse.de
 
 - Fixed global default label for lilo (#361079)
