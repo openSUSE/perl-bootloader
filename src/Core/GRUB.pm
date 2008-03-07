@@ -32,6 +32,8 @@ C<< $unix_path = Bootloader::Core::GRUB->GrubPath2UnixPath ($grub_path, $grub_de
 
 C<< $grub_path = Bootloader::Core::GRUB->UnixPath2GrubPath ($unix_path, $grub_dev_prefix); >>
 
+C<< $grub_boot_device = Bootloader::Core::GRUB::BootDev2GrubDev ($device_map_ref); >>
+
 C<< $grub_conf_line_ref = Bootloader::Core::GRUB->CreateGrubConfLine ($target, $discswitch); >>
 
 C<< $files_ref = Bootloader::Core::GRUB->ListFiles (); >>
@@ -619,6 +621,55 @@ sub UnixPath2GrubPath {
     $path = $dev . $path;
     $self->l_debug ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
     return $path;
+}
+
+=item
+C<< $grub_boot_device = Bootloader::Core::GRUB::BootDev2GrubDev ($device_map_ref); >>
+
+Returns the grub device (e.g. (hd0,0)) corresponding to /boot.
+
+=cut
+
+sub BootDev2GrubDev {
+    my $device_map_ref = shift;
+    my $partitions_ref = Bootloader::Tools::ReadPartitions ();
+
+    my ($unix_dev_nr, undef, undef, undef, undef, undef, undef, undef,
+	    undef, undef, undef, undef, undef)
+	= stat ("/boot");
+
+    # Calculate major and minor device numbers
+    my $minor = $unix_dev_nr % 256;
+    my $major = ($unix_dev_nr - $minor) / 256;
+
+    # Fetch corresponding unix device
+    my $cmd = "dmsetup ls |grep \"($major, $minor)\" |cut -f1";
+    my $unix_boot_dev = qx{$cmd 2> /dev/null};
+    chomp ($unix_boot_dev);
+    $unix_boot_dev = "/dev/" . $unix_boot_dev;
+
+    my $grub_boot_dev = undef;
+    my $part_nr = undef;
+
+    # Fetch the underlying device (e.g. sda1 --> sda)
+    foreach my $part_ref (@$partitions_ref) {
+	if ($part_ref->[0] eq $unix_boot_dev) {
+	    $unix_boot_dev = $part_ref->[1];
+	    $part_nr = $part_ref->[2] - 1;
+	    last;
+	}
+    }
+
+    # Fetch grub device corresponding to unix device
+    if (exists $device_map_ref->{$unix_boot_dev}) {
+	$grub_boot_dev = $device_map_ref->{$unix_boot_dev};
+    }
+
+    $grub_boot_dev = defined ($part_nr)
+	? "($grub_boot_dev,$part_nr)"
+	: "($grub_boot_dev)";
+
+    return $grub_boot_dev;
 }
 
 =item

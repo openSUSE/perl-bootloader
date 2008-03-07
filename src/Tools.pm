@@ -378,12 +378,21 @@ sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
     my $match = 0;
 
+    my $loader = GetBootloader ();
+
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
 	# FIXME: avoid "kernel"
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
+
+	    # Only do this in case /boot is located on a single boot evms device
+	    if (boot_is_on_evms () and $loader eq "grub" and $sect_ref->{"$opt"} =~ m/^(\(hd\d+,\d+\)).*$/) {
+		my $device_map_ref = $lib_ref->GetDeviceMapping ();
+		my $grub_boot_dev = Bootloader::Core::GRUB::BootDev2GrubDev ($device_map_ref);
+		$opt_ref->{"$opt"} =~ s#/boot#$grub_boot_dev#;
+	    }
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
 	}
@@ -393,6 +402,19 @@ sub match_section {
 	last unless $match;
     }
     return $match;
+}
+
+
+# internal: checks if /boot is located on a evms partition
+sub boot_is_on_evms {
+    my $cmd = "cat /etc/fstab |grep \"/boot\" |cut -d \" \" -f1";
+    my $boot_dev = qx{ $cmd 2>/dev/null };
+
+    if ($boot_dev =~ m#^/dev/evms/#) {
+	return 1;
+    }
+
+    return 0;
 }
 
 
