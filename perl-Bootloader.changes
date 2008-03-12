@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 12 13:43:21 CET 2008 - aosthof@suse.de
+
+- Fixed booting from EVMS on OES2 (#304515)
+- Version bump to 0.4.19.7
+
+-------------------------------------------------------------------
 Fri Feb 22 15:34:51 CET 2008 - aosthof@suse.de
 
 - Changed some l_debug output to l_milestone to be always present

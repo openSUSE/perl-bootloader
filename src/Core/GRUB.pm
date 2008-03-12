@@ -480,6 +480,14 @@ sub UnixDev2GrubDev {
 	$kernel_dev = $members[0] || $kernel_dev;
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: First device of MDRaid: $original --> $kernel_dev");
     }
+    elsif (($dev =~ m{/dev/evms/}) and ($dev !~ m{/dev/evms/lvm2?/})) {
+	# This uses the naming scheme used by EVMS for no lvm devices which is
+	# easily mappable to kernel devices. Hopefully that never changes in
+	# the future.
+	$kernel_dev = $dev;
+	$kernel_dev =~ s{^/dev/evms/}{/dev/}; # map back to kernel device name
+	$self->l_debug ("GRUB::UnixDev2GrubDev: Mapped EVMS to kernel device: $original --> $kernel_dev");
+    }
 
     # fetch the underlying device (sda1 --> sda)
     foreach my $dev_ref (@{$self->{"partitions"}}) {
