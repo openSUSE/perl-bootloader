@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Mar 12 13:45:39 CET 2008 - aosthof@suse.de
+
+- Fixed removal of old boot entries in case of a single evms boot
+  device (#354768)
+- Version bump to 0.4.19.8
+
+-------------------------------------------------------------------
 Wed Mar 12 13:43:21 CET 2008 - aosthof@suse.de
 
 - Fixed booting from EVMS on OES2 (#304515)

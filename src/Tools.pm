@@ -438,19 +438,30 @@ sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
     my $match = 0;
 
+    my $loader = GetBootloader ();
     my $core_lib = $lib_ref->{"loader"};
 
     $core_lib->l_milestone ("Tools::match_section: matching section name: " . $sect_ref->{"name"});
 
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
+
+	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
+
 	# FIXME: avoid "kernel"
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
-	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
+
+	    # Only do this in case /boot is located on a single boot evms device
+	    if (boot_is_on_evms () and $loader eq "grub" and $sect_ref->{"$opt"} =~ m/^(\(hd\d+,\d+\)).*$/) {
+		my $device_map_ref = $lib_ref->GetDeviceMapping ();
+		my $grub_boot_dev = Bootloader::Core::GRUB::BootDev2GrubDev ($device_map_ref);
+		$opt_ref->{"$opt"} =~ s#/boot#$grub_boot_dev#;
+	    }
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
+
 	    # Print info for this match
 	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
 		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
@@ -458,6 +469,7 @@ sub match_section {
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
+
 	    # Print info for this match
 	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
 		$sect_ref->{"$opt"} . ", with: " . $opt_ref->{"$opt"} . ", result: $match");
@@ -465,7 +477,21 @@ sub match_section {
 	last unless $match;
     }
     $core_lib->l_milestone ("Tools::match_section: end result: $match");
+
     return $match;
+}
+
+
+# internal: checks if /boot is located on a evms partition
+sub boot_is_on_evms {
+    my $cmd = "cat /etc/fstab |grep \"/boot\" |cut -d \" \" -f1";
+    my $boot_dev = qx{ $cmd 2>/dev/null };
+
+    if ($boot_dev =~ m#^/dev/evms/#) {
+	return 1;
+    }
+
+    return 0;
 }
 
 
