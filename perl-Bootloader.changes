@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 12 13:49:20 CET 2008 - aosthof@suse.de
+
+- Fixed global default label for lilo (#361079)
+- Version bump to 0.4.19.9
+
+-------------------------------------------------------------------
 Wed Mar 12 13:45:39 CET 2008 - aosthof@suse.de
 
 - Fixed removal of old boot entries in case of a single evms boot
