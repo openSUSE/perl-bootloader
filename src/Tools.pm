@@ -1303,7 +1303,7 @@ sub AddSection {
 
     my $loader = Bootloader::Tools::GetBootloader ();
 
-    if ($loader ne "grub") {
+    if ($loader ne "grub" and $loader ne "lilo") {
         # Search for duplicate boot entry label and rename them in a unique way
 	foreach my $s (@sections) {
 	    while ((my $k, my $v) = each (%$s)) {
@@ -1671,7 +1671,7 @@ sub RemoveSections {
     }
 
     $lib_ref->SetSections (\@sections);
-    if ($default_removed) {
+    if ($default_removed or $loader eq "lilo") {
 	$glob_ref->{"default"} = $sections[0]{"name"};
 
 	# During an update with YaST running in the inst-sys, if the default

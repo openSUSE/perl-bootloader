@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 12 15:12:13 CET 2008 - aosthof@suse.de
+
+- Fixed global default label for lilo (#361079)
+- Version bump to 0.4.48
+
+-------------------------------------------------------------------
 Fri Feb 22 15:16:52 CET 2008 - aosthof@suse.de
 
 - Changed some l_debug output to l_milestone to be always present
