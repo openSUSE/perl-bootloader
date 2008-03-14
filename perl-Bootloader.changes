@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Mar 14 19:11:37 CET 2008 - jplack@suse.de
+
+- Fixed string to array conversion for menu lists (#352495)
+
+-------------------------------------------------------------------
 Wed Mar 12 13:49:20 CET 2008 - aosthof@suse.de
 
 - Fixed global default label for lilo (#361079)
