@@ -233,11 +233,31 @@ sub ReadMountPoints {
 
 sub Udev2Dev {
     my $udev = shift;
+
+    # FIXME: maybe useless code
     my $cmd = "udevinfo -q name -p /block/$udev";
     my $dev = qx{ $cmd 2>/dev/null };
     chomp ($dev);
 
-    $dev = $dev ? "/dev/$dev" : "/dev/$udev";
+    if ($dev ne "") {
+        $dev = "/dev/$dev";
+    }
+
+    # Fallback in case udevinfo fails
+    else {
+
+	#If $udev consists of both device and partition - e.g. "sda/sda1" -
+	#then only assign the partition.
+    	if ($udev =~ m#\w+/(\w+)#) {
+	    $dev = "/dev/$1";
+	}
+
+	#Else, just assign the content of $udev, e.g. "sda".
+	else {
+	    $dev = "/dev/$udev";
+	}
+    }
+
     # CCISS maps slashes to bangs so we have to reverse that.
     $dev =~ s:!:/:g;
 

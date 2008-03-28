@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Mar 28 18:54:53 CET 2008 - aosthof@suse.de
+
+- Implemented a fallback for failing udevinfo call (#371618)
+- Version bump to 0.4.49
+
+-------------------------------------------------------------------
 Wed Mar 12 15:12:13 CET 2008 - aosthof@suse.de
 
 - Fixed global default label for lilo (#361079)
