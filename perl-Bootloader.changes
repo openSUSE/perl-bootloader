@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Apr  3 14:23:18 CEST 2008 - aosthof@suse.de
+
+- Fixed string-to-array conversion for menu lists (#352495)
+- Version bump to 0.4.50
+
+-------------------------------------------------------------------
 Fri Mar 28 18:54:53 CET 2008 - aosthof@suse.de
 
 - Implemented a fallback for failing udevinfo call (#371618)
