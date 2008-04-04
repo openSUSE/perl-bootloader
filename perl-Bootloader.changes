@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Apr  4 11:25:53 CEST 2008 - aosthof@suse.de
+
+- Adapted changelog to use bugzilla number references in the
+  following form: (bnc#<number>)
+- Version bump to 0.4.52
+
+-------------------------------------------------------------------
 Thu Apr  3 16:29:15 CEST 2008 - aosthof@suse.de
 
 - Corrected typo in pattern matching in GRUB.pm
@@ -7,19 +14,19 @@ Thu Apr  3 16:29:15 CEST 2008 - aosthof@suse.de
 -------------------------------------------------------------------
 Thu Apr  3 14:23:18 CEST 2008 - aosthof@suse.de
 
-- Fixed string-to-array conversion for menu lists (#352495)
+- Fixed string-to-array conversion for menu lists (bnc#352495)
 - Version bump to 0.4.50
 
 -------------------------------------------------------------------
 Fri Mar 28 18:54:53 CET 2008 - aosthof@suse.de
 
-- Implemented a fallback for failing udevinfo call (#371618)
+- Implemented a fallback for failing udevinfo call (bnc#371618)
 - Version bump to 0.4.49
 
 -------------------------------------------------------------------
 Wed Mar 12 15:12:13 CET 2008 - aosthof@suse.de
 
-- Fixed global default label for lilo (#361079)
+- Fixed global default label for lilo (bnc#361079)
 - Version bump to 0.4.48
 
 -------------------------------------------------------------------
@@ -34,7 +41,7 @@ Fri Feb 22 15:16:52 CET 2008 - aosthof@suse.de
 Fri Jan 25 16:24:06 CET 2008 - aosthof@suse.de
 
 - Enhanced distinction in section labels in a way to append the
-  flavors to the labels if necessary (#351126)
+  flavors to the labels if necessary (bnc#351126)
 - Version bump to 0.4.46
 
 -------------------------------------------------------------------
