@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Apr  7 16:15:05 CEST 2008 - aosthof@suse.de
+
+- Prevent perl-Bootloader from segfaulting when loader type is set
+  to "none" (bnc#362650)
+- Version bump to 0.4.53
+
+-------------------------------------------------------------------
 Fri Apr  4 11:25:53 CEST 2008 - aosthof@suse.de
 
 - Adapted changelog to use bugzilla number references in the

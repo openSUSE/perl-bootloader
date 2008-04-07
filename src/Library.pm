@@ -456,7 +456,10 @@ sub GetFilesContents {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+
+    if (! defined $loader or $loader eq "none") {
+	return undef;
+    }
 
     $loader->{"resolve_symlinks"} = 0;
     my $new_lines_ref = $loader->CreateLines ();
