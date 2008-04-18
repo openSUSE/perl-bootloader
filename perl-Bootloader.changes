@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr 18 16:34:59 CEST 2008 - aosthof@suse.de
+
+- Fixed translation of unix devices to grub devices (bnc#375176)
+- Version bump to 0.4.54
+
+-------------------------------------------------------------------
 Mon Apr  7 16:15:05 CEST 2008 - aosthof@suse.de
 
 - Prevent perl-Bootloader from segfaulting when loader type is set
