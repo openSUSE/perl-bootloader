@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr 18 16:17:26 CEST 2008 - aosthof@suse.de
+
+- Fixed translation of unix devices to grub devices (bnc#380212)
+- Version bump to 0.4.19.11
+
+-------------------------------------------------------------------
 Thu Apr  3 11:42:11 CEST 2008 - aosthof@suse.de
 
 - Implemented a fallback for failing udevinfo call (#371618)
