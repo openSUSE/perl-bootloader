@@ -447,7 +447,7 @@ As argument takes the UNIX device, returns the GRUB device (both strings).
 # Pattern for grub device specification. Please note that this does not work
 # with BSD labeled disks which use things like "hd0,b"
 # The pattern matches disk or floppy or network or cd
-my $grubdev_pattern = "(?:hd\d+(?:,\d+)?|fd\d+|nd|cd)";
+my $grubdev_pattern = "(?:hd\\d+(?:,\\d+)?|fd\\d+|nd|cd)";
 
 
 # string UnixDev2GrubDev (string unix_dev)

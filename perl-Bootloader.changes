@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Apr 23 15:25:05 CEST 2008 - aosthof@suse.de
+
+- Fixed grub device pattern (bnc#382724)
+- Version bump to 0.4.19.12
+
+-------------------------------------------------------------------
 Fri Apr 18 16:17:26 CEST 2008 - aosthof@suse.de
 
 - Fixed translation of unix devices to grub devices (bnc#380212)
