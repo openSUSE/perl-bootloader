@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr 25 13:18:14 CEST 2008 - aosthof@suse.de
+
+- Enhanced graphical failsafe mode (bnc#352020)
+- Version bump to 0.4.56
+
+-------------------------------------------------------------------
 Wed Apr 23 15:17:31 CEST 2008 - aosthof@suse.de
 
 - Fixed grub device pattern (bnc#382724)

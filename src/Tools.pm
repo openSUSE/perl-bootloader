@@ -1294,21 +1294,16 @@ sub AddSection {
 	chomp ($arch);
 
 	if ($arch eq "i386") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off 3";
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off x11failsafe";
 	}
 	elsif ($arch eq "x86_64") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off 3";
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe";
 	}
 	elsif ($arch eq "ia64") {
 	    $new{"append"} = "ide=nodma nohalt noresume 3";
 	}
 	else {
 	    print ("Architecture $arch does not support failsafe entries.\n");
-	}
-
-	# Set vgamode to "normal" for failsafe entries
-	if (exists $new{"vgamode"} && defined $new{"vgamode"}) {
-	    $new{"vgamode"} = "normal";
 	}
 
 	$failsafe_modified = 1;

@@ -1319,7 +1319,7 @@ sub CreateKernelLine {
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
-    return "$image$root$vga$append";
+    return "$image$root$append$vga";
 }
 
 =item
