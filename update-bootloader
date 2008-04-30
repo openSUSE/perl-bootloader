@@ -376,12 +376,18 @@ if (defined $oper{add}) {
 	push @params, xen     => $opt_xen_kernel if $type eq "xen";
 	push @params, initrd  => $opt_initrd if $opt_initrd;
 
+	# Add "xen" section
 	if ($opt_xen) { 
-	    # Add "xen" section
+	    # Add original_name to params to be able to create comment line
+	    push @params, original_name => "xen";
+
 	    AddSection($opt_xen_name, @params);
 	}
+	# Add "normal" section
 	else {
-	    # Add "normal" sections
+	    # Add original_name to params to be able to create comment line
+	    push @params, original_name => "linux";
+
 	    AddSection($opt_name, @params);
 	}
 
@@ -398,6 +404,9 @@ if (defined $oper{add}) {
 	    ($opt_image =~ /-smp/) ||
 	    ($opt_image =~ /-bigsmp/)) &&
 	    ($opt_xen != 1)) {
+	    # Add original_name to params to be able to create comment line
+	    push @params, original_name => "failsafe";
+
 	    AddSection($opt_failsafe, @params);
 	}
     }

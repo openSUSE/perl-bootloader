@@ -986,7 +986,7 @@ sub Comment2OriginalName($) {
     my $comment_lines_ref = shift || [];
     foreach (@{$comment_lines_ref}) {
 	return $1
-	    if m/${orig_name_comment}([a-zA-Z0-9]+)###/o;
+	    if m/${orig_name_comment}([^#]+?) *###/o;
     }
     return "";
 }
