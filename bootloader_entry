@@ -60,8 +60,12 @@ function getargs()
 # Wrapper for the update-bootloader function
 function update_bootloader() 
 {
+        echo "bootloader_entry: This is (wrapper) function update_bootloader" >> $logname
+
 	[ -x /sbin/update-bootloader -a "$YAST_IS_RUNNING" != instsys ] || return 0
-		/sbin/update-bootloader "$@"
+	    # call update-bootloader and also append stderr to the log file
+	    ((/sbin/update-bootloader "$@") 3>&1 1>&2 2>&3 3>&- | tee -a \
+	    $logname ) 3>&1 1>&2 2>&3 3>&-
 }
 
 
@@ -70,6 +74,8 @@ function update_bootloader()
 ##############################
 function add_entry()
 {
+        echo "bootloader_entry: This is function add_entry()" >> $logname
+
 	# Set up the new kernel
 	if [ "$YAST_IS_RUNNING" != instsys ]; then
 		case $flavor in
@@ -181,6 +187,7 @@ function remove_entry()
 	#  sections at all, or do only chainload them (BootLILO.ycp), and
 	#  thus do not match either. (#223030)
 
+        echo "bootloader_entry: This is function remove_entry()" >> $logname
 
 	if [[ $flavor =~ xen ]]; then
 		update_bootloader --image /boot/$image \
@@ -203,6 +210,38 @@ function remove_entry()
 
 #####################  M A I N  ###############################################
 
+# Log how program was called
+logname="/var/log/YaST2/perl-BL-standalone-log"
+echo "bootloader_entry was called as: $*" >> $logname
+
+# Log parts of the current system configuration
+(
+echo "/proc/mounts:"
+cat /proc/mounts
+echo
+
+echo "/sys:"
+ls -l /sys
+echo
+
+fstab="/etc/fstab"
+if [ -e $fstab ] ; then
+	echo "fstab:"
+	cat $fstab
+	echo
+fi
+
+echo "excerpts of /dev:"
+ls -l /dev/{[hs]d[ab]?,md[0-3],.udev,disk/by-*} 2>/dev/null
+echo
+
+device_map="/boot/grub/device.map"
+if [ -e $device_map ] ; then
+	echo "device.map:"
+	cat $device_map
+	echo
+fi
+) >> $logname
 
 # Checks if correct amount of arguments is given
 if [ "$#" -lt "4" -o "$#" -gt "6" ] ; then

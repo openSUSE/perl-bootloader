@@ -161,6 +161,10 @@ sub GetProduct {
     return "SUSE Code10";
 }
 
+my $logname = "/var/log/YaST2/perl-BL-standalone-log";
+open (LOG, ">>$logname");
+print LOG ("update-bootloader called:\n" . $0 . " " . join (" ", @ARGV) .  "\n");
+close LOG;
 
 GetOptions (\%oper,
     'add|a'    	 ,
@@ -335,6 +339,10 @@ if (defined $oper{add}) {
 #  execute selected operation
 #
 if (defined $oper{add}) {
+    open (LOG, ">>$logname");
+    print LOG ("update-bootloader: now executing operation add\n");
+    close LOG;
+
     pod2usage("Please specify name and kernel image for new section")
 	unless $opt_name and $opt_image;
 
@@ -381,12 +389,20 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "xen";
 
+            open (LOG, ">>$logname");
+            print LOG ("update-bootloader: calling Tools::AddSection (XEN)\n");
+            close LOG;
+
 	    AddSection($opt_xen_name, @params);
 	}
 	# Add "normal" section
 	else {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "linux";
+
+            open (LOG, ">>$logname");
+            print LOG ("update-bootloader: calling Tools::AddSection (normal)\n");
+            close LOG;
 
 	    AddSection($opt_name, @params);
 	}
@@ -407,6 +423,10 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "failsafe";
 
+            open (LOG, ">>$logname");
+            print LOG ("update-bootloader: calling Tools::AddSection (failsafe)\n");
+            close LOG;
+
 	    AddSection($opt_failsafe, @params);
 	}
     }
@@ -421,17 +441,37 @@ if (defined $oper{remove}) {
     push @params, initrd => $opt_initrd if $opt_initrd;
     push @params, name   => $opt_name if $opt_name;
 		      
+    open (LOG, ">>$logname");
+    print LOG ("update-bootloader: now executing operation remove\n");
+    close LOG;
+
     my $num = CountSections(@params);
 
     if ($num > 0) {
         if ($num > 1 and not $opt_force) {
+            open (LOG, ">>$logname");
+            print LOG ("update-bootloader: found $num sections, no opt_force: not removing\n");
+            close LOG;
+
 	    pod2usage("There is more than one section with image '$opt_image'");
 	} else {
+            open (LOG, ">>$logname");
+            print LOG ("update-bootloader: calling Tools::RemoveSections\n");
+            close LOG;
+
 	    RemoveSections(@params);
 	}
-    } elsif (not $opt_force) {
+    } else {
+	open (LOG, ">>$logname");
+	print LOG ("update-bootloader: no $opt_image found\n");
+	close LOG;
+
 	pod2usage("There is no section with image '$opt_image'");
     }
+    open (LOG, ">>$logname");
+    print LOG ("update-bootloader: finished operation remove\n");
+    close LOG;
+
 }
 
 if (defined $oper{refresh}) {

@@ -80,32 +80,74 @@ use Bootloader::Core;
 my $lib_ref = undef;
 
 sub DumpLog {
-    foreach my $rec (@{$lib_ref->GetLogRecords ()})
+    my $core_lib = shift;
+
+    my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
+    my $using_logfile = 1;
+
+    if (not open LOGFILE, ">>$perl_logfile") {
+	$using_logfile = 0;
+	open LOGFILE, ">&STDERR" or die "Can't dup STDERR: $!";
+	print LOGFILE ("WARNING: Can't open $perl_logfile, using STDERR instead.\n");
+    }
+
+    # Adding timestamp to log messages
+    use POSIX qw(strftime);
+
+    sub timestamp () {
+	return strftime ( "%Y-%m-%d %H:%M:%S", localtime);
+    }
+
+    foreach my $rec (@{$core_lib->GetLogRecords ()})
     {
 	my $message = $rec->{"message"};
 	my $level = $rec->{"level"};
-	if ($level eq "debug")
+
+	# If debug messages should be printed, the environment variable
+	# Y2DEBUG has to be set ("export Y2DEBUG=1").
+	if ($level eq "debug" and defined $ENV{'Y2DEBUG'})
 	{
-#	    print STDERR ("DEBUG: $message\n");
+	    print LOGFILE (timestamp() . "DEBUG: $message\n");
+	}
+	elsif ($level eq "debug" and not defined $ENV{'Y2DEBUG'})
+	{
+	    # Omit debug messages
 	}
 	elsif ($level eq "milestone")
 	{
-#	    print STDERR ("MILESTONE: $message\n");
+	    print LOGFILE (timestamp() . "MILESTONE: $message\n");
 	}
 	elsif ($level eq "warning")
 	{
-	    print STDERR ("WARNING: $message\n");
+	    print LOGFILE (timestamp() . "WARNING: $message\n");
+
+	    # If writing to perl logfile, also print warnings to STDERR
+	    if ($using_logfile) {
+		print STDERR (timestamp() . "WARNING: $message\n");
+	    }
 	}
 	elsif ($level eq "error")
 	{
-	    print STDERR ("ERROR: $message\n");
+	    print LOGFILE (timestamp() . "ERROR: $message\n");
+
+	    # If writing to perl logfile, also print errors to STDERR
+	    if ($using_logfile) {
+		print STDERR (timestamp() . "ERROR: $message\n");
+	    }
 	}
 	else
 	{
-	    print STDERR ("ERROR: Uncomplete log record\n");
-	    print STDERR ("ERROR: $message\n");
+	    print LOGFILE (timestamp() . "ERROR: Uncomplete log record\n");
+	    print LOGFILE (timestamp() . "ERROR: $message\n");
+
+	    # If writing to perl logfile, also print errors to STDERR
+	    if ($using_logfile) {
+		print STDERR (timestamp() . "ERROR: Uncomplete log record\n");
+		print STDERR (timestamp() . "ERROR: $message\n");
+	    }
 	}
     }
+    close LOGFILE;
 }
 
 sub ResolveCrossDeviceSymlinks {
@@ -113,6 +155,8 @@ sub ResolveCrossDeviceSymlinks {
 
     my $core_lib = Bootloader::Core->new ();
     $path = $core_lib->RealFileName ($path);
+
+    DumpLog ($core_lib);
     return $path;
 }
 
@@ -372,7 +416,7 @@ sub InitLibrary {
     # parse Bootloader configuration files   
     $lib_ref->ReadSettings();
 
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -382,9 +426,15 @@ sub match_section {
     my $match = 0;
 
     my $loader = GetBootloader ();
+    my $core_lib = $lib_ref->{"loader"};
+
+    $core_lib->l_milestone ("Tools::match_section: matching section name: " . $sect_ref->{"name"});
 
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
+
+	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
+
 	# FIXME: avoid "kernel"
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
@@ -398,12 +448,23 @@ sub match_section {
 	    }
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
+
+	    # Print info for this match
+	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
+		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
+		", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
+
+	    # Print info for this match
+	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
+		$sect_ref->{"$opt"} . ", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	last unless $match;
     }
+    $core_lib->l_milestone ("Tools::match_section: end result: $match");
+
     return $match;
 }
 
@@ -425,9 +486,14 @@ sub boot_is_on_evms {
 sub normalize_options {
     my $opt_ref = shift;
 
+    my $core_lib = $lib_ref->{"loader"};
+
     foreach ("image", "initrd" ) {
+	# Print found sections to logfile
+	$core_lib->l_milestone ("Tools::normalize_options: key: $_, resolving if exists:" . $opt_ref->{"$_"});
 	$opt_ref->{"$_"} = ResolveCrossDeviceSymlinks($opt_ref->{"$_"})
 	    if exists $opt_ref->{"$_"};
+	$core_lib->l_milestone ("Tools::normalize_options: resolved result:" . $opt_ref->{"$_"});
     }
 
     # FIXME: some have "kernel" some have "image" tag, latter makes more sense
@@ -616,7 +682,7 @@ sub SetGlobals {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -629,6 +695,8 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 sub GetSectionList {
     my %option = @_;
     my $loader = GetBootloader ();
+
+    my $core_lib = $lib_ref->{"loader"};
 
 # FIXME: Maybe activate this part of code later if - against all expectations
 # - still needed, but this shouldn't happen.
@@ -659,11 +727,25 @@ sub GetSectionList {
 
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
+
+    # Print sections from file to logfile
+    $core_lib->l_milestone ("Tools::GetSectionList: sections from file:\n' " .
+			join("'\n' ",
+			     map {
+				 $_->{"name"};
+			     } @sections) . "'\n"
+		       );
+
     my @section_names = map {
 	match_section($_, \%option) ? $_->{"name"} : ();
     } @sections;
 
-    DumpLog ();
+    # Print found sections to logfile
+    $core_lib->l_milestone ("Tools::GetSectionList: Found sections:\n' " .
+			join("'\n' ", @section_names) . "'\n"
+		       );
+
+    DumpLog ($lib_ref->{"loader"});
     return @section_names;
 }
 
@@ -875,6 +957,16 @@ sub AddSection {
 	}
     }
 
+    my $core_lib = $lib_ref->{"loader"};
+
+    # Print new section to be added to logfile
+    $core_lib->l_milestone ("Tools::AddSection: New section to be added :\n\n' " .
+			join("'\n' ",
+			     map {
+				 $_ . " => '" . $new{$_} . "'";
+			     } keys %new) . "'\n"
+		       );
+
     # Put new entries on top
     unshift @sections, \%new;
 
@@ -998,6 +1090,21 @@ sub AddSection {
 	unshift @sections, $normal_entry;
     }
 
+    # Print all available sections to logfile
+    $core_lib->l_milestone (
+	"Tools::AddSection: All available sections (including new ones):\n");
+
+    my $section_count = 1;
+    foreach my $s (@sections) {
+	$core_lib->l_milestone ("$section_count. section :\n' " .
+			    join("'\n' ",
+				 map {
+				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+				 } keys %{$s}) . "'\n"
+			   );
+	$section_count++;
+    }
+
     $lib_ref->SetSections (\@sections);
 
     # If the former default boot entry is updated, the new one will become now
@@ -1023,11 +1130,19 @@ sub AddSection {
         $lib_ref->SetGlobalSettings ($glob_ref);
     }
 
+    # Print globals to logfile
+    $core_lib->l_milestone ("Tools::AddSection: Global section of config :\n\n' " .
+			join("'\n' ",
+			     map {
+				 m/^__/ ? () : $_ . " => '" . $glob_ref->{$_} . "'";
+			     } keys %{$glob_ref}) . "'\n"
+		       );
+
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
 
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1102,6 +1217,31 @@ sub RemoveSections {
 	push (@section_names_before_removal, $s->{"name"});
     }
 
+    my $core_lib = $lib_ref->{"loader"};
+
+    # Print section to be removed to logfile
+    $core_lib->l_milestone ("Tools::RemoveSections: Old section to be removed :\n\n' " .
+			join("'\n' ",
+			     map {
+				 $_ . " => '" . $option{$_} . "'";
+			     } keys %option) . "'\n"
+		       );
+
+    # Print all available sections (before removal) to logfile
+    $core_lib->l_milestone (
+	"Tools::RemoveSections: All available sections (before removal):\n");
+
+    my $section_count = 1;
+    foreach my $s (@sections) {
+	$core_lib->l_milestone ("$section_count. section :\n' " .
+			    join("'\n' ",
+				 map {
+				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+				 } keys %{$s}) . "'\n"
+			   );
+	$section_count++;
+    }
+
     normalize_options(\%option);
     @sections = grep {
 	my $match = match_section($_, \%option);
@@ -1151,6 +1291,21 @@ sub RemoveSections {
 	\@section_names_before_removal,
 	\@section_names_after_removal);
 
+    # Print all available sections (after removal) to logfile
+    $core_lib->l_milestone (
+	"Tools::RemoveSections: All available sections (after removal):\n");
+
+    $section_count = 1;
+    foreach my $s (@sections) {
+	$core_lib->l_milestone ("$section_count. section :\n' " .
+			    join("'\n' ",
+				 map {
+				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
+				 } keys %{$s}) . "'\n"
+			   );
+	$section_count++;
+    }
+
     $lib_ref->SetSections (\@sections);
     if ($default_removed or $loader eq "lilo") {
 	$glob_ref->{"default"} = $sections[0]{"name"};
@@ -1162,7 +1317,7 @@ sub RemoveSections {
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
 
-    DumpLog ();
+    DumpLog ($lib_ref->{"loader"});
 }
 
 

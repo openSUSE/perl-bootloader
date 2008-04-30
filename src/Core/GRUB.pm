@@ -387,11 +387,11 @@ sub GrubDev2UnixDev {
     my $dev = shift;
 
     unless ($dev) {
-	$self->l_debug ("GRUB::GrubDev2UnixDev: Empty device to translate");
+	$self->l_milestone ("GRUB::GrubDev2UnixDev: Empty device to translate");
 	return $dev;
     }
     if ($dev !~ /^\(.*\)$/) {
-	$self->l_debug ("GRUB::GrubDev2UnixDev: Not translating device $dev");
+	$self->l_milestone ("GRUB::GrubDev2UnixDev: Not translating device $dev");
 	return $dev;
     }
 
@@ -419,19 +419,20 @@ sub GrubDev2UnixDev {
 	chomp ($resolved_link);
 	$dev = "/dev/" . $resolved_link; 
     }
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevinfo returned: $dev");
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
 	    if ($dev_ref->[1] eq $dev && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
-		$self->l_debug ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
+		$self->l_milestone ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
 		return $dev;
 	    }
 	}
     }
 
     $dev = $self->Member2MD ($dev);
-    $self->l_debug ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
     return $dev;
 }
 
@@ -449,12 +450,12 @@ sub UnixDev2GrubDev {
     my $dev = shift;
 
     unless (defined($dev) and $dev) {
-	$self->l_debug ("GRUB::UnixDev2GrubDev: Empty device to translate");
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Empty device to translate");
 	return $dev;
     }
     # Seems to be a grub device already 
     if ($dev =~ /^\(.*\)$/) {
-	$self->l_debug ("GRUB::UnixDev2GrubDev: Not translating device $dev");
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Not translating device $dev");
 	return $dev;
     }
 
@@ -495,7 +496,7 @@ sub UnixDev2GrubDev {
 	if ($dev_ref->[0] eq $kernel_dev) {
 	    $kernel_dev = $dev_ref->[1];
 	    $partition = $dev_ref->[2] - 1;
-	    $self->l_debug ("GRUB::UnixDev2GrubDev: dev_ref:  ".$dev_ref->[0]." ".$dev_ref->[1]." ".$dev_ref->[2]);		
+	    $self->l_milestone ("GRUB::UnixDev2GrubDev: dev_ref:  ".$dev_ref->[0]." ".$dev_ref->[1]." ".$dev_ref->[2]);
 	    last;
 	}
     }
@@ -577,7 +578,7 @@ sub GrubPath2UnixPath {
     }
 
     if ($dev eq "") {
-	$self->l_warning ("GRUB::GrubPath2UnixPath: Path $orig_path in UNIX form, not modifying it");
+	$self->l_milestone ("GRUB::GrubPath2UnixPath: Path $orig_path in UNIX form, not modifying it");
 	return $orig_path;
     }
 
@@ -609,7 +610,7 @@ sub GrubPath2UnixPath {
 
     $path = $mountpoint . $path;
     $path = $self->CanonicalPath ($path);
-    $self->l_debug ("GRUB::GrubPath2UnixPath: Translated GRUB->UNIX dev: $dev, path: $orig_path to: $path");
+    $self->l_milestone ("GRUB::GrubPath2UnixPath: Translated GRUB->UNIX dev: $dev, path: $orig_path to: $path");
     return $path;
 }
 
@@ -644,7 +645,7 @@ sub UnixPath2GrubPath {
     }
 
     $path = $dev . $path;
-    $self->l_debug ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
+    $self->l_milestone ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
     return $path;
 }
 
@@ -1039,7 +1040,7 @@ sub CreateGrubConfLines() {
 
     # keep the first bootloader setup command for every boot device and drop
     # all other
-    # FIXME: shouldn't we make comments from that? commment handling here at all?
+    # FIXME: shouldn't we make comments from that? comment handling here at all?
     my @grub_conf_items = grep {
 	my $keep = 1;
 	if ($_->{"command"} eq "install"|| $_->{"command"} eq "setup")
@@ -1082,7 +1083,12 @@ sub CreateGrubConfLines() {
 	foreach my $new_dev (keys (%s1_devices))
 	{
 	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch, 1);
-	    $self->l_milestone ("GRUB::CreateGrubConfLines: new line created: $line");
+	    $self->l_milestone ("GRUB::CreateGrubConfLines: new line created:\n\n' " .
+				join("'\n' ",
+				    map {
+					$_ . " => '" . $line->{$_} . "'";
+				    } keys %$line) . "'\n"
+				);
 
 	    push @grub_conf_items, $line;
 	}

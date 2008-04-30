@@ -1,4 +1,33 @@
 -------------------------------------------------------------------
+Wed Apr 30 16:27:28 CEST 2008 - aosthof@suse.de
+
+- Improved logging mechanism to write perl-BL-standalone-log
+  --> Omit error messages on console when looking for devices
+  --> Changed a misleading warning to a milestone (bnc#345848)
+  --> Log contents of /etc/fstab (bnc#309837)
+  --> Improved logging in bootloader_entry, update-bootloader,
+      Core.pm & Tools.pm (bnc#309837)
+  --> Adapted timestamps for log files (bnc#309837)
+  --> Convert debug messages to milestones in GrubDev2UnixDev() and
+      UnixDev2GrubDev(): we always want to have logs available when
+      device translation goes wrong
+  --> Adapt function DumpLog() to only write to
+      perl-BL-standalone-log, because against expectations
+      yast2-bootloader does logging of called perl-Bootloader
+      functions on its own
+  --> Added milestones to functions AddSection() and
+      RemoveSections() to print new section entries, already
+      existing section entries and section entries to be removed
+  --> Improved logging mechanism to write log messages either to
+      /var/log/YaST2/y2log or to
+      /var/log/YaST2/perl-BL-standalone-log, depending on the state
+      of the environment variable YAST_IS_RUNNING. In addition to
+      that, the printing of log messages with level DEBUG can be
+      switched on/off by setting/unsetting the environment variable
+      Y2DEBUG.
+- Version bump to 0.4.18.17
+
+-------------------------------------------------------------------
 Wed Apr 30 15:54:46 CEST 2008 - aosthof@suse.de
 
 - Implemented new function AdaptCommentLine in Tools.pm which
