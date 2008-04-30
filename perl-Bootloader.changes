@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Apr 30 16:29:43 CEST 2008 - aosthof@suse.de
+
+- Implemented a fallback for failing udevinfo call (bnc#371618)
+- Version bump to 0.4.18.18
+
+-------------------------------------------------------------------
 Wed Apr 30 16:27:28 CEST 2008 - aosthof@suse.de
 
 - Improved logging mechanism to write perl-BL-standalone-log
