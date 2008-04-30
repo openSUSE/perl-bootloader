@@ -109,10 +109,10 @@ sub GetMetaData() {
     my $boot_partitions = join(":", @bootpart);
     
     my $root_devices = join(":",
-        map {
+        (map {
             my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
             # FIXME: weed out non-root partitions
-        } @ partinfo,
+        } @partinfo),
         keys %{$loader->{"md_arrays"} || {}}
     );
     
@@ -824,7 +824,7 @@ sub PrepareMenuFileLines {
 
     # Transform $menu_list into an array to be able to bettter compare it with
     # the @sect_names array
-    my @menu_list_array = split (/, /, $menu_list);
+    my @menu_list_array = split (/\s*,\s*/, $menu_list);
     my @sect_names_to_append = ();
 
     # Search for sections in @sect_names array which are not yet in "list" of
