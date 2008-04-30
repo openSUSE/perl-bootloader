@@ -444,6 +444,12 @@ As argument takes the UNIX device, returns the GRUB device (both strings).
 
 =cut
 
+# Pattern for grub device specification. Please note that this does not work
+# with BSD labeled disks which use things like "hd0,b"
+# The pattern matches disk or floppy or network or cd
+my $grubdev_pattern = "(?:hd\\d+(?:,\\d+)?|fd\\d+|nd|cd)";
+
+
 # string UnixDev2GrubDev (string unix_dev)
 sub UnixDev2GrubDev {
     my $self = shift;
@@ -451,15 +457,19 @@ sub UnixDev2GrubDev {
 
     unless (defined($dev) and $dev) {
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: Empty device to translate");
-	return $dev;
+	return ""; # return an error
     }
     # Seems to be a grub device already 
-    if ($dev =~ /^\(.*\)$/) {
+    if ($dev =~ /^\(${grubdev_pattern}\)$/) {
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: Not translating device $dev");
 	return $dev;
     }
 
-    # This gives me the devicename, wether $dev is the device or a link!
+    # remove parenthesis to be able to handle entries like "(/dev/sda1)" which
+    # might be there by error
+    $dev =~ s/^\((.*)\)$/$1/;
+
+    # This gives me the devicename, whether $dev is the device or a link!
     # This works for udev (kernel) devices only, devicemapper doesn't 
     # need to be changed here 
     my $original = $dev;
@@ -533,12 +543,12 @@ sub UnixDev2GrubDev {
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: Internal structure device_map doesn't exist.");
     }
 
-    $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX
-	device/partition -> GRUB device: $original to $dev");
+    $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX device/partition -> GRUB device: $original to $dev");
 
     # fallback to grub device hd0 if translation has failed - this is good
     # enough for many cases
-    if ($dev !=~ /^hd\d+$/) {
+    if ($dev !~ /^${grubdev_pattern}$/) {
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Unknown device '$dev', fall back to hd0");
 	$dev = "hd0";
     }
 
@@ -631,13 +641,17 @@ sub UnixPath2GrubPath {
     my $self = shift;
     my $orig_path = shift;
     my $preset_dev = shift;
+    my $dev;
+    my $path;
 
-    if ($orig_path =~ /^\(.+\).+$/) {
-	$self->l_milestone ("GRUB::UnixPath2GrubPath: Path $orig_path in GRUB form, keeping it");
-	return $orig_path;
+    if ($orig_path =~ /^(\(.*\))(.+)$/) {
+	$self->l_milestone ("GRUB::UnixPath2GrubPath: Path $orig_path looks like in GRUB form, special treatment");
+	$dev = $1;
+	$path = $2;
     }
-
-    (my $dev, my $path) = $self->SplitDevPath ($orig_path);
+    else {
+	($dev, $path) = $self->SplitDevPath ($orig_path);
+    }
 
     $dev = $self->UnixDev2GrubDev ($dev);
     if ($dev eq $preset_dev) {
@@ -1607,7 +1621,7 @@ sub Info2Section {
     if ($grub_root ne "" or $noverify) {
 	unshift @lines, {
 	    "key" => $noverify ? "rootnoverify" : "root",
-	    "value" => $grub_root ne "" ? $grub_root : "(hd0,0)",
+	    "value" => $grub_root ne "" ? $grub_root : "(hd0)",
 	};
     }
 
