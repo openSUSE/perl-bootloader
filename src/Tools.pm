@@ -922,6 +922,16 @@ sub AddSection {
     # Append flavor appendix to section label if necessary
     AdjustSectionNameAppendix ("add", \%new);
 
+    # In case of a xen entry, look for a existing xen_append parameter and
+    # add it to the new one respectively
+    foreach my $s (@sections) {
+	while ((my $k, my $v) = each (%$s)) {
+	    if ($k eq "xen_append") {
+		$new{"xen_append"} = $v;
+	    }
+	}
+    }
+
     my $failsafe_modified = 0;
 
     # FIXME: Failsafe parameters should be set dynamically in the future
