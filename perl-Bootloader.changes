@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May 13 14:51:52 CEST 2008 - aosthof@suse.de
+
+- Prevent perl-Bootloader from segfaulting when loader type is set
+  to "none" (bnc#362650)
+- Version bump to 0.4.32.19
+
+-------------------------------------------------------------------
 Tue May 13 14:50:39 CEST 2008 - aosthof@suse.de
 
 - Corrected typo in pattern matching in GRUB.pm
