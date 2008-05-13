@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue May 13 14:44:28 CEST 2008 - aosthof@suse.de
+
+- Fixed global default label for lilo (bnc#361079)
+- Version bump to 0.4.32.15
+
+-------------------------------------------------------------------
 Tue May 13 14:42:32 CEST 2008 - aosthof@suse.de
 
 - Changed some l_debug output to l_milestone to be always present
