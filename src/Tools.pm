@@ -74,6 +74,8 @@ C<< Bootloader::Tools::AddSection($name, @params); >>
 
 C<< Bootloader::Tools::RemoveSections($name); >>
 
+C<< Bootloader::Tools::AdjustSectionNameAppendix ($mode, $sect_ref_new, $sect_ref_old); >>
+
 C<< $exec_with_path = Bootloader::Tools::AddPathToExecutable($executable); >>
 
 =head1 DESCRIPTION
@@ -1261,6 +1263,9 @@ sub AddSection {
 	}
     }
 
+    # Append flavor appendix to section label if necessary
+    AdjustSectionNameAppendix ("add", \%new);
+
     my $failsafe_modified = 0;
 
     # FIXME: Failsafe parameters should be set dynamically in the future
@@ -1594,6 +1599,13 @@ sub RemoveSections {
 	$section_count++;
     }
 
+    my @section_names_before_removal = ();
+
+    # Extract section names (before removal) out of @sections array
+    foreach my $s (@sections) {
+	push (@section_names_before_removal, $s->{"name"});
+    }
+
     normalize_options(\%option);
     @sections = grep {
 	my $match = match_section($_, \%option);
@@ -1630,6 +1642,18 @@ sub RemoveSections {
 	    $match;
 	} @sections;
     }
+
+    my @section_names_after_removal = ();
+
+    # Extract section names (after removal) out of @sections array
+    foreach my $s (@sections) {
+	push (@section_names_after_removal, $s->{"name"});
+    }
+
+    # Remove flavor appendix from section labels if necessary
+    AdjustSectionNameAppendix ("remove",
+	\@section_names_before_removal,
+	\@section_names_after_removal);
 
     # Print all available sections (after removal) to logfile
     $core_lib->l_milestone (
@@ -1673,6 +1697,115 @@ sub RemoveSections {
                                     # the right place
 
     DumpLog ($lib_ref->{"loader"});
+}
+
+
+=item
+C<< Bootloader::Tools::AdjustSectionNameAppendix ($mode, $sect_ref_new, $sect_ref_old); >>
+
+Adds and respectively removes a potential appendix of a section name.
+
+In case of mode "add", it adjusts labels which only differ in their
+corresponding flavors in the following way, e.g.:
+
+  SUSE Linux Enterprise Server 10 - 2.6.16.54-0.2.3 (default) and
+  SUSE Linux Enterprise Server 10 - 2.6.16.54-0.2.3 (smp)
+
+Thus, the corresponding flavors will be appended in brackets.
+
+In case of mode "remove", an appended flavor will be removed from the section
+label if the corresponding section is the only one left referring to a kernel
+with it's specific version.
+
+EXAMPLE:
+
+  my $mode = "add";
+  my $sect_ref_new = \%new_section;
+  Bootloader::Tools::AdjustSectionNameAppendix ($mode, $sect_ref_new);
+
+  or
+
+  my $mode = "remove"
+  my $sect_ref_new = \@section_naems_after_removal;
+  my $sect_ref_old = \@section_names_before_removal;
+  Bootloader::Tools::AdjustSectionNameAppendix ($mode, $sect_ref_new, $sect_ref_old);
+
+=cut
+
+sub AdjustSectionNameAppendix {
+    my ($mode, $sect_ref_new, $sect_ref_old) = @_;
+
+    my @sections = @{$lib_ref->GetSections()};
+
+    if ($mode eq "add" and %$sect_ref_new) {
+	my $loader = Bootloader::Tools::GetBootloader ();
+
+	if ($loader eq "grub") {
+	    foreach my $s (@sections) {
+		while ((my $k, my $v) = each (%$s)) {
+		    if ($k eq "name" and $v =~ m/$sect_ref_new->{"name"}( \(\w+\))?/) {
+			if ($v =~ m/^$sect_ref_new->{"name"}$/) {
+			    my $flavor_old = $s->{"image"};
+			    $flavor_old =~ s/.*-(\w+)/(\1)/;
+			    $s->{"name"} = $s->{"name"} . " " . $flavor_old;
+			    $s->{"__modified"} = 1;
+			}
+
+			my $flavor_new = $sect_ref_new->{"image"};
+			$flavor_new =~ s/.*-(\w+)/(\1)/;
+			$sect_ref_new->{"name"} = $sect_ref_new->{"name"} . " " . $flavor_new;
+		    }
+		}
+	    }
+	}
+    }
+
+    elsif ($mode eq "remove" and @$sect_ref_old and @$sect_ref_new) {
+	my @section_names_removed = ();
+
+	# Determine removed section names
+	foreach my $s_name_old (@$sect_ref_old) {
+	    my $hit = 0;
+
+	    foreach my $s_name_new (@$sect_ref_new) {
+		if ($s_name_old eq $s_name_new) {
+		    $hit = 1;
+		}
+	    }
+
+	    if (!$hit) {
+		$s_name_old =~ s/^(.+) \(\w+\)$/\1/;
+		push @section_names_removed, $s_name_old;
+	    }
+	}
+
+	# Remove appended flavor from title if the corresponding section is the
+	# only one left referring to a kernel with it's specific version.
+	foreach my $s_removed (@section_names_removed) {
+	    my $count = 0;
+	    my @hits = ();
+
+	    for (my $i = 0; $i <= $#sections; $i++) {
+		while ((my $k, my $v) = each (%{$sections[$i]})) {
+		    if ($k eq "name" and $v =~ m/^$s_removed \(\w+\)$/) {
+			$count++;
+			push (@hits, $i);
+		    }
+		}
+	    }
+
+	    if ($count == 1) {
+		foreach my $hit (@hits) {
+		    $sections[$hit]->{"name"} =~ s/(.*) \(\w+\)/\1/;
+		    $sections[$hit]->{"__modified"} = 1;
+		}
+	    }
+	}
+    }
+
+    else {
+	print "Bootloader::Tools::AdjustSectionNameAppendix(): Invalid parameters.\n";
+    }
 }
 
 
