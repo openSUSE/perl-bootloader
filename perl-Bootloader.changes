@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue May 13 14:42:32 CEST 2008 - aosthof@suse.de
+
+- Changed some l_debug output to l_milestone to be always present
+- Added some additional milestones
+- Added a fallback for grub devices if translation fails
+- Version bump to 0.4.32.14
+
+-------------------------------------------------------------------
 Tue May 13 14:41:11 CEST 2008 - aosthof@suse.de
 
 - Enhanced distinction in section labels in a way to append the
