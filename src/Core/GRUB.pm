@@ -529,7 +529,7 @@ sub UnixDev2GrubDev {
 
     # fallback to grub device hd0 if translation has failed - this is good
     # enough for many cases
-    if ($dev !=~ /^hd\d+$/) {
+    if ($dev !~ /^hd\d+$/) {
 	$dev = "hd0";
     }
 

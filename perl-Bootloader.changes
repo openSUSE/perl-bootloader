@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue May 13 14:50:39 CEST 2008 - aosthof@suse.de
+
+- Corrected typo in pattern matching in GRUB.pm
+- Verion bump to 0.4.32.18
+
+-------------------------------------------------------------------
 Tue May 13 14:49:07 CEST 2008 - aosthof@suse.de
 
 - Fixed string-to-array conversion for menu lists (bnc#352495)
