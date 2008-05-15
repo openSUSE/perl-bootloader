@@ -213,7 +213,6 @@ sub new {
     my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
 	{ "key" => "timeout", "value" => 80 },
-	{ "key" => "read-only", "value" => "" },
 	{ "key" => "relocatable", "value" => "" },
     ];
     bless ($loader);
