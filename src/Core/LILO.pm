@@ -62,7 +62,6 @@ sub new {
 	{ "key" => "lba32", "value" => "" },
 	{ "key" => "change-rules", "value" => "" },
 	{ "key" => "reset", "value" => "" },
-	{ "key" => "read-only", "value" => "" },
 	{ "key" => "prompt", "value" => "" },
     ];
     bless ($loader);

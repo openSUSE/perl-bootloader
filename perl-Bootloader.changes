@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May 15 11:07:20 CEST 2008 - aosthof@suse.de
+
+- Removed "read-only" flag from lilo.conf (bnc#381669)
+- Version bump to 0.4.57
+
+-------------------------------------------------------------------
 Fri Apr 25 13:18:14 CEST 2008 - aosthof@suse.de
 
 - Enhanced graphical failsafe mode (bnc#352020)
