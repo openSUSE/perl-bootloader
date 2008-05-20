@@ -1640,14 +1640,6 @@ sub Info2Section {
 		"value" => $self->CreateChainloaderLine (\%sectinfo, $grub_root), 
 	    };
 	}
-	elsif ($key eq "configfile")
-	{
-	    # dummy/placeholder entry: do we need this?
-	    push @lines, {
-		"key" => $key,
-		"value" => $value,
-	    };
-	}
     }
 
     my $ret = $self->FixSectionLineOrder (\@lines,

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue May 20 10:44:02 CEST 2008 - aosthof@suse.de
+
+- Remove duplicate configfile lines (bnc#389891)
+- Version bump to 0.4.59
+
+-------------------------------------------------------------------
 Thu May 15 13:53:45 CEST 2008 - aosthof@suse.de
 
 - Removed "read-only" flag from elilo.conf (bnc#381669)
