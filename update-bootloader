@@ -412,13 +412,14 @@ if (defined $oper{add}) {
 
 	# Add a "Failsafe" section, but only if the underlying architecture is
 	# one of i386, x86_84 or ia64 and the kernel flavor is either default,
-	# smp or bigsmp and not a xen kernel.
+	# smp, bigsmp or pae and not a xen kernel.
 	if ((($arch eq "i386") ||
 	    ($arch eq "x86_64") ||
 	    ($arch eq "ia64")) &&
 	    (($opt_image =~ /-default/) ||
 	    ($opt_image =~ /-smp/) ||
-	    ($opt_image =~ /-bigsmp/)) &&
+	    ($opt_image =~ /-bigsmp/) ||
+	    ($opt_image =~ /-pae/)) &&
 	    ($opt_xen != 1)) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "failsafe";

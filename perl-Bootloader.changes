@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon May 26 17:07:46 CEST 2008 - aosthof@suse.de
+
+- Create failsafe sections also for pae kernels (former bigsmp)
+  (bnc#372168)
+- Version bump to 0.4.61
+
+-------------------------------------------------------------------
 Mon May 26 16:51:59 CEST 2008 - aosthof@suse.de
 
 - Omit warning when dm_mod is not available (bnc#393229)
