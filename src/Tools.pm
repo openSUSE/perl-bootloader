@@ -398,6 +398,13 @@ Return 0 if no device, 1 if there are any.
 sub DMRaidAvailable {
     my $retval = 0;
 
+    # Check if device-mapper is available in /proc/misc
+    my $dm_available = qx{grep device-mapper /proc/misc};
+
+    if ($dm_available eq "") {
+	return $retval;
+    }
+
     $dmsetup = AddPathToExecutable("dmsetup");
 
     if (-e $dmsetup) {

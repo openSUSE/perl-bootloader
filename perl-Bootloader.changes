@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon May 26 16:51:59 CEST 2008 - aosthof@suse.de
+
+- Omit warning when dm_mod is not available (bnc#393229)
+- Version bump to 0.4.60
+
+-------------------------------------------------------------------
 Tue May 20 10:44:02 CEST 2008 - aosthof@suse.de
 
 - Remove duplicate configfile lines (bnc#389891)
