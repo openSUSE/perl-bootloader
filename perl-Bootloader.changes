@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May 29 11:51:02 CEST 2008 - aosthof@suse.de
+
+- Corrected naming scheme for pae kernels (bnc#395085)
+- Version bump to 0.4.62
+
+-------------------------------------------------------------------
 Mon May 26 17:07:46 CEST 2008 - aosthof@suse.de
 
 - Create failsafe sections also for pae kernels (former bigsmp)
