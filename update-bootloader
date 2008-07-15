@@ -46,8 +46,11 @@ Needs a call to --refresh to take effect.
 
 activate the new config e.g. write boot loader to disk
 
+=back
 
 =head1 PARAMETER
+
+=over 8
 
 =item B<--help>
 
