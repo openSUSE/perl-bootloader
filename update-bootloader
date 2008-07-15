@@ -4,7 +4,6 @@ use POSIX;
 use Getopt::Long;
 use Pod::Usage;
 use Bootloader::Tools;
-use Locale::gettext;
 use strict;
 
 my %oper;
@@ -162,6 +161,18 @@ sub GetProduct {
     return "Linux";
 }
 
+sub test_gettext {
+  my $filename = "Locale/gettext.pm";
+  my $realfilename;
+  foreach my $prefix (@INC) {
+    $realfilename = "$prefix/$filename";
+    if (-f $realfilename) {
+      return 1;
+    }
+  }
+  return undef
+}
+
 my $logname = "/var/log/YaST2/perl-BL-standalone-log";
 open (LOG, ">>$logname");
 print LOG ("update-bootloader called:\n" . $0 . " " . join (" ", @ARGV) .  "\n");
@@ -269,13 +280,19 @@ if (defined $oper{add}) {
     }
 
     # only localize on grub and lilo
-    if ($loader eq "grub" || $loader eq "lilo") {
+    if (($loader eq "grub" || $loader eq "lilo") && defined(test_gettext)) {
 	setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
 	my $d =  Locale::gettext->domain("bootloader");
 	$d->dir("/usr/share/YaST2/locale");
 	my $opt_trans = $d->get($opt_name);
 	chomp ($opt_trans);
+
+        #log what is translated
+        my $logname = "/var/log/YaST2/perl-BL-standalone-log";
+        open (LOG, ">>$logname");
+        print LOG ("translate :\n" . $0 . " " . join (" ", @ARGV) .  "\n");
+        close LOG;
 	
 	# check whether translation only contains [a-zA-Z0-9 _]
 	# otherwise fall back to untranslated string
