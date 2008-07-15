@@ -13,7 +13,7 @@
 Name:           perl-Bootloader
 Version:        --autoversion--
 Release:        0
-Requires:       perl = %{perl_version}
+Requires:       perl-base = %{perl_version}
 Requires:       e2fsprogs
 Recommends:     perl-gettext
 Autoreqprov:    on
