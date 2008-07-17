@@ -12,6 +12,7 @@ endif
 MBUILD=/work/src/bin/mbuild
 MBUILDC=$(MBUILD) -l $(LOGNAME) -d stable
 MBUILDQ=$(MBUILD) -q
+ABUILD=/work/src/bin/abuild
 BUILD_ROOT=/abuild/buildsystem.$(HOST).$(LOGNAME)
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
@@ -20,7 +21,7 @@ DISTMAIL=/work/src/bin/distmail
 .PHONY:	export build mbuild submit rpm clean
 
 all:
-	@echo "Choose one target out of 'export', 'build', 'mbuild', 'submit', 'rpm' or 'clean'"
+	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'rpm' or 'clean'"
 	@echo
 
 export:	.checkexportdir .exportdir
@@ -75,6 +76,9 @@ submit:	.submitted
 	else \
 	    echo Compile failed; exit 1; \
 	fi
+
+abuild: .checkexportdir .exportdir
+	sudo ${ABUILD} $$(<.exportdir)/$(PKG)
 
 mbuild: .checkexportdir .exportdir
 	@if [ -f .mbuild_id -a .exportdir -ot .mbuild_id ]; then \
