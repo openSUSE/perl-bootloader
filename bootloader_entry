@@ -95,11 +95,11 @@ function add_entry()
 		chmod 755 $delayed_exec_file
 	else
 		# Set up the new kernel
-		if [ -f /etc/sysconfig/bootloader ] &&
-		   [ -f /boot/grub/menu.lst -o \
-		     -f /etc/lilo.conf      -o \
-		     -f /etc/elilo.conf     -o \
-		     -f /etc/zipl.conf ]; then
+		if [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/sysconfig/bootloader ] &&
+		   [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub/menu.lst -o \
+		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/lilo.conf      -o \
+		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/elilo.conf     -o \
+		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/zipl.conf ]; then
 			case $flavor in
 				(kdump|um)
 				;;
@@ -254,7 +254,7 @@ function remove_entry()
 #####################  M A I N  ###############################################
 
 # Log how program was called
-logname="/var/log/YaST2/perl-BL-standalone-log"
+logname=$PERL_BOOTLOADER_TESTSUITE_PATH"/var/log/YaST2/perl-BL-standalone-log"
 echo "bootloader_entry was called as: $*" >> $logname
 
 # Log parts of the current system configuration
