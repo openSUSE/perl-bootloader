@@ -209,7 +209,7 @@ Returns undef on fail
 sub ListFiles {
     my $self = shift;
 
-    return [ "/etc/zipl.conf" ];
+    return [ Bootloader::Path::Zipl_conf() ];
 }
 
 
@@ -308,7 +308,7 @@ sub ParseLines {
     my $avoid_reading_device_map = shift;
 
     # the only file is /etc/zipl.conf
-    my @zipl_conf = @{$files{"/etc/zipl.conf"} || []};
+    my @zipl_conf = @{$files{Bootloader::Path::Zipl_conf()} || []};
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	"=",
 	["label","menuname"],
@@ -374,7 +374,7 @@ sub CreateLines {
     }
 
     return {
-	"/etc/zipl.conf" => $zipl_conf,
+	Bootloader::Path::Zipl_conf() => $zipl_conf,
     }
 }
 
@@ -418,7 +418,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	"/sbin/zipl",
+	Bootloader::Path::Zipl_zipl(),
 	"/var/log/YaST2/y2log_bootloader"
     );
 }

@@ -43,6 +43,8 @@ use Bootloader::Core;
 
 our @ISA = qw(Bootloader::Core);
 
+use Bootloader::Path;
+
 #module interface
 
 sub GetMetaData() {
@@ -80,7 +82,8 @@ sub GetMetaData() {
     my %exports;
 
     # one of iseries, prep, chrp, pmac_old, pmac_new ...
-    my $arch = qx{ /sbin/lilo --get-arch };
+    my $lilo = Bootloader::Path::Lilo_lilo();
+    my $arch = qx{ $lilo --get-arch };
     chomp( $arch );
     $arch = "pmac" if "$arch" =~ /^pmac/;
 
@@ -285,7 +288,7 @@ Returns undef on fail
 sub ListFiles {
     my $self = shift;
 
-    return [ "/etc/lilo.conf" ];
+    return [ Bootloader::Path::Lilo_conf() ];
 }
 
 # FIXME document
@@ -329,7 +332,7 @@ sub ParseLines {
     my $avoid_reading_device_map = shift;
 
     # the only file is /etc/lilo.conf
-    my @lilo_conf = @{$files{"/etc/lilo.conf"} || []};
+    my @lilo_conf = @{$files{Bootloader::Path::Lilo_conf()} || []};
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	"=",
 	["image", "other"],
@@ -376,7 +379,7 @@ sub CreateLines {
     return undef unless defined ($lilo_conf);
 
     return {
-	"/etc/lilo.conf" => $lilo_conf,
+	Bootloader::Path::Lilo_conf() => $lilo_conf,
     }
 }
 
@@ -726,8 +729,9 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
 
+    my $lilo = Bootloader::Path::Lilo_lilo();
     return 0 == $self->RunCommand (
-	"/sbin/lilo",
+	"$lilo",
 	"/var/log/YaST2/y2log_bootloader"
     );
 }

@@ -100,6 +100,7 @@ our @EXPORT = qw(InitLibrary CountImageSections CountSections
 
 use Bootloader::Library;
 use Bootloader::Core;
+use Bootloader::Path;
 
 my $lib_ref = undef;
 my $dmsetup = undef;
@@ -108,7 +109,7 @@ my $mdadm = undef;
 sub DumpLog {
     my $core_lib = shift;
 
-    my $perl_logfile = "/var/log/YaST2/perl-BL-standalone-log";
+    my $perl_logfile = Bootloader::Path::Logname();
     my $using_logfile = 1;
 
     if (not open LOGFILE, ">>$perl_logfile") {
@@ -197,7 +198,7 @@ See InitLibrary function for example.
 =cut
 
 sub ReadMountPoints {
-    open (FILE, "/etc/fstab") || 
+    open (FILE, Bootloader::Path::Fstab()) || 
 	die ("ReadMountPoints(): Failed to open /etc/fstab");
 
     my %mountpoints = ();
@@ -211,7 +212,8 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
-		    open (BLKID, "/sbin/blkid -t $dev |") || 
+                    my $command = Bootloader::Path::Blkid() . " -t $dev |";
+		    open (BLKID, $command) || 
 			die ("ReadMountPoints(): Failed to run blkid");
 
 		    my $line = <BLKID>;
@@ -793,9 +795,9 @@ See InitLibrary function for example.
 
 =cut
 
-# FIXME: this has to be read through yast::storage or such
 sub GetBootloader {
-    my $lt = qx{ . /etc/sysconfig/bootloader && echo \$LOADER_TYPE } or
+    my $path = Bootloader::Path::Sysconfig();
+    my $lt = qx{ . $path && echo \$LOADER_TYPE } or
 	die ("GetBootloader(): Cannot determine the loader type");
     chomp ($lt);
     return $lt;

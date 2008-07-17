@@ -4,6 +4,7 @@ use POSIX;
 use Getopt::Long;
 use Pod::Usage;
 use Bootloader::Tools;
+use Bootloader::Path;
 use strict;
 
 my %oper;
@@ -176,7 +177,7 @@ sub test_gettext {
   return undef
 }
 
-my $logname = "/var/log/YaST2/perl-BL-standalone-log";
+my $logname = Bootloader::Path::Logname();
 open (LOG, ">>$logname");
 print LOG ("update-bootloader called:\n" . $0 . " " . join (" ", @ARGV) .  "\n");
 close LOG;
@@ -283,7 +284,7 @@ if (defined $oper{add}) {
     }
 
     # only localize on grub and lilo
-    if (($loader eq "grub" || $loader eq "lilo") && defined(test_gettext)) {
+    if (($loader eq "grub" || $loader eq "lilo") && defined(test_gettext())) {
 	setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
 	my $d =  Locale::gettext->domain("bootloader");
@@ -292,7 +293,7 @@ if (defined $oper{add}) {
 	chomp ($opt_trans);
 
         #log what is translated
-        my $logname = "/var/log/YaST2/perl-BL-standalone-log";
+        my $logname = Bootloader::Path::Logname();
         open (LOG, ">>$logname");
         print LOG ("translate :\n" . $0 . " " . join (" ", @ARGV) .  "\n");
         close LOG;

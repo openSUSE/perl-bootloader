@@ -80,6 +80,7 @@ use strict;
 
 use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
+use Bootloader::Path;
 
 #module interface
 
@@ -719,13 +720,15 @@ Returns undef on fail
 sub ListFiles {
     my $self = shift;
 
-    return [ "/boot/grub/menu.lst", "/boot/grub/device.map", "/etc/grub.conf" ];
+    return [ Bootloader::Path::Grub_menulst() , 
+    Bootloader::Path::Grub_devicemap(),
+    Bootloader::Path::Grub_grubconf() ];
 }
 
 sub ListMenuFiles {
     my $self = shift;
 
-    return [ "/boot/grub/menu.lst" ];
+    return [ Bootloader::Path::Grub_menulst() ];
 }
 
 =item
@@ -748,7 +751,7 @@ sub ParseLines {
     my $avoid_reading_device_map = shift;
 
     #first set the device map - other parsing uses it
-    my @device_map = @{$files{"/boot/grub/device.map"} || []};
+    my @device_map = @{$files{"Bootloader::Path::Grub_devicemap()"} || []};
     my %devmap = ();
     foreach my $dm_entry (@device_map)
     {
@@ -760,7 +763,7 @@ sub ParseLines {
     $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
 
     # and now proceed with menu.lst
-    my @menu_lst = @{$files{"/boot/grub/menu.lst"} || []};
+    my @menu_lst = @{$files{Bootloader::Path::Grub_menulst()} || []};
     $self->l_milestone ("GRUB::Parselines: input from menu.lst :\n'" .
 			join("'\n' ", @menu_lst) . "'");
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
@@ -770,7 +773,7 @@ sub ParseLines {
     );
 
     # and finally get the location from /etc/grub.conf
-    my @grub_conf_lines = @{$files{"/etc/grub.conf"} || []};
+    my @grub_conf_lines = @{$files{Bootloader::Path::Grub_grubconf()} || []};
     $self->l_milestone ("GRUB::Parselines: input from /etc/grub.conf :\n'" .
 			join("'\n' ", @grub_conf_lines) . "'");
     my $grub_root = "";
@@ -924,9 +927,9 @@ sub CreateLines {
 
     #return all files
     return {
-	"/boot/grub/menu.lst" => $menu_lst,
-	"/boot/grub/device.map" => \@device_map,
-	"/etc/grub.conf" => $grub_conf,
+	Bootloader::Path::Grub_menulst() => $menu_lst,
+	Bootloader::Path::Grub_devicemap() => \@device_map,
+	Bootloader::Path::Grub_grubconf() => $grub_conf,
     }
 }
 
@@ -1898,8 +1901,11 @@ sub InitializeBootloader {
     # write generic_mbr in case
 
     my $log = "/var/log/YaST2/y2log_bootloader";
+    my $grub = Bootloader::Path::Grub_grub();
+    my $grubconf = Bootloader::Path::Grub_grubconf();
+    my $devicemap = Bootloader::Path::Grub_devicemap();
     my $ret = $self->RunCommand (
-	"cat /etc/grub.conf | /usr/sbin/grub --device-map=/boot/grub/device.map --batch",
+	"cat $grubconf | $grub --device-map=$devicemap --batch",
 	$log
     );
     if ($ret == 0)

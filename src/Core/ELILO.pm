@@ -41,6 +41,7 @@ use strict;
 
 use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
+use Bootloader::Path;
 
 #module interface
 
@@ -230,8 +231,7 @@ Returns undef on fail
 
 =cut
 
-my $default_conf = "/etc/elilo.conf";
-#$default_conf = "/tmp/elilo.conf";
+my $default_conf = Bootloader::Path::Elilo_conf();
 
 # list<string> ListFiles ();
 sub ListFiles {
@@ -737,10 +737,12 @@ sub UpdateBootloader {
 
     # FIXME: this is good-weather programming: /boot/efi is _always_ a
     #        FAT partition which has to be mounted
-    system ("mkdir -p /boot/efi/efi/SuSE") unless -d "/boot/efi/efi/SuSE";
+    my $efi = Bootloader::Path::Elilo_efi();
+    system ("mkdir -p $efi") unless -d "$efi";
  
+    my $elilo = Bootloader::Path::Elilo_elilo(); 
     return 0 == $self->RunCommand (
-	"/sbin/elilo -v",
+	"$elilo -v",
 	"/var/log/YaST2/y2log_bootloader"
     );
 }
