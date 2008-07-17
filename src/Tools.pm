@@ -46,6 +46,8 @@ C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
 
 C<< $loader = Bootloader::Tools::GetBootloader (); >>
 
+C<< $value = Bootloader::Tools::GetSysconfigValue (); >>
+
 C<< Bootloader::Tools::InitLibrary (); >>
 
 C<< Bootloader::Tools::CountImageSections ($image); >>
@@ -93,7 +95,7 @@ use base 'Exporter';
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
 		 RemoveImageSections GetDefaultImage
 		 GetDefaultInitrd GetBootloader UpdateBootloader
-		 GetGlobals SetGlobals
+		 GetGlobals SetGlobals 
 		 GetSectionList GetSection AdaptCommentLine
 		 AddSection RemoveSections
 );
@@ -804,6 +806,24 @@ sub GetBootloader {
 }   
 
 =item
+C<< $value = Bootloader::Tools::GetSysconfigValue (); >>
+
+returns specified option from the /etc/sysconfig/bootloader
+file.
+
+See AddSection for example
+
+=cut
+
+sub GetSysconfigValue {
+    my $key = shift;
+    my $file = Bootloader::Path::Sysconfig();
+    my $value = qx{ . $file && echo \$$key } or "";
+    chomp ($value);
+    return $value;
+}
+
+=item
 C<< Bootloader::Tools::InitLibrary (); >>
 
 initializes the bootloader configuration library. Fills its internal structures
@@ -1295,31 +1315,44 @@ sub AddSection {
     # Append flavor appendix to section label if necessary
     AdjustSectionNameAppendix ("add", \%new);
 
+    if ($name =~ m/^Failsafe.*$/) {
+        $new{"append"} = GetSysconfigValue("FAILSAFE_APPEND");
+        $new{"vgamode"} = GetSysconfigValue("FAILSAFE_VGA")
+    }
+    elsif ($option{"type"} eq "xen") {
+        $new{"append"} = GetSysconfigValue("XEN_APPEND");
+        $new{"vgamode"} = GetSysconfigValue("XEN_VGA")
+    }
+    else {
+        $new{"append"} = GetSysconfigValue("DEFAULT_APPEND");
+        $new{"vgamode"} = GetSysconfigValue("DEFAULT_VGA")
+    }
+
     my $failsafe_modified = 0;
 
     # FIXME: Failsafe parameters should be set dynamically in the future
-    if ($name =~ m/^Failsafe.*$/) {
-	my $arch = `uname --hardware-platform`;
-	chomp ($arch);
-
-	if ($arch eq "i386") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off x11failsafe";
-	}
-	elsif ($arch eq "x86_64") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe";
-	}
-	elsif ($arch eq "ia64") {
-	    $new{"append"} = "ide=nodma nohalt noresume 3";
-	}
-	else {
-	    print ("Architecture $arch does not support failsafe entries.\n");
-	}
-
-	$failsafe_modified = 1;
-
-	# Don't make the failsafe entry the default one
-	$default = 0;
-    }
+#    if ($name =~ m/^Failsafe.*$/) {
+#	my $arch = `uname --hardware-platform`;
+#	chomp ($arch);
+#
+#	if ($arch eq "i386") {
+#	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off x11failsafe";
+#	}
+#	elsif ($arch eq "x86_64") {
+#	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe";
+#	}
+#	elsif ($arch eq "ia64") {
+#	    $new{"append"} = "ide=nodma nohalt noresume 3";
+#	}
+#	else {
+#	    print ("Architecture $arch does not support failsafe entries.\n");
+#	}
+#
+#	$failsafe_modified = 1;
+#
+#	# Don't make the failsafe entry the default one
+#	$default = 0;
+#    }
     $new{"__modified"} = 1;
 
     my $match = '';
