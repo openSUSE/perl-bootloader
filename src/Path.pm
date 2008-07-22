@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 #
 # Set of path used in bootloader. Allows setting prefix via global variable
 # $PERL_BOOTLOADER_TESTSUITE_PATH
@@ -9,15 +9,9 @@ package Bootloader::Path;
 
 use strict;
 
-use Env qw($PERL_BOOTLOADER_TESTSUITE_PATH);
-
 sub Prefix {
   my $value = shift;
-  if ( defined($PERL_BOOTLOADER_TESTSUITE_PATH) )
-  {
-    $value = $PERL_BOOTLOADER_TESTSUITE_PATH . $value;
-  }
-  return $value;
+  return $ENV{PERL_BOOTLOADER_TESTSUITE_PATH} . $value;
 }
 
 sub Logname {

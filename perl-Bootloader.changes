@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Thu Jul 17 17:33:47 CEST 2008 - jreidinger@suse.cz
+
+- refactor pathnames, no it can be used 
+  $PERL_BOOTLOADER_TESTSUITE_PATH variable for prefix
+- fixed manpage warnings bnc#398538
+- added fix for bnc#381386 to trunk
+- perl-gettext is only reccomends (FATE #301805)
+- read kernel parametrs from sysconfig (jsrain)
+- Version bump to 0.4.64 
+
+-------------------------------------------------------------------
 Wed Jun  4 14:04:38 CEST 2008 - aosthof@suse.de
 
 - Reverted the fix for minor bnc#389891 causing blocker bnc#395085

@@ -285,6 +285,7 @@ if (defined $oper{add}) {
 
     # only localize on grub and lilo
     if (($loader eq "grub" || $loader eq "lilo") && defined(test_gettext())) {
+        require Locale::gettext;
 	setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
 
 	my $d =  Locale::gettext->domain("bootloader");
