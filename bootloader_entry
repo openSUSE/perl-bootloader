@@ -289,7 +289,8 @@ if [ -e $fstab ] ; then
 fi
 
 echo "excerpts of /dev:"
-ls -l /dev/{[hs]d[ab]?,md[0-3],.udev,disk/by-*} 2>/dev/null
+#if doesn't find anything you can be on strange architecture (like ps3) and dump all block devices
+ls -l /dev/{[hs]d[ab]?,md[0-3],.udev,disk/by-*} 2>/dev/null || ls -l /dev | grep ^b
 echo
 
 device_map="/boot/grub/device.map"
