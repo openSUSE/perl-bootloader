@@ -211,6 +211,11 @@ function remove_entry()
 
 		chmod 755 $delayed_exec_file
 	else
+		if [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/sysconfig/bootloader ] &&
+		   [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub/menu.lst -o \
+		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/lilo.conf      -o \
+		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/elilo.conf     -o \
+		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/zipl.conf ]; then
 		# Do not specify the name of a bootloader entry when removing it, thus
 		# removing all sections matching the kernel image and initrd names
 		# (either both a "linux" and a "failsafe" section, or a section
@@ -246,6 +251,7 @@ function remove_entry()
 
 		# Run the bootloader (e.g., lilo).
 		update_bootloader --refresh
+                fi
 	fi
 }
 
