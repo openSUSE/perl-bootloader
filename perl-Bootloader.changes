@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Tue Jul 22 10:29:14 CEST 2008 - jreidinger@suse.cz
+
+- fix crash in update-bootloader (bnc #411161)
+- don't try remove kernel image if none bootloader installed
+  (bnc #237620)
+- version bump to 0.4.65 
+
+-------------------------------------------------------------------
+Mon Jul 21 18:42:53 CEST 2008 - snwint@suse.de
+
+- removed 'use Env' from Path.pm (bnc #410878)
+
+-------------------------------------------------------------------
 Thu Jul 17 17:33:47 CEST 2008 - jreidinger@suse.cz
 
 - refactor pathnames, no it can be used 
