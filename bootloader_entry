@@ -132,7 +132,7 @@ function add_entry()
 				fi
 
 					# Run the bootloader (e.g., lilo).
-					update_bootloader --refresh
+					update_bootloader --refresh || exit 1
 				;;
 
 				(debug)
@@ -157,7 +157,7 @@ function add_entry()
 				fi
 
 					# Run the bootloader (e.g., lilo).
-					update_bootloader --refresh
+					update_bootloader --refresh || exit 1
 				;;
 
 				(*)
@@ -184,7 +184,7 @@ function add_entry()
 				fi
 
 					# Run the bootloader (e.g., lilo).
-					update_bootloader --refresh
+					update_bootloader --refresh || exit 1
 				;;
 			esac
 		fi
@@ -258,7 +258,7 @@ function remove_entry()
 		fi
 
 		# Run the bootloader (e.g., lilo).
-		update_bootloader --refresh
+		update_bootloader --refresh || exit 1
                 fi
 	fi
 }
