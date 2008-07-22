@@ -118,7 +118,8 @@ function add_entry()
 							  --force-default \
 							  --add \
 							  --force $opt_xen_kernel \
-							  --name "$release"
+							  --name "$release" \
+                                                          || exit 1
 				else
 					# Add the new bootloader entry (xen kernel)
 					update_bootloader --image /boot/$image \
@@ -126,7 +127,8 @@ function add_entry()
 							  --default \
 							  --add \
 							  --force $opt_xen_kernel \
-							  --name "$release"
+							  --name "$release" \
+                                                          || exit 1
 				fi
 
 					# Run the bootloader (e.g., lilo).
@@ -142,14 +144,16 @@ function add_entry()
 							  --force-default \
 							  --add \
 							  --force \
-							  --name "$release"
+							  --name "$release" \
+                                                          || exit 1
 				else
 					# Add the new bootloader entry (debug kernel)
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
 							  --add \
 							  --force \
-							  --name "$release"
+							  --name "$release" \
+                                                          || exit 1
 				fi
 
 					# Run the bootloader (e.g., lilo).
@@ -166,7 +170,8 @@ function add_entry()
 							  --force-default \
 							  --add \
 							  --force \
-							  --name "$release"
+							  --name "$release" \
+                                                          || exit 1
 				else
 					# Add the new bootloader entry
 					update_bootloader --image /boot/$image \
@@ -174,7 +179,8 @@ function add_entry()
 							  --default \
 							  --add \
 							  --force \
-							  --name "$release"
+							  --name "$release" \
+                                                          || exit 1
 				fi
 
 					# Run the bootloader (e.g., lilo).
@@ -241,12 +247,14 @@ function remove_entry()
 					  --initrd /boot/$initrd \
 					  --xen \
 					  --remove \
-					  --force
+					  --force \
+                                          || exit 1
 		else
 			update_bootloader --image /boot/$image \
 					  --initrd /boot/$initrd \
 					  --remove \
-					  --force
+					  --force \
+                                          || exit 1
 		fi
 
 		# Run the bootloader (e.g., lilo).
