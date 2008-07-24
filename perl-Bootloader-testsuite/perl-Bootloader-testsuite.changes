@@ -1,0 +1,6 @@
+-------------------------------------------------------------------
+Thu Jul 17 13:13:05 CEST 2008 - jreidinger@suse.cz
+
+- initial test scripts
+- test upgrade kernel vith new sysconfig support 
+

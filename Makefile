@@ -59,7 +59,7 @@ submit:	.submitted
 	mv src $(PKG)-$$lv/lib/Bootloader; \
 	tar cfvj $(PKG)-$$lv.tar.bz2 $(PKG)-$$lv ; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > $(PKG).spec ; \
-	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in; \
+	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in perl-Bootloader-testsuite ; \
 	pwd ; \
 	ls -la ; \
 	if /work/src/bin/check_if_valid_source_dir; then cd -; echo $$exportdir > $@; else exit 1 ; fi
