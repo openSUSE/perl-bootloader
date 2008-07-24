@@ -751,7 +751,7 @@ sub ParseLines {
     my $avoid_reading_device_map = shift;
 
     #first set the device map - other parsing uses it
-    my @device_map = @{$files{"Bootloader::Path::Grub_devicemap()"} || []};
+    my @device_map = @{$files{Bootloader::Path::Grub_devicemap()} || []};
     my %devmap = ();
     foreach my $dm_entry (@device_map)
     {
