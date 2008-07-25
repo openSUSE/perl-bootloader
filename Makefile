@@ -7,13 +7,13 @@ SUBMIT_DIR=/work/src/done/STABLE
 ifeq ($(BUILD_DIST),ppc)
 BUILD=powerpc32 /work/src/bin/build
 else
-BUILD=/work/src/bin/build
+BUILD=/work/src/bin/build --target=i586
 endif
 MBUILD=/work/src/bin/mbuild
 MBUILDC=$(MBUILD) -l $(LOGNAME) -d stable
 MBUILDQ=$(MBUILD) -q
 ABUILD=/work/src/bin/abuild
-BUILD_ROOT=/abuild/buildsystem.$(HOST).$(LOGNAME)
+BUILD_ROOT=/tmp/buildsystem.$(HOST).root
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
 DISTMAIL=/work/src/bin/distmail

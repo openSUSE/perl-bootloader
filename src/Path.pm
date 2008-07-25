@@ -11,7 +11,8 @@ use strict;
 
 sub Prefix {
   my $value = shift;
-  return $ENV{PERL_BOOTLOADER_TESTSUITE_PATH} . $value;
+  return $ENV{PERL_BOOTLOADER_TESTSUITE_PATH} . $value if (defined($ENV{PERL_BOOTLOADER_TESTSUITE_PATH}));
+  return $value;
 }
 
 sub Logname {

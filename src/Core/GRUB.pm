@@ -407,6 +407,7 @@ sub GrubDev2UnixDev {
 	$dev = $1;
     }
 
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: ".$self->{"device_map"});
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
 	if ($dev eq $fw) {
 	    $dev = $unix;
@@ -512,6 +513,7 @@ sub UnixDev2GrubDev {
     # now check kernel devices / devicemapper devices 
     if ( exists $self->{"device_map"}->{$kernel_dev} ) {
 	$dev = $self->{"device_map"}->{$kernel_dev};
+        return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no partition
     }
     else {
 	foreach my $udev_link (@udev_links) { 
@@ -519,12 +521,14 @@ sub UnixDev2GrubDev {
 	    $udev_link = "/dev/" . $udev_link;
 	    if (exists $self->{"device_map"}->{$udev_link} ) {
 		$dev = $self->{"device_map"}->{$udev_link};
+                return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no partition
 	    }
 	}
     }
 
     # print all entries of device.map. This is rather for debugging
     if (exists $self->{"device_map"}) {
+        $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: ".$self->{"device_map"});
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: Read from internal structure device_map:");
 
 	while ((my $unix_dev, my $grub_dev) = each (%{$self->{"device_map"}})) {
@@ -539,11 +543,12 @@ sub UnixDev2GrubDev {
 
     # fallback to grub device hd0 if translation has failed - this is good
     # enough for many cases
+    #FIXME try get partition number from device
     my $partition_fallback = 0;
 
     if ($dev !~ /^${grubdev_pattern}$/) {
 	$dev = "hd0";
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: Unknown device '$dev', fall back to ($dev,$partition_fallback)");
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Unknown device '$original', fall back to ($dev)");
     }
 
     $dev = defined ($partition)
@@ -752,6 +757,8 @@ sub ParseLines {
 
     #first set the device map - other parsing uses it
     my @device_map = @{$files{Bootloader::Path::Grub_devicemap()} || []};
+    $self->l_milestone ("GRUB::Parselines: input from device.map :\n'" .
+			join("'\n' ", @device_map) . "'");
     my %devmap = ();
     foreach my $dm_entry (@device_map)
     {
@@ -760,6 +767,7 @@ sub ParseLines {
 	    $devmap{$2} = $1;
 	}
     };
+    $self->l_debug ("GRUB::Parselines: avoided_reading device map.") if (! $avoid_reading_device_map );
     $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
 
     # and now proceed with menu.lst
@@ -1161,6 +1169,7 @@ sub Section2Info {
 	}
 	# remapping end, start processing
 
+
 	# FIXME : check against metadata?
 
 	if ($key eq "root" || $key eq "rootnoverify")
@@ -1255,6 +1264,11 @@ sub Section2Info {
 	    }
 	    $ret{$key} = $val;
 	}
+        # recognize remapping both is shrink to one remap return
+        elsif ($key eq "map")
+        {
+          $ret{"remap"} = "true";
+        }
     }
 
     $ret{"__lines"} = \@lines;
@@ -1654,6 +1668,25 @@ sub Info2Section {
 		"value" => $value,
 	    };
 	}
+        elsif ($key eq "remap")
+        {
+            push @lines, {
+                "key" => "map",
+                "value" => "(hd0) ".$grub_root,
+            };
+            push @lines, {
+                "key" => "map",
+                "value" => $grub_root." (hd0)",
+            };
+        }
+        elsif ($key eq "makeactive")
+        {
+          push @lines, {
+              "key" => "makeactive",
+              "value" => "",
+          };
+        }
+
     }
 
     my $ret = $self->FixSectionLineOrder (\@lines,

@@ -1705,7 +1705,11 @@ sub SetDeviceMapping {
     my $self = shift;
     my $devmap_ref = shift;
 
+    $self->l_debug ("Core::SetDeviceMapping: called.");
     $self->{"device_map"} = $devmap_ref;
+    while  ( my ($key, $value) = each (%$devmap_ref)){
+        $self->l_milestone ("Core::SetDeviceMapping: device_mapping: $key <=> $value");
+    }
     return 1;
 }
 
@@ -1751,7 +1755,8 @@ sub SetSettings {
 	if (defined ($settings{$key}))
 	{
 	    $self->{$key} = $settings{$key};
-	}
+            $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", $settings{$key}));
+        }
     }
     return 1;
 }
