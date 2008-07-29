@@ -407,11 +407,17 @@ sub GrubDev2UnixDev {
 	$dev = $1;
     }
 
+    my $match_found = 0;
     $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: ".$self->{"device_map"});
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
 	if ($dev eq $fw) {
 	    $dev = $unix;
+	    $match_found = 1;
 	}
+    }
+    if ($match_found == 0) {
+        $self->l_error ("GRUB::GrubDev2UnixDev: did not find a match for $dev in the device map");
+        return $original;
     }
 
     # resolve symlinks.....

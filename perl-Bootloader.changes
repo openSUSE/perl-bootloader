@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Jul 29 15:51:16 CEST 2008 - jsrain@suse.cz
+
+- return unmodified GRUB device from GrubDev2UnixDev when match not
+  found in device map so that it is distinguishable GRUB device and
+  cannot be understood as UNIX device (bnc #411937)
+- version bump to 0.4.66
+
+-------------------------------------------------------------------
 Tue Jul 22 10:29:14 CEST 2008 - jreidinger@suse.cz
 
 - fix crash in update-bootloader (bnc #411161)
