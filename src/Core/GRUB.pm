@@ -1149,6 +1149,11 @@ sub Section2Info {
     my $type = $self->EvalSectionType (\@lines);
     $ret{"type"} = $type;
 
+    # store original device map
+    my %orig_device_map = %{$self->{"device_map"}};
+    # see below - only two disks can be swapped
+    my $remapped = 0;
+
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
@@ -1262,6 +1267,7 @@ sub Section2Info {
 		{
 		    $val = $grub_root;
 		}
+$self->l_error ("translating $val");
 		$val = $self->GrubDev2UnixDev ($val);
 	    }
 	    else
@@ -1273,10 +1279,27 @@ sub Section2Info {
         # recognize remapping both is shrink to one remap return
         elsif ($key eq "map")
         {
+	  if ($val =~ /\(([a-z0-9]+)\)[ \t]*\(([a-z0-9]+)\)/ && $remapped == 0) {
+	    # FIXME only exchanging two disks works
+	    my $disk1 = "$1";
+	    my $disk2 = "$2";
+	    $self->l_milestone ("GRUB::Section2Info: Remapping the device map; exchanging $disk1 and $disk2");
+	    my %new_device_map = ();
+	    while ((my $unix, my $fw) = each (%orig_device_map))
+	    {
+	      if ($fw eq $disk1) { $fw = $disk2; }
+	      elsif ($fw eq $disk2) { $fw = $disk1; }
+	      $new_device_map{$unix} = $fw;
+	    }
+            $self->{"device_map"} = \%new_device_map;
+	    $remapped = 1;
+	  }
           $ret{"remap"} = "true";
         }
     }
 
+    # restore device map in case it has changed
+    $self->{"device_map"} = \%orig_device_map;
     $ret{"__lines"} = \@lines;
     return \%ret;
 }
@@ -1493,6 +1516,38 @@ sub Info2Section {
     {
 	return \@lines;
     }
+
+    # store original device map
+    my %orig_device_map = %{$self->{"device_map"}};
+    my %new_device_map = {};
+    my $remap_device = undef;
+
+    # remap the first disk to the chainloader if requested
+    # store the information about remapped disk
+    if (defined ($sectinfo{"remap"}) && $sectinfo{"remap"} == "true" && defined ($sectinfo{"chainloader"}))
+    {
+	$self->l_milestone ("GRUB::Info2Section: Remapping the device map");
+	$remap_device = $sectinfo{"chainloader"};
+	$remap_device = $self->UnixDev2GrubDev ($remap_device);
+        if ($remap_device =~ /\(([^,]+),([^,]+)\)/) {
+	    $remap_device = "$1";
+	}
+	elsif ($remap_device =~ /\(([^,]+)\)/) {
+	    $remap_device = "$1";
+	}
+	else {
+	    $self->l_error ("GRUB::Info2Section: Not valid device $remap_device");
+	}
+	$self->l_milestone ("GRUB::Info2Section: Device to remap: $remap_device");
+	while ((my $unix, my $fw) = each (%orig_device_map))
+	{
+	    if ($fw eq "hd0") { $fw = $remap_device; }
+	    elsif ($fw eq $remap_device) { $fw = "hd0"; }
+	    $new_device_map{$unix} = $fw;
+	}
+        $self->{"device_map"} = \%new_device_map;
+    }
+
     my $grub_root = "";
     if (defined ($sectinfo{"image"}) && defined ($sectinfo{"initrd"}))
     {
@@ -1507,6 +1562,13 @@ sub Info2Section {
 	$grub_root = $self->UnixDev2GrubDev (
 	    exists $sectinfo{"root"} ? delete($sectinfo{"root"}) : $boot_dev
         );
+	$self->l_milestone ("Set GRUB's root to $grub_root");
+	# FIXES the above - maybe: To make makeactive without parameter work,
+	# one needs to pass the chainloader device
+	if (exists $sectinfo{"chainloader"}) {
+	    $self->l_milestone ("Setting GRUB's root to $grub_root ($sectinfo{\"chainloader\"})");
+	    $grub_root = $self->UnixDev2GrubDev ($sectinfo{"chainloader"});
+	}
     }
 
     if ($type eq "xen") {
@@ -1607,6 +1669,12 @@ sub Info2Section {
 		$line_ref = undef;
 	    }
 	}
+	elsif ($key eq "map")
+	{
+	    #just remove them for now, it will work even though it is not the best solution
+	    # FIXME when time permits
+	    $line_ref = undef;
+	}
 	defined $line_ref ? $line_ref : ();
     } @lines;
 
@@ -1676,13 +1744,13 @@ sub Info2Section {
 	}
         elsif ($key eq "remap")
         {
-            push @lines, {
+            unshift @lines, {
                 "key" => "map",
-                "value" => "(hd0) ".$grub_root,
+                "value" => "(hd0) ($remap_device)",
             };
-            push @lines, {
+            unshift @lines, {
                 "key" => "map",
-                "value" => $grub_root." (hd0)",
+                "value" => "($remap_device) (hd0)",
             };
         }
         elsif ($key eq "makeactive")
@@ -1697,6 +1765,12 @@ sub Info2Section {
 
     my $ret = $self->FixSectionLineOrder (\@lines,
 	["title"]);
+
+    # restore original device map - if was changed
+    if (defined ($sectinfo{"remap"}) && defined ($sectinfo{"chainloader"})) {
+	$self->{"device_map"} = \%orig_device_map;
+    }
+
     return $ret;
 }
 
