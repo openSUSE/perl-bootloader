@@ -3,6 +3,7 @@ Mon Aug  4 16:43:48 CEST 2008 - jsrain@suse.cz
 
 - fixed creating chainloader GRUB sections with disk remapping
   (fate #301994)
+- 0.4.67
 
 -------------------------------------------------------------------
 Tue Jul 29 15:51:16 CEST 2008 - jsrain@suse.cz
