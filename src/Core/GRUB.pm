@@ -410,9 +410,13 @@ sub GrubDev2UnixDev {
     my $match_found = 0;
     $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: ".$self->{"device_map"});
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
+        $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: $unix <-> $fw.");
+    }
+    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
 	if ($dev eq $fw) {
 	    $dev = $unix;
 	    $match_found = 1;
+            last;
 	}
     }
     if ($match_found == 0) {
@@ -436,6 +440,9 @@ sub GrubDev2UnixDev {
 		return $dev;
 	    }
 	}
+        #no partition found so return $dev with partition
+	$self->l_milestone ("GRUB::GrubDev2UnixDev: No partition found for $dev with $partition.");
+        return $dev.$partition;
     }
 
     $dev = $self->Member2MD ($dev);
@@ -1215,28 +1222,29 @@ sub Section2Info {
 		$ret{"vgamode"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
 	    }
+	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\d+) (?:\s+(.*))?$/)
+	    {
+		$ret{"console"} = "ttyS$2,$3" if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $4);
+		if ($type eq "xen") {
+		    my $console = sprintf("com%d", $1+1);
+		    my $speed   = sprintf("%s=%d", $console, $2);
+		    if (exists $ret{"xen_append"}) {
+		        my $xen_append = $ret{"xen_append"};
+		        while ($xen_append =~
+			    s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
+		              my $del_console = $2;
+				$xen_append =~
+			        s/(.*)${del_console}=\d+\s*(.*)$/$1$2/g;
+			    }
+			    $ret{"xen_append"} = "console=$console $speed $xen_append";
+		    } else {
+		        $ret{"xen_append"} = "console=$console $speed";
+		    }
+		}
 	    if ($val ne "")
 	    {
 		$ret{"append"} = $val;
-		if ($type eq "xen") {
-		    if ($val =~ /console=ttyS(\d+),(\d+)/) {
-			# merge console and speed into xen_append
-			my $console = sprintf("com%d", $1+1);
-			my $speed   = sprintf("%s=%d", $console, $2);
-			if (exists $ret{"xen_append"}) {
-			    my $xen_append = $ret{"xen_append"};
-			    while ($xen_append =~
-				   s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
-				my $del_console = $2;
-				$xen_append =~
-				    s/(.*)${del_console}=\d+\s*(.*)$/$1$2/g;
-			    }
-			    $ret{"xen_append"} = "console=$console $speed $xen_append";
-			} else {
-			    $ret{"xen_append"} = "console=$console $speed";
-			}
-		    }
-		}
 	    }
 	}
 	elsif ($key eq "xen")
@@ -1342,11 +1350,13 @@ sub CreateKernelLine {
     my $vga = $sectinfo_ref->{"vgamode"} || "";
     my $append = $sectinfo_ref->{"append"} || "";
     my $image = $sectinfo_ref->{"image"} || "";
+    my $console = $sectinfo_ref->{"console"} || "";
     $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
+    $console = " console=$console" if $console ne "";
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
-    return "$image$root$append$vga";
+    return "$image$root$append$vga$console";
 }
 
 =item
@@ -1539,8 +1549,8 @@ sub Info2Section {
     }
 
     if ($type eq "xen") {
-	if (exists($sectinfo{"append"}) and
-	    ($sectinfo{"append"} =~ /console=ttyS(\d+),(\d+)/) )
+	if (exists($sectinfo{"console"}) and
+	    ($sectinfo{"console"} =~ /ttyS(\d+),(\d+)/) )
 	{
 	    # merge console and speed into xen_append
 	    my $console = sprintf("com%d", $1+1);
@@ -1590,6 +1600,7 @@ sub Info2Section {
 		delete ($sectinfo{"vgamode"});
 		delete ($sectinfo{"append"});
 		delete ($sectinfo{"image"});
+		delete ($sectinfo{"console"});
 	    }
 	}
 	elsif ($key eq "initrd" || $key eq "wildcard")
