@@ -852,7 +852,7 @@ sub InitLibrary {
 # internal: does section match with set of tags
 sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
-    my $match = 0;
+    my $match = 1;
 
     my $core_lib = $lib_ref->{"loader"};
 
