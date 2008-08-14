@@ -1222,7 +1222,7 @@ sub Section2Info {
 		$ret{"vgamode"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
 	    }
-	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\d+) (?:\s+(.*))?$/)
+	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\d+)(?:\s+(.*))?$/)
 	    {
 		$ret{"console"} = "ttyS$2,$3" if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $4);
@@ -1242,6 +1242,7 @@ sub Section2Info {
 		        $ret{"xen_append"} = "console=$console $speed";
 		    }
 		}
+            }
 	    if ($val ne "")
 	    {
 		$ret{"append"} = $val;

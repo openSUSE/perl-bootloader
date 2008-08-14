@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 24;
+use Test::More tests => 46;
 
 use lib "./";
 use Bootloader::Library;
@@ -13,7 +13,10 @@ my $lib_ref = Bootloader::Library->new();
 
 ok($lib_ref->SetLoaderType("grub"));
 $lib_ref->InitializeBootloader(); #this is expected fail, because it check real hardware
+my %mount_points = ( '/' => '/dev/sda2' );
+ok($lib_ref->DefineMountPoints(\%mount_points));
 ok($lib_ref->ReadSettings());
+
 
 #test device map
 my $dev_map = $lib_ref->GetDeviceMapping ();
@@ -30,20 +33,40 @@ my $globals = $lib_ref->GetGlobalSettings();
 ok($globals);
 is($globals->{'default'},'openSUSE 11.0 - 2.6.25.4-10');
 is($globals->{"timeout"},"8");
-is($globals->{"gfxmenu"},"(hd0,1)/boot/message");
+is($globals->{"gfxmenu"},"/boot/message");
 
 #test sections
 my @sections = @{$lib_ref->GetSections()};
 ok(@sections);
 foreach my $section (@sections) {
   if ( $section->{'original_name'} eq "linux" ){
-
+    is( $section->{'type'}, 'image' );
+    is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10-debug' );
+    is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-debug' );
+    is( $section->{'name'}, 'Debug -- openSUSE 11.0 - 2.6.25.4-10' );
+    ok( not defined $section->{'vgamode'} );
+    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
+    is( $section->{'console'}, 'ttyS0,38400' );
   } 
   elsif ( $section->{'original_name'} eq "linux-2.6.25.4-10-default" )
   {
+    is( $section->{'type'}, 'image' );
+    is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10-default' );
+    is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-default' );
+    is( $section->{'name'}, 'openSUSE 11.0 - 2.6.25.4-10' );
+    is( $section->{'vgamode'}, '0x31a' );
+    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
+    ok( not defined $section->{'console'} );
   }
   elsif ( $section->{'original_name'} eq "failsafe" )
   {
+    is( $section->{'type'}, 'image' );
+    is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10-default' );
+    is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-default' );
+    is( $section->{'name'}, 'Failsafe -- openSUSE 11.0 - 2.6.25.4-10' );
+    ok( not defined $section->{'vgamode'} );
+    is( $section->{'append'}, 'showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe' );
+    ok( not defined $section->{'console'} );
   }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
   {
