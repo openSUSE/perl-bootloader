@@ -46,7 +46,7 @@ foreach my $section (@sections) {
     is( $section->{'name'}, 'Debug -- openSUSE 11.0 - 2.6.25.4-10' );
     ok( not defined $section->{'vgamode'} );
     is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
-    is( $section->{'console'}, 'ttyS0,38400' );
+    is( $section->{'console'}, 'ttyS0,38400n52r' );
   } 
   elsif ( $section->{'original_name'} eq "linux-2.6.25.4-10-default" )
   {
