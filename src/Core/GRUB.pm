@@ -1726,7 +1726,7 @@ sub Info2Section {
 		"value" => $value,
 	    };
 	}
-        elsif ($key eq "remap")
+        elsif ($key eq "remap" and $value eq "true" )
         {
             unshift @lines, {
                 "key" => "map",
@@ -1737,7 +1737,7 @@ sub Info2Section {
                 "value" => "($remap_device) (hd0)",
             };
         }
-        elsif ($key eq "makeactive")
+        elsif ($key eq "makeactive" and $value eq "true" )
         {
           push @lines, {
               "key" => "makeactive",
