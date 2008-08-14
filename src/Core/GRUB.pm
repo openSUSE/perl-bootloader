@@ -1222,10 +1222,11 @@ sub Section2Info {
 		$ret{"vgamode"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
 	    }
-	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\d+)([noe]\d+r?)?(?:\s+(.*))?$/)
+#FIXME after noe need be number
+	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\w+)(?:\s+(.*))?$/)
 	    {
-		$ret{"console"} = "ttyS$2,$3$4" if $2 ne "";
-		$val = $self->MergeIfDefined ($1, $5);
+		$ret{"console"} = "ttyS$2,$3" if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $4);
 		if ($type eq "xen") {
 		    my $console = sprintf("com%d", $1+1);
 		    my $speed   = sprintf("%s=%d", $console, $2);
@@ -1235,7 +1236,7 @@ sub Section2Info {
 			    s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
 		              my $del_console = $2;
 				$xen_append =~
-			        s/(.*)${del_console}=\d+\s*(.*)$/$1$2/g;
+			        s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
 			    }
 			    $ret{"xen_append"} = "console=$console $speed $xen_append";
 		    } else {
@@ -1551,7 +1552,7 @@ sub Info2Section {
 
     if ($type eq "xen") {
 	if (exists($sectinfo{"console"}) and
-	    ($sectinfo{"console"} =~ /ttyS(\d+),(\d+)([noe]\d+r?)?/) )
+	    ($sectinfo{"console"} =~ /ttyS(\d+),(\w+)/) )
 	{
 	    # merge console and speed into xen_append
 	    my $console = sprintf("com%d", $1+1);
@@ -1562,7 +1563,7 @@ sub Info2Section {
 		       s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
 		    my $del_console = $2;
 		    $xen_append =~
-			s/(.*)${del_console}=\d+\s*(.*)$/$1$2/g;
+			s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
 		}
 		$sectinfo{"xen_append"} = "console=$console $speed $xen_append";
 	    } else {
