@@ -1285,6 +1285,10 @@ sub Section2Info {
         {
           $ret{"remap"} = "true";
         }
+        elsif ($key eq "makeactive")
+        {
+          $ret{"makeactive"} = "true";
+        }
     }
 
     $ret{"__lines"} = \@lines;

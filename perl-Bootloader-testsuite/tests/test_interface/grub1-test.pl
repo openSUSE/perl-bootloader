@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 46;
+use Test::More tests => 50;
 
 use lib "./";
 use Bootloader::Library;
@@ -75,6 +75,8 @@ foreach my $section (@sections) {
     is( $section->{'name'}, 'Linux other 1 (/dev/sda4)' );
     ok( $section->{'noverifyroot'});
     is( $section->{'type'}, 'other' );
+    ok( $section->{'makeactive'});
+    ok( $section->{'remap'} );
   }
   elsif ( $section->{'original_name'} eq "floppy" )
   {
@@ -83,6 +85,8 @@ foreach my $section (@sections) {
     is( $section->{'name'}, 'Floppy' );
     ok( $section->{'noverifyroot'});
     is( $section->{'type'}, 'other' );
+    ok( not exists $section->{'makeactive'});
+    ok( not exists $section->{'remap'} );
   }
 }
 
