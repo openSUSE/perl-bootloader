@@ -1227,8 +1227,8 @@ sub Section2Info {
 		$ret{"console"} = "ttyS$2,$3" if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $4);
 		if ($type eq "xen") {
-		    my $console = sprintf("com%d", $1+1);
-		    my $speed   = sprintf("%s=%d", $console, $2);
+		    my $console = sprintf("com%d", $2+1);
+		    my $speed   = sprintf("%s=%s", $console, $3);
 		    if (exists $ret{"xen_append"}) {
 		        my $xen_append = $ret{"xen_append"};
 		        while ($xen_append =~
@@ -1236,8 +1236,9 @@ sub Section2Info {
 		              my $del_console = $2;
 				$xen_append =~
 			        s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
-			    }
-			    $ret{"xen_append"} = "console=$console $speed $xen_append";
+			}
+                        $xen_append =~ s/\s*(\S*)\s*$/$1/;
+			$ret{"xen_append"} = "console=$console $speed $xen_append";
 		    } else {
 		        $ret{"xen_append"} = "console=$console $speed";
 		    }
