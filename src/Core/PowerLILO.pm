@@ -701,6 +701,7 @@ sub Section2Info {
 	}
         elsif ($key eq "append")
         {
+          my $val = $line_ref->{"value"};
           if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\w+)(?:\s+(.*))?$/)
           {
             $ret{"console"} = "ttyS$2,$3" if $2 ne "";
