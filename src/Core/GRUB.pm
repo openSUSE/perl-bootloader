@@ -1672,9 +1672,15 @@ sub Info2Section {
 	delete($sectinfo{"noverifyroot"});
     }
     if ($grub_root ne "" or $noverify) {
+        my $value = undef;
+        #trick how to boot freedos floppy bnc #278699
+        my $grub_dev = $self->UnixDev2GrubDev($sectinfo{"chainloader"});
+        $value = $grub_root if $grub_root ne "";
+        $value = $grub_dev if ( $grub_dev =~ m/fd[0-9]/ );
+        $value = "(hd0)" if not defined($value);
 	unshift @lines, {
 	    "key" => $noverify ? "rootnoverify" : "root",
-	    "value" => $grub_root ne "" ? $grub_root : "(hd0)",
+	    "value" => $value,
 #	    "value" => $grub_root ne "" ? $grub_root : "(hd0,0)",
 	};
     }
