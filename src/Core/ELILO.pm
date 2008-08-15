@@ -719,6 +719,7 @@ sub Section2Info {
               $val = $self->MergeIfDefined( $1, $4);
            }
            $ret{"append"} = $val if $val ne "";
+           next;
         }
 
 	unless (exists $ret{"type"} && exists $so->{$ret{"type"} . "_" . $key}) {
