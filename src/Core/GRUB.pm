@@ -1222,7 +1222,6 @@ sub Section2Info {
 		$ret{"vgamode"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
 	    }
-#FIXME after noe need be number
 	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\w+)(?:\s+(.*))?$/)
 	    {
 		$ret{"console"} = "ttyS$2,$3" if $2 ne "";
