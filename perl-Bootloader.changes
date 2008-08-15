@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Fri Aug 15 15:03:52 CEST 2008 - jreidinger@suse.cz
+
+- added testsuite - now contains reading config files for grub,
+  elilo and powerlilo (fate #303444)
+- implement serial console parameter for image and xen section for
+  grub, elilo and powerlilo (fate #110038)
+- fix root for booting freedos floppy (bnc #278699)
+- 0.4.68 
+
+-------------------------------------------------------------------
 Mon Aug  4 16:43:48 CEST 2008 - jsrain@suse.cz
 
 - fixed creating chainloader GRUB sections with disk remapping
