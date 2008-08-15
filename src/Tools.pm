@@ -818,7 +818,7 @@ See AddSection for example
 sub GetSysconfigValue {
     my $key = shift;
     my $file = Bootloader::Path::Sysconfig();
-    my $value = qx{ . $file && echo \$$key } or "";
+    my $value = qx{ . $file && echo \$$key } || "";
     chomp ($value);
     return $value;
 }
@@ -1448,7 +1448,7 @@ sub AddSection {
 			    # Create the new kernel line with long (resolved)
 			    # kernel filename
 			    my $kernel_line = $s->{"__lines"}[$index]->{"value"};
-			    $kernel_line =~ s/(^\S*)vmlinu[xz](\s*)/\1$link_target\2/;
+			    $kernel_line =~ s/(^\S*)vmlinu[xz](\s*)/$1$link_target$2/;
 			    $s->{"__lines"}[$index]->{"value"} = $kernel_line;
 			}
 		    }
@@ -1463,7 +1463,7 @@ sub AddSection {
 			    # Create the new initrd line with long (resolved)
 			    # initrd filename
 			    my $initrd_line = $s->{"__lines"}[$index]->{"value"};
-			    $initrd_line =~ s/(^\S*)initrd(\s*)/\1$link_target\2/;
+			    $initrd_line =~ s/(^\S*)initrd(\s*)/$1$link_target$2/;
 			    $s->{"__lines"}[$index]->{"value"} = $initrd_line;
 			}
 		    }
@@ -1741,7 +1741,7 @@ sub RemoveSections {
 	    ! defined $ENV{'DELAYED_RUN_UPDATE_BOOTLOADER'} and
 	    ! defined $glob_ref->{"former_default_image_flavor"}) {
 	    my $former_flavor = $option{"image"};
-	    $former_flavor =~ s/.*-(\w+)/\1/;
+	    $former_flavor =~ s/.*-(\w+)/$1/;
 
 	    $glob_ref->{"former_default_image_flavor"} = $former_flavor;
 	}
@@ -1803,13 +1803,13 @@ sub AdjustSectionNameAppendix {
 		    if ($k eq "name" and $v =~ m/$sect_ref_new->{"name"}( \(\w+\))?/) {
 			if ($v =~ m/^$sect_ref_new->{"name"}$/) {
 			    my $flavor_old = $s->{"image"};
-			    $flavor_old =~ s/.*-(\w+)/(\1)/;
+			    $flavor_old =~ s/.*-(\w+)/($1)/;
 			    $s->{"name"} = $s->{"name"} . " " . $flavor_old;
 			    $s->{"__modified"} = 1;
 			}
 
 			my $flavor_new = $sect_ref_new->{"image"};
-			$flavor_new =~ s/.*-(\w+)/(\1)/;
+			$flavor_new =~ s/.*-(\w+)/($1)/;
 			$sect_ref_new->{"name"} = $sect_ref_new->{"name"} . " " . $flavor_new;
 		    }
 		}
@@ -1831,7 +1831,7 @@ sub AdjustSectionNameAppendix {
 	    }
 
 	    if (!$hit) {
-		$s_name_old =~ s/^(.+) \(\w+\)$/\1/;
+		$s_name_old =~ s/^(.+) \(\w+\)$/$1/;
 		push @section_names_removed, $s_name_old;
 	    }
 	}
@@ -1853,7 +1853,7 @@ sub AdjustSectionNameAppendix {
 
 	    if ($count == 1) {
 		foreach my $hit (@hits) {
-		    $sections[$hit]->{"name"} =~ s/(.*) \(\w+\)/\1/;
+		    $sections[$hit]->{"name"} =~ s/(.*) \(\w+\)/$1/;
 		    $sections[$hit]->{"__modified"} = 1;
 		}
 	    }
