@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 50;
+use Test::More tests => 60;
 
 use lib "./";
 use Bootloader::Library;
@@ -67,6 +67,19 @@ foreach my $section (@sections) {
     ok( not defined $section->{'vgamode'} );
     is( $section->{'append'}, 'showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe' );
     ok( not defined $section->{'console'} );
+  }
+  elsif ( $section->{'original_name'} eq "xen" )
+  {
+    is( $section->{"type"}, 'xen' );
+    is( $section->{"append"}, 'resume=/dev/sda1 splash=silent showopts' );
+    is( $section->{"image"}, '/boot/vmlinuz-2.6.25.4-10-xen' );
+    is( $section->{"initrd"}, '/boot/initrd-2.6.25.4-10-xen' );
+    is( $section->{"name"}, 'XEN' );
+    is( $section->{"root"}, '/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2' );
+    is( $section->{"xen"}, '/boot/xen.gz' );
+    is( $section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok' );
+    is( $section->{"vgamode"}, '0x332' );
+    is( $section->{'console'}, 'ttyS0,38400n52r' );
   }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
   {

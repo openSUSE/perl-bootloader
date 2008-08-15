@@ -231,13 +231,12 @@ Returns undef on fail
 
 =cut
 
-my $default_conf = Bootloader::Path::Elilo_conf();
 
 # list<string> ListFiles ();
 sub ListFiles {
     my $self = shift;
 
-    return [ $default_conf ];
+    return [ Bootloader::Path::Elilo_conf() ];
 }
 
 
@@ -286,7 +285,7 @@ sub ParseLines {
     my $avoid_reading_device_map = shift;
 
     # the only file is /etc/elilo.conf
-    my @elilo_conf = @{$files{$default_conf} || []};
+    my @elilo_conf = @{$files{Bootloader::Path::Elilo_conf()} || []};
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	"=",
 	["image"],
@@ -413,7 +412,7 @@ sub CreateLines {
     } @{$elilo_conf};
 
     return {
-	$default_conf => $elilo_conf,
+	Bootloader::Path::Elilo_conf() => $elilo_conf,
     }
 }
 
