@@ -1560,7 +1560,7 @@ sub Info2Section {
 	{
 	    # merge console and speed into xen_append
 	    my $console = sprintf("com%d", $1+1);
-	    my $speed   = sprintf("%s=%d", $console, $2);
+	    my $speed   = sprintf("%s=%s", $console, $2);
 	    if (exists $sectinfo{"xen_append"}) {
 		my $xen_append = $sectinfo{"xen_append"};
 		while ($xen_append =~

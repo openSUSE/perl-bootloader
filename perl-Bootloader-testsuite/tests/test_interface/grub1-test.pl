@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 60;
+use Test::More tests => 64;
 
 use lib "./";
 use Bootloader::Library;
@@ -80,6 +80,8 @@ foreach my $section (@sections) {
     is( $section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok' );
     is( $section->{"vgamode"}, '0x332' );
     is( $section->{'console'}, 'ttyS0,38400n52r' );
+    $section->{'console'} = 'ttyS1,9600n52r'; #test change console
+    $section->{'__modified'} = '1';
   }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
   {
@@ -102,5 +104,13 @@ foreach my $section (@sections) {
     ok( not exists $section->{'remap'} );
   }
 }
+
+ok($lib_ref->SetSections(\@sections));
+ok($lib_ref->WriteSettings());
+ok($lib_ref->UpdateBootloader());
+
+my $res = qx:grep -c "kernel /boot/xen.gz console=com2 com2=9600n52r testparam=ok" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1);
 
 Bootloader::Tools::DumpLog( $lib_ref );
