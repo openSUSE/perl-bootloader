@@ -1584,7 +1584,7 @@ sub Info2Section {
     # remap the first disk to the chainloader if requested
     # store the information about remapped disk
     my $remap_device = undef;
-    if (defined ($sectinfo{"remap"}) && $sectinfo{"remap"} == "true" && defined ($sectinfo{"chainloader"}))
+    if (defined ($sectinfo{"remap"}) && $sectinfo{"remap"} eq "true" && defined ($sectinfo{"chainloader"}))
     {
 	$self->l_milestone ("GRUB::Info2Section: Remapping the device map");
 	$remap_device = $sectinfo{"chainloader"};
@@ -1671,7 +1671,17 @@ sub Info2Section {
         }
         elsif ($key eq "makeactive")
         {
-            # put makeactive away
+            if( exists $sectinfo{"makeactive"} 
+              and $sectinfo{"makeactive"} eq "true")
+            {
+              delete $sectinfo{"makeactive"};
+            } else {
+              $line_ref = undef;
+            }
+        }
+        elsif ($key eq "configfile")
+        {
+            # remove configfile due to hard check if equal
             $line_ref = undef;
         }
 	elsif ($key eq "kernel") {
