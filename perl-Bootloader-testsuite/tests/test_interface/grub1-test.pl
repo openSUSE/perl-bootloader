@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 65;
+use Test::More tests => 66;
 
 use lib "./";
 use Bootloader::Library;
@@ -92,6 +92,8 @@ foreach my $section (@sections) {
     is( $section->{'type'}, 'other' );
     ok( $section->{'makeactive'});
     ok( $section->{'remap'} );
+    $section->{'__modified'} = "1";
+    delete $section->{'makeactive'};
   }
   elsif ( $section->{'original_name'} eq "floppy" )
   {
@@ -117,5 +119,9 @@ is( $res, 1); #test correct created xen append
 $res = qx:grep -c "rootnoverify (fd0)" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
+
+$res = qx:grep -c "makeactive" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 0); #test if floppy is correctly repammer for root
 
 Bootloader::Tools::DumpLog( $lib_ref );
