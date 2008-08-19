@@ -1,0 +1,43 @@
+# Modified by YaST2. Last modification on Tue Jul 15 10:54:28 CEST 2008
+default 1
+timeout 8
+gfxmenu (hd0,1)/boot/message
+##YaST - activate
+
+###Don't change this comment - YaST2 identifier: Original name: linux###
+title Debug -- openSUSE 11.0 - 2.6.25.4-10
+    root (hd0,1)
+    kernel /boot/vmlinuz-2.6.25.4-10-debug root=/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
+    initrd /boot/initrd-2.6.25.4-10-debug
+
+###Don't change this comment - YaST2 identifier: Original name: linux-2.6.25.4-10-default###
+title openSUSE 11.0 - 2.6.25.4-10
+    root (hd0,1)
+    kernel /boot/vmlinuz-2.6.25.4-10-default root=/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2 resume=/dev/sda1 splash=silent showopts vga=0x31a
+    initrd /boot/initrd-2.6.25.4-10-default
+
+###Don't change this comment - YaST2 identifier: Original name: failsafe###
+title Failsafe -- openSUSE 11.0 - 2.6.25.4-10
+    root (hd0,1)
+    kernel /boot/vmlinuz-2.6.25.4-10-default root=/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2 showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe
+    initrd /boot/initrd-2.6.25.4-10-default
+
+###Don't change this comment - YaST2 identifier: Original name: xen###'
+title XEN
+    root (hd0,1)
+    kernel /boot/xen.gz testparam=ok com1=38400n52r console=com1
+    module /boot/vmlinuz-2.6.25.4-10-xen root=/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2 resume=/dev/sda1 splash=silent showopts vga=0x332 console=ttyS0,38400n52r
+    module /boot/initrd-2.6.25.4-10-xen
+
+###Don't change this comment - YaST2 identifier: Original name: Linux other 1 (/dev/sda4)###
+title Linux other 1 (/dev/sda4)
+    rootnoverify (hd0,1)
+    map (hd0) (hd1)
+    map (hd1) (hd0)
+    makeactive
+    chainloader (hd0,3)+1
+
+###Don't change this comment - YaST2 identifier: Original name: floppy###
+title Floppy
+    rootnoverify (hd0,1)
+    chainloader (fd0)+1

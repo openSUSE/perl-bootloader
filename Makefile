@@ -36,6 +36,9 @@ diff:	export
 
 submit:	.submitted
 
+test:
+	cd perl-Bootloader-testsuite/tests/test_interface/ && make
+
 
 # worker targets
 .checkexportdir:
