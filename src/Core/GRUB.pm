@@ -271,7 +271,62 @@ sub GetMetaData() {
     return \%exports;
 }
 
+sub GetOptions{
+  my $loader = shift;
+  
+  my %options;
+  $options{"global_options"} = {
+        boot     => "",
+        activate => "bool",
+        timeout  => "",
+        default  => "",
+        former_default_image_flavor => "",
+        generic_mbr => "bool",
+        boot_custom => "",
+        boot_mbr => "bool",
+        boot_root => "bool",
+        boot_boot => "bool",
+        boot_extended => "bool",
+        serial => "",
+        terminal => "",
+        fallback => "",
+        hiddenmenu => "bool",
+        gfxmenu => "path",
+        password => "",
+        debug => "bool",
+        configfile => "path"
+  };
 
+  $options{"section_options"} = {
+	image_name     => "",
+	image_image       => "path",
+	image_root        => "",
+	image_vgamode     => "",
+	image_append      => "",
+	image_initrd      => "path",
+	image_noverifyroot=> "bool",
+        image_measure     => "", #special, not path due to pcr
+
+	other_lock        => "bool",
+	other_chainloader => "",
+	other_noverifyroot=> "bool",
+	other_makeactive  => "bool",
+	other_blockoffset => "",
+        other_measure     => "", #special, not path due to pcr
+
+	xen_xen => "",
+	xen_xen_append    => "",
+	xen_image         => "path",
+	xen_root          => "",
+	xen_vgamode       => "",
+	xen_append        => "",
+	xen_initrd        => "path",
+
+	menu_root         => "",
+	menu_configfile   => "path"
+  };
+  $loader->{"options"}=\%options;
+}
 =item
 C<< $obj_ref = Bootloader::Core::GRUB->new (); >>
 
@@ -289,6 +344,7 @@ sub new {
     # FIXME: Add an 'init-only' parameter to GetMetaData if
     # perfomance goes down
     $loader->GetMetaData();
+    $loader->GetOptions();
     $loader->l_milestone ("GRUB::new: Created GRUB instance");
     return $loader;
 }
@@ -1289,6 +1345,20 @@ sub Section2Info {
         {
           $ret{"makeactive"} = "true";
         }
+        elsif ($key eq "measure")
+        {
+          my @parts = split(" ",$val);
+          $parts[0] = $self->GrubPath2UnixPath($parts[0]);
+
+          if (exists $ret{"measure"}){
+            push @{$ret{"measure"}}, $parts[0]." ".$parts[1];
+          }
+          else
+          {
+            my @measure_array = ( $parts[0]." ".$parts[1] );
+            $ret{'measure'} = \@measure_array;
+          }
+        }
     }
 
     $ret{"__lines"} = \@lines;
@@ -1493,7 +1563,7 @@ sub Info2Section {
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
-    my $so = $self->{"exports"}{"section_options"};
+    my $so = $self->{'options'}{'section_options'};
     my $modules = 0;
 
     # allow to keep the section unchanged
@@ -1594,6 +1664,16 @@ sub Info2Section {
 	    # put module lines always at the end.
 	    $line_ref = undef;
 	}
+        elsif ($key eq "measure")
+        {
+            # put measure lines out, because we recreate it
+            $line_ref = undef;
+        }
+        elsif ($key eq "makeactive")
+        {
+            # put makeactive away
+            $line_ref = undef;
+        }
 	elsif ($key eq "kernel") {
 	    if ($type eq "xen") {
 		$line_ref->{"value"} =
@@ -1750,7 +1830,19 @@ sub Info2Section {
               "value" => "",
           };
         }
-
+        elsif ($key eq "measure")
+        {
+          my @parts;
+          foreach my $measure (@{$value}){
+            @parts = undef;
+            @parts = split(" ",$measure);
+            $parts[0] = $self->UnixPath2GrubPath($parts[0],$grub_root);
+            push @lines, {
+              "key" => "measure",
+              "value" => $parts[0]." ".$parts[1],
+            };
+          }
+        }
     }
 
     my $ret = $self->FixSectionLineOrder (\@lines,
@@ -1840,7 +1932,7 @@ sub Info2Global {
     my $sections_ref = shift;
 
     my @lines = @{$globinfo{"__lines"} || []};
-    my $go = $self->{"exports"}{"global_options"};
+    my $go = $self->{'options'}{"global_options"};
   
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;
@@ -1857,7 +1949,7 @@ sub Info2Global {
     @lines = map {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
-	my ($type) = split(/:/, $go->{$key} || "");
+	my ($type) = $go->{$key} || "";
 
 	# only accept known global options :-)
 	if ( !exists $go->{$key} ) {

@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 64;
+use Test::More tests => 65;
 
 use lib "./";
 use Bootloader::Library;
@@ -102,15 +102,20 @@ foreach my $section (@sections) {
     is( $section->{'type'}, 'other' );
     ok( not exists $section->{'makeactive'});
     ok( not exists $section->{'remap'} );
+    $section->{'__modified'} = "1";
   }
 }
 
 ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
-ok($lib_ref->UpdateBootloader());
+ok($lib_ref->UpdateBootloader(1));
 
 my $res = qx:grep -c "kernel /boot/xen.gz console=com2 com2=9600n52r testparam=ok" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
-is( $res, 1);
+is( $res, 1); #test correct created xen append
+
+$res = qx:grep -c "rootnoverify (fd0)" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
 
 Bootloader::Tools::DumpLog( $lib_ref );
