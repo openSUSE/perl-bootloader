@@ -1315,9 +1315,13 @@ sub AddSection {
     # Append flavor appendix to section label if necessary
     AdjustSectionNameAppendix ("add", \%new);
 
+    my $failsafe_modified = 0;
+
     if ($name =~ m/^Failsafe.*$/) {
         $new{"append"} = GetSysconfigValue("FAILSAFE_APPEND");
-        $new{"vgamode"} = GetSysconfigValue("FAILSAFE_VGA")
+        $new{"vgamode"} = GetSysconfigValue("FAILSAFE_VGA");
+        $failsafe_modified = 1;
+	$default = 0;
     }
     elsif ($option{"type"} eq "xen") {
         $new{"append"} = GetSysconfigValue("XEN_APPEND");
@@ -1328,7 +1332,6 @@ sub AddSection {
         $new{"vgamode"} = GetSysconfigValue("DEFAULT_VGA")
     }
 
-    my $failsafe_modified = 0;
 
     # FIXME: Failsafe parameters should be set dynamically in the future
 #    if ($name =~ m/^Failsafe.*$/) {
