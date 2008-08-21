@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 19;
+use Test::More tests => 23;
 
 use lib "./";
 use Bootloader::Library;
@@ -26,7 +26,9 @@ foreach my $section (@sections) {
   {
     is( $section->{'type'}, 'image' );
     is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10-default' );
+    is( $section->{'imagepcr'}, '8' );
     is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-default' );
+    is( $section->{'initrdpcr'}, '8' );
     is( $section->{'name'}, 'openSUSE 11.0 - 2.6.25.4-10' );
     is( $section->{'vgamode'}, '0x31a' );
     is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
@@ -37,6 +39,8 @@ foreach my $section (@sections) {
     }
     $section->{'__modified'}=1;
     push  @{$section->{'measure'}}, "/opt/jdk1.4.2/jre/lib/security/java.security 8";
+    $section->{"imagepcr"} = "7";
+    $section->{"initrdpcr"} = "7";
   }
 }
 
@@ -46,14 +50,22 @@ ok($lib_ref->UpdateBootloader(1));
 
 my $res = qx:grep -c 'measure /etc/security/selinux/policy.17 9' ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
-is( $res, 1); #test correct created xen append
+is( $res, 1); #test correct created measure
 
 $res = qx:grep -c "measure /opt/jdk1.4.2/jre/lib/security/java.policy 9" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
-is( $res, 1); #test correct created xen append
+is( $res, 1); #test correct created measure
 
 $res = qx:grep -c "measure /opt/jdk1.4.2/jre/lib/security/java.security 8" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
-is( $res, 1); #test correct created xen append
+is( $res, 1); #test correct created measure
+
+$res = qx:grep -c "kernel --pcr=7" ./fake_root2/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct pcr for image
+
+$res = qx:grep -c "initrd --pcr=7" ./fake_root2/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct pcr for image
 
 Bootloader::Tools::DumpLog( $lib_ref );

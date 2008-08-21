@@ -1261,8 +1261,14 @@ sub Section2Info {
 	}
 	elsif ($key eq "image")
 	{
+            #first must be remove of pcr, because pcr can be before image
+	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
+	    {
+		$ret{"imagepcr"} = $2 if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $3);
+	    }
 	    # split into loader and parameter, note that the regex does
-	    # always match, then split out root= vgamode= and append= values
+	    # always match, then split out root= vgamode=,console=, --pcr and append= values
 	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
     
 	    $ret{"image"} = $self->GrubPath2UnixPath ($1, $grub_root);
@@ -1314,7 +1320,16 @@ sub Section2Info {
 	    $ret{"xen"} = $self->GrubPath2UnixPath ($1, $grub_root);
 	    $ret{"xen_append"} = $2 if defined $2;
 	}
-	elsif ($key eq "initrd" || $key eq "wildcard" || $key eq "configfile")
+	elsif ($key eq "initrd")
+        {
+	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
+	    {
+		$ret{"initrdpcr"} = $2 if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $3);
+	    }
+            $ret{"initrd"} =  $self->GrubPath2UnixPath ($val, $grub_root);
+        }
+	elsif ($key eq "wildcard" || $key eq "configfile")
 	{
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
@@ -1422,17 +1437,19 @@ sub CreateKernelLine {
     my $sectinfo_ref = shift;
     my $grub_root = shift || "";
 
+    my $pcr = $sectinfo_ref->{"imagepcr"} || "";
     my $root = $sectinfo_ref->{"root"} || "";
     my $vga = $sectinfo_ref->{"vgamode"} || "";
     my $append = $sectinfo_ref->{"append"} || "";
     my $image = $sectinfo_ref->{"image"} || "";
     my $console = $sectinfo_ref->{"console"} || "";
+    $pcr = "--pcr=$pcr " if $pcr ne "";
     $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
     $console = " console=$console" if $console ne "";
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
-    return "$image$root$append$vga$console";
+    return "$pcr$image$root$append$vga$console";
 }
 
 =item
@@ -1650,25 +1667,17 @@ sub Info2Section {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
 
-	if ($key eq "root" or $key eq "rootnoverify")
-	{
-	    # always remove old root line
-	    $line_ref = undef;
-	}
-	elsif ($key eq "title")
+	if ($key eq "title")
 	{
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
 	}
-	elsif ($key eq "module") {
+        #entries which must be recreated due to hard check if valid or order
+	elsif ($key eq "module" or $key eq "measure" or $key eq "configfile" or
+            $key eq "root" or $key eq "rootnoverify" or $key eq "map") {
 	    # put module lines always at the end.
 	    $line_ref = undef;
 	}
-        elsif ($key eq "measure")
-        {
-            # put measure lines out, because we recreate it
-            $line_ref = undef;
-        }
         elsif ($key eq "makeactive")
         {
             if( exists $sectinfo{"makeactive"} 
@@ -1678,11 +1687,6 @@ sub Info2Section {
             } else {
               $line_ref = undef;
             }
-        }
-        elsif ($key eq "configfile")
-        {
-            # remove configfile due to hard check if equal
-            $line_ref = undef;
         }
 	elsif ($key eq "kernel") {
 	    if ($type eq "xen") {
@@ -1697,6 +1701,7 @@ sub Info2Section {
 		delete ($sectinfo{"append"});
 		delete ($sectinfo{"image"});
 		delete ($sectinfo{"console"});
+		delete ($sectinfo{"imagepcr"});
 	    }
 	}
 	elsif ($key eq "initrd" || $key eq "wildcard")
@@ -1706,6 +1711,12 @@ sub Info2Section {
 	    }
 	    else {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
+                if ( $key eq "initrd" and exists $sectinfo{"initrdpcr"}
+                  and defined $sectinfo{"initrdpcr"})
+                {
+                  $line_ref->{"value"} = "--pcr=".$sectinfo{"initrdpcr"}." ".$line_ref->{"value"};
+                  delete ($sectinfo{"initrdpcr"});
+                }
 	    }
 	    delete ($sectinfo{$key});
 	}
@@ -1742,12 +1753,6 @@ sub Info2Section {
 	    else {
 		$line_ref = undef;
 	    }
-	}
-	elsif ($key eq "map")
-	{
-	    #just remove them for now, it will work even though it is not the best solution
-	    # FIXME when time permits
-	    $line_ref = undef;
 	}
 	defined $line_ref ? $line_ref : ();
     } @lines;
