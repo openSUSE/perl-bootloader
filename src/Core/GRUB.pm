@@ -1313,6 +1313,11 @@ sub Section2Info {
 	}
 	elsif ($key eq "xen")
 	{
+	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
+	    {
+		$ret{"xenpcr"} = $2 if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $3);
+	    }
 	    # split into loader and parameter, note that the regex does
 	    # always match
 	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
@@ -1335,6 +1340,11 @@ sub Section2Info {
 	}
 	elsif ($key eq "chainloader")
 	{
+	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
+	    {
+		$ret{"chainloaderpcr"} = $2 if $2 ne "";
+		$val = $self->MergeIfDefined ($1, $3);
+	    }
 	    if ($val =~ /^(.*)\+(\d+)/)
 	    {
 		$val = $1;
@@ -1469,26 +1479,32 @@ sub CreateChainloaderLine {
     my $sectinfo_ref = shift;
     my $grub_root = shift || "";
 
-    my $sectors = $sectinfo_ref->{"blockoffset"};
-    my $line = $sectinfo_ref->{"chainloader"};
-    if (substr ($line, 0, 5) eq "/dev/" && ! defined ($sectors))
+    my $sectors = $sectinfo_ref->{"blockoffset"} || "";
+    my $chain = $sectinfo_ref->{"chainloader"};
+    my $pcr = $sectinfo_ref->{"chainloaderpcr"} || "";
+
+    $pcr = "--pcr=$pcr " if $pcr ne "";
+
+    if (substr ($chain, 0, 5) eq "/dev/" && $sectors eq "")
     {
-	$sectors = 1;
+	$sectors = "1";
     }
-    if (defined ($sectors) && $sectors > 0)
+    $sectors = "+$sectors" if $sectors ne "";
+
+    if ($sectors eq "")
     {
-	$line = $self->UnixDev2GrubDev ($line);
-	if (substr ($line, 0, length ($grub_root)) eq $grub_root)
-	{
-	    $line = substr ($line, length ($grub_root));
-	}
-	$line = $line . "+" . $sectors;
-	return $line;
+      $chain =  $self->UnixPath2GrubPath ($chain, $grub_root);
     }
     else
     {
-	return $self->UnixPath2GrubPath ($line, $grub_root);
+	$chain = $self->UnixDev2GrubDev ($chain);
+	if (substr ($chain, 0, length ($grub_root)) eq $grub_root)
+	{
+	    $chain = substr ($chain, length ($grub_root));
+	}
     }
+
+    return "$pcr$chain$sectors";
 }
 
 
@@ -1693,6 +1709,11 @@ sub Info2Section {
 		$line_ref->{"value"} =
 		    $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root)
 		    . " " . (delete($sectinfo{"xen_append"}) || "");
+                if (exists $sectinfo{"xenpcr"} and defined $sectinfo{"xenpcr"})
+                {
+                    $line_ref->{"value"} = "--pcr=".$sectinfo{"xenpcr"}." ".$line_ref->{"value"};
+                    delete ($sectinfo{"xenpcr"});
+                }
 	    }
 	    elsif ($type eq "image") {
 		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
@@ -1749,6 +1770,7 @@ sub Info2Section {
 		$line_ref->{"value"} = $self->CreateChainloaderLine (\%sectinfo, $grub_root);
 		delete ($sectinfo{$key});
 		delete ($sectinfo{"blockoffset"});
+		delete ($sectinfo{"chainloaderpcr"});
 	    }
 	    else {
 		$line_ref = undef;
@@ -1782,11 +1804,16 @@ sub Info2Section {
 
     # keep a hard order for the following three entries
     if (exists $sectinfo{"xen"}) {
-	push @lines, {
-	    "key" => "kernel",
-	    "value" => $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
-		. " " . ($sectinfo{"xen_append"} || ""),
-	    };
+      my $value = $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
+                      . " " . ($sectinfo{"xen_append"} || "");
+      if (exists $sectinfo{"xenpcr"} and defined $sectinfo{"xenpcr"})
+      {
+        $value = "--pcr=".$sectinfo{"xenpcr"}." ".$value;
+      }
+      push @lines, {
+	"key" => "kernel",
+        "value" => $value,
+      };
     }
     if (exists $sectinfo{"image"}) {
 	my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
@@ -1796,9 +1823,14 @@ sub Info2Section {
 	};
     }
     if (exists $sectinfo{"initrd"}) {
+      my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
+      if (exists $sectinfo{"initrdpcr"} and defined $sectinfo{"initrdpcr"})
+      {
+        $value = "--pcr=".$sectinfo{"initrdpcr"}." ".$value;
+      }
 	push @lines, {
 	    "key" => ($type eq "xen") ? "module" : "initrd",
-	    "value" => $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root),
+	    "value" => $value,
 	};
     }
 
@@ -1813,8 +1845,9 @@ sub Info2Section {
 	}
 	elsif ($key eq "chainloader")
 	{
-	    # FIXME: is this necessary? It seems this is already handled in a
+	    # is this necessary? It seems this is already handled in a
 	    # loop above (where the sectinfo stuff for chainloader is deleted).
+            # JR: yes it is necessary if in previous lines hasn't been chainloader line (or lines is empty)
 	    push @lines, {
 		"key" => $key,
 		"value" => $self->CreateChainloaderLine (\%sectinfo, $grub_root), 

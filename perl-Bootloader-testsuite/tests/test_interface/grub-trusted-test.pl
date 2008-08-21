@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 23;
+use Test::More tests => 39;
 
 use lib "./";
 use Bootloader::Library;
@@ -42,6 +42,30 @@ foreach my $section (@sections) {
     $section->{"imagepcr"} = "7";
     $section->{"initrdpcr"} = "7";
   }
+  elsif ( $section->{'original_name'} eq "xen" )
+  {
+    is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10-xen' );
+    is( $section->{'imagepcr'}, '10' );
+    is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-xen' );
+    is( $section->{'initrdpcr'}, '9' );
+    is( $section->{'xenpcr'}, '11' );
+    is( $section->{'xen'}, '/boot/xen.gz' );
+    is( $section->{'xen_append'}, 'console=com1 com1=38400n52r testparam=ok' );
+    is( $section->{'root'}, '/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2' );
+    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
+    $section->{'__modified'}=1;
+    $section->{"imagepcr"} = "1";
+    $section->{"initrdpcr"} = "13";
+    $section->{'xenpcr'} = '12';
+  }
+  elsif ( $section->{'original_name'} eq "other" )
+  {
+    is( $section->{'chainloaderpcr'}, '8' );
+    is( $section->{'chainloader'}, '/dev/sda4' );
+    is( $section->{'blockoffset'}, '1' );
+    $section->{'__modified'}=1;
+    $section->{"chainloaderpcr"} = "14";
+  }
 }
 
 ok($lib_ref->SetSections(\@sections));
@@ -65,6 +89,22 @@ chomp($res);
 is( $res, 1); #test correct pcr for image
 
 $res = qx:grep -c "initrd --pcr=7" ./fake_root2/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct pcr for image
+
+$res = qx:grep -c "kernel --pcr=12" ./fake_root2/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct pcr for image
+
+$res = qx:grep -c "module --pcr=1 " ./fake_root2/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct pcr for image
+
+$res = qx:grep -c "module --pcr=13" ./fake_root2/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct pcr for image
+
+$res = qx:grep -c "chainloader --pcr=14" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test correct pcr for image
 
