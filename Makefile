@@ -39,6 +39,8 @@ submit:	.submitted
 test:
 	cd perl-Bootloader-testsuite/tests/test_interface/ && make
 
+test_clean:
+	cd perl-Bootloader-testsuite/tests/test_interface/ && make clean
 
 # worker targets
 .checkexportdir:

@@ -1709,11 +1709,9 @@ sub Info2Section {
 		$line_ref->{"value"} =
 		    $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root)
 		    . " " . (delete($sectinfo{"xen_append"}) || "");
-                if (exists $sectinfo{"xenpcr"} and defined $sectinfo{"xenpcr"})
-                {
-                    $line_ref->{"value"} = "--pcr=".$sectinfo{"xenpcr"}." ".$line_ref->{"value"};
-                    delete ($sectinfo{"xenpcr"});
-                }
+                my $pcr = delete ($sectinfo{"xenpcr"}) || "";
+                $pcr = "--pcr=$pcr " if $pcr ne "";
+                $line_ref->{"value"} = "$pcr".$line_ref->{"value"};
 	    }
 	    elsif ($type eq "image") {
 		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
@@ -1732,11 +1730,11 @@ sub Info2Section {
 	    }
 	    else {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
-                if ( $key eq "initrd" and exists $sectinfo{"initrdpcr"}
-                  and defined $sectinfo{"initrdpcr"})
+                if ( $key eq "initrd")
                 {
-                  $line_ref->{"value"} = "--pcr=".$sectinfo{"initrdpcr"}." ".$line_ref->{"value"};
-                  delete ($sectinfo{"initrdpcr"});
+                  my $pcr = delete ($sectinfo{"initrdpcr"}) || "";
+                  $pcr = "--pcr=$pcr " if $pcr ne "";
+                  $line_ref->{"value"} = $pcr.$line_ref->{"value"};
                 }
 	    }
 	    delete ($sectinfo{$key});
@@ -1806,10 +1804,9 @@ sub Info2Section {
     if (exists $sectinfo{"xen"}) {
       my $value = $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
                       . " " . ($sectinfo{"xen_append"} || "");
-      if (exists $sectinfo{"xenpcr"} and defined $sectinfo{"xenpcr"})
-      {
-        $value = "--pcr=".$sectinfo{"xenpcr"}." ".$value;
-      }
+      my $pcr = $sectinfo{"xenpcr"} || "";
+      $pcr = "--pcr=$pcr " if $pcr ne "";
+      $value = "$pcr$value";
       push @lines, {
 	"key" => "kernel",
         "value" => $value,
@@ -1824,10 +1821,9 @@ sub Info2Section {
     }
     if (exists $sectinfo{"initrd"}) {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
-      if (exists $sectinfo{"initrdpcr"} and defined $sectinfo{"initrdpcr"})
-      {
-        $value = "--pcr=".$sectinfo{"initrdpcr"}." ".$value;
-      }
+      my $pcr = $sectinfo{"initrdpcr"} || "";
+      $pcr = "--pcr=$pcr " if $pcr ne "";
+      $value = "$pcr$value";
 	push @lines, {
 	    "key" => ($type eq "xen") ? "module" : "initrd",
 	    "value" => $value,

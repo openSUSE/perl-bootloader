@@ -1307,7 +1307,7 @@ sub AddSection {
 
     my $failsafe_modified = 0;
 
-    if ($name =~ m/^Failsafe.*$/) {
+    if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
         $new{"append"} = GetSysconfigValue("FAILSAFE_APPEND");
         $new{"vgamode"} = GetSysconfigValue("FAILSAFE_VGA");
         $failsafe_modified = 1;
@@ -1322,6 +1322,12 @@ sub AddSection {
         $new{"append"} = GetSysconfigValue("DEFAULT_APPEND");
         $new{"vgamode"} = GetSysconfigValue("DEFAULT_VGA")
     }
+
+    $new{"console"} = GetSysconfigValue("CONSOLE");
+    $new{"imagepcr"} = GetSysconfigValue("IMAGE_PCR");
+    $new{"initrdpcr"} = GetSysconfigValue("INITRD_PCR");
+    $new{"xenpcr"} = GetSysconfigValue("XEN_PCR");
+    $new{"chainloaderpcr"} = GetSysconfigValue("CHAINLOADER_PCR");
 
 
     # FIXME: Failsafe parameters should be set dynamically in the future

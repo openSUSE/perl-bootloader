@@ -350,10 +350,12 @@ if (defined $oper{add}) {
 	    $version =~ s/-[^-]*$//;
 
 	    $opt_name = $flavor . " -- " . GetProduct() . " - " . $version;
+	    $opt_failsafe = "Failsafe -- " . GetProduct() . " - " . $version;
 	}
 	# Create short labels for all other loaders
 	else {
 	    $opt_name = $flavor;
+	    $opt_failsafe = "Failsafe";
 	}
     }
 }
