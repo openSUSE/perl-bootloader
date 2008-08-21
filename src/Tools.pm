@@ -1302,16 +1302,6 @@ sub AddSection {
     }
     $new{"name"} = $name;
 
-    # In case of a xen entry, look for a existing xen_append parameter and
-    # add it to the new one respectively
-    foreach my $s (@sections) {
-	while ((my $k, my $v) = each (%$s)) {
-	    if ($k eq "xen_append") {
-		$new{"xen_append"} = $v;
-	    }
-	}
-    }
-
     # Append flavor appendix to section label if necessary
     AdjustSectionNameAppendix ("add", \%new);
 
@@ -1324,8 +1314,9 @@ sub AddSection {
 	$default = 0;
     }
     elsif ($option{"type"} eq "xen") {
-        $new{"append"} = GetSysconfigValue("XEN_APPEND");
-        $new{"vgamode"} = GetSysconfigValue("XEN_VGA")
+        $new{"append"} = GetSysconfigValue("XEN_KERNEL_APPEND");
+        $new{"vgamode"} = GetSysconfigValue("XEN_VGA");
+        $new{"xen_append"} = GetSysconfigValue("XEN_APPEND");
     }
     else {
         $new{"append"} = GetSysconfigValue("DEFAULT_APPEND");
