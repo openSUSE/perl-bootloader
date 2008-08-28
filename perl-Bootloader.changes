@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Thu Aug 21 15:51:15 CEST 2008 - jreidinger@suse.cz
+
+- add support for trusted grub
+- add support for reading console a trusted grub params from
+  sysconfig (except measures)
+- split metadata and internal information about possible keys in 
+  local/global sections
+- fix duplicating configfile line (bnc #389891)
+- fix selecting failsafe as default (bnc #413280)
+- 0.4.69
+
+-------------------------------------------------------------------
 Fri Aug 15 15:03:52 CEST 2008 - jreidinger@suse.cz
 
 - added testsuite - now contains reading config files for grub,

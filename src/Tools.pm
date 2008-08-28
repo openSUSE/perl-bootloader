@@ -1328,6 +1328,8 @@ sub AddSection {
     $new{"initrdpcr"} = GetSysconfigValue("INITRD_PCR");
     $new{"xenpcr"} = GetSysconfigValue("XEN_PCR");
     $new{"chainloaderpcr"} = GetSysconfigValue("CHAINLOADER_PCR");
+    my %measures = split(/:/, GetSysconfigValue("MEASURES"));
+    $new{"measure"} = \%measures;
 
 
     # FIXME: Failsafe parameters should be set dynamically in the future

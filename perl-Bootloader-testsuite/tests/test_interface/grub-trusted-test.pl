@@ -33,12 +33,10 @@ foreach my $section (@sections) {
     is( $section->{'vgamode'}, '0x31a' );
     is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
     ok( not defined $section->{'console'} );
-    foreach my $measure ( @{$section->{'measure'}}){
-      ok ( $measure eq '/etc/security/selinux/policy.17 9'
-        or  $measure eq '/opt/jdk1.4.2/jre/lib/security/java.policy 9' );
-    }
+    is( $section->{'measure'}->{'/etc/security/selinux/policy.17'}, '9' );
+    is( $section->{'measure'}->{'/opt/jdk1.4.2/jre/lib/security/java.policy'}, '9' );
     $section->{'__modified'}=1;
-    push  @{$section->{'measure'}}, "/opt/jdk1.4.2/jre/lib/security/java.security 8";
+    $section->{'measure'}->{"/opt/jdk1.4.2/jre/lib/security/java.security"} = "8";
     $section->{"imagepcr"} = "7";
     $section->{"initrdpcr"} = "7";
   }

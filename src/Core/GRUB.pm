@@ -1376,12 +1376,12 @@ sub Section2Info {
           $parts[0] = $self->GrubPath2UnixPath($parts[0]);
 
           if (exists $ret{"measure"}){
-            push @{$ret{"measure"}}, $parts[0]." ".$parts[1];
+            $ret{"measure"}->{$parts[0]} = $parts[1];
           }
           else
           {
-            my @measure_array = ( $parts[0]." ".$parts[1] );
-            $ret{'measure'} = \@measure_array;
+            my %measure_array = ( $parts[0] => $parts[1] );
+            $ret{'measure'} = \%measure_array;
           }
         }
     }
@@ -1877,13 +1877,11 @@ sub Info2Section {
         elsif ($key eq "measure")
         {
           my @parts;
-          foreach my $measure (@{$value}){
-            @parts = undef;
-            @parts = split(" ",$measure);
-            $parts[0] = $self->UnixPath2GrubPath($parts[0],$grub_root);
+          while(my ($measure,$pcr) = each (%{$value})){
+            $measure = $self->UnixPath2GrubPath($measure,$grub_root);
             push @lines, {
               "key" => "measure",
-              "value" => $parts[0]." ".$parts[1],
+              "value" => "$measure $pcr",
             };
           }
         }
