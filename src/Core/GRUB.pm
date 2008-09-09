@@ -1688,10 +1688,22 @@ sub Info2Section {
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
 	}
+        elsif ($key eq "configfile")
+        {
+          if (exists $sectinfo{"configfile"})
+          {
+            $line_ref->{"value"} = $sectinfo{"configfile"};
+            delete ($sectinfo{"configfile"});
+          }
+          else
+          {
+            $line_ref = undef;
+          }
+        }
         #entries which must be recreated due to hard check if valid or order
-	elsif ($key eq "module" or $key eq "measure" or $key eq "configfile" or
-            $key eq "root" or $key eq "rootnoverify" or $key eq "map") {
-	    # put module lines always at the end.
+	elsif ($key eq "module" or $key eq "measure" or 
+            $key eq "root" or $key eq "rootnoverify" or $key eq "map")
+        {
 	    $line_ref = undef;
 	}
         elsif ($key eq "makeactive")
@@ -1986,6 +1998,12 @@ sub Info2Global {
 	    { "key" => "default", "value" => 0 },
 	    { "key" => "timeout", "value" => 8 },
 	);
+    }
+
+    #remove gfxmenu in trusted grub due to security
+    if ($globinfo{"trusted_grub"} eq "true") {
+      delete ($globinfo{"trusted_grub"});
+      delete ($globinfo{"gfxmenu"});
     }
 
     @lines = map {
