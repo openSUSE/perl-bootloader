@@ -1533,6 +1533,7 @@ sub AddSection {
     # If the former default boot entry is updated, the new one will become now
     # the new default entry.
     my $glob_ref = $lib_ref->GetGlobalSettings ();
+    $default = 1 if (delete($glob_ref->{"removed_default"}) == 1);
     if ($default) {
 	$glob_ref->{"default"} = $new{"name"};
 	$glob_ref->{"__modified"} = 1;
@@ -1672,6 +1673,7 @@ sub RemoveSections {
 	    if $match and $default_section eq $_->{"name"};
 	!$match;
     } @sections;
+    $core_lib->l_milestone("default is removed by grep") if $default_removed;
 
     # Detect wether we have an entry with an initrd line referring to a non
     # existing initrd file and remove this section respectively.
@@ -1746,7 +1748,10 @@ sub RemoveSections {
 	    $former_flavor =~ s/.*-(\w+)/$1/;
 
 	    $glob_ref->{"former_default_image_flavor"} = $former_flavor;
-	}
+	} elsif ($default_removed) {
+          $core_lib->l_milestone ( "removed default");
+	    $glob_ref->{"removed_default"} = 1;
+        }
     }
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
 				   # may change even if not deleted

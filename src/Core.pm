@@ -1075,6 +1075,49 @@ sub CreateFormerDefaultImageLine {
 }
 
 =item
+C<< $original_name = Bootloader::Core->Comment2RemovedDefault ($comment); >>
+
+Gets 1 if comment contains info about removed default. This can happen when you remove default kernel (this can handle situation when changing kernele and old kernel is removed before installing new.
+
+=cut
+
+my $remove_default_comment = "###YaST update: removed default";
+
+# string Comment2FormerFlavor (list<string> comment)
+sub Comment2RemovedDefault($) {
+    my $self = shift;
+    my $comment_lines_ref = shift || [];
+    foreach (@{$comment_lines_ref}) {
+	return 1
+	    if m/${remove_default_comment}/o;
+    }
+    return 0;
+}
+
+=item
+C<< $line_ref = Bootloader::Core->CreateRemovedDefaultLine (\%line,); >>
+
+Updates the 'default line' in globals so that it contains info about removed default line. Returns the updated line reference.
+
+=cut
+
+# map<string,any> CreateRemovedDefaultLine (map<string,any> line)
+sub CreateRemovedDefaultLine {
+    my $self = shift;
+    my $line_ref = shift || {};
+
+    my @comment_before;
+
+    push @comment_before, "${remove_default_comment}";
+
+    $self->l_debug("put removed default comment");
+		
+    $line_ref->{"comment_before"} = \@comment_before;
+
+    return $line_ref;
+}
+
+=item
 C<< $sectin_info_ref = Bootloader::Core->Section2Info (\@section_lines); >>
 
 Gets the information about the section. As argument, takes a reference to the

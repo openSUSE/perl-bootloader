@@ -1950,6 +1950,12 @@ sub Global2Info {
 	    # Parse flavor of former default image out of comment
 	    my $ff = $self->Comment2FormerFlavor ($line_ref->{"comment_before"});
 	    $ret{"former_default_image_flavor"} = $ff if ($ff ne "");
+
+	    # Parse RemovedDefault image out of comment
+	    $ff = $self->Comment2RemovedDefault ($line_ref->{"comment_before"});
+	    $ret{"removed_default"} = 1 if ($ff == 1);
+
+
 	}
 	elsif (defined ($type) and $type eq "path") {
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
@@ -2024,9 +2030,18 @@ sub Info2Global {
 	    $line_ref->{"value"} = $self->IndexOfSection (
 		delete $globinfo{$key}, $sections_ref) || 0;
 
+            #reset all information before default
+            my @empty;
+            $line_ref->{"comment_before"} = \@empty;
+
 	    $line_ref = $self->CreateFormerDefaultImageLine (
 		$line_ref, $globinfo{"former_default_image_flavor"});
 	    delete ($globinfo{"former_default_image_flavor"});
+
+             $line_ref = $self->CreateRemovedDefaultLine (
+                         $line_ref, $globinfo{"removed_default"}) if
+                         delete ($globinfo{"removed_default"});
+
 
 	}
 	elsif ($key eq "password")
