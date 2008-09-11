@@ -354,7 +354,7 @@ if (defined $oper{add}) {
 	}
 	# Create short labels for all other loaders
 	else {
-	    $opt_name = $flavor;
+	    $opt_name = GetProduct();
 	    $opt_failsafe = "Failsafe";
 	}
     }

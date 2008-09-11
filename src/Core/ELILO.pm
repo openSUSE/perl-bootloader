@@ -294,21 +294,16 @@ sub ParseLines {
 
     # handle global append information 
     my $glob_app = undef;
-    my $flag = 0;
     foreach my $opt_ref (@{$glob_ref->{"__lines"}|| []})
     {
         my $key = $opt_ref->{"key"};
         my $val = $opt_ref->{"value"};
         if ($key eq "append")
         {
-           $flag = 1;
            $glob_app = $val;
-#          print STDERR "\nGLOBAL APPEND: $glob_app \n\n"; 
+           $self->l_milestone("GLOBAL APPEND: $glob_app \n"); 
         }
     }
-#   if(! $flag) {
-#     print STDERR "\nNO GLOBAL APPEND!\n\n";
-#   } 
 
 
     # handle section append information

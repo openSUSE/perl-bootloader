@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use lib "./";
 use Bootloader::Library;
@@ -23,6 +23,7 @@ my $globals = $lib_ref->GetGlobalSettings();
 ok($globals);
 is($globals->{'default'},'linux');
 is($globals->{"timeout"},"8");
+is($globals->{"append"},"showopts");
 
 #test sections
 my @sections = @{$lib_ref->GetSections()};
