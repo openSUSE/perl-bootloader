@@ -809,7 +809,7 @@ sub GetBootloader {
 C<< $value = Bootloader::Tools::GetSysconfigValue (); >>
 
 returns specified option from the /etc/sysconfig/bootloader
-file.
+file or undef if variable is not set.
 
 See AddSection for example
 
@@ -818,6 +818,7 @@ See AddSection for example
 sub GetSysconfigValue {
     my $key = shift;
     my $file = Bootloader::Path::Sysconfig();
+    return undef if ( qx{ grep -c ^[:space:]\$$key $file} == 0);
     my $value = qx{ . $file && echo \$$key } || "";
     chomp ($value);
     return $value;
@@ -1307,54 +1308,70 @@ sub AddSection {
 
     my $failsafe_modified = 0;
 
-    if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
-        $new{"append"} = GetSysconfigValue("FAILSAFE_APPEND");
-        $new{"vgamode"} = GetSysconfigValue("FAILSAFE_VGA");
-        $failsafe_modified = 1;
-	$default = 0;
-    }
-    elsif ($option{"type"} eq "xen") {
-        $new{"append"} = GetSysconfigValue("XEN_KERNEL_APPEND");
-        $new{"vgamode"} = GetSysconfigValue("XEN_VGA");
-        $new{"xen_append"} = GetSysconfigValue("XEN_APPEND");
-    }
-    else {
-        $new{"append"} = GetSysconfigValue("DEFAULT_APPEND");
-        $new{"vgamode"} = GetSysconfigValue("DEFAULT_VGA")
-    }
-
-    $new{"console"} = GetSysconfigValue("CONSOLE");
-    $new{"imagepcr"} = GetSysconfigValue("IMAGE_PCR");
-    $new{"initrdpcr"} = GetSysconfigValue("INITRD_PCR");
-    $new{"xenpcr"} = GetSysconfigValue("XEN_PCR");
-    $new{"chainloaderpcr"} = GetSysconfigValue("CHAINLOADER_PCR");
-    my %measures = split(/:/, GetSysconfigValue("MEASURES"));
-    $new{"measure"} = \%measures;
 
 
     # FIXME: Failsafe parameters should be set dynamically in the future
-#    if ($name =~ m/^Failsafe.*$/) {
-#	my $arch = `uname --hardware-platform`;
-#	chomp ($arch);
-#
-#	if ($arch eq "i386") {
-#	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off x11failsafe";
-#	}
-#	elsif ($arch eq "x86_64") {
-#	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe";
-#	}
-#	elsif ($arch eq "ia64") {
-#	    $new{"append"} = "ide=nodma nohalt noresume 3";
-#	}
-#	else {
-#	    print ("Architecture $arch does not support failsafe entries.\n");
-#	}
-#
-#	$failsafe_modified = 1;
-#
-#	# Don't make the failsafe entry the default one
-#	$default = 0;
-#    }
+    if ($name =~ m/^Failsafe.*$/) {
+	my $arch = `uname --hardware-platform`;
+	chomp ($arch);
+
+	if ($arch eq "i386") {
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off x11failsafe";
+	}
+	elsif ($arch eq "x86_64") {
+	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe";
+	}
+	elsif ($arch eq "ia64") {
+	    $new{"append"} = "ide=nodma nohalt noresume 3";
+	}
+	else {
+	    print ("Architecture $arch does not support failsafe entries.\n");
+	}
+
+	$failsafe_modified = 1;
+
+	# Don't make the failsafe entry the default one
+	$default = 0;
+    }
+
+    my $sysconf;
+    if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
+        $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
+        $new{"append"} = $sysconf if (defined $sysconf);
+        $sysconf = GetSysconfigValue("FAILSAFE_VGA");
+        $new{"vgamode"} = $sysconf if (defined $sysconf);
+        $failsafe_modified = 1;
+	$default = 0;
+    }
+    elsif ($option{"type"} eq "xen") 
+    {
+        $sysconf = GetSysconfigValue("XEN_KERNEL_APPEND");
+        $new{"append"} = $sysconf if (defined $sysconf);
+        $sysconf =  GetSysconfigValue("XEN_VGA");
+        $new{"vgamode"} = $sysconf if (defined $sysconf);
+         $sysconf =  GetSysconfigValue("XEN_APPEND");
+        $new{"xen_append"} =  $sysconf if (defined $sysconf);
+    }
+    else 
+    {
+        $sysconf = GetSysconfigValue("DEFAULT_APPEND");
+        $new{"append"} = $sysconf if (defined $sysconf);
+        $sysconf = GetSysconfigValue("DEFAULT_VGA");
+        $new{"vgamode"} = $sysconf if (defined $sysconf);
+    }
+
+    $sysconf = GetSysconfigValue("CONSOLE");
+    $new{"console"} = $sysconf if (defined $sysconf);
+    $sysconf = GetSysconfigValue("IMAGE_PCR");
+    $new{"imagepcr"} = $sysconf if (defined $sysconf);
+    $sysconf = GetSysconfigValue("INITRD_PCR");
+    $new{"initrdpcr"} = $sysconf if (defined $sysconf);
+    $sysconf = GetSysconfigValue("XEN_PCR");
+    $new{"xenpcr"} = $sysconf if (defined $sysconf);
+    $sysconf = GetSysconfigValue("CHAINLOADER_PCR");
+    $new{"chainloaderpcr"} = $sysconf if (defined $sysconf);
+    my %measures = split(/:/, GetSysconfigValue("MEASURES"));
+    $new{"measure"} = \%measures if ((keys %measures)!= 0);
     $new{"__modified"} = 1;
 
     my $match = '';
