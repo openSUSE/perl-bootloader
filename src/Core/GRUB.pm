@@ -1249,8 +1249,12 @@ sub Section2Info {
 #		$grub_root = $val;
 	    }
 	    else {
-		$grub_root = $val;
-		$ret{"noverifyroot"} = "true" if ($key eq "rootnoverify");
+              if ($type eq "other")
+              {
+                $ret{"chainloader"} = $val;
+              }
+              $grub_root = $val;
+	      $ret{"noverifyroot"} = "true" if ($key eq "rootnoverify");
 	    }
 	}
 	elsif ($key eq "title")
@@ -1490,21 +1494,9 @@ sub CreateChainloaderLine {
 	$sectors = "1";
     }
     $sectors = "+$sectors" if $sectors ne "";
+    $chain = "" if $sectors ne ""; #chainloader with blockoffset no
 
-    if ($sectors eq "")
-    {
-      $chain =  $self->UnixPath2GrubPath ($chain, $grub_root);
-    }
-    else
-    {
-	$chain = $self->UnixDev2GrubDev ($chain);
-	if (substr ($chain, 0, length ($grub_root)) eq $grub_root)
-	{
-	    $chain = substr ($chain, length ($grub_root));
-	}
-    }
-
-    return "$pcr$chain$sectors";
+    return "$pcr$sectors";
 }
 
 
@@ -1776,15 +1768,7 @@ sub Info2Section {
 	    # "(hd0,3)/boot/grub/menu.lst". We rather choose to require the
 	    # device in the "root" key and do not expect and handle UNIX device
 	    # names in the "configfile" value at all.
-	    if ($type eq "other" and defined ($sectinfo{$key})) {
-		$line_ref->{"value"} = $self->CreateChainloaderLine (\%sectinfo, $grub_root);
-		delete ($sectinfo{$key});
-		delete ($sectinfo{"blockoffset"});
-		delete ($sectinfo{"chainloaderpcr"});
-	    }
-	    else {
-		$line_ref = undef;
-	    }
+	    $line_ref = undef;
 	}
 	defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1800,15 +1784,21 @@ sub Info2Section {
     }
     if ($grub_root ne "" or $noverify) {
         my $value = undef;
-        #trick how to boot freedos floppy bnc #278699
-        my $grub_dev = $self->UnixDev2GrubDev($sectinfo{"chainloader"});
-        $value = $grub_root if $grub_root ne "";
-        $value = $grub_dev if ( $grub_dev =~ m/fd[0-9]/ );
+        my $blockoffset = $sectinfo{"blockoffset"} || "";
+        if ($type eq "other" && $blockoffset ne "")
+        {
+          $value = $self->UnixDev2GrubDev($sectinfo{"chainloader"});
+        }
+        else
+        {
+          $value = $grub_root if $grub_root ne "";
+        }
+
         $value = "(hd0)" if not defined($value);
+
 	unshift @lines, {
 	    "key" => $noverify ? "rootnoverify" : "root",
 	    "value" => $value,
-#	    "value" => $grub_root ne "" ? $grub_root : "(hd0,0)",
 	};
     }
 

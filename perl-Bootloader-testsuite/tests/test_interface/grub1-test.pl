@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 66;
+use Test::More tests => 67;
 
 use lib "./";
 use Bootloader::Library;
@@ -15,6 +15,9 @@ ok($lib_ref->SetLoaderType("grub"));
 $lib_ref->InitializeBootloader(); #this is expected fail, because it check real hardware
 my %mount_points = ( '/' => '/dev/sda2' );
 ok($lib_ref->DefineMountPoints(\%mount_points));
+my @partition1 = ( "/dev/hdb1", "/dev/hdb","1","130","","","","");
+my @partitions = ( \@partition1 );
+ok($lib_ref->DefinePartitions(\@partitions));
 ok($lib_ref->ReadSettings());
 
 
@@ -85,7 +88,7 @@ foreach my $section (@sections) {
   }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
   {
-    is( $section->{'chainloader'}, '/dev/sda4' );
+    is( $section->{'chainloader'}, '/dev/hdb1' );
     is( $section->{'blockoffset'}, '1' );
     is( $section->{'name'}, 'Linux other 1 (/dev/sda4)' );
     ok( $section->{'noverifyroot'});

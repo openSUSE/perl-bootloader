@@ -284,6 +284,7 @@ if (defined $oper{add}) {
     }
 
     # only localize on grub and lilo
+    #FIXME jreidinger: I think this now doesn't work. because pbl get only version + type of kernel....maybe help translate strings like failsafe etc
     if (($loader eq "grub" || $loader eq "lilo") && defined(test_gettext())) {
         require Locale::gettext;
 	setlocale(LC_MESSAGES, Bootloader::Tools::GetSystemLanguage());
