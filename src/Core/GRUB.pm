@@ -520,6 +520,7 @@ sub UnixDev2GrubDev {
     # now check kernel devices / devicemapper devices 
     if ( exists $self->{"device_map"}->{$kernel_dev} ) {
 	$dev = $self->{"device_map"}->{$kernel_dev};
+         return "($dev)" if ( $kernel_dev eq $original ); #disk dev,no partition
     }
     else {
 	foreach my $udev_link (@udev_links) { 
@@ -527,6 +528,7 @@ sub UnixDev2GrubDev {
 	    $udev_link = "/dev/" . $udev_link;
 	    if (exists $self->{"device_map"}->{$udev_link} ) {
 		$dev = $self->{"device_map"}->{$udev_link};
+                 return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no                      partition
 	    }
 	}
     }
