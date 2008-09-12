@@ -1,4 +1,21 @@
 -------------------------------------------------------------------
+Fri Sep 12 13:38:11 CEST 2008 - jreidinger@suse.cz
+
+- gfxmenu menu is removed from trustedgrub global section
+- if type of kernel is changed, then correctly transfer default
+  (bnc #402789)
+- if kernel params is not set in sysconfig, use old way to transfer
+  it (bnc #423613)
+- fix root in chainloading (bnc #394319)
+- don't change original name (bnc #397067)
+- drop support xen-pae from metadata (kernel update still support
+  it) (bnc #400526)
+- don't use uninitialized variable in elilo (bnc #252148)
+- remove read-only flag from lilo, because it stop booting
+  (bnc #381669)
+- 0.4.70 
+
+-------------------------------------------------------------------
 Thu Aug 21 15:51:15 CEST 2008 - jreidinger@suse.cz
 
 - add support for trusted grub

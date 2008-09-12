@@ -1434,7 +1434,9 @@ sub Info2Global {
 	    {
 		$line_ref = undef;
 	    }
-	}
+	} elsif ($key eq "read-only"){
+          $line_ref = undef;
+        }
 	$line_ref;
     } @lines;
 

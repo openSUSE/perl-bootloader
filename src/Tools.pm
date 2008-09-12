@@ -1490,6 +1490,10 @@ sub AddSection {
     $default = 1 if (delete($glob_ref->{"removed_default"}) == 1);
     if ($default) {
 	$glob_ref->{"default"} = $new{"name"};
+        if ($loader eq "lilo") #remove read-only flag bnc #381669
+        {
+          delete $glob_ref->{"read-only"};
+        }
 	$glob_ref->{"__modified"} = 1;
 	$lib_ref->SetGlobalSettings ($glob_ref);
     }
