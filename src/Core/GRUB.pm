@@ -251,7 +251,7 @@ sub GetMetaData() {
 	other_blockoffset => "int:Block offset for chainloading:1:0:32",
 
 	type_xen          => "bool:Xen section",
-	xen_xen => "select:Hypervisor:/boot/xen.gz:/boot/xen.gz:/boot/xen-pae.gz",
+	xen_xen => "select:Hypervisor:/boot/xen.gz:/boot/xen.gz",
 	xen_xen_append    => "string:Additional Xen Hypervisor Parameters:",
 	xen_image         => "path:Kernel image:/boot/vmlinux",
 	xen_root          => "select:Root device::" . $root_devices,
