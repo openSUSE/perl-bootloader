@@ -381,18 +381,10 @@ if (defined $oper{add}) {
 	    pod2usage("There are already sections with image '$opt_image'");
 	}
     } else {
-	my $default_image = GetDefaultImage();
 
-	# Check if default image is a symlink. If this is the case, let the new
-	# kernel be the default one.
-	if (-l $default_image) {
-	    $default_image = readlink ($default_image);
-	    push @params, default => $opt_default;
-	}
-
-	# Else, if option $opt_force_default is set, let this new kernel be
+	# If, if option $opt_force_default is set, let this new kernel be
 	# the default one.
-	elsif ($opt_force_default) {
+	if ($opt_force_default) {
 	    push @params, default => $opt_default;
 	}
 
@@ -400,6 +392,12 @@ if (defined $oper{add}) {
 	# flavor as the one of the new kernel, let the new kernel be the
 	# default one.
 	else {
+	    my $default_image = GetDefaultImage();
+
+	    if (-l $default_image) {
+	      $default_image = readlink ($default_image);
+            }
+
 	    $default_image =~ s/^.*-//;
 
 	    if ($opt_image =~ m/.*-${default_image}$/) {
