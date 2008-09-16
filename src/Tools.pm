@@ -1398,7 +1398,8 @@ sub AddSection {
 		    # and resolve them if found
 		    if ($lineref->{"key"} eq "kernel") {
 			my $kernel_symlink = (split (/ /, $lineref->{"value"}))[0];
-			if ($link_target = readlink ($kernel_symlink)) {
+			if ($link_target = readlink ($kernel_symlink)
+                           and $kernel_symlink =~ m/\/vmlinu[xz]$/) { #change only default symlink, not user created
 			    chomp ($link_target);
 
 			    # Create the new kernel line with long (resolved)
@@ -1413,7 +1414,8 @@ sub AddSection {
 		    # and resolve them if found
 		    if ($lineref->{"key"} eq "initrd") {
 			my $initrd_symlink = (split (/ /, $lineref->{"value"}))[0];
-			if ($link_target = readlink ($initrd_symlink)) {
+			if ($link_target = readlink ($initrd_symlink)
+                          and $initrd_symlink =~ m/\/initrd$/) {
 			    chomp ($link_target);
 
 			    # Create the new initrd line with long (resolved)
