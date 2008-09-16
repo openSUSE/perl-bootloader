@@ -2202,6 +2202,7 @@ sub GrubDev2MountPoint {
 
 	foreach my $md_member (@{$members_ref}) {
 	    if ($device eq $md_member) {
+	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find md: $md");
 		push (@devices, $md);
 	    }
 	}
@@ -2217,15 +2218,18 @@ sub GrubDev2MountPoint {
 	foreach $device (@udev_links) {
 	    chomp $device;
 	    $device = "/dev/" . $device; 
+	    $self->l_milestone ("GRUB::GrubDev2MountPoint : find udev link: $device");
 	    push (@devices, $device);
 	}    
     }
 
     my $mountpoint = $grub_dev;
     foreach $device (@devices) {
+
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
-	    if ($d eq $device) {
-		$mountpoint = $mp;
+	    if ($d eq $device) { 
+	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find mountpoint: $mp");
+		return $mp;
 	    }
 	}
     }
