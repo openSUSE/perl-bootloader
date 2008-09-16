@@ -472,7 +472,6 @@ sub GrubDev2UnixDev {
 	if ($dev eq $fw) {
 	    $dev = $unix;
 	    $match_found = 1;
-            last;
 	}
     }
     if ($match_found == 0) {
