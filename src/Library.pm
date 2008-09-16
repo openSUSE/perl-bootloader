@@ -159,7 +159,7 @@ sub SetLoaderType {
     }
 
     $self->{"loader"} = $loader;
-    $loader->l_debug ("Bootloader::Library::SetLoaderType: TRACE new $bootloader");
+    $loader->l_milestone ("Bootloader::Library::SetLoaderType: TRACE new $bootloader");
     return 1;
 }
 
@@ -191,7 +191,7 @@ sub DefineMountPoints {
 
     while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
     {
-	$loader->l_debug ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
+	$loader->l_milestone ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
     }
     $loader->{"mountpoints"} = $mountpoints_ref;
     return 1;
@@ -201,7 +201,7 @@ sub GetMountPoints {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    $loader->l_debug ("Library::GetMountPoints: TRACE");
+    $loader->l_milestone ("Library::GetMountPoints: TRACE");
     return $loader->{"mountpoints"};
 }
 
@@ -235,7 +235,7 @@ sub DefinePartitions {
     foreach my $part_ref (@{$partitions_ref})
     {
 	my ($part, $disk, $num, @part_info ) = @{$part_ref};
-	$loader->l_debug ("Library::DefinePartitions: Partition: $part ; " .
+	$loader->l_milestone ("Library::DefinePartitions: Partition: $part ; " .
 			  "Disk: $disk ; Number: $num ; Info: " .
 			  join(", ", map { "$_"; } @part_info) );
     }
@@ -276,7 +276,7 @@ sub DefineMDArrays {
     while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
     {
 	my $members = join ", ", @{$members_ref};
-	$loader->l_debug ("Library::DefineMDArrays: MD Array: $md ; Members: $members");
+	$loader->l_milestone ("Library::DefineMDArrays: MD Array: $md ; Members: $members");
     }
     $loader->{"md_arrays"} = $md_arrays_ref;
     return 1;
@@ -305,7 +305,7 @@ sub ReadSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug( "Library::ReadSettings: TRACE" );
+    $loader->l_milestone( "Library::ReadSettings: TRACE" );
     my $files_ref = $loader->ReadFiles ($loader->ListFiles ());
     if (! defined ($files_ref))
     {
@@ -343,7 +343,7 @@ sub WriteSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug(" Library::WriteSettings: TRACE menu_only $menu_only ");
+    $loader->l_milestone(" Library::WriteSettings: TRACE menu_only $menu_only ");
     $loader->{"resolve_symlinks"} = 1;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -376,7 +376,7 @@ sub ReadSettingsTmp {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug(" Library::ReadSettingsTmp: TRACE tmp_dir $tmp_dir ");
+    $loader->l_milestone(" Library::ReadSettingsTmp: TRACE tmp_dir $tmp_dir ");
 
     my @files = @{$loader->ListFiles ()};
     my %filenames = ();
@@ -424,7 +424,7 @@ sub WriteSettingsTmp {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug(" Library::WriteSettingsTmp: TRACE tmp_dir $tmp_dir ");
+    $loader->l_milestone(" Library::WriteSettingsTmp: TRACE tmp_dir $tmp_dir ");
 
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -469,7 +469,7 @@ sub GetFilesContents {
 	return undef;
     }
 
-    $loader->l_debug(" Library::GetFilesContents TRACE ");
+    $loader->l_milestone(" Library::GetFilesContents TRACE ");
 
     $loader->{"resolve_symlinks"} = 0;
     my $new_lines_ref = $loader->CreateLines ();
@@ -502,7 +502,7 @@ sub SetFilesContents {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug(" Library::SetFilesContents TRACE ");
+    $loader->l_milestone(" Library::SetFilesContents TRACE ");
 
     my %lines = ();
     while ((my $fn, my $contents) = each (%{$files_ref}))
@@ -540,7 +540,7 @@ sub UpdateBootloader {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug("Library::UpdateBootloader: TRACE avoid_init $avoid_init");
+    $loader->l_milestone("Library::UpdateBootloader: TRACE avoid_init $avoid_init");
 
     return $loader->UpdateBootloader ($avoid_init);
 }
@@ -567,7 +567,7 @@ sub InitializeBootloader {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug( "Library::InitializeBootloader: TRACE");
+    $loader->l_milestone( "Library::InitializeBootloader: TRACE");
 
     return $loader->InitializeBootloader ();
 }
@@ -598,7 +598,7 @@ sub ListConfigurationFiles {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug( "Library::ListConfigurationFiles TRACE");
+    $loader->l_milestone( "Library::ListConfigurationFiles TRACE");
 
     return $loader->ListFiles ();
 }
@@ -621,7 +621,7 @@ sub GetSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug( "Library::GetSettings TRACE");
+    $loader->l_milestone( "Library::GetSettings TRACE");
     return $loader->GetSettings ();
 }
 
@@ -644,7 +644,7 @@ sub SetSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_debug( "Library::SetSettings TRACE");
+    $loader->l_milestone( "Library::SetSettings TRACE");
 
     return $loader->SetSettings ($settings_ref);
 }
@@ -696,7 +696,7 @@ sub GetMetaData {
     my $self = shift;
     my $loader = $self->{loader} || return undef;
 
-    $loader->l_debug( "Library::GetMetaData TRACE");
+    $loader->l_milestone( "Library::GetMetaData TRACE");
 
     return $loader->GetMetaData();;
 }
@@ -877,7 +877,7 @@ sub UnixFile2GrubDev {
     my $unix_file = shift;
     my $loader = $self->{loader} || return undef;
 
-    $loader->l_debug( "Library::UnixFile2GrubDev unix_file: $unix_file" );
+    $loader->l_milestone( "Library::UnixFile2GrubDev unix_file: $unix_file" );
 
     my $unix_dev = $loader->UnixFile2UnixDev ($unix_file);
     my $grub_dev = $loader->UnixDev2GrubDev ($unix_dev);
@@ -900,7 +900,7 @@ sub GrubDev2UnixDev {
     my $grub_dev = shift;
     my $loader = $self->{loader} || return undef;
 
-    $loader->l_debug( "Library::GrubDev2UnixDev grub_dev: $grub_dev" );
+    $loader->l_milestone( "Library::GrubDev2UnixDev grub_dev: $grub_dev" );
 
     my $unix_dev = $loader->GrubDev2UnixDev ($grub_dev);
 
