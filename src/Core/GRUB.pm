@@ -2193,6 +2193,7 @@ sub GrubDev2MountPoint {
     my $grub_dev = shift;
     my @devices = ();
     my $device = $self->GrubDev2UnixDev($grub_dev);
+    $self->l_milestone ("GRUB::GrubDev2MountPoint : device: $device");
 
     # MD-RAID handling: find the corresponding /dev/mdX if any.
     while ((my $md, my $members_ref) = each (%{$self->{"md_arrays"}})) {
@@ -2225,11 +2226,13 @@ sub GrubDev2MountPoint {
 
     my $mountpoint = $grub_dev;
     foreach $device (@devices) {
+	$self->l_debug ("GRUB::GrubDev2MountPoint : finding for device $device");
 
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
+	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
 	    if ($d eq $device) { 
 	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find mountpoint: $mp");
-		return $mp;
+		$mountpoint = $mp;
 	    }
 	}
     }

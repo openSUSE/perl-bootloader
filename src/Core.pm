@@ -447,6 +447,7 @@ sub Quote {
 	|| ($when eq "blanks" && $text eq "")
 	|| index ($text, "=") >= 0)
     {
+        $text =~ s: +: :; #remove duplicated spaces
 	$text = "\"$text\"";
     }
     
