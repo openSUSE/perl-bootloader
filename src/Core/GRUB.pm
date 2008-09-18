@@ -294,7 +294,8 @@ sub GetOptions{
         gfxmenu => "path",
         password => "",
         debug => "bool",
-        configfile => "path"
+        configfile => "path",
+        setkeys => ""
   };
 
   $options{"section_options"} = {
@@ -1952,6 +1953,19 @@ sub Global2Info {
 	elsif (defined ($type) and $type eq "bool") {
 	    $ret{$key} = "true";
 	}
+        elsif ($key eq "setkey")
+        {
+          my @parts = split(" ",$val);
+
+          if (exists $ret{"setkeys"}){
+            $ret{"setkeys"}->{$parts[0]} = $parts[1];
+          }
+          else
+          {
+            my %measure_array = ( $parts[0] => $parts[1] );
+            $ret{'setkeys'} = \%measure_array;
+          }
+        }
 	elsif ($key =~ m/^boot_/) {
 	    # boot_* parameters are handled else where but should not happen!
 	    $self->l_milestone ("GRUB::Global2Info: Wrong item here $key, ignored");
@@ -1996,7 +2010,7 @@ sub Info2Global {
     }
 
     #remove gfxmenu in trusted grub due to security
-    if ($globinfo{"trusted_grub"} eq "true") {
+    if (defined $globinfo{"trusted_grub"} && $globinfo{"trusted_grub"} eq "true") {
       delete ($globinfo{"trusted_grub"});
       delete ($globinfo{"gfxmenu"});
     }
@@ -2014,6 +2028,18 @@ sub Info2Global {
 	{
 	    $line_ref = undef;
 	}
+        elsif ($key eq "setkey")
+        {
+          $line_ref->{"value"} =~ m/^(\s+)\S+(\s+)$/;
+          if (defined $globinfo{"setkeys"}->{$1})
+          {
+            $line_ref->{"value"} = delete $globinfo{"setkeys"}->{"$key"};
+          }
+          else
+          {
+            $line_ref = undef;
+          }
+        }
 	elsif ($key eq "default")
 	{
 	    $line_ref->{"value"} = $self->IndexOfSection (
@@ -2070,6 +2096,17 @@ sub Info2Global {
 	if ($key eq "default") {
 	    $value = $self->IndexOfSection ($value, $sections_ref) || 0;
 	}
+        elsif ($key eq "setkeys")
+        {
+          while (my ($k,$v) = each (%{$globinfo{"setkeys"}}))
+          {
+	    push @lines, {
+	    "key" => "setkey",
+	    "value" => "$k $v",
+	    }
+          }
+          next;
+        }
 	# bool values appear in a config file or not
 	elsif ($type eq "bool") {
 	    next if $value ne "true";

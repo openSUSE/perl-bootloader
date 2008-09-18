@@ -1,6 +1,8 @@
 # Modified by YaST2. Last modification on Tue Jul 15 10:54:28 CEST 2008
 default 1
 timeout 8
+setkey a b
+setkey b a
 gfxmenu (hd0,1)/boot/message
 ##YaST - activate
 

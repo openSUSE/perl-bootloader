@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 67;
+use Test::More tests => 72;
 
 use lib "./";
 use Bootloader::Library;
@@ -37,6 +37,12 @@ ok($globals);
 is($globals->{'default'},'openSUSE 11.0 - 2.6.25.4-10');
 is($globals->{"timeout"},"8");
 is($globals->{"gfxmenu"},"/boot/message");
+is($globals->{"setkeys"}->{"a"}, "b");
+is($globals->{"setkeys"}->{"b"}, "a");
+$globals->{"setkeys"}->{"b"} = "c";
+$globals->{"setkeys"}->{"c"} = "a";
+$globals->{"__modified"} = 1;
+$lib_ref->SetGlobalSettings($globals);
 
 #test sections
 my @sections = @{$lib_ref->GetSections()};
@@ -126,5 +132,17 @@ is( $res, 1); #test if floppy is correctly repammer for root
 $res = qx:grep -c "makeactive" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 0); #test if floppy is correctly repammer for root
+
+$res = qx:grep -c "setkey b a" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 0); #test if floppy is correctly repammer for root
+
+$res = qx:grep -c "setkey b c" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
+
+$res = qx:grep -c "setkey c a" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
 
 Bootloader::Tools::DumpLog( $lib_ref );
