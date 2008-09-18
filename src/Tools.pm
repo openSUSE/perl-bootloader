@@ -236,7 +236,11 @@ sub ReadMountPoints {
 sub Udev2Dev {
     my $udev = shift;
 
-    # FIXME: maybe useless code
+    my $mounted = undef;
+    unless (-e "/sys/block/") {
+      $mounted = `mount /sys`;
+    }
+    # FIXME: maybe useless code  
     my $cmd = "udevinfo -q name -p /block/$udev";
     my $dev = qx{ $cmd 2>/dev/null };
     chomp ($dev);
@@ -263,6 +267,8 @@ sub Udev2Dev {
     # CCISS maps slashes to bangs so we have to reverse that.
     $dev =~ s:!:/:g;
 
+    `umount /sys` if (defined $mounted);
+
     return $dev;
 }
 
@@ -279,6 +285,10 @@ See InitLibrary function for example.
 # FIXME: this has to be read through yast::storage
 sub ReadPartitions {
     my $sb = "/sys/block";
+    my $mounted = undef;
+    unless (-e $sb) {
+      $mounted = `mount /sys`;
+    }
     opendir(BLOCK_DEVICES, "$sb") || 
 	die ("ReadPartitions(): Failed to open dir $sb");
 
@@ -386,6 +396,11 @@ sub ReadPartitions {
             }
 	}
     }
+
+    if (defined $mounted){
+      $mounted = `unmount /sys`;
+    }
+
     return \@devices;
 }
 
@@ -652,7 +667,14 @@ sub Bootloader::Tools::Udev2MajMin {
 
     if (my $udev_path = qx{$cmd 2>/dev/null}){
        chomp ($udev_path);
+       
+       my $mounted = undef;
+       unless (-e "/sys/block") {
+         $mounted = `mount /sys`;
+       }
        $majmin = qx{cat /sys$udev_path/dev};
+       `umount /sys` if (defined $mounted);
+
     }
     chomp ($majmin);
     return $majmin;
@@ -675,6 +697,10 @@ sub Bootloader::Tools::MajMin2Udev {
     my $sb="/sys/block";
     my $devmajmin;
 
+    my $mounted = undef;
+    unless (-e "/sys/block") {
+      $mounted = `mount /sys`;
+    }
     opendir (SYSBLOCK, "$sb");
 
     foreach my $dirent (readdir(SYSBLOCK)) {
@@ -707,6 +733,8 @@ sub Bootloader::Tools::MajMin2Udev {
 	}
     }
     closedir (SYSBLOCK);
+
+    `umount /sys` if (defined $mounted);
 
     return $part;
 }
