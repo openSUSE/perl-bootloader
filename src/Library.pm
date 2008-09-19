@@ -67,6 +67,10 @@ C<< $grub_dev = Bootloader::Library->UnixFile2GrubDev ($unix_file); >>
 
 C<< $unix_dev = Bootloader::Library->GrubDev2UnixDev ($grub_dev); >>
 
+C<< $result = Bootloader::Library::DetectThinkpadMBR ($disk); >>
+
+C<< $result = Bootloader::Library::WriteThinkpadMBR ($disk); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -79,6 +83,7 @@ package Bootloader::Library;
 use strict;
 
 use Bootloader::Core;
+use Bootloader::MBRTools;
 
 # this is bad style, load modules when required
 use Bootloader::Core::GRUB;
@@ -905,6 +910,40 @@ sub GrubDev2UnixDev {
     my $unix_dev = $loader->GrubDev2UnixDev ($grub_dev);
 
     return $unix_dev;
+}
+
+=item
+C<< $result = Bootloader::Library::DetectThinkpadMBR ($disk); >>
+
+Try detect on disk if contains ThinkpadMBR. Return true if detected.
+
+=cut
+
+#  DetectThinkpadMBR (string disk)
+sub DetectThinkpadMBR {
+  my $self = shift;
+  my $disk = shift;
+  my $res = MBRTools::IsThinkpadMBR($disk);
+  $self->{"loader"}->l_milestone("Library::DetectThinkpadMBR on $disk result $res" )
+      if (defined $self->{"loader"});
+  return $res;
+}
+
+=item
+C<< $result = Bootloader::Library::WriteThinkpadMBR ($disk); >>
+
+Write generic mbr to disk on thinkpad. Return undef if fail.
+
+=cut
+
+#  WriteThinkpadMBR (string disk)
+sub WriteThinkpadMBR {
+   my $self = shift;
+   my $disk = shift;
+   my $res = MBRTools::PatchThinkpadMBR($disk);
+   $self->{"loader"}->l_milestone("Library::WriteThinkpadMBR on $disk result $res" ) 
+         if (defined $self->{"loader"});
+   return $res;
 }
 
 1;
