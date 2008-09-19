@@ -946,6 +946,18 @@ sub WriteThinkpadMBR {
    return $res;
 }
 
+sub CountGRUBPassword{
+  my $self = shift;
+  my $pass = shift;
+  my $res = qx{echo "md5crypt \
+  $pass" | grub --batch | grep Encrypted };
+  $res =~ s/Encrypted:\s+(.*)$/$1/;
+  $self->{"loader"}->l_milestone("Library::CountGRUBPassword result $res" )
+      if (defined $self->{"loader"});
+  return $res;
+
+}
+
 1;
 
 #
