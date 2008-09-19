@@ -954,6 +954,7 @@ sub CountGRUBPassword{
   $res =~ s/Encrypted:\s+(.*)$/$1/;
   $self->{"loader"}->l_milestone("Library::CountGRUBPassword result $res" )
       if (defined $self->{"loader"});
+  return undef unless $res =~ m/^\$1\$.*\$.*$/;
   return $res;
 
 }
