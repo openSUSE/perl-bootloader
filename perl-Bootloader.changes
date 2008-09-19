@@ -1,4 +1,19 @@
 -------------------------------------------------------------------
+Fri Sep 19 15:46:10 CEST 2008 - jreidinger@suse.cz
+
+- doesn't allow change between default and xen kernel during
+  install (bnc #397075)
+- don't resolve user specified symlinks (bnc #410431)
+- remove unnecesary spaces in append line (bnc #266223)
+- always have default section in ELILO (bnc #250981)
+- try mount /sys if doesn't contain files (bnc #151877)
+- check if /boot is mounted during kernel update (bnc #340837)
+- properly handle setkey option in GRUB (bnc #410004)
+- move thinkpad mbr detection to perl-Bootloader from yast
+  (start moving some functionality from yast to perl-BL)
+- 0.4.71
+
+-------------------------------------------------------------------
 Fri Sep 12 13:38:11 CEST 2008 - jreidinger@suse.cz
 
 - gfxmenu menu is removed from trustedgrub global section
