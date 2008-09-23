@@ -710,7 +710,20 @@ sub Section2Info {
           $ret{"append"} = $val if $val ne "";
           next;
         }
-	$ret{$key} = $line_ref->{"value"};
+        my ($stype) = undef;
+        if (defined $ret{"type"})
+        {
+          ($stype) = split /:/, $self->{"exports"}{"section_options"}->{$ret{"type"} . "_" . $key} || ""; 
+        }
+	# bool values appear in a config file or not
+	if (defined $stype and $stype eq "bool")
+        {
+	  $ret{$key} = "true";
+	}
+        else
+        {
+          $ret{$key} = $line_ref->{"value"};
+        }
     }
     $ret{"__lines"} = \@lines;
     return \%ret;

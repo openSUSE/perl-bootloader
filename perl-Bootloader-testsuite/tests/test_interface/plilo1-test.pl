@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 16;
+use Test::More tests => 21;
 
 use lib "./";
 use Bootloader::Library;
@@ -38,7 +38,19 @@ foreach my $section (@sections) {
     ok( not defined $section->{'vgamode'} );
     is( $section->{'append'}, ' quiet sysrq=1' );
     ok( not exists $section->{'console'} );
+    ok( $section->{'optional'});
+    $section->{'__modified'} = 1;
   } 
 }
+
+
+
+ok($lib_ref->SetSections(\@sections));
+ok($lib_ref->WriteSettings());
+ok($lib_ref->UpdateBootloader(1));
+
+my $res = qx:grep -c "optional" ./fake_root1/etc/lilo.conf:;
+chomp($res);
+is( $res, 1); #test correct created xen append
 
 Bootloader::Tools::DumpLog( $lib_ref );
