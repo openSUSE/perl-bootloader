@@ -509,7 +509,8 @@ if (defined $oper{remove}) {
 }
 
 if (defined $oper{refresh}) {
-    UpdateBootloader();
+    my $ret = UpdateBootloader();
+    exit 1 if ( !$ret );
 }
 
 #

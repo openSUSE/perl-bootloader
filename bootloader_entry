@@ -63,9 +63,9 @@ function update_bootloader()
         echo "bootloader_entry: This is (wrapper) function update_bootloader" >> $logname
 
 	[ -x /sbin/update-bootloader ] || return 0
-	    # call update-bootloader and also append stderr to the log file
-	    ((/sbin/update-bootloader "$@") 3>&1 1>&2 2>&3 3>&- | tee -a \
-	    $logname ) 3>&1 1>&2 2>&3 3>&-
+
+	# call update-bootloader and also append stderr to the log file
+	/sbin/update-bootloader "$@") 1>>$logname 2>&1
 }
 
 
