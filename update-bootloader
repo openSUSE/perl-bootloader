@@ -194,6 +194,15 @@ pod2usage("Option 'default' is only allowed for operation 'add'")
 
 pod2usage("Option 'force-default' is only allowed for operation 'add'")
     if ($opt_force_default and not defined $oper{add});
+    
+if (Bootloader::Tools::GetBootloader() eq "none")
+{
+  open (LOG, ">>$logname");
+  print LOG ("none bootloader, skipped updating \n");
+  close LOG;
+  
+  exit 0;
+}
 
 if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
