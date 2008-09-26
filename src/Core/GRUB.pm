@@ -481,12 +481,12 @@ sub GrubDev2UnixDev {
     }
 
     # resolve symlinks.....
-    my $cmd = "udevinfo  -q name -n $dev";
+    my $cmd = "udevadm info  -q name -n $dev";
     if (my $resolved_link = qx{$cmd 2> /dev/null}) {
 	chomp ($resolved_link);
 	$dev = "/dev/" . $resolved_link; 
     }
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevinfo returned: $dev");
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevadm info returned: $dev");
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
@@ -544,7 +544,7 @@ sub UnixDev2GrubDev {
     # need to be changed here 
     my $original = $dev;
     my $kernel_dev;
-    my $cmd = "udevinfo  -q name -n $dev";
+    my $cmd = "udevadm info  -q name -n $dev";
     if ($kernel_dev = qx{$cmd 2> /dev/null}) {
 	chomp $kernel_dev;
 	$kernel_dev = "/dev/" . $kernel_dev;
@@ -574,8 +574,8 @@ sub UnixDev2GrubDev {
     }
 
     # get the symbolic link from udev, it might be used in device.map
-    # udevinfo returns a space separated list of strings
-    $cmd = "udevinfo  -q symlink -n $kernel_dev";
+    # udevadm info returns a space separated list of strings
+    $cmd = "udevadm info  -q symlink -n $kernel_dev";
 
     my @udev_links = split (/ /, qx{$cmd 2>/dev/null});
 
@@ -2249,7 +2249,7 @@ sub GrubDev2MountPoint {
 
     #FIXME: sf@ need handling for /dev/dm-X devices here
     if ($device !~ /mapper/) {
-	my $cmd = "udevinfo  -q symlink -n $device";
+	my $cmd = "udevadm info  -q symlink -n $device";
 	my @udev_links = split (/ /, qx{$cmd 2>/dev/null});
 
 	foreach $device (@udev_links) {

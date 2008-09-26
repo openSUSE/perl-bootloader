@@ -241,7 +241,7 @@ sub Udev2Dev {
       $mounted = `mount /sys`;
     }
     # FIXME: maybe useless code  
-    my $cmd = "udevinfo -q name -p /block/$udev";
+    my $cmd = "udevadm info -q name -p /block/$udev";
     my $dev = qx{ $cmd 2>/dev/null };
     chomp ($dev);
 
@@ -249,7 +249,7 @@ sub Udev2Dev {
         $dev = "/dev/$dev";
     }
 
-    # Fallback in case udevinfo fails
+    # Fallback in case udevadm info fails
     else {
 
 	#If $udev consists of both device and partition - e.g. "sda/sda1" -
@@ -654,7 +654,7 @@ sub Bootloader::Tools::DMDev2MajMin {
 
 =item
 C<< $majmin = Bootloader::Tools::Udev2MajMin($udev); >>
-takes a udev device as reported from udevinfo
+takes a udev device as reported from udevadm info
 returns a string containing major:minor
 
 =cut
@@ -663,7 +663,7 @@ sub Bootloader::Tools::Udev2MajMin {
 
     my $udev_dev = shift;
     my $majmin;
-    my $cmd = "udevinfo -qpath -n $udev_dev";
+    my $cmd = "udevadm info -qpath -n $udev_dev";
 
     if (my $udev_path = qx{$cmd 2>/dev/null}){
        chomp ($udev_path);
@@ -682,9 +682,9 @@ sub Bootloader::Tools::Udev2MajMin {
 
 =item
 C<< $udev_dev = Bootloader::Tools::MajMin2Udev($majmin); >>
-takes a string major:minor as reported from udevinfo
+takes a string major:minor as reported from udevadm info
 returns a string containing the udev device as reported 
-by udevinfo
+by udevadm info
 
 =cut
 
@@ -741,7 +741,7 @@ sub Bootloader::Tools::MajMin2Udev {
 
 =item
 C<< $dm_dev = Bootloader::Tools::DMDev2MajMin($majmin); >>
-takes a string major:minor as reported from udevinfo
+takes a string major:minor as reported from udevadm info
 returns a string containing the device as reported by 
 dmsetup
 
