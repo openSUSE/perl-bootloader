@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Fri Sep 26 16:23:39 CEST 2008 - jreidinger@suse.cz
+
+- add password generator for grub (bnc #407887)
+- fix handling boolean parameters in powerLILO( bnc #383287)
+- exit as soon as possible if user request skip updating bootloader
+  (bnc #425501)
+- fix permission for directory with script for kernel-update
+- use udevadm info instead of udevinfo (patch by ro)
+- 0.4.72
+
+-------------------------------------------------------------------
 Fri Sep 19 15:46:10 CEST 2008 - jreidinger@suse.cz
 
 - doesn't allow change between default and xen kernel during
