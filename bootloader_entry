@@ -65,7 +65,7 @@ function update_bootloader()
 	[ -x /sbin/update-bootloader ] || return 0
 
 	# call update-bootloader and also append stderr to the log file
-	/sbin/update-bootloader "$@") 1>>$logname 2>&1
+	/sbin/update-bootloader "$@" 1>>$logname 2>&1
 }
 
 
