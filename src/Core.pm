@@ -1144,13 +1144,21 @@ sub Section2Info {
 	}
 	elsif ($key eq "image")
 	{
-	    $ret{"kernel"} = $line_ref->{"value"};
+	    $ret{"image"} = $line_ref->{"value"};
 	    $ret{"type"} = "image";
 	}
-	elsif ($key eq "initrd" || $key eq "root" || $key eq "vga" || $key eq "append" || $key eq "wildcard")
+	elsif ($key eq "initrd" || $key eq "root" || $key eq "append" || $key eq "wildcard")
 	{
 	    $ret{$key} = $line_ref->{"value"};
 	}
+        elsif (  $key eq "vga" )
+        {
+            $ret{"vgamode"} = $line_ref->{"value"};
+        }
+        elsif (  $key eq "optional" )
+        {
+            $ret{$key} = "true";
+        }
 	elsif ($key eq "other")
 	{
 	    $ret{"chainloader"} = $line_ref->{"value"};
@@ -1295,7 +1303,7 @@ sub Info2Section {
 	    push @lines, $line_ref;
 	}
 	elsif ($key eq "kernel" || $key eq "initrd" || $key eq "root"
-	    || $key eq "vga" || $key eq "append" || $key eq "chainloader"
+	    || $key eq "vgamode" || $key eq "append" || $key eq "chainloader"
 	    || $key eq "wildcard" || $key eq "image" || $key eq "other")
 	{
 	    $key = "image" if ($key eq "kernel");
@@ -1350,6 +1358,11 @@ sub Global2Info {
 	{
 	    $ret{$key} = 1;
 	}
+	elsif ($key eq "activate")
+        {
+            $ret{$key} = "true"
+        }
+        
     }
     $ret{"__lines"} = \@lines;
     return \%ret;

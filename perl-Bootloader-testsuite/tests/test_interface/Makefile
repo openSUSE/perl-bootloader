@@ -3,6 +3,7 @@ test:
 	cp -rf backup/fake_root1 .
 	cp -rf backup/fake_root2 .
 	perl -w grub1-test.pl
+	perl -w lilo1-test.pl
 	perl -w elilo1-test.pl
 	perl -w plilo1-test.pl
 	perl -w zipl1-test.pl

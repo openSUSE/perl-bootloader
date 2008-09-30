@@ -42,6 +42,8 @@ use strict;
 use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
 
+use Bootloader::Path;
+
 #module interface
 
 =item
@@ -81,7 +83,7 @@ Returns undef on fail
 sub ListFiles {
     my $self = shift;
 
-    return [ "/etc/lilo.conf" ];
+    return [ Bootloader::Path::Lilo_conf() ];
 }
 
 # TODO document
@@ -139,7 +141,7 @@ sub ParseLines {
     my $avoid_reading_device_map = shift;
 
     # the only file is /etc/lilo.conf
-    my @lilo_conf = @{$files{"/etc/lilo.conf"} || []};
+    my @lilo_conf = @{$files{Bootloader::Path::Lilo_conf()} || []};
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	"=",
 	["image", "other"],
