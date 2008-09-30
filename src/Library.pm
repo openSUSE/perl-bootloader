@@ -348,7 +348,7 @@ sub WriteSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    $loader->l_milestone(" Library::WriteSettings: TRACE menu_only $menu_only ");
+    $loader->l_milestone(" Library::WriteSettings: TRACE menu_only:". ($menu_only ||""));
     $loader->{"resolve_symlinks"} = 1;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
