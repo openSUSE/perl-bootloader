@@ -1263,7 +1263,6 @@ sub Info2Section {
 	elsif ($key eq "image" || $key eq "initrd" || $key eq "root"
 	    || $key eq "vga" || $key eq "append" || $key eq "wildcard")
 	{
-	    $key = "kernel" if ($key eq "image");
 	    if ($type eq "chainloader" || ! defined ($sectinfo{$key}))
 	    {
 		$line_ref = undef;
@@ -1302,11 +1301,10 @@ sub Info2Section {
 	    $line_ref->{"key"} = "label";
 	    push @lines, $line_ref;
 	}
-	elsif ($key eq "kernel" || $key eq "initrd" || $key eq "root"
+	elsif ($key eq "initrd" || $key eq "root"
 	    || $key eq "vgamode" || $key eq "append" || $key eq "chainloader"
 	    || $key eq "wildcard" || $key eq "image" || $key eq "other")
 	{
-	    $key = "image" if ($key eq "kernel");
 	    $key = "other" if ($key eq "chainloader");
 	    push @lines, {
 		"key" => $key,
