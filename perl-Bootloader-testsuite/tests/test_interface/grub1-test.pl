@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 72;
+use Test::More tests => 74;
 
 use lib "./";
 use Bootloader::Library;
@@ -92,6 +92,11 @@ foreach my $section (@sections) {
     $section->{'console'} = 'ttyS1,9600n52r'; #test change console
     $section->{'__modified'} = '1';
   }
+  elsif ( $section->{'original_name'} eq "xen2" )
+  {
+    is($section->{'nounzip'},2);
+    $section->{'__modified'} = '1';
+  }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
   {
     is( $section->{'chainloader'}, '/dev/hdb1' );
@@ -144,5 +149,20 @@ is( $res, 1); #test if floppy is correctly repammer for root
 $res = qx:grep -c "setkey c a" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
+
+$res = qx:grep -n 'module .*/boot/vmlinuz-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
+my $imagepos;
+if ( $res =~ m/(\d+):.*/ )
+{
+  $imagepos = $1;
+}
+$res = qx:grep -n 'modulenounzip .*/boot/initrd-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
+my $initrdpos;
+if ( $res =~ m/(\d+):.*/ )
+{
+  $initrdpos = $1;
+}
+ok($initrdpos>$imagepos);
+
 
 Bootloader::Tools::DumpLog( $lib_ref );

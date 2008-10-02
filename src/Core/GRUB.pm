@@ -1211,6 +1211,7 @@ sub Section2Info {
     my $modules = 0;
     my $type = $self->EvalSectionType (\@lines);
     $ret{"type"} = $type;
+    $ret{"nounzip"} = 0 if ($type eq "xen");
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
@@ -1221,12 +1222,15 @@ sub Section2Info {
 	    if ($key eq "kernel") {
 		$key = "xen";
 	    }
-	    elsif ($line_ref->{"key"} eq "module") {
+	    elsif ($line_ref->{"key"} eq "module" ||
+             $line_ref->{"key"} eq "modulenounzip") {
 		if ($modules == 0) {
 		    $key = "image";
+                    $ret{"nounzip"} |= 1 if $line_ref->{"key"} eq "modulenounzip";
 		}
 		elsif ($modules == 1) {
 		    $key = "initrd";
+                    $ret{"nounzip"} |= 2 if $line_ref->{"key"} eq "modulenounzip";
 		}
 		$modules++;
 	    }
@@ -1693,8 +1697,9 @@ sub Info2Section {
           }
         }
         #entries which must be recreated due to hard check if valid or order
-	elsif ($key eq "module" or $key eq "measure" or 
-            $key eq "root" or $key eq "rootnoverify" or $key eq "map")
+	elsif ($key eq "module" or $key eq "modulenounzip"
+            or $key eq "measure" or $key eq "root" or $key eq "rootnoverify"
+            or $key eq "map")
         {
 	    $line_ref = undef;
 	}
@@ -1816,8 +1821,20 @@ sub Info2Section {
     }
     if (exists $sectinfo{"image"}) {
 	my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
+        my $key = "kernel";
+        if ($type eq "xen")
+        {
+          if (defined $sectinfo{"nounzip"} && (($sectinfo{"nounzip"} & 1) == 1))
+          {
+            $key = "modulenounzip";
+          }
+          else
+          {
+            $key = "module";
+          }
+        }
 	push @lines, {
-	    "key" => ($type eq "xen") ? "module" : "kernel",
+	    "key" => $key,
 	    "value" => $val,
 	};
     }
@@ -1825,9 +1842,21 @@ sub Info2Section {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
       my $pcr = $sectinfo{"initrdpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
+      my $key = "initrd";
+      if ($type eq "xen")
+      {
+        if (defined $sectinfo{"nounzip"} && (($sectinfo{"nounzip"} & 2) == 2))
+        {
+          $key = "modulenounzip";
+        }
+        else
+        {
+          $key = "module";
+        }
+      }
       $value = "$pcr$value";
 	push @lines, {
-	    "key" => ($type eq "xen") ? "module" : "initrd",
+	    "key" => $key,
 	    "value" => $value,
 	};
     }
