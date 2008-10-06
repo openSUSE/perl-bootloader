@@ -499,8 +499,6 @@ if (defined $oper{remove}) {
 	open (LOG, ">>$logname");
 	print LOG ("update-bootloader: no $opt_image found\n");
 	close LOG;
-
-	pod2usage("There is no section with image '$opt_image'");
     }
     open (LOG, ">>$logname");
     print LOG ("update-bootloader: finished operation remove\n");
