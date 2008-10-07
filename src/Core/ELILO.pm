@@ -222,8 +222,8 @@ sub new {
     chomp ($arch);
     if ($arch eq "ia64")
     {
-      my %line = { "key" => "relocatable",  "value" => "" };
-      push  @{$loader->{"default_global_lines"}},  %line ;
+      my $line = { "key" => "relocatable",  "value" => "" };
+      push  @{$loader->{"default_global_lines"}},  $line ;
     }
     bless ($loader);
 
