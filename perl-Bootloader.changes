@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Tue Oct  7 14:51:05 CEST 2008 - jreidinger@suse.cz
+
+- Fix syntax error in bootloader_entry (bnc#430666 patch by
+  kukuk@suse.de)
+- fix reading lilo configuration (needed to convert lilo to grub
+  FATE #305006)
+- fix kernel/image mismatch (bnc #229978)
+- add support for modulenounzip in xen section (bnc #397864)
+- doesn't count commented boot entry in fstab (bnc #431535)
+- don't fail if section is already removed (bnc #431535)
+- 0.4.73
+
+-------------------------------------------------------------------
 Fri Sep 26 16:23:39 CEST 2008 - jreidinger@suse.cz
 
 - add password generator for grub (bnc #407887)
