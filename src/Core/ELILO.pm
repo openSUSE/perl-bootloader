@@ -150,9 +150,9 @@ sub GetMetaData() {
     } @partinfo;
     my $root_devices = join(":",@root_part,\@md_arrays);
     
-    # FIXME: is "arch" export necessary?
+    my $arch = `uname --hardware-platform`;
+    chomp ($arch);
 
-    # FIXME: Add quotation marks around all keys (like key "read-only")
 
     $exports{"global_options"} = {
 	default		=> "string:Default Boot Section:Linux",
@@ -170,12 +170,15 @@ sub GetMetaData() {
 	fX		=> "path:Display the Content of a File by Function Keys:",
 	noedd30		=> "bool:Don't force EDD30 Mode if not set:",
 	fpswa		=> "path:Specify the Filename for a specific FPSWA to load:",
-	relocatable	=> "bool:Allow Attempt to relocate:",
 
 	# shadow entries for efi boot manager
 	boot_efilabel	=> "string:EFI Boot Manager Label::",
 	#boot_rm_efilabel => "bool:Remove existing EFI Boot Manager Entries by Name:",
     };
+
+    if ($arch eq "ia64") {
+      $exports{"global_options"}{"relocatable"} = "bool:Allow Attempt to relocate:";
+    }
 
     my $go = $exports{"global_options"};
     
@@ -187,9 +190,11 @@ sub GetMetaData() {
 	image_initrd       => "path:Initial RAM Disk:/boot/initrd",
 	image_noverifyroot => "bool:Do not verify Filesystem before Booting:false",
 	image_readonly	   => "bool:Force Root Filesystem to be mounted read-only:",
-	image_relocatable  => "bool:Allow Attempt to relocate:",
 	image_root	   => "selectdevice:Root Device::" . $root_devices,
     };
+    if ($arch eq "ia64") {
+      $exports{"sction_options"}{"image_relocatable"} = "bool:Allow Attempt to relocate:";
+    }
 
     my $so = $exports{"section_options"};
 
@@ -212,8 +217,14 @@ sub new {
     my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
 	{ "key" => "timeout", "value" => 80 },
-	{ "key" => "relocatable", "value" => "" },
     ];
+    my $arch = `uname --hardware-platform`;
+    chomp ($arch);
+    if ($arch eq "ia64")
+    {
+      my %line = { "key" => "relocatable",  "value" => "" };
+      push  @{$loader->{"default_global_lines"}},  %line ;
+    }
     bless ($loader);
 
     $loader->GetMetaData();
