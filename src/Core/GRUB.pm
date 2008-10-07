@@ -520,6 +520,7 @@ sub UnixDev2GrubDev {
     # now check kernel devices / devicemapper devices 
     if ( exists $self->{"device_map"}->{$kernel_dev} ) {
 	$dev = $self->{"device_map"}->{$kernel_dev};
+         return "($dev)" if ( $kernel_dev eq $original ); #disk dev,no partition
     }
     else {
 	foreach my $udev_link (@udev_links) { 
@@ -527,6 +528,7 @@ sub UnixDev2GrubDev {
 	    $udev_link = "/dev/" . $udev_link;
 	    if (exists $self->{"device_map"}->{$udev_link} ) {
 		$dev = $self->{"device_map"}->{$udev_link};
+                 return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no                      partition
 	    }
 	}
     }
@@ -547,14 +549,16 @@ sub UnixDev2GrubDev {
 
     # fallback to grub device hd0 if translation has failed - this is good
     # enough for many cases
+    my $partition_fallback = 0;
+
     if ($dev !~ /^${grubdev_pattern}$/) {
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: Unknown device '$dev', fall back to hd0");
 	$dev = "hd0";
+	$self->l_milestone ("GRUB::UnixDev2GrubDev: Unknown device '$dev', fall back to ($dev,$partition_fallback)");
     }
 
     $dev = defined ($partition)
 	? "($dev,$partition)"
-	: "($dev)";
+	: "($dev,$partition_fallback)";
 
     $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX->GRUB: $original to $dev");
 
