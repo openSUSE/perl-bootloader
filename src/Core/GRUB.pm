@@ -156,6 +156,7 @@ sub GetMetaData() {
 
     my @bootpart;
     my @partinfo = @{$loader->{"partitions"} || []};
+    my %dev_map = %{$loader->{"mountpoints"} || {}};
 
     # Partitioninfo is a list of list references of the format:
     #   Device,   disk,    nr, fsid, fstype,   part_type, start_cyl, size_cyl
@@ -175,10 +176,11 @@ sub GetMetaData() {
     # give a list of possible root devices: all MD devices
     # and all 'Linux' devices above 20 cylinders
     my $root_devices = join(":",
-	(map {
+        (map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
 		$part_type, $start_cyl, $size_cyl) = @$_;
-	    (($fsid eq "131" or $fstype =~ m:linux:i) and
+            # allow only linux standart partitions, 130 is linux swap
+	    (($fsid eq "131" or ($fsid ne "130" and $fstype =~ m:linux:i)) and
 	     $size_cyl >= 20)
 		? $device : ();
 	} @partinfo),
@@ -237,7 +239,7 @@ sub GetMetaData() {
 	type_image        => "bool:Image section",
 	# image_name     => "string:Name of section", # implicit
 	image_image       => "path:Kernel image:/boot/vmlinux",
-	image_root        => "selectdevice:Root device::" . $root_devices,
+	image_root        => "selectdevice:Root device:". $dev_map{"/"}.":" . $root_devices,
 	image_vgamode     => "string:Vga Mode",
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
