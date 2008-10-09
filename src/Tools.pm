@@ -1683,6 +1683,8 @@ sub RemoveSections {
 		if (!$other_part and !-f $initrd_name and
 		    ($_->{"type"} eq "image" or $_->{"type"} eq "xen")) {
 		    $match = 0;
+                    $core_lib->l_milestone (
+                	"Tools::RemoveSections: Remove non-existing initrd :".$_->{"name"}." -- $initrd_name \n");
 		}
 
 		$default_removed = 1
