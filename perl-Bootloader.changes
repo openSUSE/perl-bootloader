@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Thu Oct  9 15:34:48 CEST 2008 - jreidinger@suse.cz
+
+- use option relocatable only on ia64 architecture (FATE #301882)
+- improve selecting root devices (bnc #433347)
+- fix regex to confirm mounted /boot (bnc #433835) 
+- add support for xen to elilo, as elilo now must work also on
+  x86_64  (FATE #301882)
+- 0.4.74
+
+-------------------------------------------------------------------
 Tue Oct  7 14:51:05 CEST 2008 - jreidinger@suse.cz
 
 - Fix syntax error in bootloader_entry (bnc#430666 patch by
