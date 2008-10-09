@@ -16,6 +16,8 @@ This package is the core library of the bootloader configuration
 
 use Bootloader::Core;
 
+C<< $res = Bootloader::Core->trim ($string); >>
+
 C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
 
 C<< $device = Bootloader::Core->MP2Dev ($mountpoint); >>
@@ -131,6 +133,21 @@ use strict;
 my $headline = "# Modified by YaST2. Last modification on ";
 
 # variables
+
+=item
+
+C<< $res = Bootloader::Core->trim ($string); >>
+
+Cut whitespace from front and back.
+
+=cut
+sub trim{
+    my $self = shift;
+    my $string = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
+}
 
 =item
 

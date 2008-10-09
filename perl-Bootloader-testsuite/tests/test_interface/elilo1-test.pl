@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 15;
+use Test::More tests => 28;
 
 use lib "./";
 use Bootloader::Library;
@@ -29,7 +29,8 @@ is($globals->{"append"},"showopts");
 my @sections = @{$lib_ref->GetSections()};
 ok(@sections);
 foreach my $section (@sections) {
-  if ( $section->{'original_name'} eq "linux" ){
+  if ( $section->{'original_name'} eq "linux" )
+  {
     is( $section->{'type'}, 'image' );
     is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10' );
     is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10' );
@@ -38,6 +39,34 @@ foreach my $section (@sections) {
     is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
     is( $section->{'console'}, 'ttyS0,38400n52r' );
   } 
+  elsif ( $section->{'original_name'} eq "xen" )
+  {
+    is( $section->{'type'}, 'xen' );
+    is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10' );
+    is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10' );
+    is( $section->{'name'}, 'xen' );
+    ok( not defined $section->{'vgamode'} );
+    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
+    is( $section->{'xen'}, "/boot/xen.gz");
+    is( $section->{'xen_append'}, "test");
+    is( $section->{'console'}, 'ttyS0,38400n52r' );
+    $section->{"__modified"} = 1;
+    $section->{'xen'}= "/boot/xen-pae.gz";
+    $section->{'xen_append'} = "test2";
+  } 
+
 }
+
+ok($lib_ref->SetSections(\@sections));
+ok($lib_ref->WriteSettings());
+$lib_ref->UpdateBootloader(1);
+
+my $res = qx:grep -c "vmm = /boot/xen-pae.gz" ./fake_root1/etc/elilo.conf:;
+chomp($res);
+is( $res, 1);
+
+$res = qx:grep -c 'append = "test2 --' ./fake_root1/etc/elilo.conf:;
+chomp($res);
+is( $res, 1);
 
 Bootloader::Tools::DumpLog( $lib_ref );

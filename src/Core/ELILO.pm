@@ -191,6 +191,14 @@ sub GetMetaData() {
 	image_noverifyroot => "bool:Do not verify Filesystem before Booting:false",
 	image_readonly	   => "bool:Force Root Filesystem to be mounted read-only:",
 	image_root	   => "selectdevice:Root Device::" . $root_devices,
+
+	type_xen          => "bool:Xen section",
+	xen_xen => "select:Hypervisor:/boot/xen.gz:/boot/xen.gz",
+	xen_xen_append    => "string:Additional Xen Hypervisor Parameters:",
+	xen_image         => "path:Kernel image:/boot/vmlinux",
+	xen_root          => "select:Root device::" . $root_devices,
+	xen_append        => "string:Optional kernel command line parameter",
+	xen_initrd        => "path:Initial RAM disk:/boot/initrd",
     };
     if ($arch eq "ia64") {
       $exports{"sction_options"}{"image_relocatable"} = "bool:Allow Attempt to relocate:";
@@ -598,6 +606,11 @@ sub Info2Section {
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 
+        if ($key eq "vmm")
+        {
+          $key = "xen";
+        }
+
 	if ($key eq "label")
 	{
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref,
@@ -610,6 +623,21 @@ sub Info2Section {
 		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
+        #append in xen contains also xen append, so it must handled special
+        elsif ($key eq "append") 
+        {
+          my $first = $sectinfo{"xen_append"} || "";
+          my $second = $sectinfo{"append"} || "";  
+          my $console = $sectinfo{"console"} || "";
+          $console = "console=$console" if ($console ne "");
+          my $value = "$second $console";
+          $value = "$first -- $value" if ($type eq "xen");
+          $value = $self->trim($value);
+          $line_ref->{"value"} = $value;
+          delete $sectinfo{"xen_append"};
+          delete $sectinfo{"append"};
+          delete $sectinfo{"console"};
+        }
 	else
 	{
 	    next unless defined ($sectinfo{$key});
@@ -640,18 +668,34 @@ sub Info2Section {
 	    $line_ref->{"key"} = "label";
 	    push @lines, $line_ref;
 	}
-        elsif ( $key eq "append" || $key eq "console" )
+        elsif ( $key eq "append" || $key eq "console" || $key eq "xen_append" )
         {
           if (defined($create_append))
           {
             my $append = $sectinfo{"append"} || "";
             my $console = $sectinfo{"console"} || "";
+            $console = "console=$console" if ($console ne "");
+            my $val = "$append $console";
+            if ($type eq "xen")
+            {
+              my $xen_append = $sectinfo{"xen_append"} || "";
+              $val = "$xen_append -- $val";
+            }
+
+            
             push @lines, {
 	        "key" => "append",
-	        "value" => $append.$console,
+	        "value" => $val,
 	    };
             $create_append = undef;
           }
+        }
+        elsif ($key eq "xen" and $type eq "xen")
+        {
+            push @lines, {
+	        "key" => "vmm",
+	        "value" => $value,
+	    };
         }
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
@@ -715,6 +759,12 @@ sub Section2Info {
 	{
 	    $ret{"type"} = $key;
 	}
+        elsif ($key eq "vmm")
+        {
+            $ret{"type"} = "xen";
+            $ret{"xen"} = $val;
+            next;
+        }
         elsif ($key eq "append")
         {
            if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\w+)(?:\s+(.*))?$/)
@@ -722,7 +772,18 @@ sub Section2Info {
               $ret{"console"} = "ttyS$2,$3" if $2 ne "";
               $val = $self->MergeIfDefined( $1, $4);
            }
-           $ret{"append"} = $val if $val ne "";
+           if ($val =~ m/--/) #value contains separator between hypervisor and host
+           {
+             $val =~ m/(.*)--(.*)/;
+             my $xen_app = $1;
+             my $host_app = $2;
+             $ret{"xen_append"} = $self->trim($xen_app);
+             $ret{"append"} = $self->trim($host_app);
+           }
+           else
+           {
+             $ret{"append"} = $val if $val ne "";
+           }
            next;
         }
 

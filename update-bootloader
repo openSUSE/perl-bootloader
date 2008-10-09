@@ -344,8 +344,8 @@ if (defined $oper{add}) {
 	    $opt_xen_name = "$opt_name -- " . GetProduct() . " - " . $version;
 	}
 	else {
-	    $opt_name =~ s/^.*(xen.*)$/$1/;
-	    $opt_name = ucfirst ($opt_name);
+	    $opt_xen_name =~ s/^.*(xen.*)$/$1/;
+	    $opt_xen_name = ucfirst ($opt_xen_name);
 	}
     }
     # Naming scheme for all other kernels
@@ -376,6 +376,7 @@ if (defined $oper{add}) {
 if (defined $oper{add}) {
     open (LOG, ">>$logname");
     print LOG ("update-bootloader: now executing operation add\n");
+    print LOG ("update-bootloader: changed opt name is $opt_name \n");
     close LOG;
 
     pod2usage("Please specify name and kernel image for new section")
