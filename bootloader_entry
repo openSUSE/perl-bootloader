@@ -301,7 +301,8 @@ if [ -e $device_map ] ; then
 fi
 ) >> $logname
 
-if [ `grep -c "^[^#[:space:]]\+[[:space:]]\+/boot" /etc/fstab` -ne `grep -c "^[^[:space:]]\+[[:space:]]\+/boot" /etc/mtab` ]; then
+if [ `grep -c "^[^#[:space:]]\+[[:space:]]\+/boot[[:space:]]" /etc/fstab` -ne \
+  `grep -c "^[^[:space:]]\+[[:space:]]\+/boot[[:space:]]" /etc/mtab` ]; then
   echo "/boot directory is not mounted";
   exit 1;
 fi
