@@ -239,7 +239,7 @@ sub GetMetaData() {
 	type_image        => "bool:Image section",
 	# image_name     => "string:Name of section", # implicit
 	image_image       => "path:Kernel image:/boot/vmlinux",
-	image_root        => "selectdevice:Root device:". $dev_map{"/"}.":" . $root_devices,
+	image_root        => "selectdevice:Root device:". ($dev_map{"/"} || "").":" . $root_devices,
 	image_vgamode     => "string:Vga Mode",
 	image_append      => "string:Optional kernel command line parameter",
 	image_initrd      => "path:Initial RAM disk:/boot/initrd",
