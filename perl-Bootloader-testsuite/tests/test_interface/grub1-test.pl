@@ -15,7 +15,7 @@ ok($lib_ref->SetLoaderType("grub"));
 $lib_ref->InitializeBootloader(); #this is expected fail, because it check real hardware
 my %mount_points = ( '/' => '/dev/sda2' );
 ok($lib_ref->DefineMountPoints(\%mount_points));
-my @partition1 = ( "/dev/hdb1", "/dev/hdb","1","130","","","","");
+my @partition1 = ( "/dev/hdb1", "/dev/hdb","1","130","","","","","/dev/disk/by-id/test");
 my @partitions = ( \@partition1 );
 ok($lib_ref->DefinePartitions(\@partitions));
 ok($lib_ref->ReadSettings());

@@ -492,7 +492,9 @@ sub GrubDev2UnixDev {
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
-	    if ($dev_ref->[1] eq $dev && $dev_ref->[2] == $partition) {
+	    if (($dev_ref->[1] eq $dev or 
+              (scalar @{$dev_ref}>8 && $dev_ref->[8] eq $dev)) #FIXME HACK to live install
+              && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
 		$self->l_milestone ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
 		return $dev;
