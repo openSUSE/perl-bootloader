@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Oct 14 15:05:16 CEST 2008 - jreidinger@suse.cz
+
+- fix fallback for translation from unix device to grub on
+  system with activated multipath (bnc #381386)
+- doesn't collect any hardware information if user want skip
+  bootloader update after kernel upgrade (bnc #425501)
+- Version bump to 0.4.19.13
+
+-------------------------------------------------------------------
 Wed Apr 23 15:25:05 CEST 2008 - aosthof@suse.de
 
 - Fixed grub device pattern (bnc#382724)
