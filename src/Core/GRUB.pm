@@ -591,10 +591,11 @@ sub UnixDev2GrubDev {
     else {
 	foreach my $udev_link (@udev_links) { 
 	    chomp ($udev_link);
+	    $self->l_milestone ("GRUB::UnixDev2GrubDev: try udev link $udev_link.");
 	    $udev_link = "/dev/" . $udev_link;
 	    if (exists $self->{"device_map"}->{$udev_link} ) {
 		$dev = $self->{"device_map"}->{$udev_link};
-                return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no partition
+                return "($dev)" if ( $kernel_dev eq $original or $original eq $udev_link ); #disk dev, no partition
 	    }
 	}
     }

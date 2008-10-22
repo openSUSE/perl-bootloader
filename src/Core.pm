@@ -1830,7 +1830,21 @@ sub SetSettings {
 	if (defined ($settings{$key}))
 	{
 	    $self->{$key} = $settings{$key};
-            $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", $settings{$key}));
+            if ($key eq "sections")
+            {
+              foreach my $section (@{$settings{$key}})
+              {
+                $self->l_milestone ("Core::SetSettings: store: $key:" . join( " - ", %{$section}));
+              }
+            }
+            elsif ($key eq "global" or $key eq "device_map")
+            {
+              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", %{$settings{$key}}));
+            }
+            else
+            {
+              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", $settings{$key}));
+            }
         }
     }
     return 1;
