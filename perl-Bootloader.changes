@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Oct 23 17:15:02 CEST 2008 - jreidinger@suse.cz
+
+- improve logging library input/output 
+- fix bug with xen kernel in xen enviroment (bnc #436899)
+- 0.4.76
+
+-------------------------------------------------------------------
 Thu Oct 23 12:54:40 CEST 2008 - jreidinger@suse.cz
 
 - add workaround for live installation (bnc #432699)
