@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct 23 12:54:40 CEST 2008 - jreidinger@suse.cz
+
+- add workaround for live installation (bnc #432699)
+- 0.4.75 
+
+-------------------------------------------------------------------
 Thu Oct  9 15:34:48 CEST 2008 - jreidinger@suse.cz
 
 - use option relocatable only on ia64 architecture (FATE #301882)
