@@ -1810,16 +1810,16 @@ sub GetSettings {
             {
               foreach my $section (@{$ret{$key}})
               {
-                $self->l_milestone ("Core::SetSettings: store: $key:" . join( " - ", %{$section}));
+                $self->l_milestone ("Core::GetSettings: store: $key:" . join( " - ", %{$section}));
               }
             }
             elsif ($key eq "global" or $key eq "device_map")
             {
-              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", %{$ret{$key}}));
+              $self->l_milestone ("Core::GetSettings: store: $key:" . join( ",", %{$ret{$key}}));
             }
             else
             {
-              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", $ret{$key}));
+              $self->l_milestone ("Core::GetSettings: store: $key:" . join( ",", $ret{$key}));
             }
 	}
     }
