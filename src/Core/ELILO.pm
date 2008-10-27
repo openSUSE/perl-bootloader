@@ -201,7 +201,7 @@ sub GetMetaData() {
 	xen_initrd        => "path:Initial RAM disk:/boot/initrd",
     };
     if ($arch eq "ia64") {
-      $exports{"sction_options"}{"image_relocatable"} = "bool:Allow Attempt to relocate:";
+      $exports{"section_options"}{"image_relocatable"} = "bool:Allow Attempt to relocate:";
     }
 
     my $so = $exports{"section_options"};
