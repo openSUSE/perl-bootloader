@@ -446,11 +446,11 @@ sub GrubDev2UnixDev {
     my $dev = shift;
 
     unless ($dev) {
-	$self->l_milestone ("GRUB::GrubDev2UnixDev: Empty device to translate");
+	$self->l_error ("GRUB::GrubDev2UnixDev: Empty device to translate");
 	return $dev;
     }
     if ($dev !~ /^\(.*\)$/) {
-	$self->l_milestone ("GRUB::GrubDev2UnixDev: Not translating device $dev");
+	$self->l_warning ("GRUB::GrubDev2UnixDev: Not translating device $dev");
 	return $dev;
     }
 
@@ -501,7 +501,7 @@ sub GrubDev2UnixDev {
 	    }
 	}
         #no partition found so return $dev with partition
-	$self->l_milestone ("GRUB::GrubDev2UnixDev: No partition found for $dev with $partition.");
+	$self->l_warning ("GRUB::GrubDev2UnixDev: No partition found for $dev with $partition.");
         return $dev.$partition;
     }
 
@@ -530,12 +530,12 @@ sub UnixDev2GrubDev {
     my $dev = shift;
 
     unless (defined($dev) and $dev) {
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: Empty device to translate");
+	$self->l_error ("GRUB::UnixDev2GrubDev: Empty device to translate");
 	return ""; # return an error
     }
     # Seems to be a grub device already 
     if ($dev =~ /^\(${grubdev_pattern}\)$/) {
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: Not translating device $dev");
+	$self->l_warning ("GRUB::UnixDev2GrubDev: Not translating device $dev");
 	return $dev;
     }
 
@@ -602,7 +602,7 @@ sub UnixDev2GrubDev {
 
     # print all entries of device.map. This is rather for debugging
     if (exists $self->{"device_map"}) {
-        $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: ".$self->{"device_map"});
+        $self->l_milestone ("GRUB::UnixDev2UnixDev: device_map: ".$self->{"device_map"});
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: Read from internal structure device_map:");
 
 	while ((my $unix_dev, my $grub_dev) = each (%{$self->{"device_map"}})) {
@@ -610,7 +610,7 @@ sub UnixDev2GrubDev {
 	}
     }
     else {
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: Internal structure device_map doesn't exist.");
+	$self->l_warning ("GRUB::UnixDev2GrubDev: Internal structure device_map doesn't exist.");
     }
 
     $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX device/partition -> GRUB device: $original to $dev");
@@ -622,12 +622,15 @@ sub UnixDev2GrubDev {
 
     if ($dev !~ /^${grubdev_pattern}$/) {
 	$dev = "hd0";
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: Unknown device '$original', fall back to ($dev)");
+	$self->l_warning ("GRUB::UnixDev2GrubDev: Unknown device '$original', fall back to ($dev)");
     }
 
     $dev = defined ($partition)
 	? "($dev,$partition)"
 	: "($dev,$partition_fallback)";
+
+    $self->l_warning("GRUB::UnixDev2GrubDev: Unknown partition, fallback to first")
+      unless (defined ($partition));
 
     $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX->GRUB: $original to $dev");
 
