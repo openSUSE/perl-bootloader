@@ -91,6 +91,7 @@ use Bootloader::Core::LILO;
 use Bootloader::Core::ELILO;
 use Bootloader::Core::ZIPL;
 use Bootloader::Core::PowerLILO;
+use Bootloader::Core::NONE;
 
 =item
 C<< $obj_ref = Bootloader::Library->new (); >>
@@ -156,11 +157,14 @@ sub SetLoaderType {
     {
 	$loader = Bootloader::Core::PowerLILO->new ($loader);
     }
+    elsif ($bootloader eq "none")
+    {
+	$loader = Bootloader::Core::NONE->new ($loader);
+    }
     else
     {
-	# FIXME: handle case 'none'
-	$loader = Bootloader::Core->new ($loader);
-	$loader->l_error ("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader");
+	$loader = Bootloader::Core::NONE->new ($loader);
+	$loader->l_error ("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader, fallback to none");
     }
 
     $self->{"loader"} = $loader;

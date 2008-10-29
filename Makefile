@@ -7,7 +7,7 @@ SUBMIT_DIR=/work/src/done/STABLE
 ifeq ($(BUILD_DIST),ppc)
 BUILD=powerpc32 /work/src/bin/build
 else
-BUILD=/work/src/bin/build #--target=i586
+BUILD=/work/src/bin/build --target=i586
 endif
 MBUILD=/work/src/bin/mbuild
 MBUILDC=$(MBUILD) -l $(LOGNAME) -d stable
