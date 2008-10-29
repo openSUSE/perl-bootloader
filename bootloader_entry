@@ -302,7 +302,7 @@ fi
 ) >> $logname
 
 if [ `grep -c "^[^#[:space:]]\+[[:space:]]\+/boot[[:space:]]" /etc/fstab` -ne \
-  `grep -c "^[^[:space:]]\+[[:space:]]\+/boot[[:space:]]" /etc/mtab` ]; then
+  `grep -c "^[^[:space:]]\+[[:space:]]\+/boot[[:space:]]" /proc/mounts` ]; then
   echo "/boot directory is not mounted";
   exit 1;
 fi
