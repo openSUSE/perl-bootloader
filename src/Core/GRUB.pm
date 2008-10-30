@@ -2269,6 +2269,9 @@ sub GrubDev2MountPoint {
     my $grub_dev = shift;
     my @devices = ();
     my $device = $self->GrubDev2UnixDev($grub_dev);
+
+    return $grub_dev if ($grub_dev eq $device); #immediatelly return if GrubDev2UnixDev fail
+
     $self->l_milestone ("GRUB::GrubDev2MountPoint : device: $device");
 
     # MD-RAID handling: find the corresponding /dev/mdX if any.
