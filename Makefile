@@ -21,10 +21,13 @@ DISTMAIL=/work/src/bin/distmail
 .PHONY:	export build mbuild submit rpm clean
 
 all:
-	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'rpm' or 'clean'"
+	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'test', 'test_clean', 'docs', 'rpm' or 'clean'"
 	@echo
 
 export:	.checkexportdir .exportdir
+
+docs:
+	cd doc/ && make
 
 build:	.checkexportdir .built
 

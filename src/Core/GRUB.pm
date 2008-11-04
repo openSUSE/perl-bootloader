@@ -387,7 +387,8 @@ sub Quote {
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
 
 Translates the GRUB device (eg. '(hd0,0)') to UNIX device (eg. '/dev/hda1').
-As argument takes the GRUB device, returns the UNIX device (both strings).
+As argument takes the GRUB device, returns the UNIX device (both strings)
+or argument if translate fail.
 
 =cut
 
@@ -428,6 +429,7 @@ sub GrubDev2UnixDev {
 	    $match_found = 1;
 	}
     }
+
     if ($match_found == 0) {
         $self->l_error ("GRUB::GrubDev2UnixDev: did not find a match for $dev in the device map");
         return $original;
