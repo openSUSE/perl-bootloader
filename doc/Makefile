@@ -1,2 +1,2 @@
-html: 
-	@./genhtml.sh 
+htmldoc: 
+	./genhtml.sh 
