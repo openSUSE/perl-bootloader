@@ -163,7 +163,7 @@ sub GetMetaData() {
     #   /dev/sda9 /dev/sda 9   258   Apple_HFS `primary   0          18237
     #
 
-    # boot from any primary partition with PReP or FAT partition id
+    # boot from any bootable primary partition  which doesn't have xfs (small size of boot sector)
     my $boot_partitions = join(":", 
 	map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
@@ -174,7 +174,7 @@ sub GetMetaData() {
     );
 
     # give a list of possible root devices: all MD devices
-    # and all 'Linux' devices above 20 cylinders
+    # and all 'Linux' devices above 20 cylinders and not swap
     my $root_devices = join(":",
         (map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
@@ -197,10 +197,10 @@ sub GetMetaData() {
 	} @partinfo
     );
 
-    # FIXME: does it make sense to distinguish between x86_64 and x86?
+    # does it make sense to distinguish between x86_64 and x86? 
+    #jreidinger: no, it only is here to uniform with ppc where it is reasonable
     $exports{"arch"} = "x86";
     $exports{"global_options"} = {
- 	# for iseries list for others exactly one allowed
 	boot     => "multi:Boot Loader Locations:",
 	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
 	timeout  => "int:Timeout in Seconds:8:0:3600",
@@ -233,8 +233,6 @@ sub GetMetaData() {
 	debug => "bool:Debugging flag:false"
     };
 
-    my $go = $exports{"global_options"};
-
     $exports{"section_options"} = {
 	type_image        => "bool:Image section",
 	# image_name     => "string:Name of section", # implicit
@@ -266,13 +264,11 @@ sub GetMetaData() {
 	menu_configfile   => "path:Menu description file:/boot/grub/menu.lst"
     };
 
-    # my $so = $exports{"section_options"};
-    # add architecture specific section_options here in case
-
     $loader->{"exports"}=\%exports;
     return \%exports;
 }
 
+# Internal metadata only for checking of valid values, doesn't affect any yast
 sub GetOptions{
   my $loader = shift;
   
@@ -330,6 +326,10 @@ sub GetOptions{
   };
   $loader->{"options"}=\%options;
 }
+
+#end of internal metadata
+
+
 =item
 C<< $obj_ref = Bootloader::Core::GRUB->new (); >>
 
@@ -344,9 +344,7 @@ sub new {
     my $loader = $self->SUPER::new ($old);
     bless ($loader);
 
-    # FIXME: Add an 'init-only' parameter to GetMetaData if
-    # perfomance goes down
-    $loader->GetMetaData();
+    $loader->GetMetaData(); #FIXME this is not need but need test before remove
     $loader->GetOptions();
     $loader->l_milestone ("GRUB::new: Created GRUB instance");
     return $loader;
@@ -383,53 +381,6 @@ sub Quote {
     my $when = shift;
 
     return $text;
-}
-
-=item
-C<< $unix_dev = Bootloader::Core::GRUB->UnixFile2UnixDev ($unix_file); >>
-
-Detects the underlying partition (e.g. '/dev/sda1') a given UNIX file 
-(e.g. '/boot') is located on. Takes a UNIX file as argument and returns 
-the corresponding UNIX device.
-
-=cut
-
-# string UnixFile2UnixDev (string unix_file)
-sub UnixFile2UnixDev {
-    my $self = shift;
-    my $unix_file = shift;
-    my $unix_dev = "";
-
-    # Collect information about device using "stat"
-    my ($temp_unix_dev, undef, undef, undef, undef, undef, undef, undef,
-	undef, undef, undef, undef, undef)
-    = stat ($unix_file);
-
-    # Open "/proc/partitions" to look up the partition corresponding to
-    # major and minor device numbers
-    open (PARTITIONS, "</proc/partitions");
-    while (<PARTITIONS>) {
-	chomp;
-
-	# Omit header and empty lines in /proc/partitions
-        unless ($_ =~ /^\s+\d+\s+\d+.*$/) {
-	    next;
-        }
-
-	my ($empty1 , $major, $minor, $empty2, $dev_name) = split (/\s+/, $_);
-
-	# Assemble major and minor device numbers to be able to compare the
-        # result with $temp_unix_dev
-	my $majmin = ($major << 8 | $minor);
-
-	if ($majmin == $temp_unix_dev) {
-	    $unix_dev = "/dev/" . $dev_name;
-            last;
-	}
-    }
-    close (PARTITIONS);
-
-    return $unix_dev;
 }
 
 =item

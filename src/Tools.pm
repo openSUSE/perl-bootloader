@@ -1128,33 +1128,6 @@ sub GetSectionList {
 
     my $core_lib = $lib_ref->{"loader"};
 
-# FIXME: Maybe activate this part of code later if - against all expectations
-# - still needed, but this shouldn't happen.
-    # Examines if image and initrd strings already contain a grub device
-    # prefix. If it is not the case, attach it.
-=cut
-    if ($loader eq "grub") {
-	foreach my $key (sort keys %option) {
-	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
-		# In case /boot is resided on an own partition, the function
-		# UnixPath2GrubPath (in GRUB.pm) doesn't substitute "/boot"
-		# with the corresponding grub device, but keeps it.
-		#
-		# So the image, kernel and initrd values in the @sections
-		# array don't contain such a grub device prefix. Thus, to
-		# match sections to be deleted, a grub device prefix must not
-		# be attached to the given @option elements.
-		if ($lib_ref->UnixFile2GrubDev ("/boot") eq $lib_ref->UnixFile2GrubDev ("/")){
-		    if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
-			my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
-			$option{$key} = $grub_dev . $option{$key};
-		    }
-		}
-	    }
-	}
-    }
-=cut
-
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
 
@@ -1385,80 +1358,6 @@ sub AddSection {
 	$boot_mp = $v if ($k eq "/boot");
     }
 
-    # Resolve kernel symlinks (if available) to full names
-    my $link_target = '';
-    foreach my $s (@sections) {
-	while ((my $k, my $v) = each (%$s)) {
-	    if ($k eq "initrd" || $k eq "image" || $k eq "kernel") {
-		# Check if $v has a grub device prefix
-		if (($v =~ s#\/.*$##) && $v ne '') {
-		    my $unix_dev = $lib_ref->GrubDev2UnixDev($v);
-
-		    $valid_part = 1;
-		    unless ($unix_dev eq $root_mp || $unix_dev eq $boot_mp) {
-			$valid_part = 0;
-		    }
-		}
-	    }
-
-	    if (($k eq "kernel" || $k eq "image" || $k eq "initrd") && $valid_part) {
-		if ($link_target = readlink ($v)) {
-		    chomp ($link_target);
-		    $s->{$k} = "/boot/" . $link_target;
-		}
-            }
-
-	    if (($k eq "__lines") && $valid_part) {
-		my $index = 0;
-
-		# Print the whole __lines structure
-		# Comment out this area for debug purposes
-		#foreach my $elem (@$v) {
-		#    print ("__lines contains: $elem\n");
-		#    while ((my $k, my $v) = each (%$elem)) {
-		#	print ("key = $k,\tvalue = $v\n");
-		#    }
-		#    print ("\n");
-		#}
-
-		foreach my $lineref (@$v) {
-		    # Search in lines cache for possible kernel symlinks
-		    # and resolve them if found
-		    if ($lineref->{"key"} eq "kernel") {
-			my $kernel_symlink = (split (/ /, $lineref->{"value"}))[0];
-			if ($link_target = readlink ($kernel_symlink)
-                           and $kernel_symlink =~ m/\/vmlinu[xz]$/) { #change only default symlink, not user created
-			    chomp ($link_target);
-
-			    # Create the new kernel line with long (resolved)
-			    # kernel filename
-			    my $kernel_line = $s->{"__lines"}[$index]->{"value"};
-			    $kernel_line =~ s/(^\S*)vmlinu[xz](\s*)/$1$link_target$2/;
-			    $s->{"__lines"}[$index]->{"value"} = $kernel_line;
-			}
-		    }
-
-		    # Search in lines cache for possible kernel symlinks
-		    # and resolve them if found
-		    if ($lineref->{"key"} eq "initrd") {
-			my $initrd_symlink = (split (/ /, $lineref->{"value"}))[0];
-			if ($link_target = readlink ($initrd_symlink)
-                          and $initrd_symlink =~ m/\/initrd$/) {
-			    chomp ($link_target);
-
-			    # Create the new initrd line with long (resolved)
-			    # initrd filename
-			    my $initrd_line = $s->{"__lines"}[$index]->{"value"};
-			    $initrd_line =~ s/(^\S*)initrd(\s*)/$1$link_target$2/;
-			    $s->{"__lines"}[$index]->{"value"} = $initrd_line;
-			}
-		    }
-		    $index += 1;
-		}
-	    }
-	}
-    }
-
     # Switch the first 2 entries in @sections array to put the normal entry on
     # top of corresponding failsafe entry
     if (($failsafe_modified == 1) && scalar (@sections) >= 2) {
@@ -1592,35 +1491,7 @@ sub RemoveSections {
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
-# FIXME: Maybe activate this part of code later if - against all expectations 
-# - still needed, but this shouldn't happen.
     my $loader = GetBootloader ();
-    # Examines if image and initrd strings already contain a grub device
-    # prefix. If it is not the case, attach it.
-=cut
-    if ($loader eq "grub") {
-	foreach my $key (sort keys %option) {
-	    unless ($option{$key} =~ /^\(hd\d+,\d+\).*$/) {
-		print ("(hdx,y) not detected, key = $key,\tval = $option{$key}\n");
-		# In case /boot is resided on an own partition, the function
-		# UnixPath2GrubPath (in GRUB.pm) doesn't substitute "/boot"
-		# with the corresponding grub device, but keeps it.
-		#
-		# So the image, kernel and initrd values in the @sections
-		# array don't contain such a grub device prefix. Thus, to
-		# match sections to be deleted, a grub device prefix must not
-		# be attached to the given @option elements.
-		if ($lib_ref->UnixFile2GrubDev ("/boot") eq $lib_ref->UnixFile2GrubDev ("/")){
-		    print("equal\n");			
-		    if ($key eq "image" || $key eq "initrd" || $key eq "kernel") {
-			my $grub_dev = $lib_ref->UnixFile2GrubDev ("/boot");
-			$option{$key} = $grub_dev . $option{$key};
-		    }
-		}
-	    }
-	}
-    }
-=cut
 
     my $core_lib = $lib_ref->{"loader"};
 
