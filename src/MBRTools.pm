@@ -10,7 +10,8 @@ Bootloader::MBRTools - set of low-level functions for mbr manipulation
 
 =head1 PREFACE
 
-This package contains a set of low-level functions for mbr manipulation
+This package contains a set of low-level functions for mbr manipulation.
+Now it is only for testing purpose. Don't use it.
 
 =head1 SYNOPSIS
 
