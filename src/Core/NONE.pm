@@ -14,57 +14,21 @@ This package is the NONE library of the bootloader configuration
 
 =head1 SYNOPSIS
 
-use Bootloader::Core::GRUB;
+use Bootloader::Core::NONE;
 
-C<< $obj_ref = Bootloader::Core::GRUB->new (); >>
+C<< $obj_ref = Bootloader::Core::NONE->new (); >>
 
-C<< $unquoted = Bootloader::Core::GRUB->Unquote ($text); >>
+C<< $files_ref = Bootloader::Core::NONE->ListFiles (); >>
 
-C<< $quoted = Bootloader::Core::GRUB->Quote ($text, $when); >>
+C<< $status = Bootloader::Core::NONE->ParseLines (\%files, $avoid_reading_device_map); >>
 
-C<< $unix_dev = Bootloader::Core::GRUB->UnixFile2UnixDev ($unix_file); >>
+C<< $files_ref = Bootloader::Core::NONE->CreateLines (); >>
 
-C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
+C<< $settings_ref = Bootloader::Core::NONE->GetSettings (); >>
 
-C<< $grub_dev = Bootloader::Core::GRUB->UnixDev2GrubDev ($unix_dev); >>
+C<< $status = Bootloader::Core::NONE->SetSettings (\%settings); >>
 
-C<< $unix_path = Bootloader::Core::GRUB->GrubPath2UnixPath ($grub_path, $grub_dev_prefix); >>
-
-C<< $grub_path = Bootloader::Core::GRUB->UnixPath2GrubPath ($unix_path, $grub_dev_prefix); >>
-
-C<< $grub_conf_line_ref = Bootloader::Core::GRUB->CreateGrubConfLine ($target, $discswitch); >>
-
-C<< $files_ref = Bootloader::Core::GRUB->ListFiles (); >>
-
-C<< $status = Bootloader::Core::GRUB->ParseLines (\%files, $avoid_reading_device_map); >>
-
-C<< $files_ref = Bootloader::Core::GRUB->CreateLines (); >>
-
-C<< $dev = Bootloader::Core::GRUB->GetCommonDevice (@paths); >>
-
-C<< $line = Bootloader::Core::GRUB->CreateKernelLine (\%sectingo, $grub_root); >>
-
-C<< $line = Bootloader::Core::GRUB->CreateChainloaderLine (\%sectinfo, $grub_root); >>
-
-C<< $disk = Bootloader::Core::GRUB->Partition2Disk ($partition); >>
-
-C<< $sectin_info_ref = Bootloader::Core::GRUB->Section2Info (\@section_lines); >>
-
-C<< $lines_ref = Bootloader::Core::GRUB->Info2Section (\%section_info); >>
-
-C<< $glob_info = $Bootloader::Core::GRUB->Global2Info (\@glob_lines, \@section_names); >>
-
-C<< $lines_ref = Bootloader::Core::GRUB->Info2Global (\%section_info, \@section_names); >>
-
-C<< $settings_ref = Bootloader::Core::GRUB->GetSettings (); >>
-
-C<< $status = Bootloader::Core::GRUB->SetSettings (\%settings); >>
-
-C<< $status = Bootloader::Core::GRUB->InitializeBootloader (); >>
-
-C<< $opt_types_ref = BootGrub->GetOptTypes (); >>
-
-C<< $mountpoint = Bootloader::Core::GRUB->GrubDev2MountPoint ($grub_dev); >>
+C<< $status = Bootloader::Core::NONE->InitializeBootloader (); >>
 
 
 =head1 DESCRIPTION
@@ -98,9 +62,9 @@ sub GetMetaData() {
 }
 
 =item
-C<< $obj_ref = Bootloader::Core::GRUB->new (); >>
+C<< $obj_ref = Bootloader::Core::NONE->new (); >>
 
-Creates an instance of the Bootloader::Core::GRUB class.
+Creates an instance of the Bootloader::Core::NONE class.
 
 =cut
 
@@ -111,15 +75,14 @@ sub new {
     my $loader = $self->SUPER::new ($old);
     bless ($loader);
 
-    $loader->l_milestone ("GRUB::new: Created NONE instance");
+    $loader->l_milestone ("NONE::new: Created NONE instance");
     return $loader;
 }
 
 =item
-C<< $files_ref = Bootloader::Core::GRUB->ListFiles (); >>
+C<< $files_ref = Bootloader::Core::NONE->ListFiles (); >>
 
 Returns the list of the configuration files of the bootloader
-Returns undef on fail
 
 =cut
 
@@ -128,20 +91,10 @@ sub ListFiles {
     return []; 
 }
 
-sub ListMenuFiles {
-    return [];
-}
-
 =item
-C<< $status = Bootloader::Core::GRUB->ParseLines (\%files, $avoid_reading_device_map); >>
+C<< $status = Bootloader::Core::NONE->ParseLines (\%files, $avoid_reading_device_map); >>
 
-Parses the contents of all files and stores the settings in the
-internal structures. As first argument, it takes a hash reference, where
-keys are file names and values are references to lists, each
-member is one line of the file. As second argument, it takes a
-boolean flag that, if set to a true value, causes it to skip
-updating the internal device_map information. Returns undef on
-fail, defined nonzero value on success.
+Simulate parsing lines. Do nothing. Return non-zero for success.
 
 =cut
 
@@ -152,11 +105,9 @@ sub ParseLines {
 
 
 =item
-C<< $files_ref = Bootloader::Core::GRUB->CreateLines (); >>
+C<< $files_ref = Bootloader::Core::NONE->CreateLines (); >>
 
-creates contents of all files from the internal structures.
-Returns a hash reference in the same format as argument of
-ParseLines on success, or undef on fail.
+Simulate creating lines and return empty lines hash structure.
 
 =cut
 
@@ -166,7 +117,7 @@ sub CreateLines {
 }
 
 =item
-C<< $settings_ref = Bootloader::Core::GRUB->GetSettings (); >>
+C<< $settings_ref = Bootloader::Core::NONE->GetSettings (); >>
 
 returns the complete settings in a hash. Does not read the settings
 from the system, but returns internal structures.
@@ -182,11 +133,9 @@ sub GetSettings {
 }
 
 =item
-C<< $status = Bootloader::Core::GRUB->SetSettings (\%settings); >>
+C<< $status = Bootloader::Core::NONE->SetSettings (\%settings); >>
 
-Stores the settings in the given parameter to the internal
-structures. Does not touch the system.
-Returns undef on fail, defined nonzero value on success.
+Do nothing, as none bootloader cannot change internal settings.
 
 =cut
 
@@ -197,10 +146,9 @@ sub SetSettings {
 }
 
 =item
-C<< $status = Bootloader::Core::GRUB->InitializeBootloader (); >>
+C<< $status = Bootloader::Core::NONE->InitializeBootloader (); >>
 
-Initializes the firmware to boot the bootloader.
-Returns undef on fail, defined nonzero value otherwise
+Simulate initializing bootloader. Allways success.
 
 =cut
 
