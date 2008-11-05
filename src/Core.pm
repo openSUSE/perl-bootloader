@@ -2005,7 +2005,7 @@ sub RealFileName {
     {
 	$ret = $self->CanonicalPath($filename);
     }
-    $self->l_debug ("Core::RealFileName: Filename $filename after resolving symlinks: $ret");
+    $self->l_milestone ("Core::RealFileName: Filename $filename after resolving symlinks: $ret");
     return $ret;
 }
 

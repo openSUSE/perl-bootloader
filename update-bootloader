@@ -390,6 +390,9 @@ if (defined $oper{add}) {
     	if (not $opt_force) {
 	    pod2usage("There are already sections with image '$opt_image'");
 	}
+        open (LOG, ">>$logname");
+        print LOG ("update-bootloader: section already exist. Skip add.\n");
+        close LOG;
     } else {
 
 	# If, if option $opt_force_default is set, let this new kernel be
