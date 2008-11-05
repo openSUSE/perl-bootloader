@@ -1772,7 +1772,7 @@ sub Info2Section {
     }
 
     # keep a hard order for the following three entries
-    if (exists $sectinfo{"xen"}) {
+    if (exists $sectinfo{"xen"} && $type eq "xen") {
       my $value = $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
                       . " " . ($sectinfo{"xen_append"} || "");
       my $pcr = $sectinfo{"xenpcr"} || "";
@@ -1783,7 +1783,7 @@ sub Info2Section {
         "value" => $value,
       };
     }
-    if (exists $sectinfo{"image"}) {
+    if (exists $sectinfo{"image"} && $type ne "other") {
 	my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
         my $key = "kernel";
         if ($type eq "xen")
@@ -1802,7 +1802,7 @@ sub Info2Section {
 	    "value" => $val,
 	};
     }
-    if (exists $sectinfo{"initrd"}) {
+    if (exists $sectinfo{"initrd"} && $type ne "other") {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
       my $pcr = $sectinfo{"initrdpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
