@@ -105,6 +105,7 @@ use Bootloader::Path;
 my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
+my $logname = Bootloader::Path::logname();
 
 sub DumpLog {
     my $core_lib = shift;
@@ -288,6 +289,9 @@ sub ReadPartitions {
     my $mounted = undef;
     unless (-e $sb) {
       $mounted = `mount /sys`;
+       open (LOG, ">>$logname");
+       print LOG ("Mount /sys\n");
+       close LOG;
     }
     opendir(BLOCK_DEVICES, "$sb") || 
 	die ("ReadPartitions(): Failed to open dir $sb");
@@ -297,6 +301,10 @@ sub ReadPartitions {
 	!m/^\./ and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
+
+    open (LOG, ">>$logname");
+    print LOG ("Finded disks: ". join (",",@disks)||"");
+    close LOG;
 
     # get partition info for all partitions on all @disks
     my @devices = ();
@@ -363,11 +371,19 @@ sub ReadPartitions {
 	    } readdir (BLOCK_DEVICES);
 	    closedir BLOCK_DEVICES;
 
+            open (LOG, ">>$logname");
+            print LOG ("Finded parts: ". join (",",@parts)||"");
+            close LOG;
+
 	    # generate proper device names and other info for all @part[ition]s
 	    foreach my $part (@parts)
 	    {
 	        chomp ($part);
 	        $part = Udev2Dev ("$disk/$part");
+                open (LOG, ">>$logname");
+                print LOG ("Processing part: ". join (",",$part)||"");
+                close LOG;
+
 	        my $index = substr ($part, length ($dev_disk));
 	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
 	        {

@@ -597,7 +597,8 @@ sub Info2Section {
 	    delete ($sectinfo{"name"});
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
-	    # only accept known section options :-)
+	    $self->l_milestone (
+		"PowerLILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
 	else
@@ -645,7 +646,8 @@ sub Info2Section {
         }
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
-	    # only accept known section options :-)
+	    $self->l_milestone (
+		"PowerLILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
