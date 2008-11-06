@@ -52,7 +52,7 @@ test_clean:
 .exportdir:	$(PKG).changes $(PKG).spec.in version
 	ln -sfn src Bootloader
 	env PERLLIB=.:$$PERLLIB perl -c ./update-bootloader
-	@rm -f .built .submitted Bootloader
+	@rm -fr .built .submitted Bootloader
 	set -e ; set -x ;\
 	export LANG=C ; export LC_ALL=C ; export TZ=UTC ; \
 	exportdir=`mktemp -d /tmp/temp.XXXXXX` ; \
@@ -67,7 +67,7 @@ test_clean:
 	mv src $(PKG)-$$lv/lib/Bootloader; \
 	tar cfvj $(PKG)-$$lv.tar.bz2 $(PKG)-$$lv ; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > $(PKG).spec ; \
-	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in perl-Bootloader-testsuite ; \
+	rm -rf version Makefile $(PKG)-$$lv $(PKG).spec.in perl-Bootloader-testsuite doc; \
 	pwd ; \
 	ls -la ; \
 	if /work/src/bin/check_if_valid_source_dir; then cd -; echo $$exportdir > $@; else exit 1 ; fi

@@ -105,18 +105,17 @@ use Bootloader::Path;
 my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
-my $logname = Bootloader::Path::logname();
 
 sub DumpLog {
     my $core_lib = shift;
 
-    my $perl_logfile = Bootloader::Path::Logname();
     my $using_logfile = 1;
+    my $logname = Bootloader::Path::Logname();
 
-    if (not open LOGFILE, ">>$perl_logfile") {
+    if (not open LOGFILE, ">>$logname") {
 	$using_logfile = 0;
 	open LOGFILE, ">&STDERR" or die "Can't dup STDERR: $!";
-	print LOGFILE ("WARNING: Can't open $perl_logfile, using STDERR instead.\n");
+	print LOGFILE ("WARNING: Can't open $logname, using STDERR instead.\n");
     }
 
     # Adding timestamp to log messages
@@ -287,6 +286,7 @@ See InitLibrary function for example.
 sub ReadPartitions {
     my $sb = "/sys/block";
     my $mounted = undef;
+    my $logname = Bootloader::Path::Logname();
     unless (-e $sb) {
       $mounted = `mount /sys`;
        open (LOG, ">>$logname");
