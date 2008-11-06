@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Thu Nov  6 15:17:43 CET 2008 - jreidinger@suse.cz
+
+- ignore keys image, xen and initrd in chainloader section
+  (bnc #441463) 
+- fix warnings (bnc #440122)
+- break attach mountpoint to grub dev if grub dev translate fail
+  (bnc #438051)
+- add blank bootloader for ignore any write (bnc #438833)
+- change /etc/mtab to /proc/mounts and allow skip (bnc #439181)
+- add autogenerate of html documentation to Makefile
+- 0.4.77
+
+-------------------------------------------------------------------
 Thu Oct 23 17:15:02 CEST 2008 - jreidinger@suse.cz
 
 - improve logging library input/output 

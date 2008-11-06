@@ -301,10 +301,12 @@ if [ -e $device_map ] ; then
 fi
 ) >> $logname
 
-if [ `grep -c "^[^#[:space:]]\+[[:space:]]\+/boot[[:space:]]" /etc/fstab` -ne \
-  `grep -c "^[^[:space:]]\+[[:space:]]\+/boot[[:space:]]" /proc/mounts` ]; then
-  echo "/boot directory is not mounted";
-  exit 1;
+if test ! "$PBL_SKIP_BOOT_TEST"; then
+  if test `grep -c "^[^#[:space:]]\+[[:space:]]\+/boot[[:space:]]" /etc/fstab` -ne \
+  `grep -c "^[^[:space:]]\+[[:space:]]\+/boot[[:space:]]" /proc/mounts`; then
+    echo "/boot directory is not mounted. If this is bad detection you can avoid it by 'export PBL_SKIP_BOOT_TEST=1'";
+    exit 1;
+  fi
 fi
 
 # File containing commands for later execution
