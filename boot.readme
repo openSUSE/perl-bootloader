@@ -1,0 +1,30 @@
+This file is for first help if you occur some problems during booting.
+
+FAQ
+
+Q: Kernel upgrade break my tuned bootloader settings, I want edit it manually.
+A: set LOADER_TYPE="none" in /etc/sysconfig/bootloader. Hint is used /boot/vmlinuz and /boot/initrd symlinks as files which is already point to actual kernel. WARNING after kernel upgrade you must update also configuration manually, otherwise you cannot boot.
+
+
+
+Configuration files for bootloader (if you want manually edit it)
+
+/etc/sysconfig/bootloader - contain various settings for bootloader and is used by perl-Bootloader
+
+for grub (x86*) or trustedgrub -
+  /boot/grub/menu.lst - main configuration for sections
+  /boot/grub/device.map - mapping of real device to grub device
+  /etc/grub.conf - batch file for grub if you need update your bootloader location
+  
+for lilo ( x86* or ppc) - 
+  /etc/lilo.conf - main configuration file
+
+for elilo ( x86_64 or ia) -
+  /etc/elilo.conf - main configuration file
+  efibootmgr - utility for efi labels
+  /boot/efi/efi/SuSE/elilo.conf - configuration after elilo preprocess, use only if elilo break original configuration, in other case edit directly elilo.conf in /etc
+
+for zipl (s390)-
+  /etc/zipl.conf - main configuration file
+
+
