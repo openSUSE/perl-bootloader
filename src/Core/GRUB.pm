@@ -1701,7 +1701,7 @@ sub Info2Section {
 	    if ($type eq "other" or not defined ($sectinfo{$key})) {
 		$line_ref = undef;
 	    }
-	    else {
+	    elsif( defined $sectinfo{$key}) {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
                 if ( $key eq "initrd")
                 {
@@ -1783,7 +1783,7 @@ sub Info2Section {
         "value" => $value,
       };
     }
-    if (exists $sectinfo{"image"} && $type ne "other") {
+    if (exists $sectinfo{"image"} && ($type eq "image" || $type eq "xen")) {
 	my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
         my $key = "kernel";
         if ($type eq "xen")
@@ -1802,7 +1802,7 @@ sub Info2Section {
 	    "value" => $val,
 	};
     }
-    if (exists $sectinfo{"initrd"} && $type ne "other") {
+    if (exists $sectinfo{"initrd"} && ($type eq "image" || $type eq "xen")) {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
       my $pcr = $sectinfo{"initrdpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
@@ -1834,7 +1834,7 @@ sub Info2Section {
 	    $line_ref->{"key"} = "title";
 	    unshift @lines, $line_ref;
 	}
-	elsif ($key eq "chainloader")
+	elsif ($key eq "chainloader" && $type eq "other")
 	{
 	    # is this necessary? It seems this is already handled in a
 	    # loop above (where the sectinfo stuff for chainloader is deleted).
@@ -1844,14 +1844,14 @@ sub Info2Section {
 		"value" => $self->CreateChainloaderLine (\%sectinfo, $grub_root), 
 	    };
 	}
-	elsif ($key eq "configfile")
+	elsif ($key eq "configfile" && $type eq "other")
 	{
 	    push @lines, {
 		"key" => $key,
 		"value" => $value,
 	    };
 	}
-        elsif ($key eq "remap" and $value eq "true" )
+        elsif ($key eq "remap" and $value eq "true" and $type eq "other" )
         {
             unshift @lines, {
                 "key" => "map",
@@ -1862,7 +1862,7 @@ sub Info2Section {
                 "value" => "($remap_device) (hd0)",
             };
         }
-        elsif ($key eq "makeactive" and $value eq "true" )
+        elsif ($key eq "makeactive" and $value eq "true" and $type eq "other")
         {
           push @lines, {
               "key" => "makeactive",

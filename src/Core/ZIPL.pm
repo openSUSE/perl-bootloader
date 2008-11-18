@@ -116,15 +116,9 @@ sub GetMetaData() {
         keys %{$loader->{"md_arrays"} || {}}
     );
     
-    # FIXME: is "arch" export necessary?
-    
     $exports{"global_options"} = {
 	# maps to either deafult or default_menu
         default => "string:Default Boot Section/Menu:linux",
-        #default_menu => "string:Default Boot Menu:",
-        #timeout => "int:Timeout in Seconds:5:0:60",
-        #prompt => "bool:Show boot menu",
-        #target => "path:Target directory for configuration/menu section:/boot/zipl",
     };
     
     my $go = $exports{"global_options"};
@@ -218,6 +212,7 @@ C<< $status = Bootloader::Core::ZIPL->FixSectionName ($name, \$names_ref, $type)
 
 =cut
 
+#XXX ugly, create generic renaming function instead
 sub FixSectionName {
     my $self = shift;
     my $name = shift;
@@ -274,14 +269,6 @@ sub FixSectionName {
 	}
 	goto LOOP;
     }
-
-    #$orig_name = $name;
-
-    # and make the section name unique
-    #$name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
-
-    # do it again
-    #$name =~ s/[^$allowed_chars]/$replacement_char/g;
 
     return $new_name;
 }
@@ -443,16 +430,12 @@ sub Info2Section {
     my $type = $sectinfo{"type"} || "";
     my $so = $self->{"exports"}{"section_options"};
     
-    # print "info2section, section " . $sectinfo{"name"} . ", type " . $type . ".\n";
-
     # allow to keep the section unchanged
     if ((($sectinfo{"__modified"} || 0) == 0) and ($type ne "menu"))
     {
 	return \@lines;
     }
     
-#    $sectinfo{"name"} = $self->FixSectionName ($sectinfo{"name"},
-#                                             $sect_names_ref, $type);
     @lines = map {
 	my $line_ref = $_;
 	my $key = $line_ref->{"key"};
@@ -462,8 +445,6 @@ sub Info2Section {
 	{
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
-#	    $line_ref->{"key"}="[".$line_ref->{"value"}."]";
-#	    $line_ref->{"value"}="";
 	}
 	elsif ($key eq "ramdisk")
 	{
@@ -478,12 +459,10 @@ sub Info2Section {
         }
 	elsif ($key eq "menuname")
 	{
-            # $line_ref->{"key"}="menuname";
             $line_ref->{"value"} = delete $sectinfo{"name"};
         }
 	elsif ($key eq "prompt")
 	{
-            # $line_ref->{"key"}="menuname";
             $line_ref->{"value"} =
 		delete $sectinfo{$key} eq "true" ? "1" : "0";
 	}
@@ -512,8 +491,6 @@ sub Info2Section {
 		my $line_ref = $self->UpdateSectionNameLine($sectinfo{"name"}, {},
 							    $sectinfo{"original_name"});
 		$line_ref->{"key"} = "label";
-		#  $line_ref->{"key"}="[".$line_ref->{"value"}."]";
-		#  $line_ref->{"value"}="";
 		push @lines, $line_ref;
 	    }
 	    elsif ($type eq "menu") {
@@ -524,8 +501,9 @@ sub Info2Section {
 	    } # else ignore for unknown section type
         }
         elsif (not exists ($so->{$type . "_" . $key})) {
-            # print $type . "_" . $key . " unknown!\n";
-            next; # only accept known section options CAVEAT!
+	    $self->l_milestone (
+		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+            next; 
         }
 	elsif ($key eq "list") {
 	    my $i = 1;
