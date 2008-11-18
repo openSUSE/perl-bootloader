@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 74;
+use Test::More tests => 76;
 
 use lib "./";
 use Bootloader::Library;
@@ -91,6 +91,11 @@ foreach my $section (@sections) {
     is( $section->{'console'}, 'ttyS0,38400n52r' );
     $section->{'console'} = 'ttyS1,9600n52r'; #test change console
     $section->{'__modified'} = '1';
+  }
+  elsif ( $section->{'original_name'} eq "console" )
+  {
+    is($section->{'console'},"ttyS0,57600");
+    is($section->{'append'},'console=tty0 sysrq_always_enabled panic=100 resume=/dev/disk/by-id/ata-Hitachi_HDS721616PLA380_IBM_PVB340Z2U206SF-part2 splash=silent crashkernel=0M-:0M@16M showopts');
   }
   elsif ( $section->{'original_name'} eq "xen2" )
   {

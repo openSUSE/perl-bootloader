@@ -1275,10 +1275,8 @@ sub Section2Info {
 		    }
 		}
             }
-	    if ($val ne "")
-	    {
-		$ret{"append"} = $val;
-	    }
+	    $val =~ s/console=ttyS(\d+),(\w+)//g;
+	    $ret{"append"} = $val;
 	}
 	elsif ($key eq "xen")
 	{
@@ -1427,6 +1425,12 @@ sub CreateKernelLine {
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
     $console = " console=$console" if $console ne "";
+
+    #prevent moultiple serial console
+    if ($console ne "") {
+      $append =~ s/console=ttyS(\d+),(\w+)//g;
+    }
+
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
     return "$pcr$image$root$append$vga$console";
 }
