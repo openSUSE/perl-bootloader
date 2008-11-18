@@ -304,6 +304,7 @@ sub ReadPartitions {
 
     open (LOG, ">>$logname");
     print LOG ("Finded disks: ". join (",",@disks)||"");
+    print LOG ("\n");
     close LOG;
 
     # get partition info for all partitions on all @disks
@@ -431,6 +432,9 @@ Return 0 if no device, 1 if there are any.
 sub DMRaidAvailable {
     my $retval = 0;
 
+    my $logname = Bootloader::Path::Logname();
+    qx{cat /proc/misc >> $logname};
+
     # Check if device-mapper is available in /proc/misc
     my $dm_available = qx{grep device-mapper /proc/misc};
 
@@ -476,6 +480,7 @@ sub ReadDMRaidPartitions {
     my @dmparts = ();
     my $dmdev;
 
+    my $logname = Bootloader::Path::Logname();
 
     open(DMDEV, "$dmsetup info -c --noheadings -o name |") || 
 	die ("ReadDMRaidPartitions(): dmsetup failed.");
@@ -486,12 +491,18 @@ sub ReadDMRaidPartitions {
 
 	#FIXME: I should not need to do this twice
 	if ($dmdev !~ m/part/) {
+            open (LOG, ">>$logname");
+            print LOG ("Find raid partition $dmdev\n");
+            close LOG;
 	    # $dmdev is the base device
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmdisks, $dmdev;
 	}
 	#FIXME: need to check what needs to be removed
 	else {
+            open (LOG, ">>$logname");
+            print LOG ("Find raid disk $dmdev\n");
+            close LOG;
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmparts, $dmdev;
 	}
@@ -807,6 +818,9 @@ sub ReadRAID1Arrays {
 	# empty hash
 	return \%mapping;
     }
+    
+    my $logname = Bootloader::Path::Logname();
+    qx{ $mdadm --detail --verbose --scan >> $logname};
 
     my ($array, $level, $num_devices);
     while (my $line = <MD>)
