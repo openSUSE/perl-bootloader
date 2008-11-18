@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Tue Nov 18 20:27:56 CET 2008 - jreidinger@suse.cz
+
+- fix test suite hardware dependencies
+  (reported by mpolster@suse.de) 
+- improve logging of detecting hardware during kernel upgrade
+- allow only one serial console (bnc #444522)
+- ensure that keywords is in correct section (bnc #443790)
+- add readme with basic howto rescue to /boot (bnc #224476)
+- 0.4.78
+
+-------------------------------------------------------------------
 Thu Nov  6 15:17:43 CET 2008 - jreidinger@suse.cz
 
 - ignore keys image, xen and initrd in chainloader section
