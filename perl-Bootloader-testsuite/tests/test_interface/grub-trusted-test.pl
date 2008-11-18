@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 39;
+use Test::More tests => 40;
 
 use lib "./";
 use Bootloader::Library;
@@ -15,6 +15,11 @@ ok($lib_ref->SetLoaderType("grub"));
 $lib_ref->InitializeBootloader(); #this is expected fail, because it check real hardware
 my %mount_points = ( '/' => '/dev/sda2' );
 ok($lib_ref->DefineMountPoints(\%mount_points));
+my @partition1 = ( "/dev/hdb1", "/dev/hdb","1","130","","","","","/dev/disk/by-id/test");
+my @partition2 = ( "/dev/sda2", "/dev/sda","2","130","","","","","/dev/disk/by-id/test2");
+my @partition3 = ( "/dev/sda4", "/dev/sda","4","130","","","","","/dev/disk/by-id/test2");
+my @partitions = ( \@partition1, \@partition2, \@partition3 );
+ok($lib_ref->DefinePartitions(\@partitions));
 ok($lib_ref->ReadSettings());
 
 
