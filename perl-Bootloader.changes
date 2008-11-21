@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Nov 21 13:58:20 CET 2008 - jsrain@suse.cz
+
+- load initrd at 16MB on S/390 (bnc #434234)
+- 0.4.79
+
+-------------------------------------------------------------------
 Tue Nov 18 20:27:56 CET 2008 - jreidinger@suse.cz
 
 - fix test suite hardware dependencies
