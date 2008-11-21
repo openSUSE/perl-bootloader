@@ -985,7 +985,7 @@ sub CreateSingleMenuFileLine {
     }
     elsif (($key eq "ramdisk" || $key eq "initrd") && !($value =~ /,0x/))
     {
-        return "$key$equal_sep$value,0x1000000";
+        return "$key$equal_sep$value,0x2000000";
     }
     else
     {
