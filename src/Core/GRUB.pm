@@ -1253,13 +1253,11 @@ sub Section2Info {
 		$ret{"vgamode"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
 	    }
-	    if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\w+)(?:\s+(.*))?$/)
+	    if ($val =~ /console=ttyS(\d+),(\w+)/)
 	    {
-		$ret{"console"} = "ttyS$2,$3" if $2 ne "";
-		$val = $self->MergeIfDefined ($1, $4);
 		if ($type eq "xen") {
-		    my $console = sprintf("com%d", $2+1);
-		    my $speed   = sprintf("%s=%s", $console, $3);
+		    my $console = sprintf("com%d", $1+1);
+		    my $speed   = sprintf("%s=%s", $console, $2);
 		    if (exists $ret{"xen_append"}) {
 		        my $xen_append = $ret{"xen_append"};
 		        while ($xen_append =~
@@ -1275,7 +1273,6 @@ sub Section2Info {
 		    }
 		}
             }
-	    $val =~ s/console=ttyS(\d+),(\w+)//g;
 	    $ret{"append"} = $val;
 	}
 	elsif ($key eq "xen")
@@ -1426,13 +1423,17 @@ sub CreateKernelLine {
     $append = " $append" if $append ne "";
     $console = " console=$console" if $console ne "";
 
-    #prevent moultiple serial console
+    #handle serial console
     if ($console ne "") {
-      $append =~ s/console=ttyS(\d+),(\w+)//g;
+      if ($append =~ m/console=ttyS(\d+)(,(\w+))?/){
+        $append =~ s/console=ttyS(\d+)(,(\w+))?/$console/ ;
+      } else {
+        $append = $append.$console;
+      }
     }
 
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
-    return "$pcr$image$root$append$vga$console";
+    return "$pcr$image$root$append$vga";
 }
 
 =item
@@ -1622,8 +1623,13 @@ sub Info2Section {
     }
 
     if ($type eq "xen") {
-	if (exists($sectinfo{"console"}) and
-	    ($sectinfo{"console"} =~ /ttyS(\d+),(\w+)/) )
+#handle kernel console, if redefined in console use it and if not then parse from append line
+	if (
+          (exists($sectinfo{"console"}) and
+	    ($sectinfo{"console"} =~ /ttyS(\d+),(\w+)/))
+          or
+          (exists($sectinfo{"append"}) and
+	    ($sectinfo{"append"} =~ /console=ttyS(\d+),(\w+)/)) )
 	{
 	    # merge console and speed into xen_append
 	    my $console = sprintf("com%d", $1+1);

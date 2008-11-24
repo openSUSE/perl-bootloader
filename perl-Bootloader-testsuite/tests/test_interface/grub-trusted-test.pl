@@ -55,7 +55,7 @@ foreach my $section (@sections) {
     is( $section->{'xen'}, '/boot/xen.gz' );
     is( $section->{'xen_append'}, 'console=com1 com1=38400n52r testparam=ok' );
     is( $section->{'root'}, '/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2' );
-    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
+    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r' );
     $section->{'__modified'}=1;
     $section->{"imagepcr"} = "1";
     $section->{"initrdpcr"} = "13";

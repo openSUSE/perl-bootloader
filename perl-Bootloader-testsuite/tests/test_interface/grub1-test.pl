@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 76;
+use Test::More tests => 73;
 
 use lib "./";
 use Bootloader::Library;
@@ -55,8 +55,7 @@ foreach my $section (@sections) {
     is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-debug' );
     is( $section->{'name'}, 'Debug -- openSUSE 11.0 - 2.6.25.4-10' );
     ok( not defined $section->{'vgamode'} );
-    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
-    is( $section->{'console'}, 'ttyS0,38400n52r' );
+    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r' );
   } 
   elsif ( $section->{'original_name'} eq "linux-2.6.25.4-10-default" )
   {
@@ -81,7 +80,7 @@ foreach my $section (@sections) {
   elsif ( $section->{'original_name'} eq "xen" )
   {
     is( $section->{"type"}, 'xen' );
-    is( $section->{"append"}, 'resume=/dev/sda1 splash=silent showopts' );
+    is( $section->{"append"}, 'resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r' );
     is( $section->{"image"}, '/boot/vmlinuz-2.6.25.4-10-xen' );
     is( $section->{"initrd"}, '/boot/initrd-2.6.25.4-10-xen' );
     is( $section->{"name"}, 'XEN' );
@@ -89,14 +88,12 @@ foreach my $section (@sections) {
     is( $section->{"xen"}, '/boot/xen.gz' );
     is( $section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok' );
     is( $section->{"vgamode"}, '0x332' );
-    is( $section->{'console'}, 'ttyS0,38400n52r' );
     $section->{'console'} = 'ttyS1,9600n52r'; #test change console
     $section->{'__modified'} = '1';
   }
   elsif ( $section->{'original_name'} eq "console" )
   {
-    is($section->{'console'},"ttyS0,57600");
-    is($section->{'append'},'console=tty0 sysrq_always_enabled panic=100 resume=/dev/disk/by-id/ata-Hitachi_HDS721616PLA380_IBM_PVB340Z2U206SF-part2 splash=silent crashkernel=0M-:0M@16M showopts');
+    is($section->{'append'},'console=tty0 console=ttyS0,57600 sysrq_always_enabled panic=100 resume=/dev/disk/by-id/ata-Hitachi_HDS721616PLA380_IBM_PVB340Z2U206SF-part2 splash=silent crashkernel=0M-:0M@16M showopts');
   }
   elsif ( $section->{'original_name'} eq "xen2" )
   {
