@@ -935,13 +935,13 @@ sub InitLibrary {
     my $mp = ReadMountPoints ();
     my $part = ReadPartitions ();
     my $md = ReadRAID1Arrays ();
-    my $mp = GetMultipath ();
+    my $mpath = GetMultipath ();
 
     $lib_ref->SetLoaderType (GetBootloader ());
     $lib_ref->DefineMountPoints ($mp);
     $lib_ref->DefinePartitions ($part);
     $lib_ref->DefineMDArrays ($md);
-    $lib_ref->DefineMultipath ($mp);
+    $lib_ref->DefineMultipath ($mpath);
 
     # parse Bootloader configuration files   
     $lib_ref->ReadSettings();

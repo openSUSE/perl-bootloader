@@ -17,7 +17,8 @@ my %mount_points = ( '/' => '/dev/sda2' );
 ok($lib_ref->DefineMountPoints(\%mount_points));
 my @partition1 = ( "/dev/hdb1", "/dev/hdb","1","130","","","","","/dev/disk/by-id/test");
 my @partition2 = ( "/dev/sda2", "/dev/sda","2","130","","","","","/dev/disk/by-id/test2");
-my @partitions = ( \@partition1, \@partition2 );
+my @partition3 = ( "/dev/sda1", "/dev/sda","1","130","","","","","/dev/disk/by-id/test3");
+my @partitions = ( \@partition1, \@partition2, \@partition3 );
 ok($lib_ref->DefinePartitions(\@partitions));
 ok($lib_ref->ReadSettings());
 
@@ -84,7 +85,7 @@ foreach my $section (@sections) {
     is( $section->{"image"}, '/boot/vmlinuz-2.6.25.4-10-xen' );
     is( $section->{"initrd"}, '/boot/initrd-2.6.25.4-10-xen' );
     is( $section->{"name"}, 'XEN' );
-    is( $section->{"root"}, '/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2' );
+    is( $section->{"root"}, '/dev/sda2' );
     is( $section->{"xen"}, '/boot/xen.gz' );
     is( $section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok' );
     is( $section->{"vgamode"}, '0x332' );
@@ -93,7 +94,7 @@ foreach my $section (@sections) {
   }
   elsif ( $section->{'original_name'} eq "console" )
   {
-    is($section->{'append'},'console=tty0 console=ttyS0,57600 sysrq_always_enabled panic=100 resume=/dev/disk/by-id/ata-Hitachi_HDS721616PLA380_IBM_PVB340Z2U206SF-part2 splash=silent crashkernel=0M-:0M@16M showopts');
+    is($section->{'append'},'console=tty0 console=ttyS0,57600 sysrq_always_enabled panic=100 resume=/dev/sda1 splash=silent crashkernel=0M-:0M@16M showopts');
   }
   elsif ( $section->{'original_name'} eq "xen2" )
   {

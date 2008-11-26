@@ -390,10 +390,28 @@ sub GetKernelDevice {
     my $cmd = "udevadm info  -q name -n $device";
     my $dev = "";
     if (my $resolved_link = qx{$cmd 2> /dev/null}) {
+        if ($? > 0){
+          return $device;
+        }
 	chomp ($resolved_link);
 	$dev = "/dev/" . $resolved_link; 
+    } else {
+      return $device;
     }
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevadm info returned: $dev");
+    $self->l_milestone ("GRUB::GetKernelDevice: udevadm info returned: $dev");
+    if ($dev =~ m:^/dev/dm-\d+:){
+      my $name = qx{udevadm info  -q env -n $device | grep DM_NAME};
+      if ($name !~ m/^DM_NAME=(.*)/){
+        $self->l_error ("GRUB::GetKernelDevice: no DM_NAME for dm device: $dev");
+        return $dev;
+      }
+      $dev = $1;
+      my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
+      if ($part =~ m/^DM_PART=(\d+)$/){
+        $dev = $dev."_part$part";
+      }
+      $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
+    }
     return $dev;
 }
 =item
@@ -449,12 +467,8 @@ sub GrubDev2UnixDev {
     }
 
     # resolve symlinks.....
-    my $cmd = "udevadm info  -q name -n $dev";
-    if (my $resolved_link = qx{$cmd 2> /dev/null}) {
-	chomp ($resolved_link);
-	$dev = "/dev/" . $resolved_link; 
-    }
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevadm info returned: $dev");
+    $dev = $self->GetKernelDevice($dev);
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: Kernel device is $dev");
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
@@ -513,15 +527,7 @@ sub UnixDev2GrubDev {
     # This works for udev (kernel) devices only, devicemapper doesn't 
     # need to be changed here 
     my $original = $dev;
-    my $kernel_dev;
-    my $cmd = "udevadm info  -q name -n $dev";
-    if ($kernel_dev = qx{$cmd 2> /dev/null}) {
-	chomp $kernel_dev;
-	$kernel_dev = "/dev/" . $kernel_dev;
-    }
-    else {
-	$kernel_dev = $dev;
-    }
+    my $kernel_dev = $self->GetKernelDevice($dev);
 
     $self->l_milestone ("GRUB::UnixDev2GrubDev: kernel device: $kernel_dev");
 
@@ -543,27 +549,12 @@ sub UnixDev2GrubDev {
 	}
     }
 
-    # get the symbolic link from udev, it might be used in device.map
-    # udevadm info returns a space separated list of strings
-    $cmd = "udevadm info  -q symlink -n $kernel_dev";
-
-    my @udev_links = split (/ /, qx{$cmd 2>/dev/null});
-
-    # now check kernel devices / devicemapper devices 
-    if ( exists $self->{"device_map"}->{$kernel_dev} ) {
-	$dev = $self->{"device_map"}->{$kernel_dev};
+    for my $map_dev (keys  %{$self->{"device_map"}}){
+      if ($kernel_dev eq $self->GetKernelDevice($map_dev)){
+        $dev =  $self->{"device_map"}->{$map_dev};
+        values %{$self->{"device_map"}}; #reset hash iterator
         return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no partition
-    }
-    else {
-	foreach my $udev_link (@udev_links) { 
-	    chomp ($udev_link);
-	    $self->l_milestone ("GRUB::UnixDev2GrubDev: try udev link $udev_link.");
-	    $udev_link = "/dev/" . $udev_link;
-	    if (exists $self->{"device_map"}->{$udev_link} ) {
-		$dev = $self->{"device_map"}->{$udev_link};
-                return "($dev)" if ( $kernel_dev eq $original or $original eq $udev_link ); #disk dev, no partition
-	    }
-	}
+      }
     }
 
     # print all entries of device.map. This is rather for debugging
@@ -2265,7 +2256,8 @@ sub GrubDev2MountPoint {
 
     $self->l_milestone ("GRUB::GrubDev2MountPoint : device: $device");
 
-    # MD-RAID handling: find the corresponding /dev/mdX if any.
+    # MD-RAID handling: find the corresponding /dev/mdX if any. 
+    #FIXME is it needed? isnt't member of array instead of array device error?
     while ((my $md, my $members_ref) = each (%{$self->{"md_arrays"}})) {
 
 	my $members = join ", ", @{$members_ref};
@@ -2281,26 +2273,13 @@ sub GrubDev2MountPoint {
 
     push (@devices, $device);
 
-    #FIXME: sf@ need handling for /dev/dm-X devices here
-    if ($device !~ /mapper/) {
-	my $cmd = "udevadm info  -q symlink -n $device";
-	my @udev_links = split (/ /, qx{$cmd 2>/dev/null});
-
-	foreach $device (@udev_links) {
-	    chomp $device;
-	    $device = "/dev/" . $device; 
-	    $self->l_milestone ("GRUB::GrubDev2MountPoint : find udev link: $device");
-	    push (@devices, $device);
-	}    
-    }
-
     my $mountpoint = $grub_dev;
     foreach $device (@devices) {
 	$self->l_debug ("GRUB::GrubDev2MountPoint : finding for device $device");
 
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
 	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
-	    if ($d eq $device) { 
+	    if ($self->GetKernelDevice($d) eq $device) { 
 	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find mountpoint: $mp");
 		$mountpoint = $mp;
 	    }
