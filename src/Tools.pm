@@ -105,6 +105,7 @@ use Bootloader::Path;
 my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
+my $multipath = undef;
 
 sub DumpLog {
     my $core_lib = shift;
@@ -421,6 +422,47 @@ sub ReadPartitions {
     return \@devices;
 }
 
+=item
+C<< Bootloader::Tools::GetMultipath (); >>
+
+Gets multipath configuration. Return reference to hash map, empty if system doesn't contain multipath.
+
+=cut
+
+sub GetMultipath {
+  my %ret = {};
+
+  $multipath = AddPathToExecutable("multipath");
+
+  if (-e $multipath){
+    my $command = "$multipath -d -v 2+ -ll";
+ #FIXME log output 
+    my @result = qx/$command/;
+    # return if problems occurs...typical is not loaded kernel module
+    if ( $? ) {
+      return \%ret;
+    }
+
+    my $line = "";
+    $line = shift @result if (scalar @result != 0);
+    while (scalar @result != 0){
+      if ($line !~ m/^(.*)dm-\d+.*$/){
+        next;
+      }
+      my $multipathdev = "/dev/mapper/$1";
+      while (scalar @result != 0){
+        $line = shift @result;
+        if ($line =~ m/^(.*)dm-.*$/){
+          last;
+        }
+        if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
+          $ret{$1} = $multipathdev;
+        }
+      }
+    }
+  }
+  return \%ret;
+}
 =item
 C<< Bootloader::Tools::DMRaidAvailable (); >>
 
@@ -893,11 +935,13 @@ sub InitLibrary {
     my $mp = ReadMountPoints ();
     my $part = ReadPartitions ();
     my $md = ReadRAID1Arrays ();
+    my $mp = GetMultipath ();
 
     $lib_ref->SetLoaderType (GetBootloader ());
     $lib_ref->DefineMountPoints ($mp);
     $lib_ref->DefinePartitions ($part);
     $lib_ref->DefineMDArrays ($md);
+    $lib_ref->DefineMultipath ($mp);
 
     # parse Bootloader configuration files   
     $lib_ref->ReadSettings();

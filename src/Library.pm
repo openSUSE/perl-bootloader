@@ -292,6 +292,41 @@ sub DefineMDArrays {
 }
 
 =item
+C<< $status = Bootloader::Library->DefineMultipath (\%multipath); >>
+
+Define hardware information about multipath device.
+We only need information to write to device map real device, because created multipath device doesn't have geometry and GRUB doesn't work.
+
+As parameter, it takes a reference to a map of all multipath devices, where
+key is the physical value (/dev/sda), and value a multipath device(/dev/mapper/...).
+Returns undef on fail, defined nonzero value otherwise.
+
+EXAMPLE:
+
+  my $mp = {
+    "/dev/sda" => "/dev/mapper/little_mapper",
+    "/dev/sdb" => "/dev/mapper/little_mapper",
+  };
+  Bootloader::Library->DefineMultipath ($mp);
+
+=cut
+
+sub DefineMultipath {
+    my $self = shift;
+    my $mp_ref = shift;
+
+    my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
+    while ((my $phys, my $mp) = each (%{$mp_ref}))
+    {
+	$loader->l_milestone ("Library::DefineMultipath: Real device: $phys ;  multipath $mp");
+    }
+    $loader->{"multipath"} = $mp_ref;
+    return 1;
+}
+
+=item
 C<< $status = Bootloader::Library->ReadSettings (); >>
 
 Reads the settings from the system

@@ -383,6 +383,19 @@ sub Quote {
     return $text;
 }
 
+sub GetKernelDevice {
+    my $self = shift;
+    my $device = shift;
+    # resolve symlinks.....
+    my $cmd = "udevadm info  -q name -n $device";
+    my $dev = "";
+    if (my $resolved_link = qx{$cmd 2> /dev/null}) {
+	chomp ($resolved_link);
+	$dev = "/dev/" . $resolved_link; 
+    }
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: udevadm info returned: $dev");
+    return $dev;
+}
 =item
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
 
@@ -794,7 +807,13 @@ sub ParseLines {
     {
 	if ($dm_entry =~ /^\s*\(([^\s#]+)\)\s+(\S+)\s*$/)
 	{
+          #multipath handling, multipath need real device, because multipath
+          # device have broken geometry (bnc #448110)
+          if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$2}){
+            $devmap{ $self->{"multipath"}->{$2} } = $1;
+          } else {
 	    $devmap{$2} = $1;
+          }
 	}
     };
     $self->l_debug ("GRUB::Parselines: avoided_reading device map.") if (! $avoid_reading_device_map );
@@ -887,7 +906,7 @@ sub ParseLines {
     # in glob_ref accordingly
     my ($boot_dev,) = $self->SplitDevPath ("/boot");
     my ($root_dev,) = $self->SplitDevPath ("/");
-    my $extended_dev = $self->GetExtendedPartition($boot_dev);
+    my $extended_dev = $self->GetExtendedPartition($boot_dev) || "";
     # mbr_dev is the first bios device
     my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
 
@@ -959,6 +978,15 @@ sub CreateLines {
     my @device_map = ();
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
+        #multipath handling, multipath need real device, because multipath
+        # device have broken geometry (bnc #448110)
+        if ( defined $self->{"multipath"} ){
+          while ((my $phys, my $mp) = each (%{$self->{"multipath"}})){
+            if ( $mp eq $self->GetKernelDevice($unix) ) {
+              $unix = $mp;
+            }
+          }
+        }
 	my $line = "($fw)\t$unix";
 	push @device_map, $line;
     }
