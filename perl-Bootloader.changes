@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Thu Nov 27 16:36:22 CET 2008 - jreidinger@suse.cz
+
+- serial console handling in append moved to interface
+  (bnc #449726) 
+- fix broken udev on device-mapper (bios raid and multipath)
+  (bnc #448110)
+- write to device map physical interface to multipath 
+  (bnc #448110)
+- change serial console handling, instead append use edit
+  (bnc #444719)
+- fix uninitialized value (regression) (bnc #440122)
+- 0.4.80
+
+-------------------------------------------------------------------
 Fri Nov 21 13:58:20 CET 2008 - jsrain@suse.cz
 
 - load initrd at 16MB on S/390 (bnc #434234)
