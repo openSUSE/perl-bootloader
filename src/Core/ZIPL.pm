@@ -417,6 +417,7 @@ Takes the info about the section and uses it to construct the list of lines.
 The info about the section also contains the original lines.
 As parameter, takes the section info (reference to a hash), returns
 the lines (a list of hashes).
+
 =cut
 
 # list<map<string,any>> Info2Section (map<string,string> info), list<string> sect_names)
@@ -569,6 +570,7 @@ C<< $sectin_info_ref = Bootloader::Core::ZIPL->Section2Info (\@section_lines); >
 Gets the information about the section. As argument, takes a reference to the
 list of lines building the section, returns a reference to a hash containing
 information about the section.
+
 =cut
 
 # map<string,string> Section2Info (list<map<string,any>> section)

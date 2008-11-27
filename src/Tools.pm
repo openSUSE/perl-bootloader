@@ -463,8 +463,9 @@ sub GetMultipath {
   }
   return \%ret;
 }
+
 =item
-C<< Bootloader::Tools::DMRaidAvailable (); >>
+C<< $numDM = Bootloader::Tools::DMRaidAvailable (); >>
 
 Tests wether DMRAID is available.
 Return 0 if no device, 1 if there are any.
@@ -644,11 +645,11 @@ sub IsDMRaidSlave {
 }
 
 =item
-
 C<<  Bootloader::Tools:IsDMDevice ($device); >>
 
- returns 1 if $device is a Devicemapper device,
- otherwise 0.
+returns 1 if $device is a Devicemapper device,
+otherwise 0.
+
 =cut
 
 sub IsDMDevice {
@@ -723,6 +724,7 @@ sub Bootloader::Tools::DMDev2MajMin {
 
 =item
 C<< $majmin = Bootloader::Tools::Udev2MajMin($udev); >>
+
 takes a udev device as reported from udevadm info
 returns a string containing major:minor
 
@@ -751,6 +753,7 @@ sub Bootloader::Tools::Udev2MajMin {
 
 =item
 C<< $udev_dev = Bootloader::Tools::MajMin2Udev($majmin); >>
+
 takes a string major:minor as reported from udevadm info
 returns a string containing the udev device as reported 
 by udevadm info
@@ -809,7 +812,8 @@ sub Bootloader::Tools::MajMin2Udev {
 }
 
 =item
-C<< $dm_dev = Bootloader::Tools::DMDev2MajMin($majmin); >>
+C<< $dm_dev = Bootloader::Tools::MajMin2DMDev($majmin); >>
+
 takes a string major:minor as reported from udevadm info
 returns a string containing the device as reported by 
 dmsetup
@@ -1034,6 +1038,7 @@ sub CountImageSections {
 C<< Bootloader::Tools::CountSections (@selections); >>
 
 # FIXME: add documentation
+
 =cut
 
 sub CountSections {
@@ -1554,7 +1559,7 @@ sub RemoveImageSections {
 
 
 =item
-C<< Bootloader::Tools::RemoveSection($name); >>
+C<< Bootloader::Tools::RemoveSections($name); >>
 
 =cut
 

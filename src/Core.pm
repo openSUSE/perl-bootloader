@@ -135,7 +135,6 @@ my $headline = "# Modified by YaST2. Last modification on ";
 # variables
 
 =item
-
 C<< $res = Bootloader::Core->trim ($string); >>
 
 Cut whitespace from front and back.
@@ -150,7 +149,6 @@ sub trim{
 }
 
 =item
-
 C<< Bootloader::Core->l_debug ($message); >>
 
 Writes a debug message to the system log buffer.
@@ -169,7 +167,6 @@ sub l_debug {
 }
 
 =item
-
 C<< Bootloader::Core->l_milestone ($message); >>
 
 Writes a milestone message to the system log buffer.
@@ -188,7 +185,6 @@ sub l_milestone {
 }
 
 =item
-
 C<< Bootloader::Core->l_warning ($message); >>
 
 Writes a warning message to the system log buffer.
@@ -207,7 +203,6 @@ sub l_warning {
 }
 
 =item
-
 C<< Bootloader::Core->l_error ($message); >>
 
 Writes an error message to the system log buffer.
@@ -226,7 +221,6 @@ sub l_error {
 }
 
 =item
-
 C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
 
 
@@ -1187,7 +1181,6 @@ sub Section2Info {
 }
 
 =item
-
 C<< $label = Bootloader::Core->FixSectionName ($name, \@existing, $orig_name); >>
 
 Update the section name so that it does not break anything (is in compliance
@@ -1915,7 +1908,6 @@ sub SymlinkCrossesDevice($$) {
 }
 
 =item
-
 C<< $resolved = Bootloader::Core->ResolveCrossDeviceSymlinks ($path); >>
 
 Resolves all symlinks crossing device in the path. As argument, takes
@@ -1955,7 +1947,6 @@ sub ResolveCrossDeviceSymlinks($$) {
 }
 
 =item
-
 C<< $canonical = Bootloader::Core->CanonicalPath ($path); >>
 
 Makes a "beautification" of the path given as an argument, returns the
@@ -1979,7 +1970,6 @@ sub CanonicalPath($$) {
 }
 
 =item
-
 C<< $real = Bootloader::Core->RealFileName ($filename); >>
 
 Gets the file name with all symlinks resolved and with some "beautification"
@@ -2010,7 +2000,6 @@ sub RealFileName {
 }
 
 =item
-
 C<< Bootloader::Core->MangleSections (\@sections, \%global); >>
 
 In this version does not do anything, is needed just to be overridden

@@ -27,7 +27,7 @@ C<< $status = Bootloader::Library->DefinePartitions (\@partitions); >>
 
 C<< $status = Bootloader::Library->DefineMDArrays (\%md_arrays); >>
 
-C<< $status = Bootloader::Library->ReadSettings (); >> // FIXME ?? sysconfig ??
+C<< $status = Bootloader::Library->ReadSettings (); >>
 
 C<< $status = Bootloader::Library->WriteSettings (); >>
 
@@ -62,8 +62,6 @@ C<< $status = Bootloader::Library->SetSections ($sections_ref); >>
 C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
 
 C<< $status = Bootloader::Library->SetDeviceMapping ($device_map_ref); >>
-
-C<< $grub_dev = Bootloader::Library->UnixFile2GrubDev ($unix_file); >>
 
 C<< $unix_dev = Bootloader::Library->GrubDev2UnixDev ($grub_dev); >>
 
@@ -972,6 +970,28 @@ sub CountGRUBPassword{
   return undef unless $res =~ m/^\$1\$.*\$.*$/;
   return $res;
 
+}
+
+sub UpdateSerialConsole{
+  my $self = shift;
+  my $append = shift;
+  my $console = shift;
+  my $ret = $append;
+
+
+  if ($console ne "") {
+    $console = "console=$console";
+    if ($ret =~ m/console=ttyS(\d+)(,(\w+))?/){
+      $ret =~ s/console=ttyS(\d+)(,(\w+))?/$console/ ;
+    } else {
+      $ret = "$append $console";
+    }
+  }
+
+  $self->{"loader"}->l_milestone("Library::UpdateSerialConsole append $append console $console res $ret" )
+     if (defined $self->{"loader"});
+
+  return $ret;
 }
 
 1;

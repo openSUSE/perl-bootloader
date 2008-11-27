@@ -22,8 +22,6 @@ C<< $unquoted = Bootloader::Core::GRUB->Unquote ($text); >>
 
 C<< $quoted = Bootloader::Core::GRUB->Quote ($text, $when); >>
 
-C<< $unix_dev = Bootloader::Core::GRUB->UnixFile2UnixDev ($unix_file); >>
-
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
 
 C<< $grub_dev = Bootloader::Core::GRUB->UnixDev2GrubDev ($unix_dev); >>
@@ -61,8 +59,6 @@ C<< $settings_ref = Bootloader::Core::GRUB->GetSettings (); >>
 C<< $status = Bootloader::Core::GRUB->SetSettings (\%settings); >>
 
 C<< $status = Bootloader::Core::GRUB->InitializeBootloader (); >>
-
-C<< $opt_types_ref = BootGrub->GetOptTypes (); >>
 
 C<< $mountpoint = Bootloader::Core::GRUB->GrubDev2MountPoint ($grub_dev); >>
 
@@ -405,7 +401,7 @@ sub GetKernelDevice {
         $self->l_error ("GRUB::GetKernelDevice: no DM_NAME for dm device: $dev");
         return $dev;
       }
-      $dev = $1;
+      $dev = "/dev/mapper/$1";
       my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
       if ($part =~ m/^DM_PART=(\d+)$/){
         $dev = $dev."_part$part";
@@ -414,6 +410,7 @@ sub GetKernelDevice {
     }
     return $dev;
 }
+
 =item
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
 
@@ -1179,6 +1176,8 @@ C<< $sectin_info_ref = Bootloader::Core::GRUB->Section2Info (\@section_lines); >
 Gets the information about the section. As argument, takes a reference to the
 list of lines building the section, returns a reference to a hash containing
 information about the section.
+
+
 =cut
 
 # map<string,string> Section2Info (list<map<string,any>> section)
@@ -1373,8 +1372,8 @@ sub Section2Info {
     return \%ret;
 }
 
-=item
 
+=item
 C<< $dev = Bootloader::Core::GRUB->GetCommonDevice (@paths); >>
 
 Checks all paths given as arguments if they are on the same device. If so,
@@ -1414,7 +1413,6 @@ sub GetCommonDevice {
 }
 
 =item
-
 C<< $line = Bootloader::Core::GRUB->CreateKernelLine (\%sectingo, $grub_root); >>
 
 Creates a line with the kernel command for GRUB's menu.lst. As arguments.
@@ -1442,21 +1440,11 @@ sub CreateKernelLine {
     $append = " $append" if $append ne "";
     $console = " console=$console" if $console ne "";
 
-    #handle serial console
-    if ($console ne "") {
-      if ($append =~ m/console=ttyS(\d+)(,(\w+))?/){
-        $append =~ s/console=ttyS(\d+)(,(\w+))?/$console/ ;
-      } else {
-        $append = $append.$console;
-      }
-    }
-
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
     return "$pcr$image$root$append$vga";
 }
 
 =item
-
 C<< $line = Bootloader::Core::GRUB->CreateChainloaderLine (\%sectinfo, $grub_root); >>
 
 Creates a line with the chainloader command for GRUB's menu.lst. As arguments.
@@ -1571,6 +1559,7 @@ Takes the info about the section and uses it to construct the list of lines.
 The info about the section also contains the original lines.
 As parameter, takes the section info (reference to a hash), returns
 the lines (a list of hashes).
+
 =cut
 
 # list<map<string,any>> Info2Section (map<string,string> info)
@@ -1623,6 +1612,7 @@ sub Info2Section {
     {
 	$grub_root = $self->GetCommonDevice ($sectinfo{"image"}, $sectinfo{"initrd"});
 	$grub_root = $self->UnixDev2GrubDev ($grub_root);
+	$self->l_milestone ("Set GRUB's root to $grub_root");
     }
     elsif ($type eq "menu" or $type eq "other") {
 	# FIXME: using the boot device of the current installation as the

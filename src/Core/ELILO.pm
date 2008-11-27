@@ -580,6 +580,7 @@ Takes the info about the section and uses it to construct the list of lines.
 The info about the section also contains the original lines.
 As parameter, takes the section info (reference to a hash), returns
 the lines (a list of hashes).
+
 =cut
 
 # list<map<string,any>> Info2Section (map<string,string> info, list<string> section_names)
