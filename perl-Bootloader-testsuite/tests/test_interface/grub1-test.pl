@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 73;
+use Test::More tests => 78;
 
 use lib "./";
 use Bootloader::Library;
@@ -123,8 +123,26 @@ foreach my $section (@sections) {
     ok( not exists $section->{'makeactive'});
     ok( not exists $section->{'remap'} );
     $section->{'__modified'} = "1";
+  } elsif (  $section->{'original_name'} eq "menu" )
+  {
+    is( $section->{'type'}, 'menu' );
+    is( $section->{'name'}, 'menu' );
+    is( $section->{'configfile'}, '/boot/grub/menu.lst' );
+    $section->{'__modified'} = "1";
+    $section->{'root'} = "/dev/fd0";
   }
 }
+
+my $new_section = {(
+  'type' => 'menu',
+  'original_name' => 'menu2',
+  'configfile' => '/grub/menu.lst',
+  'root' => '/dev/sda2',
+  'name' => 'menu2',
+  '__modified' => '1',
+  )};
+
+push @sections, $new_section;
 
 ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
@@ -153,6 +171,14 @@ is( $res, 1); #test if floppy is correctly repammer for root
 $res = qx:grep -c "setkey c a" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
+
+$res = qx:grep -c "configfile /boot/grub/menu.lst" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test configfile rewrite
+
+$res = qx:grep -c "configfile /grub/menu.lst" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test configfile new write
 
 $res = qx:grep -n 'module .*/boot/vmlinuz-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
 my $imagepos;

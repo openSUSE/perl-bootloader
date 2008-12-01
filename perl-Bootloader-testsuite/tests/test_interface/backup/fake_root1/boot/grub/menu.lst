@@ -52,6 +52,12 @@ title Linux other 1 (/dev/sda4)
     makeactive
     chainloader (hd1,0)+1
 
+###Don't change this comment - YaST2 identifier: Original name: menu###
+title menu
+    root (hd0,1)
+    configfile /boot/grub/menu.lst
+
+
 ###Don't change this comment - YaST2 identifier: Original name: floppy###
 title Floppy
     rootnoverify (fd0)
