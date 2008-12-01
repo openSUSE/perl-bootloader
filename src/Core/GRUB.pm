@@ -1863,7 +1863,7 @@ sub Info2Section {
 		"value" => $self->CreateChainloaderLine (\%sectinfo, $grub_root), 
 	    };
 	}
-	elsif ($key eq "configfile" && $type eq "other")
+	elsif ($key eq "configfile" && $type eq "menu")
 	{
 	    push @lines, {
 		"key" => $key,
