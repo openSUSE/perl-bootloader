@@ -971,7 +971,7 @@ sub CreateLines {
         if ( defined $self->{"multipath"} ){
           while ((my $phys, my $mp) = each (%{$self->{"multipath"}})){
             if ( $mp eq $self->GetKernelDevice($unix) ) {
-              $unix = $mp;
+              $unix = $phys;
             }
           }
         }
