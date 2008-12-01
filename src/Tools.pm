@@ -456,7 +456,7 @@ sub GetMultipath {
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
-          $ret{$1} = $multipathdev;
+          $ret{"/dev/$1"} = $multipathdev;
         }
       }
     }
