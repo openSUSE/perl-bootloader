@@ -383,7 +383,7 @@ sub ReadPartitions {
 	        chomp ($part);
 	        $part = Udev2Dev ("$disk/$part");
                 open (LOG, ">>$logname");
-                print LOG ("Processing part: ". join (",",$part)||"");
+                print LOG ("Processing part: ".(join (",",$part)||"")."\n");
                 close LOG;
 
 	        my $index = substr ($part, length ($dev_disk));
