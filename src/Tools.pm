@@ -625,7 +625,7 @@ sub IsDMRaidSlave {
 
     if ($dm_devs[0] !~ /No devices found/) {
         foreach my $dmdisk (@dm_devs) {
-            my @tables = qx{$dmsetup table $dmdisk};
+            my @tables = qx{$dmsetup table '$dmdisk'};
 
             foreach my $line (@tables) {
                 my @content = split(/ /, $line);
@@ -659,7 +659,7 @@ sub IsDMDevice {
         return 0;
     }
 
-    my $cmd = "$dmsetup info -c --noheadings -oname $dev";
+    my $cmd = "$dmsetup info -c --noheadings -oname '$dev'";
     if (my $test = qx{$cmd 2>/dev/null}){
         chomp $test;
 
@@ -716,7 +716,7 @@ sub Bootloader::Tools::DMDev2MajMin {
 
     my $dmdev = shift;
     my $majmin;
-    $majmin =  qx{$dmsetup info -c  --noheadings -o major,minor $dmdev};
+    $majmin =  qx{$dmsetup info -c  --noheadings -o major,minor '$dmdev'};
 
     return $majmin;
 }
