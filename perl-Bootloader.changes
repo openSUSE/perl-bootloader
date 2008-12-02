@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Dec  2 13:55:11 CET 2008 - jreidinger@suse.cz
+
+- fix menu section in grub and add it to test-suite (bnc #449863)
+- create mapping of multipath to real device and back (bnc #448110)
+- properly enclose arguments for commands (bnc #447591)
+- 0.4.81
+
+-------------------------------------------------------------------
 Thu Nov 27 16:36:22 CET 2008 - jreidinger@suse.cz
 
 - serial console handling in append moved to interface

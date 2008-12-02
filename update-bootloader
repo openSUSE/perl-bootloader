@@ -29,6 +29,11 @@ valid options are --help, --man, --image <file>, --initrd <file>,
 --xen-kernel <file>, --xen, --default, --previous, --name <string>, --force,
 --force-default.
 
+=head1 DESCRIPTION
+
+B<update-bootloader> will let you modify your bootloader configuration using
+Bootloader::Tools perl module.
+
 =head1 OPERATIONS
 
 =over 8
@@ -101,11 +106,6 @@ force the new section to be added to be the default section. Only
 allowed together with --add operation
 
 =back
-
-=head1 DESCRIPTION
-
-B<update-bootloader> will let you modify your bootloader configuration using
-Bootloader::Tools perl module.
 
 =cut
 

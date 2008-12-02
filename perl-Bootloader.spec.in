@@ -46,6 +46,7 @@ Authors:
 touch Makefile.PL
 perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
 make
+pod2man %{SOURCE1} | gzip > update-Bootloader.8.gz
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install_vendor
@@ -56,6 +57,8 @@ install -d -m 755 $RPM_BUILD_ROOT/usr/lib/bootloader
 install -m 755 %{SOURCE2} $RPM_BUILD_ROOT/usr/lib/bootloader
 install -d -m 755 $RPM_BUILD_ROOT/boot
 install -m 644 %{SOURCE3} $RPM_BUILD_ROOT/boot/
+install -d -m 755 $RPM_BUILD_ROOT/usr/share/man/man8/
+install -m 644 update-Bootloader.8.gz $RPM_BUILD_ROOT/usr/share/man/man8/
 
 %files
 %defattr(-, root, root)
