@@ -1672,26 +1672,10 @@ sub RemoveSections {
     }
 
     $lib_ref->SetSections (\@sections);
-    if ($default_removed or $loader eq "lilo") {
+    if ($default_removed) {
 	$glob_ref->{"default"} = $sections[0]{"name"};
-
-	# During an update with YaST running in the inst-sys, if the default
-	# kernel is removed, add a comment to the globals so yast2-bootloader
-	# is able to set the new default value appropriately.
-	# Do not overwrite an old saved image flavor (e.g. when multiple
-	# kernels are updated during an update).
-	if (defined $ENV{'YAST_IS_RUNNING'} and
-	    $ENV{'YAST_IS_RUNNING'} == "instsys" and
-	    ! defined $ENV{'DELAYED_RUN_UPDATE_BOOTLOADER'} and
-	    ! defined $glob_ref->{"former_default_image_flavor"}) {
-	    my $former_flavor = $option{"image"};
-	    $former_flavor =~ s/.*-(\w+)/$1/;
-
-	    $glob_ref->{"former_default_image_flavor"} = $former_flavor;
-	} elsif ($default_removed) {
-          $core_lib->l_milestone ( "removed default");
-	    $glob_ref->{"removed_default"} = 1;
-        }
+        $core_lib->l_milestone ( "removed default");
+	$glob_ref->{"removed_default"} = 1;
     }
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
 				   # may change even if not deleted

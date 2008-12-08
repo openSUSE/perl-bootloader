@@ -201,7 +201,6 @@ sub GetMetaData() {
 	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
 	timeout  => "int:Timeout in Seconds:8:0:3600",
 	default  => "string:Default Boot Section:Linux",
-	former_default_image_flavor => "string:Former default Image Flavor:default",
 	generic_mbr => "bool:Write generic Boot Code to MBR:true",
 	boot_custom => "selectdevice:Custom Boot Partition::" . $boot_partitions,
 	boot_mbr => "bool:Boot from Master Boot Record:false",
@@ -274,7 +273,6 @@ sub GetOptions{
         activate => "bool",
         timeout  => "",
         default  => "",
-        former_default_image_flavor => "",
         generic_mbr => "bool",
         boot_custom => "",
         boot_mbr => "bool",
@@ -1949,12 +1947,8 @@ sub Global2Info {
 	    my $defindex = 0+ $val;
 	    $ret{"default"} = $sections[$defindex];
 
-	    # Parse flavor of former default image out of comment
-	    my $ff = $self->Comment2FormerFlavor ($line_ref->{"comment_before"});
-	    $ret{"former_default_image_flavor"} = $ff if ($ff ne "");
-
 	    # Parse RemovedDefault image out of comment
-	    $ff = $self->Comment2RemovedDefault ($line_ref->{"comment_before"});
+	    my $ff = $self->Comment2RemovedDefault ($line_ref->{"comment_before"});
 	    $ret{"removed_default"} = 1 if ($ff == 1);
 
 
@@ -2061,12 +2055,8 @@ sub Info2Global {
             my @empty;
             $line_ref->{"comment_before"} = \@empty;
 
-	    $line_ref = $self->CreateFormerDefaultImageLine (
-		$line_ref, $globinfo{"former_default_image_flavor"});
-	    delete ($globinfo{"former_default_image_flavor"});
-
-             $line_ref = $self->CreateRemovedDefaultLine (
-                         $line_ref, $globinfo{"removed_default"}) if
+            $line_ref = $self->CreateRemovedDefaultLine (
+                         $line_ref ) if
                          delete ($globinfo{"removed_default"});
 
 
