@@ -965,11 +965,10 @@ sub match_section {
 
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
-	# FIXME: avoid "kernel"
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
 	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
-	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
+	if ($opt eq "image" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      $opt_ref->{"$opt"});
 	    # Print info for this match
@@ -1003,9 +1002,6 @@ sub normalize_options {
 	    if exists $opt_ref->{"$_"};
 	$core_lib->l_milestone ("Tools::normalize_options: resolved result:" . $opt_ref->{"$_"});
     }
-
-    # FIXME: some have "kernel" some have "image" tag, latter makes more sense
-    $opt_ref->{"kernel"} = $opt_ref->{"image"} if exists $opt_ref->{"image"};
 }
 
 
@@ -1092,7 +1088,7 @@ Get the default section, returns a hash reference
 EXAMPLE:
   my %section;
   %section = Bootloader::Tools::GetDefaultSection ();
-  my $default_kernel = $section{"kernel"};
+  my $default_kernel = $section{"image"};
 =cut
 
 sub GetDefaultSection {
@@ -1138,9 +1134,7 @@ EXAMPLE:
 
 sub GetDefaultImage {
     my $ref = GetDefaultSection();
-    # FIXME: all modules under .../Core should use "image" as a key tag to the
-    # kernel image
-    return $ref->{"image"} || $ref->{"kernel"};
+    return $ref->{"image"};
 }
 
 =item
@@ -1296,15 +1290,6 @@ sub AddSection {
 	}
     }
 
-    if (exists $option{"image"}) {
-	if (exists $new{"kernel"}) { 
-	    $new{"kernel"} = delete $option{"image"};
-	}
-	else {	
-	    $new{"image"} = delete $option{"image"};
-	}
-    }
-
     foreach (keys %option) {
 	$new{"$_"} = $option{"$_"};
     }
@@ -1426,10 +1411,7 @@ sub AddSection {
 	# Delete obsolete (normal) boot entries from section array
 	my $section_index = 0;
 	foreach my $s (@sections) {
-	    if (exists $normal_entry->{"kernel"} && $normal_entry->{"kernel"} eq $s->{"kernel"}) {
-		delete $sections[$section_index];
-	    }
-	    elsif (exists $normal_entry->{"image"} && $normal_entry->{"image"} eq $s->{"image"}) {
+	    if (exists $normal_entry->{"image"} && $normal_entry->{"image"} eq $s->{"image"}) {
 		delete $sections[$section_index];
 	    }
 	    else {
@@ -1440,10 +1422,7 @@ sub AddSection {
 	# Delete obsolete (failsafe) boot entries from section array
 	$section_index = 0;
 	foreach my $s (@sections) {
-	    if (exists $failsafe_entry->{"kernel"} && $failsafe_entry->{"kernel"} eq $s->{"kernel"}) {
-		delete $sections[$section_index];
-	    }
-	    elsif (exists $failsafe_entry->{"image"} && $failsafe_entry->{"image"} eq $s->{"image"}) {
+	    if (exists $failsafe_entry->{"image"} && $failsafe_entry->{"image"} eq $s->{"image"}) {
 		delete $sections[$section_index];
 	    }
 	    else {

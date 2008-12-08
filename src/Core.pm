@@ -1219,8 +1219,11 @@ sub Info2Section {
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
 	}
+        elsif ($key eq "vga"){
+	  $line_ref->{"value"} = $sectinfo{"vgamode"} if (defined  $sectinfo{"vgamode"});
+        }
 	elsif ($key eq "image" || $key eq "initrd" || $key eq "root"
-	    || $key eq "vga" || $key eq "append" || $key eq "wildcard")
+	     || $key eq "append" || $key eq "wildcard")
 	{
 	    if ($type eq "chainloader" || ! defined ($sectinfo{$key}))
 	    {
@@ -1265,6 +1268,7 @@ sub Info2Section {
 	    || $key eq "wildcard" || $key eq "image" || $key eq "other")
 	{
 	    $key = "other" if ($key eq "chainloader");
+	    $key = "vga" if ($key eq "vgamode");
 	    push @lines, {
 		"key" => $key,
 		"value" => $value,

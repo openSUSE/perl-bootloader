@@ -1194,13 +1194,13 @@ sub Section2Info {
 
 	# do mapping of config file names to internal
 	if ($type eq "xen") {
-	    if ($key eq "kernel") {
-		$key = "xen";
-	    }
+            if ($key eq "kernel") {
+               $key = "xen";
+            }
 	    elsif ($line_ref->{"key"} eq "module" ||
-             $line_ref->{"key"} eq "modulenounzip") {
+              $line_ref->{"key"} eq "modulenounzip") {
 		if ($modules == 0) {
-		    $key = "image";
+		    $key = "kernel";
                     $ret{"nounzip"} |= 1 if $line_ref->{"key"} eq "modulenounzip";
 		}
 		elsif ($modules == 1) {
@@ -1208,11 +1208,6 @@ sub Section2Info {
                     $ret{"nounzip"} |= 2 if $line_ref->{"key"} eq "modulenounzip";
 		}
 		$modules++;
-	    }
-	}
-	elsif ($type eq "image") {
-	    if ($key eq "kernel") {
-		$key = "image";
 	    }
 	}
 	# remapping end, start processing
@@ -1242,7 +1237,7 @@ sub Section2Info {
 	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	}
-	elsif ($key eq "image")
+	elsif ($key eq "kernel")
 	{
 	    # split into loader and parameter, note that the regex does
 	    # always match, then split out root= vgamode=,console=  and append= values
@@ -1292,10 +1287,6 @@ sub Section2Info {
 	    $ret{"xen"} = $self->GrubPath2UnixPath ($1, $grub_root);
 	    $ret{"xen_append"} = $2 if defined $2;
 	}
-	elsif ($key eq "initrd")
-        {
-            $ret{"initrd"} =  $self->GrubPath2UnixPath ($val, $grub_root);
-        }
 	elsif ($key eq "configfile" || $key eq "initrd")
 	{
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
