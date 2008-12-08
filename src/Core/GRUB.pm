@@ -298,14 +298,12 @@ sub GetOptions{
 	image_append      => "",
 	image_initrd      => "path",
 	image_noverifyroot=> "bool",
-        image_measure     => "", #special, not path due to pcr
 
 	other_lock        => "bool",
 	other_chainloader => "",
 	other_noverifyroot=> "bool",
 	other_makeactive  => "bool",
 	other_blockoffset => "",
-        other_measure     => "", #special, not path due to pcr
 
 	xen_xen => "",
 	xen_xen_append    => "",
@@ -1246,14 +1244,8 @@ sub Section2Info {
 	}
 	elsif ($key eq "image")
 	{
-            #first must be remove of pcr, because pcr can be before image
-	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
-	    {
-		$ret{"imagepcr"} = $2 if $2 ne "";
-		$val = $self->MergeIfDefined ($1, $3);
-	    }
 	    # split into loader and parameter, note that the regex does
-	    # always match, then split out root= vgamode=,console=, --pcr and append= values
+	    # always match, then split out root= vgamode=,console=  and append= values
 	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
     
 	    $ret{"image"} = $self->GrubPath2UnixPath ($1, $grub_root);
@@ -1293,11 +1285,6 @@ sub Section2Info {
 	}
 	elsif ($key eq "xen")
 	{
-	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
-	    {
-		$ret{"xenpcr"} = $2 if $2 ne "";
-		$val = $self->MergeIfDefined ($1, $3);
-	    }
 	    # split into loader and parameter, note that the regex does
 	    # always match
 	    $val =~ /^\s*(\S+)(?:\s+(.*))?$/;
@@ -1307,24 +1294,14 @@ sub Section2Info {
 	}
 	elsif ($key eq "initrd")
         {
-	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
-	    {
-		$ret{"initrdpcr"} = $2 if $2 ne "";
-		$val = $self->MergeIfDefined ($1, $3);
-	    }
             $ret{"initrd"} =  $self->GrubPath2UnixPath ($val, $grub_root);
         }
-	elsif ($key eq "wildcard" || $key eq "configfile")
+	elsif ($key eq "configfile" || $key eq "initrd")
 	{
 	    $ret{$key} = $self->GrubPath2UnixPath ($val, $grub_root);
 	}
 	elsif ($key eq "chainloader")
 	{
-	    if ($val =~ /^(?:(.*)\s+)?--pcr=(\d+)(?:\s+(.*))?$/)
-	    {
-		$ret{"chainloaderpcr"} = $2 if $2 ne "";
-		$val = $self->MergeIfDefined ($1, $3);
-	    }
 	    if ($val =~ /^(.*)\+(\d+)/)
 	    {
 		$val = $1;
@@ -1349,20 +1326,6 @@ sub Section2Info {
         elsif ($key eq "makeactive")
         {
           $ret{"makeactive"} = "true";
-        }
-        elsif ($key eq "measure")
-        {
-          my @parts = split(" ",$val);
-          $parts[0] = $self->GrubPath2UnixPath($parts[0]);
-
-          if (exists $ret{"measure"}){
-            $ret{"measure"}->{$parts[0]} = $parts[1];
-          }
-          else
-          {
-            my %measure_array = ( $parts[0] => $parts[1] );
-            $ret{'measure'} = \%measure_array;
-          }
         }
     }
 
@@ -1426,20 +1389,18 @@ sub CreateKernelLine {
     my $sectinfo_ref = shift;
     my $grub_root = shift || "";
 
-    my $pcr = $sectinfo_ref->{"imagepcr"} || "";
     my $root = $sectinfo_ref->{"root"} || "";
     my $vga = $sectinfo_ref->{"vgamode"} || "";
     my $append = $sectinfo_ref->{"append"} || "";
     my $image = $sectinfo_ref->{"image"} || "";
     my $console = $sectinfo_ref->{"console"} || "";
-    $pcr = "--pcr=$pcr " if $pcr ne "";
     $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
     $console = " console=$console" if $console ne "";
 
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
-    return "$pcr$image$root$append$vga";
+    return "$image$root$append$vga";
 }
 
 =item
@@ -1460,9 +1421,6 @@ sub CreateChainloaderLine {
 
     my $sectors = $sectinfo_ref->{"blockoffset"} || "";
     my $chain = $sectinfo_ref->{"chainloader"};
-    my $pcr = $sectinfo_ref->{"chainloaderpcr"} || "";
-
-    $pcr = "--pcr=$pcr " if $pcr ne "";
 
     if (substr ($chain, 0, 5) eq "/dev/" && $sectors eq "")
     {
@@ -1471,7 +1429,7 @@ sub CreateChainloaderLine {
     $sectors = "+$sectors" if $sectors ne "";
     $chain = "" if $sectors ne ""; #chainloader with blockoffset no
 
-    return "$pcr$sectors";
+    return "$sectors";
 }
 
 
@@ -1679,7 +1637,7 @@ sub Info2Section {
         }
         #entries which must be recreated due to hard check if valid or order
 	elsif ($key eq "module" or $key eq "modulenounzip"
-            or $key eq "measure" or $key eq "root" or $key eq "rootnoverify"
+            or $key eq "root" or $key eq "rootnoverify"
             or $key eq "map")
         {
 	    $line_ref = undef;
@@ -1699,9 +1657,6 @@ sub Info2Section {
 		$line_ref->{"value"} =
 		    $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root)
 		    . " " . (delete($sectinfo{"xen_append"}) || "");
-                my $pcr = delete ($sectinfo{"xenpcr"}) || "";
-                $pcr = "--pcr=$pcr " if $pcr ne "";
-                $line_ref->{"value"} = "$pcr".$line_ref->{"value"};
 	    }
 	    elsif ($type eq "image") {
 		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
@@ -1710,22 +1665,15 @@ sub Info2Section {
 		delete ($sectinfo{"append"});
 		delete ($sectinfo{"image"});
 		delete ($sectinfo{"console"});
-		delete ($sectinfo{"imagepcr"});
 	    }
 	}
-	elsif ($key eq "initrd" || $key eq "wildcard")
+	elsif ($key eq "initrd")
 	{
 	    if ($type eq "other" or not defined ($sectinfo{$key})) {
 		$line_ref = undef;
 	    }
-	    elsif( defined $sectinfo{$key}) {
+	    else(defined $sectinfo{$key}) {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
-                if ( $key eq "initrd")
-                {
-                  my $pcr = delete ($sectinfo{"initrdpcr"}) || "";
-                  $pcr = "--pcr=$pcr " if $pcr ne "";
-                  $line_ref->{"value"} = $pcr.$line_ref->{"value"};
-                }
 	    }
 	    delete ($sectinfo{$key});
 	}
@@ -1792,9 +1740,6 @@ sub Info2Section {
     if (exists $sectinfo{"xen"} && $type eq "xen") {
       my $value = $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
                       . " " . ($sectinfo{"xen_append"} || "");
-      my $pcr = $sectinfo{"xenpcr"} || "";
-      $pcr = "--pcr=$pcr " if $pcr ne "";
-      $value = "$pcr$value";
       push @lines, {
 	"key" => "kernel",
         "value" => $value,
@@ -1821,8 +1766,6 @@ sub Info2Section {
     }
     if (exists $sectinfo{"initrd"} && ($type eq "image" || $type eq "xen")) {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
-      my $pcr = $sectinfo{"initrdpcr"} || "";
-      $pcr = "--pcr=$pcr " if $pcr ne "";
       my $key = "initrd";
       if ($type eq "xen")
       {
@@ -1835,7 +1778,6 @@ sub Info2Section {
           $key = "module";
         }
       }
-      $value = "$pcr$value";
 	push @lines, {
 	    "key" => $key,
 	    "value" => $value,
@@ -1885,17 +1827,6 @@ sub Info2Section {
               "key" => "makeactive",
               "value" => "",
           };
-        }
-        elsif ($key eq "measure")
-        {
-          my @parts;
-          while(my ($measure,$pcr) = each (%{$value})){
-            $measure = $self->UnixPath2GrubPath($measure,$grub_root);
-            push @lines, {
-              "key" => "measure",
-              "value" => "$measure $pcr",
-            };
-          }
         }
     }
 
@@ -1968,8 +1899,8 @@ sub Global2Info {
           }
           else
           {
-            my %measure_array = ( $parts[0] => $parts[1] );
-            $ret{'setkeys'} = \%measure_array;
+            my %setkey_array = ( $parts[0] => $parts[1] );
+            $ret{'setkeys'} = \%setkey_array;
           }
         }
 	elsif ($key =~ m/^boot_/) {

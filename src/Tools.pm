@@ -1347,12 +1347,6 @@ sub AddSection {
         $new{"append"} = $sysconf if (defined $sysconf);
         $sysconf = GetSysconfigValue("FAILSAFE_VGA");
         $new{"vgamode"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("IMAGEPCR");
-        $new{"imagepcr"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("INITRDPCR");
-        $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-        my %measures = split(/:/, GetSysconfigValue("FAILSAFE_MEASURES"));
-        $new{"measure"} = \%measures if ((keys %measures)!= 0);
         $failsafe_modified = 1;
 	$default = 0;
     }
@@ -1364,14 +1358,6 @@ sub AddSection {
         $new{"vgamode"} = $sysconf if (defined $sysconf);
         $sysconf =  GetSysconfigValue("XEN_APPEND");
         $new{"xen_append"} =  $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("XEN_IMAGEPCR");
-        $new{"imagepcr"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("XEN_INITRDPCR");
-        $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("XEN_PCR");
-        $new{"xenpcr"} = $sysconf if (defined $sysconf);
-        my %measures = split(/:/, GetSysconfigValue("XEN_MEASURES"));
-        $new{"measure"} = \%measures if ((keys %measures)!= 0);
     }
     else 
     {
@@ -1379,12 +1365,6 @@ sub AddSection {
         $new{"append"} = $sysconf if (defined $sysconf);
         $sysconf = GetSysconfigValue("DEFAULT_VGA");
         $new{"vgamode"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("IMAGEPCR");
-        $new{"imagepcr"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("INITRDPCR");
-        $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-        my %measures = split(/:/, GetSysconfigValue("DEFAULT_MEASURES"));
-        $new{"measure"} = \%measures if ((keys %measures)!= 0);
     }
 
     $sysconf = GetSysconfigValue("CONSOLE");
