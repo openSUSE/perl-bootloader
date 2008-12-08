@@ -1186,6 +1186,7 @@ sub Section2Info {
     my $modules = 0;
     my $type = $self->EvalSectionType (\@lines);
     $ret{"type"} = $type;
+    $ret{"nounzip"} = 0 if ($type eq "xen");
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
@@ -1196,12 +1197,15 @@ sub Section2Info {
 	    if ($key eq "kernel") {
 		$key = "xen";
 	    }
-	    elsif ($line_ref->{"key"} eq "module") {
+	    elsif ($line_ref->{"key"} eq "module" ||
+             $line_ref->{"key"} eq "modulenounzip") {
 		if ($modules == 0) {
 		    $key = "image";
+                    $ret{"nounzip"} |= 1 if $line_ref->{"key"} eq "modulenounzip";
 		}
 		elsif ($modules == 1) {
 		    $key = "initrd";
+                    $ret{"nounzip"} |= 2 if $line_ref->{"key"} eq "modulenounzip";
 		}
 		$modules++;
 	    }
@@ -1571,7 +1575,7 @@ sub Info2Section {
 	    $line_ref = $self->UpdateSectionNameLine ($sectinfo{"name"}, $line_ref, $sectinfo{"original_name"});
 	    delete ($sectinfo{"name"});
 	}
-	elsif ($key eq "module") {
+	elsif ($key eq "module" or $key eq "modulenounzip") {
 	    # put module lines always at the end.
 	    $line_ref = undef;
 	}
@@ -1639,14 +1643,38 @@ sub Info2Section {
     }
     if (exists $sectinfo{"image"}) {
 	my $val = $self->CreateKernelLine (\%sectinfo, $grub_root);
+        my $key = "kernel";
+        if ($type eq "xen")
+        {
+          if (defined $sectinfo{"nounzip"} && (($sectinfo{"nounzip"} & 1) == 1))
+          {
+            $key = "modulenounzip";
+          }
+          else
+          {
+            $key = "module";
+          }
+        }
 	push @lines, {
-	    "key" => ($type eq "xen") ? "module" : "kernel",
+	    "key" => $key,
 	    "value" => $val,
 	};
     }
     if (exists $sectinfo{"initrd"}) {
+        my $key = "initrd";
+        if ($type eq "xen")
+        {
+           if (defined $sectinfo{"nounzip"} && (($sectinfo{"nounzip"}& 2) == 2))
+            {
+              $key = "modulenounzip";
+            }
+            else
+            {
+              $key = "module";
+            }
+        }
 	push @lines, {
-	    "key" => ($type eq "xen") ? "module" : "initrd",
+	    "key" => $key,
 	    "value" => $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root),
 	};
     }
