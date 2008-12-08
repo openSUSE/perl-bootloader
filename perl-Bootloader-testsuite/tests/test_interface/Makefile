@@ -7,7 +7,6 @@ test:
 	perl -w elilo1-test.pl
 	perl -w plilo1-test.pl
 	perl -w zipl1-test.pl
-	perl -w grub-trusted-test.pl
 	perl -w none-test.pl
 	perl -w multipath-test.pl
 	rm -rf Bootloader/*

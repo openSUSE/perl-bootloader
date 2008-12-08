@@ -1672,7 +1672,7 @@ sub Info2Section {
 	    if ($type eq "other" or not defined ($sectinfo{$key})) {
 		$line_ref = undef;
 	    }
-	    else(defined $sectinfo{$key}) {
+	    elsif(defined $sectinfo{$key}) {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
 	    }
 	    delete ($sectinfo{$key});
