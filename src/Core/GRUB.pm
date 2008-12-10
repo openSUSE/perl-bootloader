@@ -2255,8 +2255,6 @@ sub GrubDev2MountPoint {
 
     my $mountpoint = $grub_dev;
     foreach $device (@devices) {
-	$self->l_debug ("GRUB::GrubDev2MountPoint : finding for device $device");
-
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
 	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
 	    if ($self->GetKernelDevice($d) eq $device) { 
