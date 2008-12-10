@@ -156,12 +156,10 @@ sub l_debug {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "debug",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
@@ -174,12 +172,10 @@ sub l_milestone {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "milestone",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
@@ -192,12 +188,10 @@ sub l_warning {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "warning",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
@@ -210,12 +204,10 @@ sub l_error {
     my $self = shift;
     my $message = shift;
 
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "error",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
