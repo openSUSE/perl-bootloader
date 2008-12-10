@@ -1375,17 +1375,25 @@ sub AddSection {
     }
     else 
     {
-        $sysconf = GetSysconfigValue("DEFAULT_APPEND");
-        $new{"append"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("DEFAULT_VGA");
-        $new{"vgamode"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("IMAGEPCR");
-        $new{"imagepcr"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("INITRDPCR");
-        $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-        my %measures = split(/:/, GetSysconfigValue("DEFAULT_MEASURES"));
-        $new{"measure"} = \%measures if ((keys %measures)!= 0);
-    }
+        #RT kernel have special args bnc #450153
+        if ($new{"image"} =~ m/-rt$/ && defined (GetSysconfigValue("RT_APPEND"))){
+          $sysconf = GetSysconfigValue("RT_APPEND");
+          $new{"append"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("RT_VGA");
+          $new{"vgamode"} = $sysconf if (defined $sysconf);
+        } else {
+          $sysconf = GetSysconfigValue("DEFAULT_APPEND");
+          $new{"append"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("DEFAULT_VGA");
+          $new{"vgamode"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("IMAGEPCR");
+          $new{"imagepcr"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("INITRDPCR");
+          $new{"initrdpcr"} = $sysconf if (defined $sysconf);
+          my %measures = split(/:/, GetSysconfigValue("DEFAULT_MEASURES"));
+          $new{"measure"} = \%measures if ((keys %measures)!= 0);
+        }
+     }
 
     $sysconf = GetSysconfigValue("CONSOLE");
     $new{"console"} = $sysconf if (defined $sysconf);
