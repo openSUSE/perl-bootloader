@@ -156,12 +156,7 @@ sub l_debug {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
-	"message" => $message,
-	"level" => "debug",
-    };
-    $self->{"log_records"} = \@log;;
+    $self->{"logger"}->debug($message);
 }
 
 =item
@@ -174,12 +169,7 @@ sub l_milestone {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
-	"message" => $message,
-	"level" => "milestone",
-    };
-    $self->{"log_records"} = \@log;;
+    $self->{"logger"}->milestone($message);
 }
 
 =item
@@ -192,12 +182,7 @@ sub l_warning {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
-	"message" => $message,
-	"level" => "warning",
-    };
-    $self->{"log_records"} = \@log;;
+    $self->{"logger"}->warning($message);
 }
 
 =item
@@ -210,28 +195,9 @@ sub l_error {
     my $self = shift;
     my $message = shift;
 
-    my @log = @{$self->{"log_records"}};
-    push @log, {
-	"message" => $message,
-	"level" => "error",
-    };
-    $self->{"log_records"} = \@log;;
+    $self->{"logger"}->error($message);
 }
 
-=item
-C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
-
-
-
-
-=cut
-sub GetLogRecords {
-    my $self = shift;
-
-    my $ret = $self->{"log_records"};
-    $self->{"log_records"} = [];
-    return $ret;
-}
 
 =item
 C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
@@ -868,7 +834,7 @@ sub new {
 	    $loader->{$key} = $old->{$key};
 	}
     }
-    $loader->{"log_records"} = [];
+    $loader->{"logger"} = Bootloader::Logger::instance();
 
     bless ($loader);
     return $loader;

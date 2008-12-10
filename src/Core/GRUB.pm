@@ -465,8 +465,7 @@ sub GrubDev2UnixDev {
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
-	    if (($dev_ref->[1] eq $dev or 
-              (scalar @{$dev_ref}>8 && $dev_ref->[8] eq $dev)) #FIXME HACK to live install
+	    if ( $dev_ref->[1] eq $dev 
               && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
 		$self->l_milestone ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
@@ -704,13 +703,9 @@ sub CreateGrubConfLine {
     my $self = shift;
     my $target = shift;
     my $discswitch = shift;
-    my $use_setup = shift;
 
 
-    my $line_ref = {};
-    if ($use_setup)
-    {
-	$line_ref = {
+    my $line_ref = {
 	    'options' => [
 		'--stage2=/boot/grub/stage2',
                 '--force-lba'
@@ -718,23 +713,6 @@ sub CreateGrubConfLine {
 	    'device' => $target,
 	    'command' => 'setup'
 	};
-    }
-    else
-    {
-	$line_ref = {
-	    'options' => [
-		'--stage2=/boot/grub/stage2',
-                '--force-lba'
-	    ],
-	    'discswitch' => $discswitch || "",
-	    'stage2' => '/boot/grub/stage2',
-	    'menu' => '/boot/grub/menu.lst',
-	    'stage1' => '/boot/grub/stage1',
-	    'device' => $target,
-	    'addr' => '0x8000',
-	    'command' => 'install'
-	};
-    }
     return $line_ref;
 }
 
@@ -837,7 +815,7 @@ sub ParseLines {
 	{
 	    $grub_root = $value;
 	}
-	elsif (($key eq "install") or ($key eq "setup")) {
+	elsif ($key eq "setup") {
 	    my @options = ();
 	    my %grub_conf_item = ();
 	    $grub_conf_item{"command"} = $key;
@@ -850,37 +828,11 @@ sub ParseLines {
 	    }
 	    $grub_conf_item{"options"} = \@options;
 
-	    if ($key eq "install") {
-		$grub_conf_item{"stage1"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
-		$tmp = shift @entries;
-		if ("d" eq $tmp)
-		{
-		    $grub_conf_item{"discswitch"} = "d";
-		    $tmp = shift @entries;
-		}
-		else
-		{
-		    $grub_conf_item{"discswitch"} = "";
-		}
-		$tmp = $self->GrubDev2UnixDev ($tmp);
-		push @devices, $tmp;
-		$grub_conf_item{"device"} = $tmp;
-		$grub_conf_item{"stage2"} = $self->GrubPath2UnixPath ( shift @entries, $grub_root);
-		$grub_conf_item{"addr"} = shift @entries || "";
-		$tmp = shift @entries;
-		if ($tmp ne "")
-		{
-		    $grub_conf_item{"menu"} = $self->GrubPath2UnixPath ($tmp, $grub_root);
-		}
-	    }
-	    else
-	    { # "setup"
-		$tmp = $self->GrubDev2UnixDev ($tmp);
-		push @devices, $tmp;
-		$grub_conf_item{"options"} = \@options;
-		$grub_conf_item{"device"} = $tmp;
-		# not interested in the rest
-	    }
+            $tmp = $self->GrubDev2UnixDev ($tmp);
+            push @devices, $tmp;
+            $grub_conf_item{"options"} = \@options;
+            $grub_conf_item{"device"} = $tmp;
+
 	    push @grub_conf, \%grub_conf_item;
 	}
     }
@@ -1098,7 +1050,7 @@ sub CreateGrubConfLines() {
 
 	foreach my $new_dev (keys (%s1_devices))
 	{
-	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch, 1);
+	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch);
 	    $self->l_milestone ("GRUB::CreateGrubConfLines: new line created:\n\n' " .
 				join("'\n' ",
 				     map {
@@ -1125,33 +1077,7 @@ sub CreateGrubConfLines() {
 
     foreach my $grub_conf_item (@grub_conf_items)
     {
-	if ($grub_conf_item->{"command"} eq "install")
-	{
-	    (my $s1dev,) = $self->SplitDevPath ($grub_conf_item->{"stage1"});
-	    (my $s2dev,) = $self->SplitDevPath ($grub_conf_item->{"stage2"});
-	    my $grub_root = "";
-	    if ($s1dev eq $s2dev)
-	    {
-		$grub_root = $self->UnixDev2GrubDev ($s1dev);
-		if ($last_root ne $grub_root)
-		{
-		    push @grub_conf, "root $grub_root";
-		}
-		$last_root = $grub_root;
-	    }
-	    my $options = join " ", @{$grub_conf_item->{"options"} || []};
-	    my $s1 = $self->UnixPath2GrubPath ($grub_conf_item->{"stage1"}, $grub_root);
-	    my $s2 = $self->UnixPath2GrubPath ($grub_conf_item->{"stage2"}, $grub_root);
-	    my $location = $self->UnixDev2GrubDev ($grub_conf_item->{"device"});
-	    my $address = $grub_conf_item->{"addr"};
-	    my $discswitch = $grub_conf_item->{"discswitch"};
-	    $discswitch = " " . $discswitch if ($discswitch ne "");
-	    my $menu_lst = $self->UnixPath2GrubPath ($grub_conf_item->{"menu"}, "");
-	    my $line = "install $options $s1$discswitch $location $s2 $address $menu_lst";
-	    push @grub_conf, $line;
-	    delete $s1_devices{$grub_conf_item->{"device"}};
-	}
-	elsif ($grub_conf_item->{"command"} eq "setup")
+	if ($grub_conf_item->{"command"} eq "setup")
 	{
 	    my $options = join " ", @{$grub_conf_item->{"options"} || []};
 	    my $location = $self->UnixDev2GrubDev ($grub_conf_item->{"device"});
