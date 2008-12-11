@@ -270,11 +270,12 @@ sub Member2MD {
     my $self = shift;
     my $member = shift;
 
-    # reset 'each' iterator
-    my $dummy = keys %{$self->{"md_arrays"}};
+    my $find = undef;
 
     while ((my $md, my $mem_ref) = each (%{$self->{"md_arrays"}}))
     {
+      unless (defined $find)
+      {
 	foreach my $mem (@{$mem_ref})
 	{
 	    if ($mem eq $member)
@@ -283,9 +284,12 @@ sub Member2MD {
 		{
 		    $md = "/dev/" . $md;
 		}
-		return $md;
+		$member = $md;
+                $find = 1;
+                last;
 	    }
 	}
+      }
     }
     return $member;
 }
@@ -442,16 +446,7 @@ sub Unquote {
     my $self = shift;
     my $text = shift;
 
-    # remove leading blanks
-    if ($text =~ /^[ \t]*([^ \t].*)$/)
-    {
-	$text = $1;
-    }
-    # remove tailing blanks
-    if ($text =~ /^(.*[^ \t])[ \t]$/)
-    {
-	$text = $1;
-    }
+    $text = $self->trim($text);
     #now unquote
     if ($text =~ /^\"(.*)\"$/)
     {
