@@ -1607,7 +1607,23 @@ sub UpdateBootloader {
     my $ok = 1;
     foreach my $file (@files) {
 	if ( -f "$file.new" ) {
-	    rename "$file", "$file.old" if -f "$file";
+            #backup file only if they exist and previos backup is enought old
+            if (-f "$file")
+            {
+              if (-f "$file.old")
+              {
+                my $mtime = time - ( stat("$file.old"))[9];
+                my $hours = $mtime / 3600;
+                if ($hours > 0)
+                {
+	          rename "$file", "$file.old";
+                }
+              }
+              else
+              {
+	        rename "$file", "$file.old";
+              }
+            }
 	    unless ( rename "$file.new",  "$file" ) {
 		$self->l_error ("Core::UpdateBootloader: Error occurred while updating file $file");
 		$ok = undef;
