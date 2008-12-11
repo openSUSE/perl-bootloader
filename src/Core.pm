@@ -1617,17 +1617,6 @@ sub UpdateBootloader {
     return $ok;
 }
 
-#
-# map<string,any> GetMetaData ()
-# sub GetMetaData() {
-#     return undef;
-# }
-#
-# boolean InitializeBootloader ()
-# sub InitializeBootloader {
-#     return undef;
-# }
-
 =item
 C<< $status = Bootloader::Core->RunCommand ($command, $log_file); >>
 
@@ -1646,7 +1635,6 @@ sub RunCommand {
 
     if (defined ($log))
     {
-	unlink "$log" if -f $log;
 	$command = "$command >>$log 2>&1";
     }
     else
