@@ -1651,13 +1651,18 @@ sub RunCommand {
 
     if (defined ($log))
     {
-	$command = "$command >>$log 2>&1";
+	$command = "$command >$log 2>&1";
     }
     else
     {
 	$command = "$command >/dev/null 2>/dev/null";
     }
-    return system ($command);
+    my $ret = system ($command);
+
+    my $output = `cat $log`;
+    $self->l_milestone("run $command - ret $ret + output: $output");
+
+    return $ret;
 }
 
 =item

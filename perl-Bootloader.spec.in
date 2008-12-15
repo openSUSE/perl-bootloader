@@ -59,6 +59,19 @@ install -d -m 755 $RPM_BUILD_ROOT/boot
 install -m 644 %{SOURCE3} $RPM_BUILD_ROOT/boot/
 install -d -m 755 $RPM_BUILD_ROOT/usr/share/man/man8/
 install -m 644 update-Bootloader.8.gz $RPM_BUILD_ROOT/usr/share/man/man8/
+#install only needed files for bootloader for specific architecture
+%ifarch i386 || i486 || i586 || i686 || x86_64
+rm %{perl_vendorlib}/Bootloader/Core/{ZIPL*,PowerLILO*}
+%endif
+%ifarch ppc || ppc64
+rm %{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*, GRUB*}
+%endif
+%ifarch s390 || s390x
+rm %{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB*}
+%endif
+%ifarch ia32 || ia64
+rm %{perl_vendorlib}/Bootloader/Core/{LILO*,GRUB*,ZIPL*,PowerLILO*}
+%endif
 
 %files
 %defattr(-, root, root)

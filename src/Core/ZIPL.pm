@@ -65,7 +65,6 @@ use strict;
 use Bootloader::Core;
 our @ISA = qw(Bootloader::Core);
 
-
 #module interface
 
 sub GetMetaData() {
@@ -121,8 +120,6 @@ sub GetMetaData() {
         default => "string:Default Boot Section/Menu:linux",
     };
     
-    my $go = $exports{"global_options"};
-    
     $exports{"section_options"} = {
         type_image     => "bool:Image Section",
         image_target   => "path:Target Directory for Image Section:/boot/zipl",
@@ -148,12 +145,71 @@ sub GetMetaData() {
         menu_prompt    => "bool:Show boot menu",
     };
     
-    my $so = $exports{"section_options"};
-    
     $loader->{"exports"}=\%exports;
     return \%exports;
 }
 
+sub SetOptions() {
+    my $loader = shift;
+    
+    # possible global entries
+    #
+    #	default
+    #	timeout
+    #	prompt
+    #	target
+    #
+    # possible section types:
+    #   image
+    #   dump
+    #   menu
+    #   
+    # per section entries
+    #
+    #	label
+    #	menuname
+    #	image
+    #	ramdisk
+    #	dumpto
+    #	target
+    #	parameters
+    #	dumptofs (unimplemented)
+    #	parmfile (unimplemented)
+    
+    my %metadata; 
+    
+    $metadata{"global"} = {
+	# maps to either deafult or default_menu
+        default => "string",
+    };
+    
+    $metadata{"section"} = {
+        type_image     => "bool",
+        image_target   => "",
+        image_image    => "",
+        # converted from ramdisk => initrd
+        image_initrd   => "",
+        # converted from parameters => append, root
+        image_append   => "",
+	image_root     => "",
+        image_parmfile => "",
+
+        type_dump      => "bool",
+        dump_target    => "",
+        dump_dumpto    => "",
+        dump_dumptofs  => "",
+
+        type_menu      => "bool",
+        menu_target    => "",
+	menu_list      => "",
+	menu_default   => "",
+        menu_timeout   => "",
+        menu_prompt    => "bool",
+    };
+    
+    
+    $loader->{"options"}=\%metadata;
+}
 
 
 =item
@@ -429,7 +485,7 @@ sub Info2Section {
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
-    my $so = $self->{"exports"}{"section_options"};
+    my $so = $self->{"options"}{"section"};
     
     # allow to keep the section unchanged
     if ((($sectinfo{"__modified"} || 0) == 0) and ($type ne "menu"))
@@ -535,12 +591,18 @@ sub Info2Section {
         elsif ($key eq "append") {
             $parameters = $parameters . $value;
         }
+        elsif ($key eq "prompt") {
+	    push @lines, {
+		"key" => $key,
+		"value" => "1",
+	    } if ( $value eq "true");
+        }
         else {
-            my ($stype) = split /:/, $so->{$type . "_" . $key};
+            my $stype = $so->$type."_".$key;
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
 		next if $value ne "true";
-		$value = "1";
+		$value = "";
 	    }
 
 	    push @lines, {
@@ -657,14 +719,13 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
-    my $go = $self->{"exports"}{"global_options"};
+    my $go = $self->{"options"}{"global"}; #not used due to only two entry, but prepared for future updates
 
     my %ret = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
-	# my ($type) = split(/:/, $go->{$key}||""); # not used yet
 	
 	if ($key eq "default" || $key eq "defaultmenu")	{
 	    $ret{"default"} = $val;
@@ -697,7 +758,7 @@ sub Info2Global {
 
     my @lines = @{$globinfo{"__lines"} || []};
     my @added_lines = ();
-    my $go = $self->{"exports"}{"global_options"};
+    my $go = $self->{"options"}{"global"}; #not used due to only two entry, but prepared for future updates
     
     # allow to keep the section unchanged
     # FIXME: always regenerate our 'meta global' section to avoid #160595
