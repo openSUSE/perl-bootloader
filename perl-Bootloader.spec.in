@@ -60,17 +60,19 @@ install -m 644 %{SOURCE3} $RPM_BUILD_ROOT/boot/
 install -d -m 755 $RPM_BUILD_ROOT/usr/share/man/man8/
 install -m 644 update-Bootloader.8.gz $RPM_BUILD_ROOT/usr/share/man/man8/
 #install only needed files for bootloader for specific architecture
-%ifarch i386 || i486 || i586 || i686 || x86_64
-rm %{perl_vendorlib}/Bootloader/Core/{ZIPL*,PowerLILO*}
+%ifarch *386 x86_64
+rm $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,PowerLILO*}
+rm $RPM_BUILD_ROOT/%{_mandir}/man?/{*ZIPL*,*PowerLILO*}
+sed -i '/ZIPL/D;/PowerLILO/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloader/.packlist
 %endif
-%ifarch ppc || ppc64
-rm %{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*, GRUB*}
+%ifarch ppc ppc64
+rm $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*, GRUB*}
 %endif
-%ifarch s390 || s390x
-rm %{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB*}
+%ifarch s390 s390x
+rm $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB*}
 %endif
-%ifarch ia32 || ia64
-rm %{perl_vendorlib}/Bootloader/Core/{LILO*,GRUB*,ZIPL*,PowerLILO*}
+%ifarch ia32 ia64
+rm $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{LILO*,GRUB*,ZIPL*,PowerLILO*}
 %endif
 
 %files

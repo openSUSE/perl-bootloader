@@ -84,13 +84,6 @@ use Bootloader::Core;
 use Bootloader::MBRTools;
 use Bootloader::Logger;
 
-# this is bad style, load modules when required
-use Bootloader::Core::GRUB;
-use Bootloader::Core::LILO;
-use Bootloader::Core::ELILO;
-use Bootloader::Core::ZIPL;
-use Bootloader::Core::PowerLILO;
-use Bootloader::Core::NONE;
 
 =item
 C<< $obj_ref = Bootloader::Library->new (); >>
@@ -137,30 +130,37 @@ sub SetLoaderType {
 
     if ($bootloader eq "grub")
     {
+        require Bootloader::Core::GRUB;
 	$loader = Bootloader::Core::GRUB->new ($loader);
     }
     elsif ($bootloader eq "lilo")
     {
+        require Bootloader::Core::LILO;
 	$loader = Bootloader::Core::LILO->new ($loader);
     }
     elsif ($bootloader eq "elilo")
     {
+        require Bootloader::Core::ELILO;
         $loader = Bootloader::Core::ELILO->new ($loader);
     }
     elsif ($bootloader eq "zipl")
     {
+        require Bootloader::Core::ZIPL;
         $loader = Bootloader::Core::ZIPL->new ($loader);
     }
     elsif ($bootloader eq "ppc")
     {
+        require Bootloader::Core::PowerLILO;
 	$loader = Bootloader::Core::PowerLILO->new ($loader);
     }
     elsif ($bootloader eq "none")
     {
+        require Bootloader::Core::NONE;
 	$loader = Bootloader::Core::NONE->new ($loader);
     }
     else
     {
+        require Bootloader::Core::NONE;
 	$loader = Bootloader::Core::NONE->new ($loader);
         Bootloader::Logger::instance()->error("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader, fallback to none");
     }
