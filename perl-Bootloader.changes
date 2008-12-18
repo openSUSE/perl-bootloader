@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Thu Dec 18 09:25:45 CET 2008 - jreidinger@suse.cz
+
+- RT kernel special support (bnc #450153)
+- remove obsolete former default, which breaks changing flavor
+  (bnc #450880)
+- generate man page for kernel update script (bnc #450880)
+- change logging performance, especial on system with many
+  partition (bnc #447142)
+- 0.4.82
+
+-------------------------------------------------------------------
 Tue Dec  2 13:55:11 CET 2008 - jreidinger@suse.cz
 
 - fix menu section in grub and add it to test-suite (bnc #449863)
