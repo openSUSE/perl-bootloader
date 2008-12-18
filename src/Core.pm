@@ -1608,13 +1608,14 @@ sub UpdateBootloader {
     foreach my $file (@files) {
 	if ( -f "$file.new" ) {
             #backup file only if they exist and previos backup is enought old
+            # 6 hours
             if (-f "$file")
             {
               if (-f "$file.old")
               {
                 my $mtime = time - ( stat("$file.old"))[9];
                 my $hours = $mtime / 3600;
-                if ($hours > 0)
+                if ($hours > 6) 
                 {
 	          rename "$file", "$file.old";
                 }
