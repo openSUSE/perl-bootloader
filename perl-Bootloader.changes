@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Mon Jan  5 14:03:07 CET 2009 - jreidinger@suse.cz
+
+- generate man page for update bootloader script (bnc #450880)
+- remove obsolete former default, which breaks changing flavor in
+  yast GUI (bnc #457057)
+- remove debug logging in loop, which cause huge amount of messages
+  and causes performance problems (bnc #457631)
+- correct translating udev names of dm raid devices (bnc #445602)
+- correctly chomp output of external command in enclosed arguments
+  (bnc #463451)
+- 0.4.81.1 
+
+-------------------------------------------------------------------
 Tue Dec  2 13:55:11 CET 2008 - jreidinger@suse.cz
 
 - fix menu section in grub and add it to test-suite (bnc #449863)
