@@ -395,14 +395,16 @@ sub GetKernelDevice {
     $self->l_milestone ("GRUB::GetKernelDevice: udevadm info returned: $dev");
     if ($dev =~ m:^/dev/dm-\d+:){
       my $name = qx{udevadm info  -q env -n $device | grep DM_NAME};
+      chomp $name;
       if ($name !~ m/^DM_NAME=(.*)/){
         $self->l_error ("GRUB::GetKernelDevice: no DM_NAME for dm device: $dev");
         return $dev;
       }
       $dev = "/dev/mapper/$1";
       my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
+      chomp $part;
       if ($part =~ m/^DM_PART=(\d+)$/){
-        $dev = $dev."_part$part";
+        $dev = $dev."_part$1";
       }
       $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
     }
