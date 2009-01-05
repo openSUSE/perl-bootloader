@@ -242,7 +242,7 @@ sub Udev2Dev {
       $mounted = `mount /sys`;
     }
     # FIXME: maybe useless code  
-    my $cmd = "udevadm info -q name -p /block/$udev";
+    my $cmd = "udevadm info -q name -p '/block/$udev'";
     my $dev = qx{ $cmd 2>/dev/null };
     chomp ($dev);
 
@@ -337,6 +337,7 @@ sub ReadPartitions {
 	#
 	my @parted_info_list = ();
 	my $parted_info = `parted -s $dev_disk unit cyl print`;
+        chomp $parted_info;
 	if ( $? == 0 ) {
 	    my @parted_info_split = split(/\n/, $parted_info);
 	    # skip header lines
@@ -443,6 +444,8 @@ sub GetMultipath {
       return \%ret;
     }
 
+    chomp @result;
+
     my $line = "";
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
@@ -480,6 +483,7 @@ sub DMRaidAvailable {
 
     # Check if device-mapper is available in /proc/misc
     my $dm_available = qx{grep device-mapper /proc/misc};
+    chomp $dm_available;
 
     if ($dm_available eq "") {
 	return $retval;
@@ -622,10 +626,12 @@ sub IsDMRaidSlave {
     }
 
     my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
+    chomp @dm_devs;
 
     if ($dm_devs[0] !~ /No devices found/) {
         foreach my $dmdisk (@dm_devs) {
             my @tables = qx{$dmsetup table '$dmdisk'};
+            chomp @tables;
 
             foreach my $line (@tables) {
                 my @content = split(/ /, $line);
@@ -717,6 +723,7 @@ sub Bootloader::Tools::DMDev2MajMin {
     my $dmdev = shift;
     my $majmin;
     $majmin =  qx{$dmsetup info -c  --noheadings -o major,minor '$dmdev'};
+    chomp $majmin;
 
     return $majmin;
 }
@@ -744,10 +751,10 @@ sub Bootloader::Tools::Udev2MajMin {
          $mounted = `mount /sys`;
        }
        $majmin = qx{cat /sys$udev_path/dev};
+       chomp ($majmin);
        `umount /sys` if (defined $mounted);
 
     }
-    chomp ($majmin);
     return $majmin;
 }
 
@@ -779,6 +786,7 @@ sub Bootloader::Tools::MajMin2Udev {
 	next if $dirent =~ m/^\./;
 	next if -r "$sb/$dirent/range" and qx{ cat $sb/$dirent/range } == 1;
 	$devmajmin = qx{cat $sb/$dirent/dev};
+        chomp $devmajmin;
 	my ($p, undef) = (split(/:/, $devmajmin));
 
 	if ("$p" eq "$major" ) {
@@ -824,6 +832,7 @@ sub Bootloader::Tools::MajMin2DMDev {
 
     my $majmin = shift;
     my $dm_name  =  qx{devmap_name $majmin};
+    chomp $dm_name;
 
     return $dm_name;
 
