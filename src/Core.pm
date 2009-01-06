@@ -379,7 +379,7 @@ sub GetExtendedPartition {
 
     # Check for valid devices
     unless ($part_dev =~ m/^\/dev\/[sh]d[a-z](\d+)?$/) {
-	$self->l_debug ("Core::GetExtendedPartition: Specified device
+	$self->l_warning ("Core::GetExtendedPartition: Specified device
 	    $part_dev is not valid and cannot be used as base for detecting an
 	    extended partition on the same disk.");
 	return $extended_part_dev;
@@ -473,10 +473,16 @@ sub MergeIfDefined {
     {
 	if (defined ($arg))
 	{
+          if ($ret eq "") #first defined entry
+          {
+            $ret = $arg;
+          }
+          else
+          {
 	    $ret = $ret . " " . $arg;
+          }
 	}
     }
-    $ret = substr ($ret, 1) if substr ($ret, 0, 1) eq " ";
     return $ret;
 }
 
@@ -656,7 +662,7 @@ sub MenuFileLineEmpty {
 	# ignore the headline with modification date/time
 	return 1;
     }
-    elsif ($line =~ /^[ \t]*$/)
+    elsif ($line =~ /^\s*$/)
     {
 	# ignore empty line
 	return 1;

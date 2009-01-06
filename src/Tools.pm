@@ -287,12 +287,10 @@ See InitLibrary function for example.
 sub ReadPartitions {
     my $sb = "/sys/block";
     my $mounted = undef;
-    my $logname = Bootloader::Path::Logname();
+    my $logger = Bootloader::Logger::instance();
     unless (-e $sb) {
       $mounted = `mount /sys`;
-       open (LOG, ">>$logname");
-       print LOG ("Mount /sys\n");
-       close LOG;
+      $logger->milestone("ReadPartitions: Mount /sys");
     }
     opendir(BLOCK_DEVICES, "$sb") || 
 	die ("ReadPartitions(): Failed to open dir $sb");
@@ -303,10 +301,7 @@ sub ReadPartitions {
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
-    open (LOG, ">>$logname");
-    print LOG ("Finded disks: ". join (",",@disks)||"");
-    print LOG ("\n");
-    close LOG;
+    $logger->milestone("ReadPartitions: Finded disks: ". join (",",@disks));
 
     # get partition info for all partitions on all @disks
     my @devices = ();
@@ -373,18 +368,13 @@ sub ReadPartitions {
 	    } readdir (BLOCK_DEVICES);
 	    closedir BLOCK_DEVICES;
 
-            open (LOG, ">>$logname");
-            print LOG ("Finded parts: ". join (",",@parts)||"");
-            close LOG;
+            $logger->milestone("ReadPartitions: Finded parts: ". join (",",@parts));
 
 	    # generate proper device names and other info for all @part[ition]s
 	    foreach my $part (@parts)
 	    {
 	        chomp ($part);
 	        $part = Udev2Dev ("$disk/$part");
-                open (LOG, ">>$logname");
-                print LOG ("Processing part: ".(join (",",$part)||"")."\n");
-                close LOG;
 
 	        my $index = substr ($part, length ($dev_disk));
 	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
@@ -431,37 +421,107 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 
 sub GetMultipath {
   my %ret = {};
+  my $logger = Bootloader::Logger::instance();
 
   $multipath = AddPathToExecutable("multipath");
 
   if (-e $multipath){
     my $command = "$multipath -d -v 2+ -ll";
- #FIXME log output 
     my @result = qx/$command/;
     # return if problems occurs...typical is not loaded kernel module
     if ( $? ) {
+      $logger->warning("Tools::GetMultipath: multipath command failed with $?");
       return \%ret;
     }
 
     my $line = "";
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
+      $logger->milestone("Tools::GetMultipath: processing line $line");
       if ($line !~ m/^(\S+)\s*dm-\d+.*$/){
+        $line = shift @result;
         next;
       }
       my $multipathdev = "/dev/mapper/$1";
       while (scalar @result != 0){
         $line = shift @result;
+        chomp $line;
+        $logger->milestone("Tools::GetMultipath: processing line $line");
         if ($line =~ m/^(.*)dm-.*$/){
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
           $ret{"/dev/$1"} = $multipathdev;
+          $logger->milestone("Tools::GetMultipath: added /dev/$1 -> $multipathdev");
         }
       }
     }
   }
+  else
+  {
+    $logger->milestone("Tools::GetMultipath: multipath command not installed");
+  }
+
   return \%ret;
+}
+
+=item
+C<< Bootloader::Tools::GetMultipath (); >>
+
+Gets multipath configuration. Return reference to hash map, empty if system doesn't contain multipath.
+
+=cut
+
+sub GetUdevMapping {
+  my %mapping= {};
+
+  my @output = `find -P /dev -type b`;
+  chomp @output;
+  my $logger = Bootloader::Logger::instance();
+  for my $dev (@output) {
+    next if ($dev =~ m:^/dev/mapper/:);
+
+    my @output2 = `udevadm info -q all -n $dev 2>/dev/null`;
+    chomp @output2;
+
+    if ($dev =~ m:^/dev/dm:) #workaround for incosistency of device mapper and udev
+    {
+      my $dmdev = undef;
+      my $dmpart = undef;
+      for my $line (@output2)
+      {
+        if ($line =~ m/DM_NAME=(.*)$/)
+        {
+          $dmdev = $1;
+        }
+        elsif ($line =~ m/DM_PART=(.*)$/)
+        {
+          $dmpart = $1;
+        }
+      }
+
+      $logger->error("UDEVMAPPING: dmdev $dev doesn't have defined DM_NAME in udev") unless defined $dmdev;
+      my $prevdev = $dev;
+      $dev = "/dev/mapper/$dmdev";
+      $dev = $dev."_part$dmpart" if defined $dmpart;
+      $mapping{$prevdev} = $dev; #maps also dm dev to device mapper
+    }
+
+    for my $line (@output2)
+    {
+      if ($line =~ m/S:\s(.*)$/)
+      {
+        $mapping{"/dev/$1"} = $dev;
+      }
+    }
+  }
+
+  while (my ($k,$v) = each (%mapping)){
+      logger->milestone ("UDEV MAPPING: $k -> $v \n");
+  }
+
+
+  return \%mapping;
 }
 
 =item

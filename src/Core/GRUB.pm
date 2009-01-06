@@ -400,7 +400,7 @@ sub GetKernelDevice {
       $dev = "/dev/mapper/$1";
       my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
       if ($part =~ m/^DM_PART=(\d+)$/){
-        $dev = $dev."_part$part";
+        $dev = $dev."_part$1";
       }
       $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
     }
