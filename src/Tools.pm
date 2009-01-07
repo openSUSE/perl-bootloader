@@ -30,18 +30,6 @@ C<< Bootloader::Tools::IsDMRaidSlave ($kernel_disk); >>
 
 C<< Bootloader::Tools::IsDMDevice($dev); >>
 
-C<< $dm_dev = Bootloader::Udev2DMDev($udevdevice); >>
-
-C<< $udev_dev = Bootloader::Tools::DMDev2Udev($dmdev); >>
-
-C<< $majmin = Bootloader::Tools::DMDev2MajMin($dmdev); >>
-
-C<< $majmin = Bootloader::Tools::Udev2MajMin($udev); >>
-
-C<< $udev_dev = Bootloader::Tools::MajMin2Udev($majmin); >>
-
-C<< $dm_dev = Bootloader::Tools::MajMin2DMDev($majmin); >>
-
 C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
 
 C<< $loader = Bootloader::Tools::GetBootloader (); >>
@@ -235,45 +223,6 @@ sub ReadMountPoints {
     return \%mountpoints;
 }
 
-sub Udev2Dev {
-    my $udev = shift;
-
-    my $mounted = undef;
-    unless (-e "/sys/block/") {
-      $mounted = `mount /sys`;
-    }
-    # FIXME: maybe useless code  
-    my $cmd = "udevadm info -q name -p /block/$udev";
-    my $dev = qx{ $cmd 2>/dev/null };
-    chomp ($dev);
-
-    if ($dev ne "") {
-        $dev = "/dev/$dev";
-    }
-
-    # Fallback in case udevadm info fails
-    else {
-
-	#If $udev consists of both device and partition - e.g. "sda/sda1" -
-	#then only assign the partition.
-    	if ($udev =~ m#\w+/(\w+)#) {
-	    $dev = "/dev/$1";
-	}
-
-	#Else, just assign the content of $udev, e.g. "sda".
-	else {
-	    $dev = "/dev/$udev";
-	}
-    }
-
-    # CCISS maps slashes to bangs so we have to reverse that.
-    $dev =~ s:!:/:g;
-
-    `umount /sys` if (defined $mounted);
-
-    return $dev;
-}
-
 =item
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
@@ -286,6 +235,7 @@ See InitLibrary function for example.
 
 # FIXME: this has to be read through yast::storage
 sub ReadPartitions {
+    my $udevmap = shift;
     my $sb = "/sys/block";
     my $mounted = undef;
     my $logger = Bootloader::Logger::instance();
@@ -316,8 +266,9 @@ sub ReadPartitions {
 
     foreach my $disk (@disks)
     {
+        my $dev_disk = $disk;
 	# get kernel device name for this device
-	my $dev_disk = Udev2Dev ($disk);
+        $dev_disk = $udevmap->{$disk} if (defined $udevmap->{$disk});
 
 	# get additional info from parted for the partitions on this $disk
 	#
@@ -375,7 +326,8 @@ sub ReadPartitions {
 	    foreach my $part (@parts)
 	    {
 	        chomp ($part);
-	        $part = Udev2Dev ("$disk/$part");
+	        $part = "$disk/$part";
+                $part = $udevmap->{$part} if (defined $udevmap->{$part});
 
 	        my $index = substr ($part, length ($dev_disk));
 	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
@@ -663,7 +615,7 @@ returns 1 if yes, 0 if no
 sub IsDMRaidSlave {
 
     my $disk = shift;
-    my $majmin_disk = Udev2MajMin($disk);
+    my $majmin_disk = `stat -c "%t:%T" $disk`;
     chomp($majmin_disk);
     my @dmparts = ();
 
@@ -672,6 +624,7 @@ sub IsDMRaidSlave {
     }
 
     my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
+    chomp @dm_devs;
 
     if ($dm_devs[0] !~ /No devices found/) {
         foreach my $dmdisk (@dm_devs) {
@@ -719,167 +672,6 @@ sub IsDMDevice {
     }
     return 0;
 }
-
-=item
-C<< $dm_dev = Bootloader::Tools::Udev2DMDev($udevdevice); >>
-
-takes a udev device (dm-X)
-returns the devicemapper device like dmsetup returns  
-
-=cut
-
-sub Bootloader::Tools::Udev2DMDev {
-
-    my $udevd = shift;
-    my $majmin = Udev2MajMin($udevd);
-    my $dmdev = MajMin2DMDev($majmin);
-
-    return $dmdev
-}
-
-=item
-C<< $udev_dev = Bootloader::Tools::DMDev2Udev($dmdev); >>
-
-takes a devicemapper device as reported from dmsetup
-returns a udev device (dm-X)
-
-=cut
-
-sub Bootloader::Tools::DMDev2Udev {
-
-    my $dmdev = shift;
-    my $majmin = DMDev2MajMin($dmdev);
-    my $udevdev = MajMin2Udev($majmin);
-
-    return $udevdev;
-}
-
-=item
-C<< $majmin = Bootloader::Tools::DMDev2MajMin($dmdev); >>
-
-takes a devicemapper device as reported from dmsetup
-returns a string containing major:minor
-
-=cut
-
-sub Bootloader::Tools::DMDev2MajMin {
-
-    my $dmdev = shift;
-    my $majmin;
-    $majmin =  qx{$dmsetup info -c  --noheadings -o major,minor '$dmdev'};
-
-    return $majmin;
-}
-
-
-=item
-C<< $majmin = Bootloader::Tools::Udev2MajMin($udev); >>
-
-takes a udev device as reported from udevadm info
-returns a string containing major:minor
-
-=cut
-
-sub Bootloader::Tools::Udev2MajMin {
-
-    my $udev_dev = shift;
-    my $majmin;
-    my $cmd = "udevadm info -qpath -n $udev_dev";
-
-    if (my $udev_path = qx{$cmd 2>/dev/null}){
-       chomp ($udev_path);
-       
-       my $mounted = undef;
-       unless (-e "/sys/block") {
-         $mounted = `mount /sys`;
-       }
-       $majmin = qx{cat /sys$udev_path/dev};
-       `umount /sys` if (defined $mounted);
-
-    }
-    chomp ($majmin);
-    return $majmin;
-}
-
-=item
-C<< $udev_dev = Bootloader::Tools::MajMin2Udev($majmin); >>
-
-takes a string major:minor as reported from udevadm info
-returns a string containing the udev device as reported 
-by udevadm info
-
-=cut
-
-sub Bootloader::Tools::MajMin2Udev {
-
-    my $majmin = shift;
-
-    my ($major,  $minor) = split (/:/, $majmin );
-    my $udevdev;
-    my $sb="/sys/block";
-    my $devmajmin;
-
-    my $mounted = undef;
-    unless (-e "/sys/block") {
-      $mounted = `mount /sys`;
-    }
-    opendir (SYSBLOCK, "$sb");
-
-    foreach my $dirent (readdir(SYSBLOCK)) {
-	next if $dirent =~ m/^\./;
-	next if -r "$sb/$dirent/range" and qx{ cat $sb/$dirent/range } == 1;
-	$devmajmin = qx{cat $sb/$dirent/dev};
-	my ($p, undef) = (split(/:/, $devmajmin));
-
-	if ("$p" eq "$major" ) {
-	    $udevdev = "$sb/$dirent";
-	    last;
-	}
-    }
-    closedir (SYSBLOCK);
-
-    opendir (SYSBLOCK, "$udevdev");
-    my $part;
-
-    foreach my $dirent (readdir(SYSBLOCK)) {
-	next if $dirent =~ m/^\./;
-
-	if (-r "$udevdev/$dirent/dev") {
-	    my $mm = qx{cat $udevdev/$dirent/dev};
-	    chomp ($mm);
-
-	    if ("$mm" eq "$majmin") {
-		$part = $dirent;
-		last;
-	    }
-	}
-    }
-    closedir (SYSBLOCK);
-
-    `umount /sys` if (defined $mounted);
-
-    return $part;
-}
-
-=item
-C<< $dm_dev = Bootloader::Tools::MajMin2DMDev($majmin); >>
-
-takes a string major:minor as reported from udevadm info
-returns a string containing the device as reported by 
-dmsetup
-
-=cut
-
-sub Bootloader::Tools::MajMin2DMDev {
-
-    my $majmin = shift;
-    my $dm_name  =  qx{devmap_name $majmin};
-
-    return $dm_name;
-
-}
-
-
 
 =item
 C<< $md_ref = Bootloader::Tools::ReadRAID1Arrays (); >>
@@ -986,8 +778,9 @@ needed for it to run properly.
 
 sub InitLibrary {
     $lib_ref = Bootloader::Library->new ();
+    my $um = GetUdevMapping();
     my $mp = ReadMountPoints ();
-    my $part = ReadPartitions ();
+    my $part = ReadPartitions ($um);
     my $md = ReadRAID1Arrays ();
     my $mpath = GetMultipath ();
 
