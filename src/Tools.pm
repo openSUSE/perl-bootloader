@@ -205,7 +205,7 @@ sub ReadMountPoints {
     my %mountpoints = ();
     while (my $line = <FILE>)
     {
-	if ($line =~ /^[ \t]*([^ \t]+)[ \t]+([^ \t]+).*/)
+	if ($line =~ /^\s*(\S+)\s+(\S+).*/)
 	{
 	    my $dev = $1;
 	    my $mp = $2;
@@ -226,6 +226,7 @@ sub ReadMountPoints {
 			$dev = substr ($line, 0, $index);
 		    }
 		}
+                $mp =~ s/\\040/ /; #handle spaces in fstab
 		$mountpoints{$mp} = $dev;
 	    }
 	}
