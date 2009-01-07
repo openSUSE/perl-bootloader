@@ -536,8 +536,8 @@ Return 0 if no device, 1 if there are any.
 sub DMRaidAvailable {
     my $retval = 0;
 
-    my $logname = Bootloader::Path::Logname();
-    qx{cat /proc/misc >> $logname};
+    my $logger = Bootloader::Logger::instance();
+    $logger->milestone(`cat /proc/misc`);
 
     # Check if device-mapper is available in /proc/misc
     my $dm_available = qx{grep device-mapper /proc/misc};
@@ -555,8 +555,9 @@ sub DMRaidAvailable {
 	$retval = $dm_devices ne "No devices found";
     }
     else {
-	print ("The command \"dmsetup\" is not available.\n");
-	print ("Is the package \"device-mapper\" installed?\n");
+	$logger->error("The command \"dmsetup\" is not available.");
+	$logger->error("Is the package \"device-mapper\" installed?");
+        $retval = 1; #return error
     }
     
     return $retval;
@@ -577,36 +578,30 @@ partX-dmraid-<strange name>
 
 =cut
 
-#FIXME: this has to be done through Storage
 sub ReadDMRaidPartitions {
 
     my @dmdisks = ();
     my @dmparts = ();
-    my $dmdev;
 
-    my $logname = Bootloader::Path::Logname();
+    my $logger = Bootloader::Logger::instance();
 
     open(DMDEV, "$dmsetup info -c --noheadings -o name |") || 
 	die ("ReadDMRaidPartitions(): dmsetup failed.");
 
     while (<DMDEV>) {
-	$dmdev = $_;
+	my $dmdev = $_;
 	chomp($dmdev);
 
 	#FIXME: I should not need to do this twice
 	if ($dmdev !~ m/part/) {
-            open (LOG, ">>$logname");
-            print LOG ("Find raid partition $dmdev\n");
-            close LOG;
+            $logger->milestone("Find raid partition $dmdev");
 	    # $dmdev is the base device
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmdisks, $dmdev;
 	}
 	#FIXME: need to check what needs to be removed
 	else {
-            open (LOG, ">>$logname");
-            print LOG ("Find raid disk $dmdev\n");
-            close LOG;
+            $logger->milestone("Find raid disk $dmdev");
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmparts, $dmdev;
 	}
@@ -614,18 +609,12 @@ sub ReadDMRaidPartitions {
     close DMDEV;
 
     my @devices = ();
-    my $dmpart;
-    my $tmp_part;
 
-    foreach $dmdev (@dmdisks) {
-	foreach $dmpart (@dmparts) {
+    foreach my $dmdev (@dmdisks) {
+	foreach my $dmpart (@dmparts) {
 	    if ($dmpart =~ m/$dmdev/) {
-		my $index = substr ($dmpart, length($dmpart)-2,2);
-
-		while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/) {
-		    $index = substr ($index, 1);
-		}
-		push @devices, [$dmpart, $dmdev, $index];
+                $dmpart =~ m/^($dmdev)_part(\d+)$/;
+		push @devices, [$dmpart, $dmdev, $2];
 	    }
 	}
     }
