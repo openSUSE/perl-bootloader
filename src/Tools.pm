@@ -458,7 +458,7 @@ sub GetUdevMapping {
       $dev = "/dev/mapper/$dmdev";
       $dev = $dev."_part$dmpart" if defined $dmpart;
       $mapping{$prevdev} = $dev; #maps also dm dev to device mapper
-    }
+    } #end of workaround
 
     for my $line (@output2)
     {
@@ -509,7 +509,6 @@ sub DMRaidAvailable {
     else {
 	$logger->error("The command \"dmsetup\" is not available.");
 	$logger->error("Is the package \"device-mapper\" installed?");
-        $retval = 1; #return error
     }
     
     return $retval;
@@ -522,10 +521,10 @@ reads partitions belonging to a Devicemapper RAID device.
 needed to be able to put get the correct translation
 into Grub notation
 DMRaid Devices look like:
-dmraid-<strange name>
+<strange name>
 
 DMRaid Partitions look like:
-partX-dmraid-<strange name>
+<strange name>_part\d
 
 
 =cut
@@ -683,6 +682,7 @@ to initialize the bootloader library properly.
 
 # FIXME: this has to be read through yast::storage
 sub ReadRAID1Arrays {
+    my $logger = Bootloader::Logger::instance();
     my %mapping = ();
     # use '/sbin/mdadm --detail --verbose --scan'
     # Assuming an output format like:
@@ -699,21 +699,21 @@ sub ReadRAID1Arrays {
 	open (MD, "$mdadm --detail --verbose --scan |");
     }
     else {
-	print ("The command \"mdadm\" is not available.\n");
-	print ("Is the package \"mdadm\" installed?\n");
+	$logger->error ("The command \"mdadm\" is not available.");
+	$logger->error ("Is the package \"mdadm\" installed?");
 
 	# If the command "mdadm" isn't available, return a reference to an
 	# empty hash
 	return \%mapping;
     }
     
-    my $logname = Bootloader::Path::Logname();
-    qx{ $mdadm --detail --verbose --scan >> $logname};
 
     my ($array, $level, $num_devices);
+    $logger->milestone("Tools::ReadRAID1Arrays: start parsing mdadm --detail --verbose --scan:");
     while (my $line = <MD>)
     {
         chomp ($line);
+        $logger->milestone("Tools::ReadRAID1Arrays: $line");
 
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
@@ -727,6 +727,8 @@ sub ReadRAID1Arrays {
              $mapping{$array} = [ split(/,/, $1) ];
         }
     }
+    $logger->milestone("Tools::ReadRAID1Arrays: finish parsing mdadm --detail --verbose --scan:");
+    while (my $line = <MD>)
     close( MD );
     return \%mapping;
 }
