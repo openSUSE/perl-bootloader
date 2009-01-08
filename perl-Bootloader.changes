@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan  8 14:03:36 CET 2009 - jreidinger@suse.cz
+
+- fix chomping of dmsetup output (bnc #463451)
+- fix translating udev dmraid device (bnc #445602) 
+- 0.4.83
+-------------------------------------------------------------------
 Thu Dec 18 09:25:45 CET 2008 - jreidinger@suse.cz
 
 - RT kernel special support (bnc #450153)
