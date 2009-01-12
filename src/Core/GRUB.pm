@@ -1720,7 +1720,7 @@ sub Info2Section {
 	    if ($type eq "other" or not defined ($sectinfo{$key})) {
 		$line_ref = undef;
 	    }
-	    elsif( defined $sectinfo{$key}) {
+	    elsif( defined $sectinfo{$key} &&  $sectinfo{$key} ne "") {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
                 if ( $key eq "initrd")
                 {
@@ -1821,7 +1821,7 @@ sub Info2Section {
 	    "value" => $val,
 	};
     }
-    if (exists $sectinfo{"initrd"} && ($type eq "image" || $type eq "xen")) {
+    if (exists $sectinfo{"initrd"} && $sectinfo{"initrd"} ne "" && ($type eq "image" || $type eq "xen")) {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
       my $pcr = $sectinfo{"initrdpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
