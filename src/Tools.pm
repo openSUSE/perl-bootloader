@@ -266,7 +266,9 @@ sub ReadPartitions {
 
     foreach my $disk (@disks)
     {
-        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)){
+        my $dev_disk = $disk;
+        $dev_disk = $udevmap->{$disk} if defined $udevmap->{$disk};
+        if (!IsDMDevice($dev_disk) && !IsDMRaidSlave($dev_disk)){
 	    # get partitions of $disk
 	    opendir(BLOCK_DEVICES, "$sb/$disk") ||
 	        die ("ReadPartitions(): Failed to open dir $sb/$disk");
@@ -680,7 +682,6 @@ sub ReadRAID1Arrays {
         }
     }
     $logger->milestone("Tools::ReadRAID1Arrays: finish parsing mdadm --detail --verbose --scan:");
-    while (my $line = <MD>)
     close( MD );
     return \%mapping;
 }
