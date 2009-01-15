@@ -150,9 +150,7 @@ sub GetMetaData() {
     } @partinfo;
     my $root_devices = join(":",@root_part,\@md_arrays);
     
-    my $arch = `uname --hardware-platform`;
-    chomp ($arch);
-
+    my $arch = $loader->{"arch"};
 
     $exports{"global_options"} = {
 	default		=> "string:Default Boot Section:Linux",
@@ -210,29 +208,86 @@ sub GetMetaData() {
     return \%exports;
 }
 
+sub GetOptions{
+  my $loader = shift;
+
+  my $arch = $loader->{"arch"};
+
+  my %exports;
+    $exports{"global"} = {
+	default		=> "",
+	timeout		=> "",
+	delay		=> "",
+	prompt		=> "bool",
+	verbose		=> "",
+	root		=> "",
+	"read-only"	=> "bool",
+	append		=> "",
+	initrd		=> "",
+	image		=> "",
+	chooser		=> "",
+	message		=> "",
+	fX		=> "",
+	noedd30		=> "bool",
+	fpswa		=> "",
+
+	# shadow entries for efi boot manager
+	boot_efilabel	=> "",
+	#boot_rm_efilabel => "bool:Remove existing EFI Boot Manager Entries by Name:",
+    };
+
+    if ($arch eq "ia64") {
+      $exports{"global_options"}{"relocatable"} = "bool";
+    }
+
+    $exports{"section"} = {
+        type_image         => "",
+	image_append       => "",
+	image_description  => "",
+	image_image        => "",
+	image_initrd       => "",
+	image_noverifyroot => "bool",
+	image_readonly	   => "bool",
+	image_root	   => "",
+
+	type_xen          => "",
+	xen_xen => "",
+	xen_xen_append    => "",
+	xen_image         => "",
+	xen_root          => "",
+	xen_append        => "",
+	xen_initrd        => "",
+    };
+    if ($arch eq "ia64") {
+      $exports{"section_options"}{"image_relocatable"} = "bool";
+    }
+
+    $loader->{"options"}=\%exports;
+}
 
 =item
 C<< $obj_ref = Bootloader::Core::ELILO->new (); >>
 
 Creates an instance of the Bootloader::Core::ELILO class.
+First argumetn is old configuration and second is architecture string like x86_64 or ia64
 
 =cut
 
 sub new {
     my $self = shift;
     my $old = shift;
+    my $arch = shift;
 
     my $loader = $self->SUPER::new ($old);
     $loader->{"default_global_lines"} = [
 	{ "key" => "timeout", "value" => 80 },
     ];
-    my $arch = `uname --hardware-platform`;
-    chomp ($arch);
     if ($arch eq "ia64")
     {
       my $line = { "key" => "relocatable",  "value" => "" };
       push  @{$loader->{"default_global_lines"}},  $line ;
     }
+    $loader->{"arch"} = $arch;
     bless ($loader);
 
     $loader->GetMetaData();
@@ -309,40 +364,23 @@ sub ParseLines {
 	\@elilo_conf
     );
 
-    # handle global append information 
-    my $glob_app = undef;
     foreach my $opt_ref (@{$glob_ref->{"__lines"}|| []})
     {
         my $key = $opt_ref->{"key"};
         my $val = $opt_ref->{"value"};
         if ($key eq "append")
         {
-           $glob_app = $val;
-           $self->l_milestone("GLOBAL APPEND: $glob_app \n"); 
+           $self->l_milestone("ELILO::ParseLines - GLOBAL APPEND: $val \n"); 
         }
     }
 
 
     # handle section append information
     foreach my $sect_ref (@{$sect_ref} ) {
-        my $sect_app = undef;
-        my $sect_title = undef;
         foreach my $opt_ref (@{$sect_ref->{"__lines"}|| []})
         {
           my $key = $opt_ref->{"key"};
           my $val = $opt_ref->{"value"};
-          if($key eq "label") {
-            $sect_title = $val;
-#            print STDERR "label name: $val\n";
-          }
-          if ($key eq "append") {
-            $sect_app = $val;
-          }
-        }
-        if( defined $sect_app ) {
-#          print STDERR "SECTION $sect_title has APPEND: $sect_app \n";
-	} else {
-#          print STDERR "SECTION $sect_title has NO APPEND!\n";
         }
      }
 
@@ -397,16 +435,6 @@ ParseLines on success, or undef on fail.
 sub CreateLines {
     my $self = shift;
 
-    # FIXME: think this is unnecessary code, no one else needs it, please check
-    if ($self->{"global"}{"__modified"} || 0) {
-	my @lines = @{$self->{"global"}{"__lines"} || []};
-	my @out_lines = ();
-	foreach my $line_ref (@lines) {
-	    push @out_lines, $line_ref;
-	}
-	$self->{"global"}{"__lines"} = \@out_lines;
-    }
-
     # create /etc/elilo.conf lines
     my $elilo_conf = $self->PrepareMenuFileLines (
 	$self->{"sections"},
@@ -444,24 +472,15 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
-    my $go = $self->{"exports"}{"global_options"};
-
-    # FIXME: Do we need the arch stuff???
-    #my $arch = $self->{"exports"}{"arch"};
+    my $go = $self->{"options"}{"global"};
 
     my %ret = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
-	my ($type) = split /:/, $go->{$key};
+	my $type = $go->{$key};
 
-	#if ($key eq "boot")
-	#{
-	#    $key = boot2special($val, $arch);
-	#    $ret{$key} = $val if defined $key;
-	#}
-	#elsif ($type eq "bool") {
 	if ($type eq "bool") {
 	    $ret{$key} = "true";
 	}
@@ -491,11 +510,8 @@ sub Info2Global {
 
     my @lines = @{$globinfo{"__lines"} || []};
     my @lines_new = ();
-    my $go = $self->{"exports"}{"global_options"};
+    my $go = $self->{"options"}{"global"};
     $globinfo{"default"} = $sections[0]->{"name"} unless (defined $globinfo{"default"});
-
-    # FIXME: Do we need the arch stuff???
-    #my $arch = $self->{"exports"}{"arch"};
 
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;
@@ -509,28 +525,22 @@ sub Info2Global {
 	my $key = $line_ref->{"key"};
 
 	# only accept known global options :-)
-	next unless exists $go->{$key};
+	unless (exists $go->{$key})
+        {
+	    $self->l_milestone (
+		"ELILO::Info2Section: Ignoring key '$key' for global section");
+            next;
+        }
 
-	#if ($key eq "boot"){
-	#    my $special = boot2special($line_ref->{"value"}, $arch);
-	#
-	#    if ( exists ($globinfo{$special}) ) {
-	#	if ( defined ($globinfo{$special})) {
-	#	    $line_ref->{"value"} = $globinfo{$special};
-	#	}		
-	#	delete $globinfo{$special};
-	#    }
-	#}
-	#else {
-	    if (defined ($globinfo{$key})) {
-		$line_ref->{"value"} = delete $globinfo{$key};
-	    }
-	    else {
-		next;
-	    }
-	#}
+	if (defined ($globinfo{$key})) {
+            $line_ref->{"value"} = delete $globinfo{$key};
+	}
+	else
+        {
+	    next;
+	}
 
-	my ($type) = split /:/, $go->{$key};
+	my $type = $go->{$key};
 	# bool values appear in a config file or not. there might be types
 	# like 'yesno' or 'truefalse' in the future which behave differently
 	if ($type eq "bool") {
@@ -538,7 +548,7 @@ sub Info2Global {
 	    $line_ref->{"value"} = "";
 	}
 
-	push @lines_new, $line_ref if defined $line_ref;
+	push @lines_new, $line_ref;
     };
 
     @lines = @lines_new;
@@ -547,27 +557,19 @@ sub Info2Global {
     while ((my $key, my $value) = each (%globinfo)) {
 	# only accept known global options :-)
 	next unless exists $go->{$key};
-	#next if $key =~ /^__/;
 
-	if ($key eq "boot_slot") {
-		push @lines, {
-		    "key" => "boot",
-		    "value" => $value,
-		}
+        my ($type) = split /:/, $go->{$key};
+	# bool values appear in a config file or not
+	if ($type eq "bool") 
+        {
+	    next if $value ne "true";
+	    $value = "";
 	}
-	else {
-	    my ($type) = split /:/, $go->{$key};
-	    # bool values appear in a config file or not
-	    if ($type eq "bool") {
-		next if $value ne "true";
-		$value = "";
-	    }
 
-	    push @lines, {
-		"key" => $key,
-		"value" => $value,
-	    };
-	}
+	push @lines, {
+	    "key" => $key,
+	    "value" => $value,
+	};
     }
     return \@lines;
 }
@@ -591,7 +593,7 @@ sub Info2Section {
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
-    my $so = $self->{"exports"}{"section_options"};
+    my $so = $self->{"options"}{"section"};
     my @lines_new = ();
 
     # allow to keep the section unchanged
@@ -606,11 +608,6 @@ sub Info2Section {
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
-
-        if ($key eq "vmm")
-        {
-          $key = "xen";
-        }
 
 	if ($key eq "label")
 	{
@@ -645,7 +642,7 @@ sub Info2Section {
 
 	    $line_ref->{"value"} = $sectinfo{$key};
 	    delete ($sectinfo{$key});
-	    my ($stype) = split /:/, $so->{$type . "_" . $key};
+	    my $stype = $so->{$type . "_" . $key};
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
 	        next if $line_ref->{"value"} ne "true";
@@ -653,6 +650,7 @@ sub Info2Section {
 	    }
 	}
 
+        #FIXME is if needed?
 	push @lines_new, $line_ref if defined $line_ref;
     }
 
@@ -741,7 +739,7 @@ information about the section.
 sub Section2Info {
     my $self = shift;
     my @lines = @{+shift};
-    my $so = $self->{"exports"}{"section_options"};
+    my $so = $self->{"options"}{"section"};
 
     my %ret = ();
 
@@ -783,7 +781,7 @@ sub Section2Info {
            }
            else
            {
-             $ret{"append"} = $val if $val ne "";
+             $ret{"append"} = $val;
            }
            next;
         }
@@ -796,8 +794,9 @@ sub Section2Info {
 	    next; 
 	}
 	
-	my ($type) = split /:/, $so->{$ret{"type"} . "_" . $key};
-	if ($type eq "bool") {
+	my ($type) = $so->{$ret{"type"} . "_" . $key};
+	if ($type eq "bool")
+        {
 	    $val = "true";
 	}
 	$ret{$key} = $val;

@@ -740,7 +740,7 @@ sub GetMetaData {
 
   #  $loader->l_milestone( "Library::GetMetaData TRACE");
 
-    return $loader->GetMetaData();;
+    return $loader->GetMetaData();
 }
 
 =item
