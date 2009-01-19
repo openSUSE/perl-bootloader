@@ -247,7 +247,7 @@ sub GetOptions{
 	image_image        => "",
 	image_initrd       => "",
 	image_noverifyroot => "bool",
-	image_readonly	   => "bool",
+	"image_read-only"  => "bool",
 	image_root	   => "",
 
 	type_xen          => "",
@@ -291,6 +291,7 @@ sub new {
     bless ($loader);
 
     $loader->GetMetaData();
+    $loader->GetOptions();
     $loader->l_milestone ("ELILO::new: Created ELILO instance");
     return $loader;
 }
@@ -481,7 +482,7 @@ sub Global2Info {
 	my $val = $line_ref->{"value"};
 	my $type = $go->{$key};
 
-	if ($type eq "bool") {
+	if (defined $type && $type eq "bool") {
 	    $ret{$key} = "true";
 	}
 	else {
@@ -528,7 +529,7 @@ sub Info2Global {
 	unless (exists $go->{$key})
         {
 	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for global section");
+		"ELILO::Info2Global: Ignoring key '$key' for global section");
             next;
         }
 
@@ -608,6 +609,7 @@ sub Info2Section {
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
+        $key = "xen" if ($key eq "vmm"); #standartize xen key
 
 	if ($key eq "label")
 	{

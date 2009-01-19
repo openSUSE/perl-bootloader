@@ -11,7 +11,7 @@ $ENV{PERL_BOOTLOADER_TESTSUITE_PATH} = getcwd()."/fake_root1/";
 
 my $lib_ref = Bootloader::Library->new();
 
-ok($lib_ref->SetLoaderType("elilo"));
+ok($lib_ref->SetLoaderType("elilo","ia64"));
 $lib_ref->InitializeBootloader(); #this is expected fail, because it check real hardware
 my %mount_points = ( '/' => '/dev/sda2' );
 ok($lib_ref->DefineMountPoints(\%mount_points));

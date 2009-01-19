@@ -125,6 +125,7 @@ EXAMPLE:
 sub SetLoaderType {
     my $self = shift;
     my $bootloader = shift;
+    my $arch = shift;
 
     my $loader = exists $self->{"loader"} ? $self->{"loader"} : undef;
 
@@ -141,7 +142,8 @@ sub SetLoaderType {
     elsif ($bootloader eq "elilo")
     {
         require Bootloader::Core::ELILO;
-        $loader = Bootloader::Core::ELILO->new ($loader);
+        $arch = "ia64" unless defined($arch);
+        $loader = Bootloader::Core::ELILO->new ($loader,$arch);
     }
     elsif ($bootloader eq "zipl")
     {
