@@ -237,6 +237,106 @@ sub GetMetaData() {
     return \%exports;
 }
 
+sub GetOptions() {
+    my $loader = shift;
+
+    # possible global entries:
+    #
+    #	boot (might be more than one)
+    #	clone
+    #	activate
+    #	force_fat
+    #	force
+    #	progressbar (deprecated, check yaboot)
+    #	bootfolder
+    #	timeout
+    #	macos_timeout
+    #	default
+    #	append
+    #	initrd
+    #
+    #
+    # per section entries
+    #	image
+    #   optional
+    #	other
+    #	root
+    #	copy
+    #	label
+    #	append
+    #	sysmap (deprecated, yaboot))
+    #   	initrd
+
+    my %exports;
+
+    # one of iseries, prep, chrp, pmac_old, pmac_new ...
+    my $arch = $loader->{"arch"};
+    $arch = "pmac" if "$arch" =~ /^pmac/;
+
+    $exports{"global"} = {
+ 	# for iseries list for others exactly one allowed
+	boot     => "",
+	activate => "bool",
+	timeout  => "",
+	default  => "",
+	root     => "",
+	append   => "",
+	initrd   => ""			  
+	};
+
+    my $go = $exports{"global"};
+    
+    if ( $arch eq "chrp" ) {
+	# pSeries only
+	$go->{"clone"}     = "";
+	$go->{"force_fat"} = "bool";
+	$go->{"force"}     = "bool";
+
+	$go->{"boot_chrp_custom"}  = "";
+    }
+    elsif ( $arch eq "prep" ) {
+	# only on old prep machines
+	$go->{"bootfolder"}  = "";
+	$go->{"boot_prep_custom"} = "";
+    }
+    elsif ( $arch eq "iseries" ) {
+	# only on legacy iseries
+	$go->{"boot_slot"} = "";
+	$go->{"boot_file"} = "";
+	$go->{"boot_iseries_custom"} = "";
+    }
+    elsif ( $arch eq "pmac" ) {
+	# only on pmac_new and pmac_old
+	$go->{"bootfolder"} = "";
+	$go->{"boot_pmac_custom"} = "";
+ 	$go->{"no_os_chooser"} = "bool";
+	$go->{"macos_timeout"} = "",
+   }
+
+    $exports{"section"} = {
+	type_image        => "",
+	image_image       => "",
+	image_root        => "",
+	image_name        => "",
+	image_append      => "",
+	image_initrd      => "",
+	image_optional    => "bool",
+	};
+
+    my $so = $exports{"section_options"};
+
+    if ( "$arch" eq "pmac" ) {
+	# only on pmac_new and pmac_old
+	$so->{"image_copy"}= "bool";
+
+	# define new section type for MacOS boot
+	$so->{"type_other"} = "bool";
+	# $so{other_label} = "string:Name of section" # implicit!
+	$so->{"other_other"} = "";
+    }
+
+    $loader->{"options"}=\%exports;
+}
 
 =item
 C<< $obj_ref = Bootloader::Core::PowerLILO->new (); >>
@@ -248,14 +348,18 @@ Creates an instance of the Bootloader::Core::PowerLILO class.
 sub new {
     my $self = shift;
     my $old = shift;
+    my $arch = shift;
 
     my $loader = $self->SUPER::new ($old);
+    $loader->{"arch"} = $arch;
     $loader->{"default_global_lines"} = [
 	{ key => "activate", value => "" },
     ];
     bless ($loader);
 
+
     $loader->GetMetaData();
+    $loader->GetOptions();
     $loader->l_milestone ("PowerLILO::new: Created PowerLILO instance");
     return $loader;
 }
@@ -422,22 +526,30 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
-    my $go = $self->{"exports"}{"global_options"};
-    my $arch = $self->{"exports"}{"arch"};
+    my $go = $self->{"options"}{"global"};
+    my $arch = $self->{"arch"};
 
     my %ret = ();
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
-	my ($type) = split /:/, $go->{$key};
-
+	
 	if ($key eq "boot")
 	{
 	    $key = boot2special($val, $arch);
-	    $ret{$key} = $val if defined $key;
 	}
-	elsif ($type eq "bool") {
+
+        unless (exists $go->{$key || ""})
+        {
+	  $self->l_milestone (
+		"PowerLILO::Global2Info: Ignoring key '$key' for global section");
+          next;
+        }
+
+	my $type = $go->{$key};
+
+	if ($type eq "bool") {
 	    $ret{$key} = "true";
 	}
 	else {
@@ -466,8 +578,8 @@ sub Info2Global {
 
     my @lines = @{$globinfo{"__lines"} || []};
     my @lines_new = ();
-    my $go = $self->{"exports"}{"global_options"};
-    my $arch = $self->{"exports"}{"arch"};
+    my $go = $self->{"options"}{"global"};
+    my $arch = $self->{"arch"};
 
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;
@@ -481,10 +593,16 @@ sub Info2Global {
 	my $key = $line_ref->{"key"};
 
 	# only accept known global options :-)
-	next unless exists $go->{$key};
+	unless (exists $go->{$key})
+        {
+	    $self->l_milestone (
+		"PowerLILO::Info2Global: Ignoring key '$key' for global section");
+            next;
+        }
 
 	if ($key eq "boot"){
 	    my $special = boot2special($line_ref->{"value"}, $arch);
+            $line_ref->{"value"} = undef;
 
 	    if ( exists ($globinfo{$special}) ) {
 		if ( defined ($globinfo{$special})) {
@@ -494,15 +612,13 @@ sub Info2Global {
 	    }
 	}
 	else {
+            $line_ref->{"value"} = undef;
 	    if (defined ($globinfo{$key})) {
 		$line_ref->{"value"} = delete $globinfo{$key};
 	    }
-	    else {
-		next;
-	    }
 	}
 
-	my ($type) = split /:/, $go->{$key};
+	my $type = $go->{$key};
 	# bool values appear in a config file or not. there might be types
 	# like 'yesno' or 'truefalse' in the future which behave differently
 	if ($type eq "bool") {
@@ -519,39 +635,20 @@ sub Info2Global {
     while ((my $key, my $value) = each (%globinfo)) {
 	# only accept known global options :-)
 	next unless exists $go->{$key};
-	#next if $key =~ /^__/;
 
-	if ($key eq "boot_" . $arch . "_custom") {
-		push @lines, {
-		    "key" => "boot",
-		    "value" => $value,
-		}
-	}
-	elsif ($key eq "boot_slot") {
-		push @lines, {
-		    "key" => "boot",
-		    "value" => $value,
-		}
-	}
-	elsif ($key eq "boot_file") {
-		push @lines, {
-		    "key" => "boot",
-		    "value" => $value,
-		}
-	}
-	else {
-	    my ($type) = split /:/, $go->{$key};
-	    # bool values appear in a config file or not
-	    if ($type eq "bool") {
-		next if $value ne "true";
-		$value = "";
-	    }
+        $key = "boot" if ($key =~ /^boot_/);
 
-	    push @lines, {
-		"key" => $key,
-		"value" => $value,
-	    };
-	}
+	my $type = $go->{$key};
+	# bool values appear in a config file or not
+	if ($type eq "bool") {
+	    next if $value ne "true";
+	    $value = "";
+        }
+
+	push @lines, {
+	    "key" => $key,
+	    "value" => $value,
+	};
     }
     return \@lines;
 }
@@ -575,7 +672,7 @@ sub Info2Section {
 
     my @lines = @{$sectinfo{"__lines"} || []};
     my $type = $sectinfo{"type"} || "";
-    my $so = $self->{"exports"}{"section_options"};
+    my $so = $self->{"options"}{"section"};
     my @lines_new = ();
 
     # allow to keep the section unchanged
@@ -608,7 +705,7 @@ sub Info2Section {
 
 	    $line_ref->{"value"} = $sectinfo{$key};
 	    delete ($sectinfo{$key});
-	    my ($stype) = split /:/, $so->{$type . "_" . $key};
+	    my $stype = $so->{$type . "_" . $key};
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
 	        next if $line_ref->{"value"} ne "true";
@@ -622,7 +719,7 @@ sub Info2Section {
     @lines = @lines_new;
 
 
-    my $create_append = 1;
+    my $create_append = 1; #control variable for append and console keys for xen
     while ((my $key, my $value) = each (%sectinfo))
     {
 	if ($key eq "name")
@@ -640,7 +737,7 @@ sub Info2Section {
             my $console = $sectinfo{"console"} || "";
             push @lines, {
                 "key" => "append",
-                "value" => $append.$console,
+                "value" => "$append $console",
             };
             $create_append = undef;
           }
@@ -653,7 +750,7 @@ sub Info2Section {
 	}
 	else
 	{
-	    my ($stype) = split /:/, $so->{$type . "_" . $key};
+	    my $stype = $so->{$type . "_" . $key};
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
 		next if $value ne "true";
@@ -713,10 +810,10 @@ sub Section2Info {
           $ret{"append"} = $val if $val ne "";
           next;
         }
-        my ($stype) = undef;
+        my $stype = undef;
         if (defined $ret{"type"})
         {
-          ($stype) = split /:/, $self->{"exports"}{"section_options"}->{$ret{"type"} . "_" . $key} || ""; 
+          $stype = $self->{"options"}{"section"}->{$ret{"type"} . "_" . $key} || ""; 
         }
 	# bool values appear in a config file or not
 	if (defined $stype and $stype eq "bool")

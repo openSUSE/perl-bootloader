@@ -142,7 +142,11 @@ sub SetLoaderType {
     elsif ($bootloader eq "elilo")
     {
         require Bootloader::Core::ELILO;
-        $arch = "ia64" unless defined($arch);
+        unless (defined $arch)
+        {
+          Bootloader::Logger::instance()->warning("Bootloader::Library::SetLoaderType: Missing arch for elilo.");
+          $arch = "ia64";
+        }
         $loader = Bootloader::Core::ELILO->new ($loader,$arch);
     }
     elsif ($bootloader eq "zipl")
@@ -153,7 +157,12 @@ sub SetLoaderType {
     elsif ($bootloader eq "ppc")
     {
         require Bootloader::Core::PowerLILO;
-	$loader = Bootloader::Core::PowerLILO->new ($loader);
+        unless (defined $arch)
+        {
+          Bootloader::Logger::instance()->warning("Bootloader::Library::SetLoaderType: Missing subarch for powerlilo.");
+          $arch = "chrp";
+        }
+	$loader = Bootloader::Core::PowerLILO->new ($loader,$arch);
     }
     elsif ($bootloader eq "none")
     {
