@@ -228,6 +228,7 @@ sub new {
     bless ($loader);
 
     $loader->GetMetaData();
+    $loader->SetOptions();
     $loader->l_milestone ("ZIPL::new: Created ZIPL instance");
     return $loader;
 }
@@ -525,7 +526,8 @@ sub Info2Section {
 	}
         elsif (not exists $so->{$type . "_" . $key})
         {
-            # print $type . "_" . $key . " unknown!\n";
+	    $self->l_milestone (
+		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    $line_ref = undef; # only accept known section options CAVEAT!
         }
         else
@@ -678,7 +680,6 @@ sub Section2Info {
 	    # split off root device from other kernel parameters
 	    ($ret{"append"} = $line_ref->{"value"}) =~ s/root=[^[:space:]]+[[:space:]]+//g;
 	    ($ret{"root"} = $line_ref->{"value"}) =~ s/^.*root=([^[:space:]]+)[[:space:]]+.*$/$1/g;
-	    #print "params: ".$ret{"append"}."/".$ret{"root"}."\n";
         }
 	elsif ($key eq "menuname")
 	{
@@ -792,17 +793,10 @@ sub Info2Global {
     my $default_sect = delete $globinfo{"default"};
     my $default_type = "";
 
-    #$self->l_milestone ("Info2Global: default_sect = $default_sect");
-    #$self->l_milestone ("Info2Global: section_names = ( " . join(",", @section_names) . " )");
-    #$self->l_milestone ("Info2Global: sections = ( " . join(",", @sections) . " )");
-
     if (defined $default_sect) {
 	foreach (@sections) {
 	    if (ref($_) eq "HASH") {
 		my $s = $_;
-		#$self->l_milestone ("Info2Global: this_sect = ( " .
-		#		    join(",\n", map {"'$_' -> '$s->{$_}'";} keys %{$s})
-		#		    . " )");
 		if (exists $_->{"name"} && $_->{"name"} eq $default_sect) {
 		    $default_type = $_->{"type"};
 		    last;
@@ -811,6 +805,7 @@ sub Info2Global {
 	}
     }
     unless ($default_type) {
+	$self->l_warning ("Info2Global: default not found, fallback to first entry");
 	$default_sect = $sections[0]->{"name"};
 	$default_type = $sections[0]->{"type"};
     }
@@ -938,8 +933,6 @@ sub MangleSections
     {
 	my $key = $sections->[$i]->{"name"};
 	my $sec = $sections->[$i];
-	
-	# print "mangling section " . $sections->[$i]->{"name"} . ", type " . $sections->[$i]->{"type"} . "\n";
 	
 	if ($sec->{"name"} eq "defaultboot")
 	{
