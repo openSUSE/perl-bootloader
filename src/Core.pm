@@ -358,7 +358,7 @@ sub SplitDevPath {
 
     my $dev = $self->{"mountpoints"}{$mp};
     $path =~ s#^$mp/?#/#;
-    $self->l_debug ("Core::SplitDevPath: $orig was split to $dev + $path");
+    $self->l_milestone ("Core::SplitDevPath: $orig was split to $dev + $path");
     return ($dev, $path);
 }
 
@@ -932,7 +932,7 @@ sub WriteFiles {
     {
 	if (! defined ($menu_files{$filename}))
 	{
-	    $self->l_debug ("Core::WriteFiles: Not writing $filename");
+	    $self->l_milestone ("Core::WriteFiles: Not writing $filename");
 	    next;
 	}
 
@@ -1038,7 +1038,7 @@ sub CreateRemovedDefaultLine {
 
     push @comment_before, "${remove_default_comment}";
 
-    $self->l_debug("put removed default comment");
+    $self->l_milestone("Core::CreateRemovedDefaultLine: put removed default comment");
 		
     $line_ref->{"comment_before"} = \@comment_before;
 
@@ -1516,14 +1516,14 @@ sub ParseMenuFileLines {
     my @global = @{+shift @sects};
 
     @sects = map {
-	$self->l_debug ("Core::ParseMenuFileLines: section lines to convert :\n'" .
+	$self->l_milestone ("Core::ParseMenuFileLines: section lines to convert :\n'" .
 			join("'\n' ",
 			     map {
 				 $_->{"key"} . " => " . $_->{"value"};
 			     } @{$_}) . "'"
 			);
 	my $s = $self->Section2Info ($_);
-	$self->l_debug ("Core::ParseMenuFileLines: parsing result :\n'" .
+	$self->l_milestone ("Core::ParseMenuFileLines: parsing result :\n'" .
 			join("'\n' ",
 			     map {
 				 m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";

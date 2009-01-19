@@ -390,9 +390,6 @@ sub WriteSettings {
     my $self = shift;
     my $menu_only = shift;
 
-# FIXME remove this line after proper testing
-# $menu_only = 0;
-
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
@@ -609,7 +606,7 @@ EXAMPLE:
   my $status = Bootloader::Library->InitializeBootloader ();
   if (! defined ($status))
   {
-    die "Connot initialize the bootloader";
+    die "Cannot initialize the bootloader";
   }
 
 =cut
@@ -748,8 +745,6 @@ Returns undef on fail.
 sub GetMetaData {
     my $self = shift;
     my $loader = $self->{loader} || return undef;
-
-  #  $loader->l_milestone( "Library::GetMetaData TRACE");
 
     return $loader->GetMetaData();
 }
