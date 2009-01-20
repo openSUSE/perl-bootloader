@@ -1259,6 +1259,10 @@ sub Info2Section {
 		"value" => $value,
 	    };
 	}
+        else
+        {
+          $self->l_milestone ("Core::Info2Section: Unknown key $key with value $value");
+        }
     }
 
     my $ret = $self->FixSectionLineOrder (\@lines,
