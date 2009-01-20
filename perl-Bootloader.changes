@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jan 20 15:56:50 CET 2009 - jreidinger@suse.cz
+
+- parse correctly multiline entries (bnc #466250)
+- 0.4.85 
+
+-------------------------------------------------------------------
 Mon Jan 19 16:33:06 CET 2009 - jreidinger@suse.cz
 
 - filter out initrd with empty value (bnc #465148)
