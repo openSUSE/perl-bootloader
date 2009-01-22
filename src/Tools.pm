@@ -717,7 +717,7 @@ See AddSection for example
 sub GetSysconfigValue {
     my $key = shift;
     my $file = Bootloader::Path::Sysconfig();
-    return undef if ( qx{ grep -c ^[:space:]*$key $file} == 0);
+    return undef if ( qx{ grep -c ^[[:space:]]*$key $file} == 0);
     my $value = qx{ . $file && echo \$$key } || "";
     chomp ($value);
     return $value;
@@ -744,6 +744,7 @@ sub InitLibrary {
     $lib_ref->DefinePartitions ($part);
     $lib_ref->DefineMDArrays ($md);
     $lib_ref->DefineMultipath ($mpath);
+    $lib_ref->DefineUdevMapping($um);
 
     # parse Bootloader configuration files   
     $lib_ref->ReadSettings();

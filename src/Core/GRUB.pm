@@ -377,34 +377,20 @@ sub Quote {
 
 sub GetKernelDevice {
     my $self = shift;
-    my $device = shift;
-    # resolve symlinks.....
-    my $cmd = "udevadm info  -q name -n $device";
-    my $dev = "";
-    if (my $resolved_link = qx{$cmd 2> /dev/null}) {
-        if ($? > 0){
-          return $device;
-        }
-	chomp ($resolved_link);
-	$dev = "/dev/" . $resolved_link; 
-    } else {
-      return $device;
+    my $orig = shift;
+    my $device = $orig;
+
+    unless (defined ($self->{"udevmap"}))
+    {
+        $self->l_warning("GRUB::GetKernelDevice: Udev mapping is not set");
+        return $orig;
     }
-    $self->l_milestone ("GRUB::GetKernelDevice: udevadm info returned: $dev");
-    if ($dev =~ m:^/dev/dm-\d+:){
-      my $name = qx{udevadm info  -q env -n $device | grep DM_NAME};
-      if ($name !~ m/^DM_NAME=(.*)/){
-        $self->l_error ("GRUB::GetKernelDevice: no DM_NAME for dm device: $dev");
-        return $dev;
-      }
-      $dev = "/dev/mapper/$1";
-      my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
-      if ($part =~ m/^DM_PART=(\d+)$/){
-        $dev = $dev."_part$1";
-      }
-      $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
-    }
-    return $dev;
+    $device =  $self->{"udevmap"}->{$device}
+        if defined ($self->{"udevmap"}->{$device});
+
+    $self->l_milestone("GRUB::GetKernelDevice: From $orig to $device");
+
+    return $device;
 }
 
 =item
