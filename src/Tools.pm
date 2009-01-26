@@ -1514,6 +1514,7 @@ sub AddSection {
     # the new default entry.
     my $glob_ref = $lib_ref->GetGlobalSettings ();
     $default = 1 if (delete($glob_ref->{"removed_default"}) == 1);
+    $default = 1 unless (defined ($glob_ref->{"default"}) && $glob_ref->{"default"} ne ""); #avoid non-exist default
     if ($default) {
 	$glob_ref->{"default"} = $new{"name"};
         if ($loader eq "lilo") #remove read-only flag bnc #381669
