@@ -1,7 +1,9 @@
 -------------------------------------------------------------------
 Mon Jan 26 08:51:34 CET 2009 - jreidinger@suse.cz
 
-- fix multipath hang (bnc #468792)
+- avoid multipath hang (but not properly fixed as it need more
+  testing in this phase(bnc #468792)
+- avoid non-exist default (bnc #669314)
 - 0.4.86 
 
 -------------------------------------------------------------------
