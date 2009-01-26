@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jan 26 08:51:34 CET 2009 - jreidinger@suse.cz
+
+- fix multipath hang (bnc #468792)
+- 0.4.86 
+
+-------------------------------------------------------------------
 Tue Jan 20 15:56:50 CET 2009 - jreidinger@suse.cz
 
 - parse correctly multiline entries (bnc #466250)
