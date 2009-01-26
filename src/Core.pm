@@ -1081,7 +1081,7 @@ sub CreateRemovedDefaultLine {
 
     push @comment_before, "${remove_default_comment}";
 
-    $self->l_debug("put removed default comment");
+    $self->l_milestone("put removed default comment");
 		
     $line_ref->{"comment_before"} = \@comment_before;
 
