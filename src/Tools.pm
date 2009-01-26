@@ -450,6 +450,7 @@ sub GetMultipath {
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
       if ($line !~ m/^(\S+)\s*dm-\d+.*$/){
+        $line = shift @result;
         next;
       }
       my $multipathdev = "/dev/mapper/$1";
