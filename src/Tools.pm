@@ -436,7 +436,7 @@ sub GetMultipath {
   $multipath = AddPathToExecutable("multipath");
 
   if (-e $multipath){
-    my $command = "$multipath -d -v 2+ -ll";
+    my $command = "$multipath -d -l";
  #FIXME log output 
     my @result = qx/$command/;
     # return if problems occurs...typical is not loaded kernel module
@@ -449,14 +449,14 @@ sub GetMultipath {
     my $line = "";
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
-      if ($line !~ m/^(\S+)\s*dm-\d+.*$/){
+      if ($line !~ m/^(\S+)\s.*dm-\d+.*$/){
         $line = shift @result;
         next;
       }
       my $multipathdev = "/dev/mapper/$1";
       while (scalar @result != 0){
         $line = shift @result;
-        if ($line =~ m/^(.*)dm-.*$/){
+        if ($line =~ m/(.*)dm-.*$/){
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
