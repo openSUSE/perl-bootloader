@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Feb  5 14:07:43 CET 2009 - jreidinger@suse.cz
+
+- proper detect of multipath with user friendly names (bnc#468792)
+- 0.4.87
+
+-------------------------------------------------------------------
 Mon Jan 26 08:51:34 CET 2009 - jreidinger@suse.cz
 
 - avoid multipath hang (but not properly fixed as it need more
