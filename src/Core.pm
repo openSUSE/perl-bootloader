@@ -970,51 +970,117 @@ sub WriteFiles {
 }
 
 =item
-C<< $original_name = Bootloader::Core->Comment2OriginalName ($comment); >>
+C<< $original_name = Bootloader::Core->CompleteSection($section_info); >>
 
-Gets the original name of the section from the comment. As argument, takes
-the comment, returns the original name (if found in the comment), or empty
-string (otherwise).
+Fill missing required keys of section.
+
+=cut
+
+sub CompleteSection($) {
+  my $self = shift;
+  my $info = shift;
+
+  unless (defined $info->{"__handled"})
+  {
+    $self->l_milestone("Core::CompleteSection: Add missing handled section");
+    if ($info->{"type"} eq "image"
+      || $info->{"type"} eq "xen")
+    {
+      $info->{"__handled"} = "auto";
+      $info->{"__handled"} = "all";
+    }
+    else
+    {
+      $info->{"__handled"} = "user";
+    }
+  }
+}
+
+
+=item
+C<< $original_name = Bootloader::Core->Comment2OriginalName ($section_ref,$comment); >>
+
+Gets the aditional information of the section from the comment. As argument, takes
+reference to section and the comment.
 
 =cut
 
 my $orig_name_comment="###Don't change this comment - YaST2 identifier: Original name: ";
+my $auto_comment_read="###Don't change this comment - YaST2 identifier: Original name: \(.*\) Handled by: YaST2 flavor: \(.*\)###";
+my $auto_comment_write="###Don't change this comment - YaST2 identifier: Original name: %s Handled by: YaST2 flavor: %s###";
+my $manual_comment_read="###Don't change this comment - YaST2 identifier: Original name: \(.*\) Handled by: user###";
+my $manual_comment_write="###Don't change this comment - YaST2 identifier: Original name: %s Handled by: user###";
 
 # string Comment2OriginalName (list<string> comment)
-sub Comment2OriginalName($) {
+sub Comment2OriginalName($$) {
     my $self = shift;
+    my $section = shift;
     my $comment_lines_ref = shift || [];
-    foreach (@{$comment_lines_ref}) {
-	return $1
-	    if m/${orig_name_comment}([^#]+?) *###/o;
+    foreach my $comment (@{$comment_lines_ref}) {
+	if( $comment =~ m/${orig_name_comment}([^#]+?) *###/)
+        {
+          $section->{"original_name"} = $1;
+        }
+        elsif ( $comment =~ $auto_comment_read )
+        {
+          $section->{"original_name"} = $1;
+          $section->{"__handled"} = "auto";
+          $section->{"__flavor"} = $2;
+        }
+        elsif ( $comment =~ $manual_comment_read )
+        {
+          $section->{"original_name"} = $1;
+          $section->{"__handled"} = "user";
+        }
     }
     return "";
 }
 
 =item
-C<< $line_ref = Bootloader::Core->UpdateSectionNameLine ($name, \%line, $original_name); >>
+C<< $line_ref = Bootloader::Core->UpdateSectionNameLine ($section, \%line, $original_name); >>
 
 Updates the 'section name line' so that it contains specified name and original name
-inside the comment. As arguments, takes the name (string), the line (hash reference)
+inside the comment. As arguments, takes the section reference (hash reference), the line (hash reference)
 and the original name (string). If original name is set to undef or empty string,
 it is not set in the comment. Returns the updated line reference.
 
 =cut
 
-# map<string,any> UpdateSectionNameLine (string name, map<string,any> line, string original_name)
+# map<string,any> UpdateSectionNameLine (map section, map<string,any> line, string original_name)
 sub UpdateSectionNameLine {
     my $self = shift;
-    my $name = shift;
+    my $section = shift;
     my $line_ref = shift || {};
     my $original_name = shift;
 
+    my $name = $section->{"name"};
     $line_ref->{"value"} = $name;
     if (defined ($original_name) && $original_name ne "")
     {
 	my @comment_before = grep {
-	    ! m/^${orig_name_comment}/o;
+          my $line = $@;
+          my $ret = 1;
+          if ($line =~ m/^${orig_name_comment}/
+            || $line =~ m/$auto_comment_read/
+            || $line =~ m/$manual_comment_read/)
+          {
+            $ret = 0;
+          }
 	}  @{$line_ref->{"comment_before"} || []};
-	push @comment_before, "${orig_name_comment}${original_name}###";
+        my $original_name = $section->{"original_name"};
+        if ( $section->{"__handled"} eq "auto" )
+        {
+          my $flavor = $section->{"__flavor"};
+          my $comment = sprintf($auto_comment_write, $original_name, $flavor);
+	  push @comment_before, $comment;
+          $self->l_milestone( "Core::UpdateSectionNameLine: section name: $name comment: $comment" );
+        }
+        elsif( $section->{"__handled"} eq "manual")
+        {
+          my $comment = sprintf($manual_comment_write, $original_name);
+	  push @comment_before, $comment;
+          $self->l_milestone( "Core::UpdateSectionNameLine: section name: $name comment: $comment" );
+        }
 	$line_ref->{"comment_before"} = \@comment_before;
     }
     return $line_ref;
