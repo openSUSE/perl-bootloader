@@ -1280,7 +1280,7 @@ sub GetCommonDevice {
 	    }
 	}
     }
-    return $occurrences > 1 ? $common_device : "";
+    return $occurrences == scalar @paths ? $common_device : "";
 }
 
 =item

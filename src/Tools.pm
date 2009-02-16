@@ -330,6 +330,11 @@ sub GetMultipath {
   my %ret = {};
   my $logger = Bootloader::Logger::instance();
 
+  unless (DMRaidAvailable())
+  {
+    return \%ret;
+  }
+
   $multipath = AddPathToExecutable("multipath");
 
   if (-e $multipath){
