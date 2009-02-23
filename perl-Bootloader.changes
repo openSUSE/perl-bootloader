@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb 23 15:00:43 CET 2009 - jsrain@suse.cz
+
+- add bootloader section properly in XEN guest (bnc#478365)
+- 0.4.88
+
+-------------------------------------------------------------------
 Thu Feb  5 14:07:43 CET 2009 - jreidinger@suse.cz
 
 - proper detect of multipath with user friendly names (bnc#468792)

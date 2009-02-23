@@ -105,9 +105,11 @@ function add_entry()
 				;;
 				(xen*)
 					opt_xen_kernel=
-					set -- $flavor
-					set -- ${1#xen}
-					opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
+					if [ -e /proc/xen/xsd_port -o ! -e /proc/xen ]; then
+					    set -- $flavor
+					    set -- ${1#xen}
+					    opt_xen_kernel=--xen-kernel=/boot/xen${1:+-$1}.gz
+					fi
 
 				if [ "$forcedefault" == "force-default" ]; then
 					# Add the new bootloader entry (xen kernel)
