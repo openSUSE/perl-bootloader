@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Feb 24 12:19:06 CET 2009 - jreidinger@suse.cz
+
+- also remove bootloader section properly in XEN guest (bnc#478365)
+- 0.4.89
+
+-------------------------------------------------------------------
 Mon Feb 23 15:00:43 CET 2009 - jsrain@suse.cz
 
 - add bootloader section properly in XEN guest (bnc#478365)
