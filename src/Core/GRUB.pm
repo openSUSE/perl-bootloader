@@ -1303,11 +1303,9 @@ sub CreateKernelLine {
     my $vga = $sectinfo_ref->{"vgamode"} || "";
     my $append = $sectinfo_ref->{"append"} || "";
     my $image = $sectinfo_ref->{"image"} || "";
-    my $console = $sectinfo_ref->{"console"} || "";
     $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
-    $console = " console=$console" if $console ne "";
 
     $image = $self->UnixPath2GrubPath ($image, $grub_root);
     return "$image$root$append$vga";
@@ -1499,12 +1497,8 @@ sub Info2Section {
 
     if ($type eq "xen") {
 #handle kernel console, if redefined in console use it and if not then parse from append line
-	if (
-          (exists($sectinfo{"console"}) and
-	    ($sectinfo{"console"} =~ /ttyS(\d+),(\w+)/))
-          or
-          (exists($sectinfo{"append"}) and
-	    ($sectinfo{"append"} =~ /console=ttyS(\d+),(\w+)/)) )
+	if ( exists($sectinfo{"append"}) and
+	    ($sectinfo{"append"} =~ /console=ttyS(\d+),(\w+)/) )
 	{
 	    # merge console and speed into xen_append
 	    my $console = sprintf("com%d", $1+1);
@@ -1574,7 +1568,6 @@ sub Info2Section {
 		delete ($sectinfo{"vgamode"});
 		delete ($sectinfo{"append"});
 		delete ($sectinfo{"image"});
-		delete ($sectinfo{"console"});
 	    }
 	}
 	elsif ($key eq "initrd")
