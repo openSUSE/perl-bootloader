@@ -978,14 +978,11 @@ sub UpdateSerialConsole{
   my $console = shift;
   my $ret = $append;
 
-
-  if ($console ne "") {
-    $console = "console=$console";
-    if ($ret =~ m/console=ttyS(\d+)(,(\w+))?/){
-      $ret =~ s/console=ttyS(\d+)(,(\w+))?/$console/ ;
-    } else {
-      $ret = "$append $console";
-    }
+  $console = "console=$console" unless ($console eq "");
+  if ($ret =~ m/console=ttyS(\d+)(,(\w+))?/){
+    $ret =~ s/console=ttyS(\d+)(,(\w+))?/$console/ ;
+  } elsif ($console ne ""){
+    $ret = "$append $console";
   }
 
   $self->{"loader"}->l_milestone("Library::UpdateSerialConsole append $append console $console res $ret" )
