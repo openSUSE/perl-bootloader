@@ -100,11 +100,6 @@ function add_entry()
 		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/lilo.conf      -o \
 		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/elilo.conf     -o \
 		     -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/zipl.conf ]; then
-                        default=""
-                        if test ! "$PBL_AUTOTEST"; then
-                          default="--default"
-                        fi
-                        
 			case $flavor in
 				(kdump|um)
 				;;
@@ -121,7 +116,7 @@ function add_entry()
 					# and force it beeing the default entry
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
-							  $default \
+							  --default \
 							  --force-default \
 							  --add \
 							  --force $opt_xen_kernel \
@@ -131,7 +126,7 @@ function add_entry()
 					# Add the new bootloader entry (xen kernel)
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
-							  $default \
+							  --default \
 							  --add \
 							  --force $opt_xen_kernel \
 							  --name "$release" \
@@ -183,7 +178,7 @@ function add_entry()
 					# Add the new bootloader entry
 					update_bootloader --image /boot/$image \
 							  --initrd /boot/$initrd \
-							  $default \
+							  --default \
 							  --add \
 							  --force \
 							  --name "$release" \

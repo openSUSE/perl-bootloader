@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 79;
+use Test::More tests => 78;
 
 use lib "./";
 use Bootloader::Library;
