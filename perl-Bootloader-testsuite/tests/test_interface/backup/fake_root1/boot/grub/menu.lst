@@ -15,7 +15,9 @@ title Debug -- openSUSE 11.0 - 2.6.25.4-10
 ###Don't change this comment - YaST2 identifier: Original name: linux-2.6.25.4-10-default###
 title openSUSE 11.0 - 2.6.25.4-10
     root (hd0,1)
-    kernel /boot/vmlinuz-2.6.25.4-10-default root=/dev/sda2 resume=/dev/sda1 splash=silent showopts vga=0x31a
+    kernel /boot/vmlinuz-2.6.25.4-10-default \
+    root=/dev/sda2 resume=/dev/sda1 splash=silent\
+    showopts vga=0x31a
     initrd /boot/initrd-2.6.25.4-10-default
 
 ###Don't change this comment - YaST2 identifier: Original name: console###
