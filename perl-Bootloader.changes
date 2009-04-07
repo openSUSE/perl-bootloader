@@ -1,8 +1,18 @@
 -------------------------------------------------------------------
-Fri Nov 21 13:58:20 CET 2008 - jsrain@suse.cz
+Tue Apr  7 10:25:16 CEST 2009 - jreidinger@suse.cz
 
+- backport handling module nounzip (bnc #397864)
+- version bump to 0.4.19.14 
+
+-------------------------------------------------------------------
+Tue Oct 14 15:05:16 CEST 2008 - jreidinger@suse.cz
+
+- fix fallback for translation from unix device to grub on
+  system with activated multipath (bnc #381386)
+- doesn't collect any hardware information if user want skip
+  bootloader update after kernel upgrade (bnc #425501)
 - load initrd at 16MB on S/390 (bnc #434234)
-- 0.4.19.13
+- version bump to 0.4.19.13
 
 -------------------------------------------------------------------
 Wed Apr 23 15:25:05 CEST 2008 - aosthof@suse.de
