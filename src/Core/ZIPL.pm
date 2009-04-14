@@ -649,7 +649,7 @@ sub Section2Info {
 	my $key = $line_ref->{"key"};
 	if ($key eq "label") {
 	    $ret{"name"} = $line_ref->{"value"};
-	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
+	    my $on = $self->Comment2OriginalName (\%ret,$line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	}
 	elsif ($key eq "image")

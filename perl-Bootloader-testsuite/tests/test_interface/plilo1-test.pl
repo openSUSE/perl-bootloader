@@ -22,7 +22,7 @@ ok($lib_ref->ReadSettings());
 my $globals = $lib_ref->GetGlobalSettings();
 ok($globals);
 is($globals->{'default'},'Linux');
-is($globals->{"timeout"},"80");
+is($globals->{"timeout"},"8");
 is($globals->{"activate"},"true");
 is($globals->{"boot_iseries_custom"},"/dev/sda2");
 

@@ -89,7 +89,7 @@ foreach my $section (@sections) {
     is( $section->{"xen"}, '/boot/xen.gz' );
     is( $section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok' );
     is( $section->{"vgamode"}, '0x332' );
-    $section->{'console'} = 'ttyS1,9600n52r'; #test change console
+    $section->{'append'} = $lib_ref->UpdateSerialConsole( $section->{'append'},'ttyS1,9600n52r'); #test change console
     $section->{'__modified'} = '1';
   }
   elsif ( $section->{'original_name'} eq "console" )
@@ -144,6 +144,7 @@ my $new_section = {(
 
 push @sections, $new_section;
 
+print "set new sections \n";
 ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
 ok($lib_ref->UpdateBootloader(1));

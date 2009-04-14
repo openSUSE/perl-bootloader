@@ -1153,7 +1153,7 @@ sub Section2Info {
 	elsif ($key eq "title")
 	{
 	    $ret{"name"} = $val;
-	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
+	    my $on = $self->Comment2OriginalName (\%ret, $line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	}
 	elsif ($key eq "kernel")

@@ -1012,15 +1012,18 @@ my $manual_comment_read="###Don't change this comment - YaST2 identifier: Origin
 my $manual_comment_write="###Don't change this comment - YaST2 identifier: Original name: %s Handled by: user###";
 
 # string Comment2OriginalName (list<string> comment)
-sub Comment2OriginalName($$) {
+sub Comment2OriginalName() {
     my $self = shift;
     my $section = shift;
     my $comment_lines_ref = shift || [];
+    my $ret = "";
     foreach my $comment (@{$comment_lines_ref}) {
-	if( $comment =~ m/${orig_name_comment}([^#]+?) *###/)
+	if( $comment =~ m/$orig_name_comment(.*)###/)
         {
           $section->{"original_name"} = $1;
+          $ret = $1;
         }
+=cut prepared autosections
         elsif ( $comment =~ $auto_comment_read )
         {
           $section->{"original_name"} = $1;
@@ -1032,8 +1035,9 @@ sub Comment2OriginalName($$) {
           $section->{"original_name"} = $1;
           $section->{"__handled"} = "user";
         }
+=cut
     }
-    return "";
+    return $ret;
 }
 
 =item
@@ -1049,25 +1053,26 @@ it is not set in the comment. Returns the updated line reference.
 # map<string,any> UpdateSectionNameLine (map section, map<string,any> line, string original_name)
 sub UpdateSectionNameLine {
     my $self = shift;
-    my $section = shift;
+    my $name = shift;
     my $line_ref = shift || {};
     my $original_name = shift;
 
-    my $name = $section->{"name"};
     $line_ref->{"value"} = $name;
     if (defined ($original_name) && $original_name ne "")
     {
 	my @comment_before = grep {
-          my $line = $@;
+          my $line = $_;
           my $ret = 1;
-          if ($line =~ m/^${orig_name_comment}/
+          if ($line =~ m/$orig_name_comment/
             || $line =~ m/$auto_comment_read/
             || $line =~ m/$manual_comment_read/)
           {
             $ret = 0;
           }
+          $ret;
 	}  @{$line_ref->{"comment_before"} || []};
-        my $original_name = $section->{"original_name"};
+        push @comment_before, $orig_name_comment.$original_name."###";
+=cut
         if ( $section->{"__handled"} eq "auto" )
         {
           my $flavor = $section->{"__flavor"};
@@ -1081,6 +1086,7 @@ sub UpdateSectionNameLine {
 	  push @comment_before, $comment;
           $self->l_milestone( "Core::UpdateSectionNameLine: section name: $name comment: $comment" );
         }
+=cut
 	$line_ref->{"comment_before"} = \@comment_before;
     }
     return $line_ref;
@@ -1150,7 +1156,7 @@ sub Section2Info {
 	if ($key eq "label")
 	{
 	    $ret{"name"} = $line_ref->{"value"};
-	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
+	    my $on = $self->Comment2OriginalName (\%ret,$line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	}
 	elsif ($key eq "image")

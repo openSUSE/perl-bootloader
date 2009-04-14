@@ -753,7 +753,7 @@ sub Section2Info {
 
 	if ($key eq "label")
 	{
-	    my $on = $self->Comment2OriginalName ($line_ref->{"comment_before"});
+	    my $on = $self->Comment2OriginalName (\%ret,$line_ref->{"comment_before"});
 	    $ret{"original_name"} = $on if ($on ne "");
 	    $ret{"name"} = $val;
 	    next;
