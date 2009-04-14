@@ -535,6 +535,8 @@ sub Global2Info {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
 	
+        $val = int($val/10) if ($key eq "timeout");
+
 	if ($key eq "boot")
 	{
 	    $key = boot2special($val, $arch);
@@ -614,6 +616,7 @@ sub Info2Global {
 	else {
             $line_ref->{"value"} = undef;
 	    if (defined ($globinfo{$key})) {
+                $line_ref->{"value"} = $line_ref->{"value"}*10 if ($key eq "timeout");
 		$line_ref->{"value"} = delete $globinfo{$key};
 	    }
 	}
@@ -637,6 +640,7 @@ sub Info2Global {
 	next unless exists $go->{$key};
 
         $key = "boot" if ($key =~ /^boot_/);
+        $value = $value*10 if ($key eq "timeout");
 
 	my $type = $go->{$key};
 	# bool values appear in a config file or not

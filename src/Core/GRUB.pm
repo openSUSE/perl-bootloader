@@ -1575,7 +1575,7 @@ sub Info2Section {
 	    if ($type eq "other" or not defined ($sectinfo{$key})) {
 		$line_ref = undef;
 	    }
-	    elsif(defined $sectinfo{$key}) {
+	    elsif( defined $sectinfo{$key} &&  $sectinfo{$key} ne "") {
 		$line_ref->{"value"} = $self->UnixPath2GrubPath ($sectinfo{$key}, $grub_root);
 	    }
 	    delete ($sectinfo{$key});
@@ -1667,7 +1667,7 @@ sub Info2Section {
 	    "value" => $val,
 	};
     }
-    if (exists $sectinfo{"initrd"} && ($type eq "image" || $type eq "xen")) {
+    if (exists $sectinfo{"initrd"} && $sectinfo{"initrd"} ne "" && ($type eq "image" || $type eq "xen")) {
       my $value =  $self->UnixPath2GrubPath ($sectinfo{"initrd"}, $grub_root);
       my $key = "initrd";
       if ($type eq "xen")
@@ -2089,8 +2089,6 @@ sub GrubDev2MountPoint {
 
     my $mountpoint = $grub_dev;
     foreach $device (@devices) {
-	$self->l_debug ("GRUB::GrubDev2MountPoint : finding for device $device");
-
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
 	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
 	    if ($self->GetKernelDevice($d) eq $device) { 

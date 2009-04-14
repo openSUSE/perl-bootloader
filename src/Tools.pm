@@ -338,7 +338,7 @@ sub GetMultipath {
   $multipath = AddPathToExecutable("multipath");
 
   if (-e $multipath){
-    my $command = "$multipath -d -v 2+ -ll";
+    my $command = "$multipath -d -l";
     my @result = qx/$command/;
     # return if problems occurs...typical is not loaded kernel module
     if ( $? ) {
@@ -346,11 +346,13 @@ sub GetMultipath {
       return \%ret;
     }
 
+    chomp @result;
+
     my $line = "";
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
       $logger->milestone("Tools::GetMultipath: processing line $line");
-      if ($line !~ m/^(\S+)\s*dm-\d+.*$/){
+      if ($line !~ m/^(\S+)\s.*dm-\d+.*$/){
         $line = shift @result;
         next;
       }
@@ -359,7 +361,7 @@ sub GetMultipath {
         $line = shift @result;
         chomp $line;
         $logger->milestone("Tools::GetMultipath: processing line $line");
-        if ($line =~ m/^(.*)dm-.*$/){
+        if ($line =~ m/(.*)dm-.*$/){
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
@@ -452,6 +454,7 @@ sub DMRaidAvailable {
 
     # Check if device-mapper is available in /proc/misc
     my $dm_available = qx{grep device-mapper /proc/misc};
+    chomp $dm_available;
 
     if ($dm_available eq "") {
 	return $retval;
@@ -587,6 +590,7 @@ sub IsDMRaidSlave {
     if ($dm_devs[0] !~ /No devices found/) {
         foreach my $dmdisk (@dm_devs) {
             my @tables = qx{$dmsetup table '$dmdisk'};
+            chomp @tables;
 
             foreach my $line (@tables) {
                 my @content = split(/ /, $line);
@@ -1150,11 +1154,19 @@ sub AddSection {
     }
     else 
     {
-        $sysconf = GetSysconfigValue("DEFAULT_APPEND");
-        $new{"append"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("DEFAULT_VGA");
-        $new{"vgamode"} = $sysconf if (defined $sysconf);
-    }
+        #RT kernel have special args bnc #450153
+        if ($new{"image"} =~ m/-rt$/ && defined (GetSysconfigValue("RT_APPEND"))){
+          $sysconf = GetSysconfigValue("RT_APPEND");
+          $new{"append"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("RT_VGA");
+          $new{"vgamode"} = $sysconf if (defined $sysconf);
+        } else {
+          $sysconf = GetSysconfigValue("DEFAULT_APPEND");
+          $new{"append"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("DEFAULT_VGA");
+          $new{"vgamode"} = $sysconf if (defined $sysconf);
+        }
+     }
 
     $sysconf = GetSysconfigValue("CONSOLE");
     $new{"console"} = $sysconf if (defined $sysconf);
@@ -1259,6 +1271,7 @@ sub AddSection {
     # the new default entry.
     my $glob_ref = $lib_ref->GetGlobalSettings ();
     $default = 1 if (delete($glob_ref->{"removed_default"}) == 1);
+    $default = 1 unless (defined ($glob_ref->{"default"}) && $glob_ref->{"default"} ne ""); #avoid non-exist default
     if ($default) {
 	$glob_ref->{"default"} = $new{"name"};
         if ($loader eq "lilo") #remove read-only flag bnc #381669

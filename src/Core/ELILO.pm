@@ -482,6 +482,8 @@ sub Global2Info {
 	my $val = $line_ref->{"value"};
 	my $type = $go->{$key};
 
+        $val = int($val/10) if ($key eq "timeout");
+
 	if (defined $type && $type eq "bool") {
 	    $ret{$key} = "true";
 	}
@@ -533,11 +535,10 @@ sub Info2Global {
             next;
         }
 
-	if (defined ($globinfo{$key})) {
+        if (defined ($globinfo{$key})) {
             $line_ref->{"value"} = delete $globinfo{$key};
-	}
-	else
-        {
+            $line_ref->{"value"} = $line_ref->{"value"}*10 if ($key eq "timeout");
+	}else {
 	    next;
 	}
 
@@ -558,19 +559,20 @@ sub Info2Global {
     while ((my $key, my $value) = each (%globinfo)) {
 	# only accept known global options :-)
 	next unless exists $go->{$key};
+        $value = $value*10 if ($key eq "timeout");
 
         my ($type) = split /:/, $go->{$key};
 	# bool values appear in a config file or not
-	if ($type eq "bool") 
-        {
-	    next if $value ne "true";
-	    $value = "";
-	}
+	if ($type eq "bool") {
+            next if $value ne "true";
+            $value = "";
+        }
 
-	push @lines, {
-	    "key" => $key,
-	    "value" => $value,
-	};
+        push @lines, {
+            "key" => $key,
+            "value" => $value,
+        };
+	
     }
     return \@lines;
 }
