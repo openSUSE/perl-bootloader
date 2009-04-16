@@ -65,7 +65,7 @@ foreach my $section (@sections) {
     is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10-default' );
     is( $section->{'name'}, 'openSUSE 11.0 - 2.6.25.4-10' );
     is( $section->{'vgamode'}, '0x31a' );
-    is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
+    is( $section->{'append'}, 'resume=/dev/sda####1 splash=silent showopts' );
     ok( not defined $section->{'console'} );
   }
   elsif ( $section->{'original_name'} eq "failsafe" )

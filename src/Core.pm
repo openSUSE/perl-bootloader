@@ -693,6 +693,19 @@ sub MenuFileLineEmpty {
 }
 
 =item
+C<< $allow_afterline_empty = Bootloader::Core->AllowCommentAfterText(); >>
+
+checks if bootloader configuration allow comments after text on line,
+returns a scalar (1 if true, 0 otherwise).
+
+=cut
+
+# boolean MenuFileLineEmpty (string line)
+sub AllowCommentAfterText {
+  return 1;
+}
+
+=item
 C<< ($lines_ref, $com_bef) Bootloader::Core->ProcessSingleMenuFileLine ($lines, $com_bef, $separator); >>
 
 processes line represented as string and returns it represented as hashes
@@ -718,20 +731,21 @@ sub ProcessSingleMenuFileLine($$$) {
 
     if ($self->MenuFileLineEmpty ($line))
     {
-	# ignore empty line
+	# skip empty
     }
-    elsif ($line =~ /^[ \t]*#/)
+    elsif ($line =~ /^\s*#/)
     {
 	push @{$comment_before}, $line;
     }
-    elsif ($line =~ /^[ \t]*([^:\[ \t=#]+)[ \t]*(.*)$/)
+    elsif ($line =~ /^\s*([^:\[ \t=#]+)[ \t]*(.*)$/)
     {
 	my $value = "";
 	my $comment_after = "";
 	my $key = $1;
 	$line = $2;
-	if ($line =~ /^([^#]*?)(\s*#.*)$/)
+	if ($self->AllowCommentAfterText() and $line =~ /^([^#]*?)(\s*#.*)$/)
 	{
+            print "comment after";
 	    $line = $1;
 	    $comment_after = $2;
 	}

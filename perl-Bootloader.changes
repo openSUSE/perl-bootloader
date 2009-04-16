@@ -4,6 +4,7 @@ Tue Apr 14 14:22:39 CEST 2009 - jreidinger@suse.cz
 - Code cleanup
 - abstract udev settings from library
 - abstract architecture from library
+- doesn't parse # after text for grub bootloader (bnc #481416)
 - 0.5.0  
 
 -------------------------------------------------------------------
