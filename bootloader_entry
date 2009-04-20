@@ -79,7 +79,7 @@ function add_entry()
 	# Set up the new kernel
 	if [ "$YAST_IS_RUNNING" != instsys ]; then
 		case $flavor in
-			(kdump|um)
+			(kdump*|um)
 			;;
 			(xen*)
 				opt_xen_kernel=
