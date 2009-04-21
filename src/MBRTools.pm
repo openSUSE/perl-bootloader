@@ -33,6 +33,8 @@ package Bootloader::MBRTools;
 use strict;
 use base 'Exporter';
 
+use Bootloader::Logger;
+
 our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR
 );
 
@@ -43,6 +45,8 @@ sub IsThinkpadMBR($) {
   $mbr =~ s/\d{7}//g; #remove address
   $mbr =~ s/\n//g; #remove end lines
   $mbr =~ s/\S//g; #remove whitespace
+
+  Bootloader::Logger::instance()->milestone("checked mbr is: $mbr");
 
   return $mbr =~ m/$thinkpad_id/ ;
 }
@@ -100,7 +104,11 @@ sub PatchThinkpadMBR($) {
 
   # read original mbr
 
-  seek F, ($old_mbr_sec - 1) << 9, 0 or die "$disk: $!\n";
+  unless (seek F, ($old_mbr_sec - 1) << 9, 0)
+  {
+    Bootloader::Logger::instance()->error("$disk $! \n");
+    return 0;
+  }
 
   my $old_mbr_s;
   sysread F, $old_mbr_s, 0x200;
@@ -114,10 +122,13 @@ sub PatchThinkpadMBR($) {
   # verify crc
 
   if($mbr[6] == 0) {
-    print STDERR "$disk: orig mbr crc not checked\n" if $mbr[6] == 0;
+    Bootloader::Logger::instance()->warning("$disk: orig mbr crc not checked\n");
   }
   else {
-    die "$disk: orig mbr crc failure\n" unless crc(\@old_mbr) == $mbr[6];
+    unless (crc(\@old_mbr) == $mbr[6]){
+       Bootloader::Logger::instance()->error("$disk: orig mbr crc failure\n");
+       return 0;
+    }
   }
 
 
@@ -141,6 +152,57 @@ sub PatchThinkpadMBR($) {
   close F;
 
   return 1;
+}
+
+sub ExamineMBR($){
+  my $device = shift;
+  my $MBR;
+
+  Bootloader::Logger::instance()->milestone("Examine MBR for device $device");
+
+  return undef unless defined $device;
+
+  unless (open(FD, "<" . $device)){
+      Bootloader::Logger::instance()->error("Examine MBR cannot open $device");
+      return undef;
+  }
+
+  unless (sysread(FD, $MBR, 512, 0) == 512){
+      Bootloader::Logger::instance()->error("Examine MBR cannot read 512 bytes from device $device");
+      return undef;
+  }
+
+  if (substr($MBR, 320, 126) =~
+        m/invalid partition table.*no operating system/i) {
+        Bootloader::Logger::instance()->milestone("Examine MBR find Generic MBR");
+        return "generic";
+  }
+
+  if (substr($MBR, 346, 100) =~
+        m/GRUB .Geom.Hard Disk.Read. Error/) {
+        Bootloader::Logger::instance()->milestone("Examine MBR find Grub MBR");
+        return "grub";
+  }
+
+  if (substr($MBR, 4, 20) =~
+        m/LILO/) {
+        Bootloader::Logger::instance()->milestone("Examine MBR find lilo MBR");
+        return "lilo";
+  }
+
+  if (substr($MBR, 12, 500) =~
+        m/NTLDR is missing/) {
+        Bootloader::Logger::instance()->milestone("Examine MBR find windows non-vista MBR");
+        return "windows";
+  }
+
+  if (substr($MBR, 0, 440) =~
+        m/invalid partition table.*Error loading operating system/i) {
+        Bootloader::Logger::instance()->milestone("Examine MBR find windows Vista MBR");
+        return "windows";
+  }
+
+  return "unknown";
 }
 
 1;

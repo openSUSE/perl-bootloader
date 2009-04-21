@@ -997,6 +997,30 @@ sub WriteThinkpadMBR {
    return $res;
 }
 
+=item
+C<< $result = Bootloader::Library::ExamineMBR ($disk); >>
+
+Detects what code is in MBR of device. Return string or undef if fail.
+Possible string is:
+  generic -> generic MBR
+  grub -> Grub MBR
+  lilo -> lilo stage1
+  windows -> windows (include vista)
+  unknown -> unknown code
+  invalid -> code which cannot boot
+
+=cut
+
+#  ExamineMBR (string disk)
+sub ExamineMBR{
+  my $self = shift;
+  my $disk = shift;
+  my $res = MBRTools::ExamineMBR($disk);
+  Bootloader::Logger::instance()->milestone("Library::ExamineMBR on $disk result $res" );
+  
+  return $res;
+}
+
 sub CountGRUBPassword{
   my $self = shift;
   my $pass = shift;
