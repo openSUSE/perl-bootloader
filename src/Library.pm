@@ -966,6 +966,30 @@ sub GrubDev2UnixDev {
 }
 
 =item
+C<< ($dev,$path) = Bootloader::Library->SplitPath ($path); >>
+
+Split unix path to device and relative path on this device.
+
+=cut
+
+# (string,string) SplitPath (string path)
+sub SplitPath {
+    my $self = shift;
+    my $opath = shift;
+    my $loader = $self->{loader} || return undef;
+
+    my @ret = $loader->SplitDevPath ($opath);
+
+    if (scalar (@ret) == 2){
+        Bootloader::Logger::instance()->milestone( "Library::SplitPath arg:: $opath result dev: ".($ret[0]||"")." result path: ".($ret[1]||"") );
+    }else{
+        Bootloader::Logger::instance()->milestone( "Library::SplitPath arg:: $opath result undef");
+    }
+
+    return @ret;
+}
+
+=item
 C<< $result = Bootloader::Library::DetectThinkpadMBR ($disk); >>
 
 Try detect on disk if contains ThinkpadMBR. Return true if detected.
@@ -1030,7 +1054,6 @@ sub CountGRUBPassword{
   Bootloader::Logger::instance()->milestone("Library::CountGRUBPassword result $res" );
   return undef unless $res =~ m/^\$1\$.*\$.*$/;
   return $res;
-
 }
 
 sub UpdateSerialConsole{
