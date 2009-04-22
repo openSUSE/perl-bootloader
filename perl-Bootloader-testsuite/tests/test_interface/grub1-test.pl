@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 78;
+use Test::More tests => 79;
 
 use lib "./";
 use Bootloader::Library;
@@ -20,6 +20,8 @@ my @partition2 = ( "/dev/sda2", "/dev/sda","2","130","","","","","/dev/disk/by-i
 my @partition3 = ( "/dev/sda1", "/dev/sda","1","130","","","","","/dev/disk/by-id/test3");
 my @partitions = ( \@partition1, \@partition2, \@partition3 );
 ok($lib_ref->DefinePartitions(\@partitions));
+my %udevmap = ();
+ok($lib_ref->DefineUdevMapping(\%udevmap));
 ok($lib_ref->ReadSettings());
 
 
