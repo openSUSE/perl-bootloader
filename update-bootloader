@@ -5,6 +5,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Bootloader::Tools;
 use Bootloader::Path;
+use Bootloader::MBRTools;
 use strict;
 
 my %oper;
@@ -186,6 +187,7 @@ GetOptions (\%oper,
     'add|a'    	 ,
     'refresh'    ,
     'remove|r' 	 ,
+    'examinembr|e=s', 
     'default|d'  => \$opt_default,
     'force-default' => \$opt_force_default,
     'help|h'   	 => \$opt_help,
@@ -210,6 +212,16 @@ pod2usage("Option 'default' is only allowed for operation 'add'")
 pod2usage("Option 'force-default' is only allowed for operation 'add'")
     if ($opt_force_default and not defined $oper{add});
     
+if (defined $oper{"examinembr"}) {
+  my $ret = Bootloader::MBRTools::ExamineMBR($oper{"examinembr"});
+  if (defined $ret){
+    print $ret;
+    exit 0;
+  } else {
+    exit 1;
+  }
+}
+
 if (Bootloader::Tools::GetBootloader() eq "none")
 {
   open (LOG, ">>$logname");

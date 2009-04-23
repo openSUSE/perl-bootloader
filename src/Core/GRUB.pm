@@ -1254,6 +1254,9 @@ sub Section2Info {
         {
           $ret{"makeactive"} = "true";
         }
+        else {
+          $ret{"__broken"} = "true"; #unknown key
+        }
     }
 
     $ret{"__lines"} = \@lines;
@@ -1829,6 +1832,9 @@ sub Global2Info {
 	}
 	else {
 	    $ret{$key} = $val;
+            unless (defined $go->{$key}){
+              $ret{"__broken"}="true";
+            }
 	}
     }
     $ret{"__lines"} = \@lines;

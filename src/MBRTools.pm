@@ -35,20 +35,29 @@ use base 'Exporter';
 
 use Bootloader::Logger;
 
-our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR
+our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR ExamineMBR
 );
 
 sub IsThinkpadMBR($) {
   my $disk = shift;
-  my $thinkpad_id = "50e46124108ae0e461241038e074f8e2f458c332edb80103ba8000cd13c3be05068a04240cc0e802c3";
   my $mbr = qx{dd status=noxfer if=$disk bs=512 count=1 2>/dev/null | od -v -t x1 -};
   $mbr =~ s/\d{7}//g; #remove address
   $mbr =~ s/\n//g; #remove end lines
   $mbr =~ s/\S//g; #remove whitespace
 
   Bootloader::Logger::instance()->milestone("checked mbr is: $mbr");
+  
+  my $first_segment = hex("0x".substr ($mbr, 4, 2));
+  my $second_segment = hex("0x".substr ($mbr, 6, 2));
 
-  return $mbr =~ m/$thinkpad_id/ ;
+  my $ret = $first_segment >= 2;
+  $ret &&= $first_segment <= hex("0x63");
+  $ret &&= $second_segment >= 2;
+  $ret &&= $second_segment <= hex("0x63");
+  $ret &&= hex(substr($mbr,28,2)) == hex("0x4e");
+  $ret &&= hex(substr($mbr,30,2)) == hex("0x50");
+
+  return $ret;
 }
 
 # crc function
@@ -172,6 +181,8 @@ sub ExamineMBR($){
       return undef;
   }
 
+  close(FD);
+
   if (substr($MBR, 320, 126) =~
         m/invalid partition table.*no operating system/i) {
         Bootloader::Logger::instance()->milestone("Examine MBR find Generic MBR");
@@ -200,6 +211,11 @@ sub ExamineMBR($){
         m/invalid partition table.*Error loading operating system/i) {
         Bootloader::Logger::instance()->milestone("Examine MBR find windows Vista MBR");
         return "windows";
+  }
+  
+  if (IsThinkpadMBR($device)){
+    Bootloader::Logger::instance()->milestone("Examine MBR find thinkpad MBR");
+    return "thinkpad";
   }
 
   return "unknown";
