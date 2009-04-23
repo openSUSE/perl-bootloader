@@ -463,14 +463,18 @@ sub GrubDev2UnixDev {
     $self->l_milestone ("GRUB::GrubDev2UnixDev: Kernel device is $dev");
 
     if (defined ($partition)) {
+        my $finded = undef;
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
 	    if ( $dev_ref->[1] eq $dev 
               && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
 		$self->l_milestone ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
-		return $dev;
+		$finded = 1;;
 	    }
 	}
+        if (defined $finded){
+          return $dev;
+        }
         #no partition found so return $dev with partition
 	$self->l_warning ("GRUB::GrubDev2UnixDev: No partition found for $dev with $partition.");
         return $dev.$partition;

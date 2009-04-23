@@ -397,7 +397,6 @@ sub GetExtendedPartition {
 	if ($part_ref->[1] eq $disk_dev and
 	    $part_ref->[5] eq "`extended") {
 	    $extended_part_dev = $part_ref->[0];
-	    last;
 	}
     }
 

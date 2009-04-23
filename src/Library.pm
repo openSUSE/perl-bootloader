@@ -363,7 +363,7 @@ sub DefineUdevMapping($) {
 
     while ((my $phys, my $mp) = each (%{$map_ref}))
     {
-	Bootloader::Logger::instance()->milestone ("Library::DefineUdevMapping: Udev device: $phys ;  kernel: $mp");
+	Bootloader::Logger::instance()->milestone ("Library::DefineUdevMapping: Udev device: ".$phys||""." ;  kernel: ".$mp||""."");
     }
 
   $loader->{"udevmap"} = $map_ref;
@@ -624,7 +624,7 @@ sub UpdateBootloader {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone("Library::UpdateBootloader: TRACE avoid_init $avoid_init");
+    Bootloader::Logger::instance()->milestone("Library::UpdateBootloader: TRACE avoid_init ".($avoid_init||""));
 
     return $loader->UpdateBootloader ($avoid_init);
 }

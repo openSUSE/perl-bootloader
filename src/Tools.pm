@@ -89,6 +89,7 @@ our @EXPORT = qw(InitLibrary CountImageSections CountSections
 use Bootloader::Library;
 use Bootloader::Core;
 use Bootloader::Path;
+use Bootloader::Logger;
 
 my $lib_ref = undef;
 my $dmsetup = undef;
@@ -114,7 +115,7 @@ sub DumpLog {
 	return strftime ( "%Y-%m-%d %H:%M:%S", localtime);
     }
 
-    foreach my $rec (@{$core_lib->GetLogRecords ()})
+    foreach my $rec (@{Bootloader::Logger::instance()->GetLogRecords()})
     {
 	my $message = $rec->{"message"};
 	my $level = $rec->{"level"};
@@ -266,8 +267,7 @@ sub ReadPartitions {
 
     foreach my $disk (@disks)
     {
-        my $dev_disk = $disk;
-        $dev_disk = $udevmap->{$disk} if defined $udevmap->{$disk};
+        my $dev_disk = "/dev/$disk";
         if (!IsDMDevice($dev_disk) && !IsDMRaidSlave($dev_disk)){
 	    # get partitions of $disk
 	    opendir(BLOCK_DEVICES, "$sb/$disk") ||
@@ -327,7 +327,7 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 =cut
 
 sub GetMultipath {
-  my %ret = {};
+  my %ret = ();
   my $logger = Bootloader::Logger::instance();
 
   unless (DMRaidAvailable())
@@ -387,7 +387,7 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 =cut
 
 sub GetUdevMapping {
-  my %mapping= {};
+  my %mapping= ();
 
   my @output = `find -P /dev -type b`;
   chomp @output;
@@ -431,7 +431,7 @@ sub GetUdevMapping {
   }
 
   while (my ($k,$v) = each (%mapping)){
-      logger->milestone ("UDEV MAPPING: $k -> $v \n");
+      $logger->milestone ("UDEV MAPPING: ".$k||""." -> ".$v||""." \n");
   }
 
 
@@ -574,15 +574,16 @@ returns 1 if yes, 0 if no
 =cut
 
 sub IsDMRaidSlave {
-
     my $disk = shift;
+
+    unless ( DMRaidAvailable() and -e $dmsetup) {
+        return 0;
+    }
+
     my $majmin_disk = `stat -c "%t:%T" $disk`;
     chomp($majmin_disk);
     my @dmparts = ();
 
-    unless (-e $dmsetup) {
-        return 0;
-    }
 
     my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
     chomp @dm_devs;
@@ -620,7 +621,7 @@ otherwise 0.
 sub IsDMDevice {
     my $dev = shift;
 
-    unless (-e $dmsetup) {
+    unless ( DMRaidAvailable() and -e $dmsetup) {
         return 0;
     }
 

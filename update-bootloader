@@ -230,7 +230,7 @@ if (defined $opt_xen_kernel) {
     $opt_xen = 1;
 } elsif ($opt_xen) {
     my $xen_flavor = $opt_image;
-    $xen_flavor =~ s/.*-(\w+)/\1/;
+    $xen_flavor =~ s/.*-(\w+)/$1/;
 
     if ($xen_flavor eq "xenpae") {
         $opt_xen_kernel = "/boot/xen-pae.gz";
@@ -351,7 +351,7 @@ if (defined $oper{add}) {
     # Naming scheme for all other kernels
     else {
 	my $flavor = $opt_name;
-	$flavor =~ s/.*-(\w+)/\1/;
+	$flavor =~ s/.*-(\w+)/$1/;
 	$flavor = ucfirst ($flavor);
 
 	# Create long labels for grub
