@@ -174,12 +174,13 @@ sub GetMetaData() {
     );
 
     # give a list of possible root devices: all MD devices
-    # and all 'Linux' devices above 20 cylinders
+    # and all 'Linux' devices above 20 cylinders and not swap
     my $root_devices = join(":",
-	(map {
+        (map {
 	    my ($device, $disk, $nr, $fsid, $fstype,
 		$part_type, $start_cyl, $size_cyl) = @$_;
-	    (($fsid eq "131" or $fstype =~ m:linux:i) and
+            # allow only linux standart partitions, 130 is linux swap
+	    (($fsid eq "131" or ($fsid ne "130" and $fstype =~ m:linux:i)) and
 	     $size_cyl >= 20)
 		? $device : ();
 	} @partinfo),
@@ -196,10 +197,10 @@ sub GetMetaData() {
 	} @partinfo
     );
 
-    # FIXME: does it make sense to distinguish between x86_64 and x86?
+    # does it make sense to distinguish between x86_64 and x86? 
+    #jreidinger: no, it only is here to uniform with ppc where it is reasonable
     $exports{"arch"} = "x86";
     $exports{"global_options"} = {
- 	# for iseries list for others exactly one allowed
 	boot     => "multi:Boot Loader Locations:",
 	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
 	timeout  => "int:Timeout in Seconds:8:0:3600",

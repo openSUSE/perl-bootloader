@@ -16,6 +16,8 @@ This package is the core library of the bootloader configuration
 
 use Bootloader::Core;
 
+C<< $res = Bootloader::Core->trim ($string); >>
+
 C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
 
 C<< $device = Bootloader::Core->MP2Dev ($mountpoint); >>
@@ -129,7 +131,20 @@ my $headline = "# Modified by YaST2. Last modification on ";
 # variables
 
 =item
+C<< $res = Bootloader::Core->trim ($string); >>
 
+Cut whitespace from front and back.
+
+=cut
+sub trim{
+    my $self = shift;
+    my $string = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
+}
+
+=item
 C<< Bootloader::Core->l_debug ($message); >>
 
 Writes a debug message to the system log buffer.
@@ -139,16 +154,13 @@ sub l_debug {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "debug",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
-
 C<< Bootloader::Core->l_milestone ($message); >>
 
 Writes a milestone message to the system log buffer.
@@ -158,16 +170,13 @@ sub l_milestone {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "milestone",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
-
 C<< Bootloader::Core->l_warning ($message); >>
 
 Writes a warning message to the system log buffer.
@@ -177,16 +186,13 @@ sub l_warning {
     my $self = shift;
     my $message = shift;
  
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "warning",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
-
 C<< Bootloader::Core->l_error ($message); >>
 
 Writes an error message to the system log buffer.
@@ -196,16 +202,13 @@ sub l_error {
     my $self = shift;
     my $message = shift;
 
-    my @log = @{$self->{"log_records"}};
-    push @log, {
+    push @{$self->{"log_records"}}, {
 	"message" => $message,
 	"level" => "error",
     };
-    $self->{"log_records"} = \@log;;
 }
 
 =item
-
 C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
 
 
@@ -1652,7 +1655,11 @@ sub SetDeviceMapping {
     my $self = shift;
     my $devmap_ref = shift;
 
+    $self->l_debug ("Core::SetDeviceMapping: called.");
     $self->{"device_map"} = $devmap_ref;
+    while  ( my ($key, $value) = each (%$devmap_ref)){
+        $self->l_milestone ("Core::SetDeviceMapping: device_mapping: $key <=> $value");
+    }
     return 1;
 }
 
@@ -1674,6 +1681,21 @@ sub GetSettings {
 	if (defined ($self->{$key}))
 	{
 	    $ret{$key} = $self->{$key};
+            if ($key eq "sections")
+            {
+              foreach my $section (@{$ret{$key}})
+              {
+                $self->l_milestone ("Core::GetSettings: store: $key:" . join( " - ", %{$section}));
+              }
+            }
+            elsif ($key eq "global" or $key eq "device_map")
+            {
+              $self->l_milestone ("Core::GetSettings: store: $key:" . join( ",", %{$ret{$key}}));
+            }
+            else
+            {
+              $self->l_milestone ("Core::GetSettings: store: $key:" . join( ",", $ret{$key}));
+            }
 	}
     }
     return \%ret;
@@ -1698,7 +1720,22 @@ sub SetSettings {
 	if (defined ($settings{$key}))
 	{
 	    $self->{$key} = $settings{$key};
-	}
+            if ($key eq "sections")
+            {
+              foreach my $section (@{$settings{$key}})
+              {
+                $self->l_milestone ("Core::SetSettings: store: $key:" . join( " - ", %{$section}||""));
+              }
+            }
+            elsif ($key eq "global" or $key eq "device_map")
+            {
+              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", %{$settings{$key}} || ""));
+            }
+            else
+            {
+              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", $settings{$key}||""));
+            }
+        }
     }
     return 1;
 }
@@ -1843,7 +1880,7 @@ sub RealFileName {
     {
 	$ret = $self->CanonicalPath($filename);
     }
-    $self->l_debug ("Core::RealFileName: Filename $filename after resolving symlinks: $ret");
+    $self->l_milestone("Core::RealFileName: Filename $filename after resolving symlinks: $ret");
     return $ret;
 }
 

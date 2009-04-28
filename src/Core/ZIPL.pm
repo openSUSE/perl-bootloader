@@ -520,8 +520,9 @@ sub Info2Section {
 	    } # else ignore for unknown section type
         }
         elsif (not exists ($so->{$type . "_" . $key})) {
-            # print $type . "_" . $key . " unknown!\n";
-            next; # only accept known section options CAVEAT!
+	    $self->l_milestone (
+		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+            next; 
         }
 	elsif ($key eq "list") {
 	    my $i = 1;

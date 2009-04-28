@@ -190,7 +190,7 @@ sub DefineMountPoints {
 
     while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
     {
-	$loader->l_debug ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
+	$loader->l_milestone ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
     }
     $loader->{"mountpoints"} = $mountpoints_ref;
     return 1;
@@ -200,6 +200,7 @@ sub GetMountPoints {
     my $self = shift;
 
     my $loader = $self->{"loader"};
+    $loader->l_milestone ("Library::GetMountPoints: TRACE");
     return $loader->{"mountpoints"};
 }
 
@@ -233,7 +234,7 @@ sub DefinePartitions {
     foreach my $part_ref (@{$partitions_ref})
     {
 	my ($part, $disk, $num, @part_info ) = @{$part_ref};
-	$loader->l_debug ("Library::DefinePartitions: Partition: $part ; " .
+	$loader->l_milestone ("Library::DefinePartitions: Partition: $part ; " .
 			  "Disk: $disk ; Number: $num ; Info: " .
 			  join(", ", map { "$_"; } @part_info) );
     }
@@ -274,7 +275,7 @@ sub DefineMDArrays {
     while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
     {
 	my $members = join ", ", @{$members_ref};
-	$loader->l_debug ("Library::DefineMDArrays: MD Array: $md ; Members: $members");
+	$loader->l_milestone ("Library::DefineMDArrays: MD Array: $md ; Members: $members");
     }
     $loader->{"md_arrays"} = $md_arrays_ref;
     return 1;
@@ -371,6 +372,8 @@ sub ReadSettingsTmp {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
+    $loader->l_milestone(" Library::ReadSettingsTmp: TRACE tmp_dir $tmp_dir ");
+
     my @files = @{$loader->ListFiles ()};
     my %filenames = ();
     @files = map {
@@ -417,6 +420,8 @@ sub WriteSettingsTmp {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
+    $loader->l_milestone(" Library::WriteSettingsTmp: TRACE tmp_dir $tmp_dir ");
+
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
     {
@@ -455,7 +460,12 @@ sub GetFilesContents {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+
+    if (! defined $loader or $loader eq "none") {
+	return undef;
+    }
+
+    $loader->l_milestone(" Library::GetFilesContents TRACE ");
 
     $loader->{"resolve_symlinks"} = 0;
     my $new_lines_ref = $loader->CreateLines ();
@@ -487,6 +497,8 @@ sub SetFilesContents {
 
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
+
+    $loader->l_milestone(" Library::SetFilesContents TRACE ");
 
     my %lines = ();
     while ((my $fn, my $contents) = each (%{$files_ref}))
@@ -522,7 +534,11 @@ sub UpdateBootloader {
     my $avoid_init = shift;
 
     my $loader = $self->{"loader"};
-    return defined $loader ? $loader->UpdateBootloader ($avoid_init) : undef;
+    return undef unless defined $loader;
+
+    $loader->l_milestone("Library::UpdateBootloader: TRACE avoid_init $avoid_init");
+
+    return $loader->UpdateBootloader ($avoid_init);
 }
 
 =item
@@ -545,7 +561,11 @@ sub InitializeBootloader {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return defined $loader ? $loader->InitializeBootloader () : undef;
+    return undef unless defined $loader;
+
+    $loader->l_milestone( "Library::InitializeBootloader: TRACE");
+
+    return $loader->InitializeBootloader ();
 }
 
 =item
@@ -572,7 +592,11 @@ sub ListConfigurationFiles {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return defined $loader ? $loader->ListFiles () : undef;
+    return undef unless defined $loader;
+
+    $loader->l_milestone( "Library::ListConfigurationFiles TRACE");
+
+    return $loader->ListFiles ();
 }
 
 =item
@@ -591,7 +615,10 @@ sub GetSettings {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    return defined $loader ? $loader->GetSettings () : undef;
+    return undef unless defined $loader;
+
+    $loader->l_milestone( "Library::GetSettings TRACE");
+    return $loader->GetSettings ();
 }
 
 =item
@@ -611,7 +638,11 @@ sub SetSettings {
     my $settings_ref = shift;
 
     my $loader = $self->{"loader"};
-    return defined $loader ? $loader->SetSettings ($settings_ref) : undef;
+    return undef unless defined $loader;
+
+    $loader->l_milestone( "Library::SetSettings TRACE");
+
+    return $loader->SetSettings ($settings_ref);
 }
 
 # wrappers for easier use
@@ -660,6 +691,8 @@ Returns undef on fail.
 sub GetMetaData {
     my $self = shift;
     my $loader = $self->{loader} || return undef;
+
+    $loader->l_milestone( "Library::GetMetaData TRACE");
 
     return $loader->GetMetaData();;
 }
@@ -860,6 +893,8 @@ sub GrubDev2UnixDev {
     my $self = shift;
     my $grub_dev = shift;
     my $loader = $self->{loader} || return undef;
+
+    $loader->l_milestone( "Library::GrubDev2UnixDev grub_dev: $grub_dev" );
 
     my $unix_dev = $loader->GrubDev2UnixDev ($grub_dev);
 

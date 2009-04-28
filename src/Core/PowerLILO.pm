@@ -590,7 +590,8 @@ sub Info2Section {
 	    delete ($sectinfo{"name"});
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
-	    # only accept known section options :-)
+	    $self->l_milestone (
+		"PowerLILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
 	else
@@ -613,6 +614,7 @@ sub Info2Section {
     @lines = @lines_new;
 
 
+    my $create_append = 1;
     while ((my $key, my $value) = each (%sectinfo))
     {
 	if ($key eq "name")
@@ -622,9 +624,23 @@ sub Info2Section {
 	    $line_ref->{"key"} = "label";
 	    push @lines, $line_ref;
 	}
+        elsif ( $key eq "append" || $key eq "console" )
+        {
+          if (defined($create_append))
+          {
+            my $append = $sectinfo{"append"} || "";
+            my $console = $sectinfo{"console"} || "";
+            push @lines, {
+                "key" => "append",
+                "value" => $append.$console,
+            };
+            $create_append = undef;
+          }
+        }
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
-	    # only accept known section options :-)
+	    $self->l_milestone (
+		"PowerLILO::Info2Section: Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
@@ -678,7 +694,31 @@ sub Section2Info {
 	{
 	    $ret{"type"} = $key;
 	}
-	$ret{$key} = $line_ref->{"value"};
+        elsif ($key eq "append")
+        {
+          my $val = $line_ref->{"value"};
+          if ($val =~ /^(?:(.*)\s+)?console=ttyS(\d+),(\w+)(?:\s+(.*))?$/)
+          {
+            $ret{"console"} = "ttyS$2,$3" if $2 ne "";
+            $val = $self->MergeIfDefined( $1, $4);
+          }
+          $ret{"append"} = $val if $val ne "";
+          next;
+        }
+        my ($stype) = undef;
+        if (defined $ret{"type"})
+        {
+          ($stype) = split /:/, $self->{"exports"}{"section_options"}->{$ret{"type"} . "_" . $key} || ""; 
+        }
+	# bool values appear in a config file or not
+	if (defined $stype and $stype eq "bool")
+        {
+	  $ret{$key} = "true";
+	}
+        else
+        {
+          $ret{$key} = $line_ref->{"value"};
+        }
     }
     $ret{"__lines"} = \@lines;
     return \%ret;
