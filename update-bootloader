@@ -215,7 +215,7 @@ pod2usage("Option 'force-default' is only allowed for operation 'add'")
 if (defined $oper{"examinembr"}) {
   my $ret = Bootloader::MBRTools::ExamineMBR($oper{"examinembr"});
   if (defined $ret){
-    print $ret;
+    print "$ret\n";
     exit 0;
   } else {
     exit 1;

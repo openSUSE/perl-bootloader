@@ -1000,7 +1000,7 @@ Try detect on disk if contains ThinkpadMBR. Return true if detected.
 sub DetectThinkpadMBR {
   my $self = shift;
   my $disk = shift;
-  my $res = MBRTools::IsThinkpadMBR($disk);
+  my $res = Bootloader::MBRTools::IsThinkpadMBR($disk);
   Bootloader::Logger::instance()->milestone("Library::DetectThinkpadMBR on $disk result $res" );
   return $res;
 }
@@ -1016,7 +1016,7 @@ Write generic mbr to disk on thinkpad. Return undef if fail.
 sub WriteThinkpadMBR {
    my $self = shift;
    my $disk = shift;
-   my $res = MBRTools::PatchThinkpadMBR($disk);
+   my $res = Bootloader::MBRTools::PatchThinkpadMBR($disk);
    Bootloader::Logger::instance()->milestone("Library::WriteThinkpadMBR on $disk result $res" );
    return $res;
 }
@@ -1029,17 +1029,19 @@ Possible string is:
   generic -> generic MBR
   grub -> Grub MBR
   lilo -> lilo stage1
-  windows -> windows (include vista)
+  windows -> windows
+  vista -> windows vista (has another mbr)
+  thinkpad -> thinkpad custom mbr
   unknown -> unknown code
   invalid -> code which cannot boot
 
 =cut
 
 #  ExamineMBR (string disk)
-sub ExamineMBR{
+sub ExamineMBR($){
   my $self = shift;
   my $disk = shift;
-  my $res = MBRTools::ExamineMBR($disk);
+  my $res = Bootloader::MBRTools::ExamineMBR($disk);
   Bootloader::Logger::instance()->milestone("Library::ExamineMBR on $disk result $res" );
   
   return $res;

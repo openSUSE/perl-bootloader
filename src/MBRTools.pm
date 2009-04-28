@@ -210,7 +210,7 @@ sub ExamineMBR($){
   if (substr($MBR, 0, 440) =~
         m/invalid partition table.*Error loading operating system/i) {
         Bootloader::Logger::instance()->milestone("Examine MBR find windows Vista MBR");
-        return "windows";
+        return "vista";
   }
   
   if (IsThinkpadMBR($device)){
