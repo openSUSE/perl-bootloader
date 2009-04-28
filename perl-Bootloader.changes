@@ -2,6 +2,14 @@
 Mon Apr 20 12:00:41 CEST 2009 - jreidinger@suse.cz
 
 - handle kdumppae kernel for SLE10 (bnc #396367) 
+- backport improved handling with logs to avoid performance
+  problems (bnc #447142)
+- backport support for ELILO for X86_64 (with all fixes)
+  (fate #306032)
+- backport support for xen in ELILO (fate #306032)
+- backport fix in metadata - not allow swap device as root
+  (bnc #433347)
+- version bump to 0.4.19.15
 
 -------------------------------------------------------------------
 Tue Apr  7 10:25:16 CEST 2009 - jreidinger@suse.cz
