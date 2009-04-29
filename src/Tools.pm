@@ -1172,6 +1172,7 @@ sub AddSection {
     $sysconf = GetSysconfigValue("CONSOLE");
     $new{"console"} = $sysconf if (defined $sysconf);
     $new{"__modified"} = 1;
+    $new{"root"} = $lib_ref->GetMountPoints()->{"/"};
 
     my $match = '';
     my $new_name = '';
