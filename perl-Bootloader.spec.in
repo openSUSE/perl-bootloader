@@ -66,7 +66,7 @@ rm $RPM_BUILD_ROOT/%{_mandir}/man?/{*ZIPL*,*PowerLILO*}
 sed -i '/ZIPL/D;/PowerLILO/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloader/.packlist
 %endif
 %ifarch ppc ppc64
-rm $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*, GRUB*}
+rm $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*,GRUB*}
 sed -i '/ZIPL/D;/ELILO/D;/\/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloader/.packlist
 %endif
 %ifarch s390 s390x

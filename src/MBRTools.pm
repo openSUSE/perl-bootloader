@@ -35,7 +35,7 @@ use base 'Exporter';
 
 use Bootloader::Logger;
 
-our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR ExamineMBR
+our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR examineMBR
 );
 
 sub IsThinkpadMBR($) {
@@ -43,7 +43,7 @@ sub IsThinkpadMBR($) {
   my $mbr = qx{dd status=noxfer if=$disk bs=512 count=1 2>/dev/null | od -v -t x1 -};
   $mbr =~ s/\d{7}//g; #remove address
   $mbr =~ s/\n//g; #remove end lines
-  $mbr =~ s/\S//g; #remove whitespace
+  $mbr =~ s/\s//g; #remove whitespace
 
   Bootloader::Logger::instance()->milestone("checked mbr is: $mbr");
   
@@ -163,7 +163,7 @@ sub PatchThinkpadMBR($) {
   return 1;
 }
 
-sub ExamineMBR($){
+sub examineMBR($){
   my $device = shift;
   my $MBR;
 

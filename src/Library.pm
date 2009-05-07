@@ -1041,7 +1041,7 @@ Possible string is:
 sub ExamineMBR($){
   my $self = shift;
   my $disk = shift;
-  my $res = Bootloader::MBRTools::ExamineMBR($disk);
+  my $res = Bootloader::MBRTools::examineMBR($disk);
   Bootloader::Logger::instance()->milestone("Library::ExamineMBR on $disk result $res" );
   
   return $res;

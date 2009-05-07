@@ -4,6 +4,7 @@ Thu May  7 09:44:37 CEST 2009 - jreidinger@suse.cz
 - add SplitPath to library interface
 - fix filling partitions
 - set thinkpad detection to last know detection
+- fix building on ppc
 - 0.5.1
 
 -------------------------------------------------------------------
