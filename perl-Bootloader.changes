@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu May  7 09:44:37 CEST 2009 - jreidinger@suse.cz
+
+- add SplitPath to library interface
+- fix filling partitions
+- set thinkpad detection to last know detection
+- 0.5.1
+
+-------------------------------------------------------------------
 Tue Apr 14 14:22:39 CEST 2009 - jreidinger@suse.cz
 
 - Code cleanup
