@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 79;
+use Test::More tests => 80;
 
 use lib "./";
 use Bootloader::Library;
@@ -144,7 +144,19 @@ my $new_section = {(
   '__modified' => '1',
   )};
 
+#memtest test
+my $new_section2 = {(
+  'type' => 'image',
+  "__auto"=>"true",
+  "__changed" => "true",
+  "__modified"=>"1",
+  "image"=>"/boot/memtest.bin",
+  "name"=>"Memory Test",
+  "original_name"=>"memtest86",
+  )};
+
 push @sections, $new_section;
+push @sections, $new_section2;
 
 print "set new sections \n";
 ok($lib_ref->SetSections(\@sections));
@@ -154,6 +166,10 @@ ok($lib_ref->UpdateBootloader(1));
 my $res = qx:grep -c "kernel /boot/xen.gz console=com2 com2=9600n52r testparam=ok" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test correct created xen append
+
+$res = qx:grep -c "kernel .*/boot/memtest.bin" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test correct created memtest
 
 $res = qx:grep -c "rootnoverify (fd0)" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
