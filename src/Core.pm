@@ -379,7 +379,7 @@ sub GetExtendedPartition {
 
     # Check for valid devices
     unless ($part_dev =~ m/^\/dev\/[sh]d[a-z](\d+)?$/) {
-	$self->l_warning ("Core::GetExtendedPartition: Specified device
+	$self->l_milestone ("Core::GetExtendedPartition: Specified device
 	    $part_dev is not valid and cannot be used as base for detecting an
 	    extended partition on the same disk.");
 	return $extended_part_dev;
