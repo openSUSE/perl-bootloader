@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Tue Jun  2 16:01:26 CEST 2009 - jreidinger@suse.cz
+
+- suppress warning about testing extended partition (bnc #504083)
+- don't warn if multipath module is not loaded and just log it
+  (bnc #506742)
+- remove last occurences of metadata as now yast2-bootloader 
+  doesn't use it
+- 0.5.2 
+
+-------------------------------------------------------------------
 Thu May  7 09:44:37 CEST 2009 - jreidinger@suse.cz
 
 - add SplitPath to library interface
