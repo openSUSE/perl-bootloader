@@ -78,191 +78,6 @@ use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
 
-#module interface
-
-sub bootable($) {
-    my $fsid = shift;
-
-    for my $id ( 5, 6, 11..15, 130, 131) {
-	return 1 if $fsid == $id;
-    }
-    return 0;
-}
-
-sub GetMetaData() {
-    my $loader = shift;
-
-    # possible global entries:
-    #
-
-    # activate		# encode somewhere in grub.conf
-    # generic_mbr	# ditto
-
-    # boot_custom	# data for grub.conf
-    # boot_mbr
-    # boot_root
-    # boot_boot
-
-    # map
-    # unhide
-    # hide
-    # rootnoverify
-    # serial
-    # terminal
-    # default
-    # timeout
-    # fallback
-    # hiddenmenu
-    # gfxmenu
-    # * password::                    Set a password for the menu interface
-
-    # * bootp:: --with-configfile     Initialize a network device via BOOTP
-    # * color::                       Color the menu interface
-    # * dhcp::                        Initialize a network device via DHCP
-    # * ifconfig::                    Configure a network device manually
-    # * rarp::                        Initialize a network device via RARP
-    # debug
-
-    # image section
-
-    # root (hd0,0) # omit this, it's always encoded in image/initrd path
-    # image	# kernel /new_kernel
-    # append
-    # initrd
-    # savedefault # not supported
-
-    # xen section
-
-    # xen
-    # xen_append
-    # image
-    # append
-    # initrd
-
-    # chainloader section
-    # lock
-    # root
-    # noverifyroot	# true if rootnoverify is used instead of root
-    # makeactive
-    # blockoffset	# this is encoded in 'chainloader' +1
-
-    # FIXME: add help texts for all widgets
-
-    my %exports;
-
-    my @bootpart;
-    my @partinfo = @{$loader->{"partitions"} || []};
-    my %dev_map = %{$loader->{"mountpoints"} || {}};
-
-    # Partitioninfo is a list of list references of the format:
-    #   Device,   disk,    nr, fsid, fstype,   part_type, start_cyl, size_cyl
-    #   /dev/sda9 /dev/sda 9   258   Apple_HFS `primary   0          18237
-    #
-
-    # boot from any bootable primary partition  which doesn't have xfs (small size of boot sector)
-    my $boot_partitions = join(":", 
-	map {
-	    my ($device, $disk, $nr, $fsid, $fstype,
-		$part_type, $start_cyl, $size_cyl) = @$_;
-	    ($fstype ne "xfs" and bootable($fsid))
-		? $device : ();
-	} @partinfo
-    );
-
-    # give a list of possible root devices: all MD devices
-    # and all 'Linux' devices above 20 cylinders and not swap
-    my $root_devices = join(":",
-        (map {
-	    my ($device, $disk, $nr, $fsid, $fstype,
-		$part_type, $start_cyl, $size_cyl) = @$_;
-            # allow only linux standart partitions, 130 is linux swap
-	    (($fsid eq "131" or ($fsid ne "130" and $fstype =~ m:linux:i)) and
-	     $size_cyl >= 20)
-		? $device : ();
-	} @partinfo),
-	keys %{$loader->{"md_arrays"} || {}}
-	# FIXME this does no longer include raid0 and raid5 devices
-    );
-
-    # give a list of all other partitions possibly ready for chain loading
-    my $other_partitions = join(":",
-	map {
-	    my ($device, $disk, $nr, $fsid, $fstype,
-		$part_type, $start_cyl, $size_cyl) = @$_;
-	    ($size_cyl >= 20) ? $device : ();
-	} @partinfo
-    );
-
-    # does it make sense to distinguish between x86_64 and x86? 
-    #jreidinger: no, it only is here to uniform with ppc where it is reasonable
-    $exports{"arch"} = "x86";
-    $exports{"global_options"} = {
-	boot     => "multi:Boot Loader Locations:",
-	activate => "bool:Set active Flag in Partition Table for Boot Partition:true",
-	timeout  => "int:Timeout in Seconds:8:0:3600",
-	default  => "string:Default Boot Section:Linux",
-	generic_mbr => "bool:Write generic Boot Code to MBR:true",
-	boot_custom => "selectdevice:Custom Boot Partition::" . $boot_partitions,
-	boot_mbr => "bool:Boot from Master Boot Record:false",
-	boot_root => "bool:Boot from Root Partition:true",
-	boot_boot => "bool:Boot from Boot Partition:true",
-	boot_extended => "bool:Boot from Extended Partition:true",
-
-	# map
-	# unhide
-	# hide
-	# rootnoverify
-
-	serial => "string:Serial connection parameters:",
-	terminal => "string:Terminal definition:",
-	fallback => "string:Fallback sections if default fails:1",
-	hiddenmenu => "bool:Hide menu on boot:false",
-	gfxmenu => "path:Graphical menu file:/boot/message",
-	password => "password:Password for the Menu Interface:",
-
-	# * bootp:: --with-configfile                      Initialize a network device via BOOTP
-	# * color::                       Color the menu interface
-	# * dhcp::                        Initialize a network device via DHCP
-	# * ifconfig::                    Configure a network device manually
-	# * rarp::                        Initialize a network device via RARP
-	debug => "bool:Debugging flag:false"
-    };
-
-    $exports{"section_options"} = {
-	type_image        => "bool:Image section",
-	# image_name     => "string:Name of section", # implicit
-	image_image       => "path:Kernel image:/boot/vmlinux",
-	image_root        => "selectdevice:Root device:". ($dev_map{"/"} || "").":" . $root_devices,
-	image_vgamode     => "string:Vga Mode",
-	image_append      => "string:Optional kernel command line parameter",
-	image_initrd      => "path:Initial RAM disk:/boot/initrd",
-	image_noverifyroot=> "bool:Do not verify filesystem before booting:false",
-
-	type_other        => "bool:Chainloader section",
-	other_lock        => "bool:Use password protection:false",
-	other_chainloader => "selectdevice:Other system::" . $other_partitions,
-	other_noverifyroot=> "bool:Do not verify filesystem before booting:false",
-	other_makeactive  => "bool:Activate this partition when selected for boot:false",
-	other_blockoffset => "int:Block offset for chainloading:1:0:32",
-
-	type_xen          => "bool:Xen section",
-	xen_xen => "select:Hypervisor:/boot/xen.gz:/boot/xen.gz",
-	xen_xen_append    => "string:Additional Xen Hypervisor Parameters:",
-	xen_image         => "path:Kernel image:/boot/vmlinux",
-	xen_root          => "select:Root device::" . $root_devices,
-	xen_vgamode       => "string:Vga Mode",
-	xen_append        => "string:Optional kernel command line parameter",
-	xen_initrd        => "path:Initial RAM disk:/boot/initrd",
-
-	type_menu         => "bool:Menu section",
-	menu_root         => "select:Partition of menu file:::" . $other_partitions,
-	menu_configfile   => "path:Menu description file:/boot/grub/menu.lst"
-    };
-
-    $loader->{"exports"}=\%exports;
-    return \%exports;
-}
-
 # Internal metadata only for checking of valid values, doesn't affect any yast
 sub GetOptions{
   my $loader = shift;
@@ -336,7 +151,6 @@ sub new {
     my $loader = $self->SUPER::new ($old);
     bless ($loader);
 
-    $loader->GetMetaData(); #FIXME this is not need but need test before remove
     $loader->GetOptions();
     $loader->l_milestone ("GRUB::new: Created GRUB instance");
     return $loader;
@@ -569,8 +383,13 @@ sub UnixDev2GrubDev {
 
     # fallback to grub device hd0 if translation has failed - this is good
     # enough for many cases
-    #FIXME try get partition number from device
     my $partition_fallback = 0;
+
+    if ( $original =~ m/(\d+)\s*$/ )
+    {
+       $partition_fallback = $1 - 1;
+       $partition_fallback = 0 if ($partition_fallback < 0 );
+    }
 
     if ($dev !~ /^${grubdev_pattern}$/) {
 	$dev = "hd0";

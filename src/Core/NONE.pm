@@ -48,19 +48,6 @@ use Bootloader::Path;
 
 #module interface
 
-sub GetMetaData() {
-    my $loader = shift;
-
-    my %exports;
-
-    $exports{"global_options"} = {};
-
-    $exports{"section_options"} = {};
-
-    $loader->{"exports"}=\%exports;
-    return \%exports;
-}
-
 =item
 C<< $obj_ref = Bootloader::Core::NONE->new (); >>
 

@@ -65,90 +65,6 @@ use strict;
 use Bootloader::Core;
 our @ISA = qw(Bootloader::Core);
 
-#module interface
-
-sub GetMetaData() {
-    my $loader = shift;
-    
-    # possible global entries
-    #
-    #	default
-    #	timeout
-    #	prompt
-    #	target
-    #
-    # possible section types:
-    #   image
-    #   dump
-    #   menu
-    #   
-    # per section entries
-    #
-    #	label
-    #	menuname
-    #	image
-    #	ramdisk
-    #	dumpto
-    #	target
-    #	parameters
-    #	dumptofs (unimplemented)
-    #	parmfile (unimplemented)
-    
-    my %exports;
-    
-    my @bootpart;
-    my @partinfo = @{$loader->{"partitions"} || []};
-    
-    # boot from any partition (really?)
-    @bootpart = map {
-        my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
-        $device;
-    } @partinfo;
-    
-    my $boot_partitions = join(":", @bootpart);
-    
-    my $root_devices = join(":",
-        (map {
-            my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
-            # FIXME: weed out non-root partitions
-        } @partinfo),
-        keys %{$loader->{"md_arrays"} || {}}
-    );
-    
-    $exports{"global_options"} = {
-	# maps to either deafult or default_menu
-        default => "string:Default Boot Section/Menu:linux",
-    };
-    
-    $exports{"section_options"} = {
-        type_image     => "bool:Image Section",
-        image_target   => "path:Target Directory for Image Section:/boot/zipl",
-        image_image    => "path:Kernel Image:/boot/image",
-        # converted from ramdisk => initrd
-        image_initrd   => "path:Initial RAM Disk:/boot/initrd",
-        # converted from parameters => append, root
-        image_append   => "string:Optional Kernel Parameters",
-	image_root     => "selectdevice:Root device::" . $root_devices,
-        image_parmfile => "path:Optional Parameter File",
-
-        type_dump      => "bool:Dump Section (obsolete)",
-        dump_target    => "path:Target Directory for Dump Section:/boot/zipl",
-        dump_dumpto    => "path:Dump Device:/dev/dasd",
-        dump_dumptofs  => "path:SCSI Dump Device:/dev/zfcp",
-
-        type_menu      => "bool:Menu Section",
-        menu_target    => "path:Target Directory for Menu Section:/boot/zipl",
-	menu_list      => "string:List of Menu Entries:linux:",
-	# menu_list => "list:List of Menu Entries:linux:",
-	menu_default   => "int:Number of Default Entry:1:1:10",
-        menu_timeout   => "int:Timeout in seconds:5:0:60",
-        menu_prompt    => "bool:Show boot menu",
-    };
-    
-    $loader->{"exports"}=\%exports;
-    return \%exports;
-}
-
 sub SetOptions() {
     my $loader = shift;
     
@@ -227,7 +143,6 @@ sub new {
     $loader->{"default_global_lines"} = [ ];
     bless ($loader);
 
-    $loader->GetMetaData();
     $loader->SetOptions();
     $loader->l_milestone ("ZIPL::new: Created ZIPL instance");
     return $loader;

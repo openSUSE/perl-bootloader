@@ -49,8 +49,6 @@ C<< $settings_ref = Bootloader::Library->GetSettings (); >>
 
 C<< $status Bootloader::Library->SetSettings ($settings_ref); >>
 
-C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
-
 C<< $global_ref = Bootloader::Library->GetGlobalSettings (); >>
 
 C<< $status = Bootloader::Library->SetGlobalSettings ($global_settings_ref); >>
@@ -765,22 +763,6 @@ sub GetSections {
 	return undef;
     }
     return $settings_ref->{"sections"};
-}
-
-=item
-C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
-
-Gets the meta data of the bootloader describing possible setting in the config,
-its data type, default value, etc.
-Returns undef on fail.
-
-=cut
-
-sub GetMetaData {
-    my $self = shift;
-    my $loader = $self->{loader} || return undef;
-
-    return $loader->GetMetaData();
 }
 
 =item

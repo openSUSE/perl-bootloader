@@ -342,7 +342,11 @@ sub GetMultipath {
     my @result = qx/$command/;
     # return if problems occurs...typical is not loaded kernel module
     if ( $? ) {
-      $logger->warning("Tools::GetMultipath: multipath command failed with $?");
+      if ($result[0] =~ m/kernel driver not loaded/) {
+        $logger->info("Tools::GetMultipath: multipath kernel module is not loaded Ecode:$?.");
+      } else {
+        $logger->warning("Tools::GetMultipath: multipath command failed with $?.");
+      }
       return \%ret;
     }
 

@@ -19,56 +19,6 @@ C<< use Bootloader::Logger; >>
 
 C<< $obj_ref = Bootloader::Logger->new (); >>
 
-C<< $status = Bootloader::Library->SetLoaderType ($bootloader); >>
-
-C<< $status = Bootloader::Library->DefineMountPoints (\%mountpoints); >>
-
-C<< $status = Bootloader::Library->DefinePartitions (\@partitions); >>
-
-C<< $status = Bootloader::Library->DefineMDArrays (\%md_arrays); >>
-
-C<< $status = Bootloader::Library->ReadSettings (); >>
-
-C<< $status = Bootloader::Library->WriteSettings (); >>
-
-C<< $status = Bootloader::Library->ReadSettingsTmp ($tmp_dir); >>
-
-C<< $status = Bootloader::Library->WriteSettingsTmp ($tmp_dir); >>
-
-C<< $files_contents_ref = Bootloader::Library->GetFilesContents (); >>
-
-C<< $status = Bootloader::Library->SetFilesContents (\%files_contents); >>
-
-C<< $status = Bootloader::Library->UpdateBootloader ($avoid_init); >>
-
-C<< $status = Bootloader::Library->InitializeBootloader (); >>
-
-C<< $file_list_ref = Bootloader::Library->ListConfigurationFiles (); >>
-
-C<< $settings_ref = Bootloader::Library->GetSettings (); >>
-
-C<< $status Bootloader::Library->SetSettings ($settings_ref); >>
-
-C<< $meta_ref = Bootloader::Library->GetMetaData (); >>
-
-C<< $global_ref = Bootloader::Library->GetGlobalSettings (); >>
-
-C<< $status = Bootloader::Library->SetGlobalSettings ($global_settings_ref); >>
-
-C<< $sections_ref = Bootloader::Library->GetSections (); >>
-
-C<< $status = Bootloader::Library->SetSections ($sections_ref); >>
-
-C<< $device_map_ref = Bootloader::Library->GetDeviceMapping (); >>
-
-C<< $status = Bootloader::Library->SetDeviceMapping ($device_map_ref); >>
-
-C<< $unix_dev = Bootloader::Library->GrubDev2UnixDev ($grub_dev); >>
-
-C<< $result = Bootloader::Library::DetectThinkpadMBR ($disk); >>
-
-C<< $result = Bootloader::Library::WriteThinkpadMBR ($disk); >>
-
 =head1 DESCRIPTION
 
 =over 2
