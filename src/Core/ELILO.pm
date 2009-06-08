@@ -147,8 +147,9 @@ sub GetMetaData() {
         map {
             my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
             # FIXME: weed out non-root partitions
+            $device || "";
         } @partinfo,
-	\@md_arrays
+	@md_arrays
     );
     
     my $arch = `uname --hardware-platform`;
