@@ -1593,7 +1593,7 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
-    my $go = $self->{"exports"}{"global_options"};
+    my $go = $self->{"options"}{"global_options"};
 
     my %ret = ();
     my $grub_root = "";
@@ -1652,6 +1652,7 @@ sub Global2Info {
 	else {
 	    $ret{$key} = $val;
             unless (defined $go->{$key}){
+              $self->l_warning("GRUB::Global2Info: Unknown global key $key");
               $ret{"__broken"}="true";
             }
 	}
