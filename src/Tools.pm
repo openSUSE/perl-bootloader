@@ -343,7 +343,7 @@ sub GetMultipath {
     # return if problems occurs...typical is not loaded kernel module
     if ( $? ) {
       if ($result[0] =~ m/kernel driver not loaded/) {
-        $logger->info("Tools::GetMultipath: multipath kernel module is not loaded Ecode:$?.");
+        $logger->milestone("Tools::GetMultipath: multipath kernel module is not loaded Ecode:$?.");
       } else {
         $logger->warning("Tools::GetMultipath: multipath command failed with $?.");
       }
