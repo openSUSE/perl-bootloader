@@ -3,6 +3,7 @@ Mon Jun  8 09:26:06 CEST 2009 - jreidinger@suse.cz
 
 - fix bad timeout in lilo
 - fix bad log channel (bnc #510037)
+- fix parsing global options
 - 0.5.3
 
 -------------------------------------------------------------------
