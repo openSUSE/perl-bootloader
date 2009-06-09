@@ -148,7 +148,7 @@ sub GetMetaData() {
             my ($device, $disk, $nr, $fsid, $fstype, $part_type, $start_cyl, $size_cyl) = @$_;
             # FIXME: weed out non-root partitions
             $device || "";
-        } @partinfo,
+        } @partinfo || (),
 	@md_arrays
     );
     
