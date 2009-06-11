@@ -1314,7 +1314,6 @@ sub Global2Info {
 	if ($key eq "default" || $key eq "timeout" || $key eq "gfxmenu" || $key eq "password")
 	{
 	    $ret{$key} = $val;
-            $ret{$key} = $val*10 if ($key eq "timeout");
 	}
 	elsif ($key eq "boot")
 	{

@@ -271,6 +271,7 @@ sub GetOptions{
   $options{"global_options"} = {
         boot     => "",
         activate => "bool",
+        color => "",
         timeout  => "",
         default  => "",
         generic_mbr => "bool",
