@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jun 11 12:16:54 CEST 2009 - jreidinger@suse.cz
+
+- fix warning on console (bnc #509525)
+- 0.4.19.16 
+
+-------------------------------------------------------------------
 Mon Apr 20 12:00:41 CEST 2009 - jreidinger@suse.cz
 
 - handle kdumppae kernel for SLE10 (bnc #396367) 
