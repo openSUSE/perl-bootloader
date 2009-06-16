@@ -1930,7 +1930,7 @@ sub Global2Info {
     my $self = shift;
     my @lines = @{+shift};
     my @sections = @{+shift};
-    my $go = $self->{"exports"}{"global_options"};
+    my $go = $self->{"options"}{"global_options"};
 
     my %ret = ();
     my $grub_root = "";
