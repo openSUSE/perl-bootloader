@@ -2,6 +2,7 @@
 Fri Jun 12 12:18:20 CEST 2009 - jsrain@suse.cz
 
 - load initrd on S/390 at 0x400000000 (bnc#502037) 
+- 0.4.19.17
 
 -------------------------------------------------------------------
 Thu Jun 11 12:16:54 CEST 2009 - jreidinger@suse.cz

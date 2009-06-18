@@ -468,7 +468,9 @@ sub Info2Section {
 	}
 	elsif ($key eq "parameters")
 	{
-	    $line_ref->{"value"} = "root=".$sectinfo{"root"}." ".$sectinfo{"append"};
+            my $root = $sectinfo{"root"}||"";
+            $root = "root=$root " unless $root =~ "";
+            $line_ref->{"value"} = $root.$sectinfo{"append"};
 	    delete ($sectinfo{"root"});
 	    delete ($sectinfo{"append"});
         }
@@ -631,8 +633,11 @@ sub Section2Info {
 	elsif ($key eq "parameters")
 	{
 	    # split off root device from other kernel parameters
-	    ($ret{"append"} = $line_ref->{"value"}) =~ s/root=[^[:space:]]+[[:space:]]+//g;
-	    ($ret{"root"} = $line_ref->{"value"}) =~ s/^.*root=([^[:space:]]+)[[:space:]]+.*$/$1/g;
+	    ($ret{"append"} = $line_ref->{"value"}) =~ s/root=\S+\s*//g;
+            if ($line_ref->{"value"} =~ m/root=(\S+)(\s+|$)/)
+            {
+	      $ret{"root"} = $1;
+            }
 	    #print "params: ".$ret{"append"}."/".$ret{"root"}."\n";
         }
 	elsif ($key eq "menuname")
