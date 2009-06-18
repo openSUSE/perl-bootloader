@@ -2,6 +2,7 @@
 Thu May 14 08:46:19 CEST 2009 - jreidinger@suse.cz
 
 - Improve multipath partition recognize (bnc#483617) 
+- Allow parameters without root in zipl (bnc #511398)
 
 -------------------------------------------------------------------
 Tue Oct 14 15:05:16 CEST 2008 - jreidinger@suse.cz

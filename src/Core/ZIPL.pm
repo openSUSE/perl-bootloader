@@ -630,8 +630,11 @@ sub Section2Info {
 	elsif ($key eq "parameters")
 	{
 	    # split off root device from other kernel parameters
-	    ($ret{"append"} = $line_ref->{"value"}) =~ s/root=[^[:space:]]+[[:space:]]+//g;
-	    ($ret{"root"} = $line_ref->{"value"}) =~ s/^.*root=([^[:space:]]+)[[:space:]]+.*$/$1/g;
+	    ($ret{"append"} = $line_ref->{"value"}) =~ s/root=\S+\s*//g;
+            if ($line_ref->{"value"} =~ m/root=(\S+)(\s+|$)/)
+            {
+	      $ret{"root"} = $1;
+            }
 	    #print "params: ".$ret{"append"}."/".$ret{"root"}."\n";
         }
 	elsif ($key eq "menuname")
