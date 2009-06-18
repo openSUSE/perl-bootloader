@@ -426,7 +426,9 @@ sub Info2Section {
 	}
 	elsif ($key eq "parameters")
 	{
-	    $line_ref->{"value"} = "root=".$sectinfo{"root"}." ".$sectinfo{"append"};
+            my $root = $sectinfo{"root"}||"";
+            $root = "root=$root " unless $root =~ "";
+	    $line_ref->{"value"} = $root.$sectinfo{"append"};
 	    delete ($sectinfo{"root"});
 	    delete ($sectinfo{"append"});
         }
