@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 21;
+use Test::More tests => 32;
 
 use lib "./";
 use Bootloader::Library;
@@ -51,6 +51,28 @@ foreach my $section (@sections) {
     is( $section->{'append'}, 'TERM=dumb 3' );
     ok( not exists $section->{'console'} );
   } 
+  elsif ( $section->{'original_name'} eq "noroot" )
+  {
+    is( $section->{'type'}, 'image' );
+    is( $section->{'image'}, '/boot/image-2.6.16.60-0.4-default' );
+    is( $section->{'initrd'}, '/boot/initrd-2.6.16.60-0.4-default' );
+    is( $section->{'name'}, 'noroot' );
+    ok( not defined $section->{'vgamode'} );
+    is( $section->{'append'}, 'TERM=dumb 3' );
+    ok( not exists $section->{'root'} );
+    $section->{'__modified'} = "1";
+    $section->{'append'} = "term=dumb 5";
+  } 
 }
+
+ok($lib_ref->SetSections(\@sections));
+ok($lib_ref->WriteSettings());
+ok($lib_ref->UpdateBootloader(1));
+
+
+my $res = qx:grep -c 'parameters = "term=dumb 5"' ./fake_root1/etc/zipl.conf:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
+
 
 Bootloader::Tools::DumpLog( $lib_ref );
