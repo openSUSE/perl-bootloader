@@ -550,6 +550,12 @@ sub UnixDev2GrubDev {
     # fallback to grub device hd0 if translation has failed - this is good
     # enough for many cases
     my $partition_fallback = 0;
+    
+    if ( $original =~ m/(\d+)\s*$/ )
+    {
+        $partition_fallback = $1 - 1;
+        $partition_fallback = 0 if ($partition_fallback < 0 );
+    }
 
     if ($dev !~ /^${grubdev_pattern}$/) {
 	$dev = "hd0";
