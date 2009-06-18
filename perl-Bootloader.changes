@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Jun 18 12:36:57 CEST 2009 - jreidinger@suse.cz
+
+- fix perl errors in metadata (bnc #514286)
+- allow no root in parameters for zipl (bnc #511398)
+- 0.4.19.18
+ 
+
+-------------------------------------------------------------------
 Fri Jun 12 12:18:20 CEST 2009 - jsrain@suse.cz
 
 - load initrd on S/390 at 0x400000000 (bnc#502037) 
