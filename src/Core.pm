@@ -657,13 +657,31 @@ sub ProcessMenuFileLines {
     my $comment_before = [];
     my @ret = ();
 
+    my $real_line = undef;
     foreach my $line (@lilo_conf_lines)
     {
+        #handle multiline entries
+        if (defined $real_line) 
+        {
+          $real_line = "$real_line $line";
+        }
+        else
+        {
+          $real_line = $line;
+        }
+
+        if ($real_line =~ m/[^\\]\\$/)
+        {
+          $real_line = substr $real_line, 0, -1;
+          next;
+        }
+
 	(my $new_lines_ref, $comment_before) =
-	    $self->ProcessSingleMenuFileLine ($line, $comment_before, $equal_sep);
+	    $self->ProcessSingleMenuFileLine ($real_line, $comment_before, $equal_sep);
 	foreach my $l (@{$new_lines_ref}) {
 	    push @ret, $l;
 	};
+        $real_line = undef;
     }
     return @ret;
 }
@@ -1063,7 +1081,7 @@ sub CreateRemovedDefaultLine {
 
     push @comment_before, "${remove_default_comment}";
 
-    $self->l_debug("put removed default comment");
+    $self->l_milestone("put removed default comment");
 		
     $line_ref->{"comment_before"} = \@comment_before;
 

@@ -9,7 +9,8 @@ gfxmenu (hd0,1)/boot/message
 ###Don't change this comment - YaST2 identifier: Original name: linux###
 title Debug -- openSUSE 11.0 - 2.6.25.4-10
     root (hd0,1)
-    kernel /boot/vmlinuz-2.6.25.4-10-debug root=/dev/sda2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
+    kernel /boot/vmlinuz-2.6.25.4-10-debug \
+    root=/dev/sda2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
     initrd /boot/initrd-2.6.25.4-10-debug
 
 ###Don't change this comment - YaST2 identifier: Original name: linux-2.6.25.4-10-default###

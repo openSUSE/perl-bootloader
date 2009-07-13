@@ -827,9 +827,16 @@ sub ParseLines {
 
     $self->l_milestone ("GRUB::Parselines: global boot setting already found: ". 
 			 join( ", ", grep { m/^boot_/; } keys %$glob_ref));
-    foreach my $line (@grub_conf_lines)
+    #parse grub conf only if mount points is set (hack for generating autoyast profile bnc #464098)
+    if (not exists $self->{"mountpoints"}{'/'})
     {
-	next unless $line =~ /^\s*(\S+)(\s+(\S+.*))?$/;
+        $self->l_milestone ("GRUB::Parselines: Mount points doesn't have '/', skipped parsing grub.conf");
+    }
+    else
+    {
+      foreach my $line (@grub_conf_lines)
+      {
+  	next unless $line =~ /^\s*(\S+)(\s+(\S+.*))?$/;
 
 	my $key = $1;
 	my $value = $3;
@@ -887,18 +894,18 @@ sub ParseLines {
 	    }
 	    push @grub_conf, \%grub_conf_item;
 	}
-    }
+      }
 
-    # FIXME: still incomplete for MD and dmraid devs
-    # translate device array to the various boot_* flags else set boot_custom
-    # in glob_ref accordingly
-    my ($boot_dev,) = $self->SplitDevPath ("/boot");
-    my ($root_dev,) = $self->SplitDevPath ("/");
-    my $extended_dev = $self->GetExtendedPartition($boot_dev) || "";
-    # mbr_dev is the first bios device
-    my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
+      # FIXME: still incomplete for MD and dmraid devs
+      # translate device array to the various boot_* flags else set boot_custom
+      # in glob_ref accordingly
+      my ($boot_dev,) = $self->SplitDevPath ("/boot");
+      my ($root_dev,) = $self->SplitDevPath ("/");
+      my $extended_dev = $self->GetExtendedPartition($boot_dev) || "";
+      # mbr_dev is the first bios device
+      my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
 
-    foreach my $dev (@devices) {
+      foreach my $dev (@devices) {
 	$self->l_milestone ("GRUB::Parselines: checking boot device $dev");
 
 	if ($dev eq $mbr_dev) {
@@ -921,8 +928,8 @@ sub ParseLines {
 	    $glob_ref->{"boot_custom"} = $dev;
 	    $self->l_milestone ("GRUB::Parselines: set boot_custom");
 	}
-    }			 
-
+      }			 
+    } 
     # $glob_ref->{"stage1_dev"} = \@devices;
     $self->{"sections"} = $sect_ref;
     $self->{"global"} = $glob_ref;

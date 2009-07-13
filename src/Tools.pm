@@ -436,7 +436,7 @@ sub GetMultipath {
   $multipath = AddPathToExecutable("multipath");
 
   if (-e $multipath){
-    my $command = "$multipath -d -v 2+ -ll";
+    my $command = "$multipath -d -l";
  #FIXME log output 
     my @result = qx/$command/;
     # return if problems occurs...typical is not loaded kernel module
@@ -449,13 +449,14 @@ sub GetMultipath {
     my $line = "";
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
-      if ($line !~ m/^(\S+)\s*dm-\d+.*$/){
+      if ($line !~ m/^(\S+)\s.*dm-\d+.*$/){
+        $line = shift @result;
         next;
       }
       my $multipathdev = "/dev/mapper/$1";
       while (scalar @result != 0){
         $line = shift @result;
-        if ($line =~ m/^(.*)dm-.*$/){
+        if ($line =~ m/(.*)dm-.*$/){
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
@@ -1505,6 +1506,7 @@ sub AddSection {
     # the new default entry.
     my $glob_ref = $lib_ref->GetGlobalSettings ();
     $default = 1 if (delete($glob_ref->{"removed_default"}) == 1);
+    $default = 1 unless (defined ($glob_ref->{"default"}) && $glob_ref->{"default"} ne ""); #avoid non-exist default
     if ($default) {
 	$glob_ref->{"default"} = $new{"name"};
         if ($loader eq "lilo") #remove read-only flag bnc #381669
