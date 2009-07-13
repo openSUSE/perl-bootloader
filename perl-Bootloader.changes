@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jul  7 08:39:53 CEST 2009 - jreidinger@suse.cz
+
+- improve fallback partition if anything goes wrong (bnc #483617)
+- 0.4.19.19 
+
+-------------------------------------------------------------------
 Thu Jun 18 12:36:57 CEST 2009 - jreidinger@suse.cz
 
 - fix perl errors in metadata (bnc #514286)
