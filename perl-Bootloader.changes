@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jul 17 10:14:24 CEST 2009 - juhliarik@suse.cz
+
+- updated calling /sbin/lilo with option -P ignore (bnc#466427)
+- 0.4.19.20 
+
+-------------------------------------------------------------------
 Tue Jul  7 08:39:53 CEST 2009 - jreidinger@suse.cz
 
 - improve fallback partition if anything goes wrong (bnc #483617)
