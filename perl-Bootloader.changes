@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Aug  3 14:36:07 CEST 2009 - jreidinger@suse.cz
+
+- disable check for partition table incostitency for lilo
+  (bnc #466427) 
+
+-------------------------------------------------------------------
 Mon Aug  3 11:52:07 CEST 2009 - jreidinger@suse.cz
 
 - Improve partition fallback if something goes wrong (bnc#483617)  
