@@ -363,6 +363,7 @@ sub UnixDev2GrubDev {
         $dev =  $self->{"device_map"}->{$map_dev};
         values %{$self->{"device_map"}}; #reset hash iterator
         return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no partition
+        last;
       }
     }
 
@@ -687,6 +688,16 @@ sub ParseLines {
 	if ($dev eq $mbr_dev) {
 	    $glob_ref->{"boot_mbr"} = "true";
 	    $self->l_milestone ("GRUB::Parselines: detected boot_mbr");
+            if (defined $self->{"md_arrays"}
+                and ((scalar keys %{$self->{"md_arrays"}}) > 0)){
+              if (defined $glob_ref->{"boot_md_mbr"} 
+                  and $glob_ref->{"boot_md_mbr"} ne "" ){
+                $glob_ref->{"boot_md_mbr"} = $glob_ref->{"boot_md_mbr"}.",".$dev;
+              } else {
+                $glob_ref->{"boot_md_mbr"} =$dev;
+              }
+              $self->l_milestone ("GRUB::Parselines: detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
+            }
 	}
 	elsif ($dev eq $root_dev) {
 	    $glob_ref->{"boot_root"} = "true";
@@ -700,6 +711,16 @@ sub ParseLines {
 	    $glob_ref->{"boot_extended"} = "true";
 	    $self->l_milestone ("GRUB::Parselines: detected boot_extended");
 	}
+        elsif (defined $self->{"device_map"}->{$dev} 
+          and defined $self->{"md_arrays"}
+          and ((scalar keys %{$self->{"md_arrays"}}) > 0)){
+          if (defined $glob_ref->{"boot_md_mbr"} and $glob_ref->{"boot_md_mbr"} ne "" ){
+            $glob_ref->{"boot_md_mbr"} = $glob_ref->{"boot_md_mbr"}.",".$dev;
+          } else {
+            $glob_ref->{"boot_md_mbr"} =$dev;
+          }
+          $self->l_milestone ("GRUB::Parselines: detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
+        }
 	else {
 	    $glob_ref->{"boot_custom"} = $dev;
 	    $self->l_milestone ("GRUB::Parselines: set boot_custom");
@@ -794,6 +815,17 @@ sub CreateGrubConfLines() {
 	    # mbr_dev is the first bios device
 	    $dev =  $self->GrubDev2UnixDev("(hd0)");
 	    $s1_devices{$dev} = 1 if defined $dev;
+	}
+
+	# boot_md_mbr   synchronize mbr of disc in md raid 
+        #(it is little tricky as md raid synchronize only partitions)
+	$flag = delete $glob{"boot_md_mbr"};
+	if (defined $flag and $flag ne "") {
+            my @discs = split(/,/,$flag);
+            chomp @discs;
+            foreach my $mbr_disc (@discs){
+	      $s1_devices{$mbr_disc} = 1;
+            }
 	}
 
 	# boot_root   => "bool:Boot from Root Partition:true",

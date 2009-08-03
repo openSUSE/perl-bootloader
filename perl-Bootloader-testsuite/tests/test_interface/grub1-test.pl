@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 80;
+use Test::More tests => 86;
 
 use lib "./";
 use Bootloader::Library;
@@ -20,6 +20,9 @@ my @partition2 = ( "/dev/sda2", "/dev/sda","2","130","","","","","/dev/disk/by-i
 my @partition3 = ( "/dev/sda1", "/dev/sda","1","130","","","","","/dev/disk/by-id/test3");
 my @partitions = ( \@partition1, \@partition2, \@partition3 );
 ok($lib_ref->DefinePartitions(\@partitions));
+my @md_raid = ("/dev/sda1","/dev/sdc1");
+my %md_arrays = ("/dev/md0" => \@md_raid);
+ok($lib_ref->DefineMDArrays(\%md_arrays));
 my %udevmap = ();
 ok($lib_ref->DefineUdevMapping(\%udevmap));
 ok($lib_ref->ReadSettings());
@@ -43,10 +46,12 @@ is($globals->{"timeout"},"8");
 is($globals->{"gfxmenu"},"/boot/message");
 is($globals->{"setkeys"}->{"a"}, "b");
 is($globals->{"setkeys"}->{"b"}, "a");
+is($globals->{"boot_md_mbr"},"/dev/sda,/dev/sdc");
 $globals->{"setkeys"}->{"b"} = "c";
 $globals->{"setkeys"}->{"c"} = "a";
+$globals->{"boot_md_mbr"} = "/dev/sda,/dev/sdc,/dev/sdb";
 $globals->{"__modified"} = 1;
-$lib_ref->SetGlobalSettings($globals);
+ok($lib_ref->SetGlobalSettings($globals));
 
 #test sections
 my @sections = @{$lib_ref->GetSections()};
@@ -212,6 +217,18 @@ if ( $res =~ m/(\d+):.*/ )
   $initrdpos = $1;
 }
 ok($initrdpos>$imagepos);
+
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd0) (hd0,1)' ./fake_root1/etc/grub.conf:;
+chomp $res;
+is( $res, 1); #test boot_md_mbr correctness
+
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd3) (hd0,1)' ./fake_root1/etc/grub.conf:;
+chomp $res;
+is( $res, 1); #test boot_md_mbr correctness
+
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd4) (hd0,1)' ./fake_root1/etc/grub.conf:;
+chomp $res;
+is( $res, 1); #test boot_md_mbr correctness
 
 
 Bootloader::Tools::DumpLog( $lib_ref );
