@@ -574,6 +574,12 @@ sub UnixDev2GrubDev {
     # enough for many cases
     #FIXME try get partition number from device
     my $partition_fallback = 0;
+    
+    if ( $original =~ m/(\d+)\s*$/ )
+    {
+        $partition_fallback = $1 - 1;
+        $partition_fallback = 0 if ($partition_fallback < 0 );
+    }
 
     if ($dev !~ /^${grubdev_pattern}$/) {
 	$dev = "hd0";
