@@ -176,7 +176,8 @@ sub examineMBR($){
       return undef;
   }
 
-  unless (sysread(FD, $MBR, 512, 0) == 512){
+  my $readed  = sysread(FD, $MBR, 512, 0);
+  unless ($readed or $readed == 512){
       Bootloader::Logger::instance()->error("Examine MBR cannot read 512 bytes from device $device");
       return undef;
   }
