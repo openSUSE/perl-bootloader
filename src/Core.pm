@@ -129,6 +129,8 @@ use strict;
 #constants
 
 my $headline = "# Modified by YaST2. Last modification on ";
+my $headline2 = "# THIS FILE WILL BE PARTIALLY OVERWRITTEN by perl-Bootloader";
+my $headline3 = "# Configure custom boot parameters for updated kernels in /etc/sysconfig/bootloader";
 
 # variables
 
@@ -674,7 +676,9 @@ sub MenuFileLineEmpty {
     my $self = shift;
     my $line = shift;
 
-    if (index ($line, $headline) >= 0)
+    if (index ($line, $headline) >= 0
+        or index ($line, $headline2) >= 0
+        or index ($line, $headline3) >= 0)
     {
 	# ignore the headline with modification date/time
 	return 1;
@@ -786,7 +790,7 @@ sub CreateMenuFileLines {
 
     use POSIX qw(strftime);
     my $date = strftime "%a %b %e %H:%M:%S %Z %Y", localtime;
-    my @ret = ($headline . $date);
+    my @ret = ($headline . $date."\n".$headline2."\n".$headline3."\n");
 
     foreach my $l (@parsed_lines) {
 	push @ret, @{$l->{"comment_before"}} if defined $l->{"comment_before"};
