@@ -545,6 +545,18 @@ sub CreateGrubConfLine {
     return $line_ref;
 }
 
+sub IsDisc {
+  my $self = shift;
+  my $disc = shift;
+  my $ret = undef;
+  foreach my $dev (keys %{$self->{"device_map"}}) {
+    if ( $self->GetKernelDevice($disc) eq $self->GetKernelDevice($dev) ){
+      $ret = 1;
+    }
+  }
+  return $ret;
+}
+
 #external iface
 
 =item
@@ -711,7 +723,7 @@ sub ParseLines {
 	    $glob_ref->{"boot_extended"} = "true";
 	    $self->l_milestone ("GRUB::Parselines: detected boot_extended");
 	}
-        elsif (defined $self->{"device_map"}->{$dev} 
+        elsif ($self->IsDisc($dev) 
           and defined $self->{"md_arrays"}
           and ((scalar keys %{$self->{"md_arrays"}}) > 0)){
           if (defined $glob_ref->{"boot_md_mbr"} and $glob_ref->{"boot_md_mbr"} ne "" ){
