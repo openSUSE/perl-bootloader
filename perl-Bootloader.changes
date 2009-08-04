@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Aug  4 17:23:48 CEST 2009 - jreidinger@suse.cz
+
+- Allow parameters without root in zipl (bnc #511398)
+- implement failover boot for md arrays (FATE #305008)
+- fix perl warnings if target device cannot be read
+- 0.5.4 
+
+-------------------------------------------------------------------
 Mon Aug  3 14:36:07 CEST 2009 - jreidinger@suse.cz
 
 - disable check for partition table incostitency for lilo
