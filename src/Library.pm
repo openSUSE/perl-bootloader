@@ -1024,7 +1024,7 @@ sub ExamineMBR($){
   my $self = shift;
   my $disk = shift;
   my $res = Bootloader::MBRTools::examineMBR($disk);
-  Bootloader::Logger::instance()->milestone("Library::ExamineMBR on $disk result $res" );
+  Bootloader::Logger::instance()->milestone("Library::ExamineMBR on $disk result ".($res||"nil"));
   
   return $res;
 }
