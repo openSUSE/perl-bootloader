@@ -1,4 +1,23 @@
 -------------------------------------------------------------------
+Mon Aug 24 13:55:32 CEST 2009 - jreidinger@suse.cz
+
+- don't use blkid for UUID and label, as it is deprecated and 
+  causes problems if have in cache non-existed devices
+  (bnc#531636) 
+
+-------------------------------------------------------------------
+Tue Aug 11 13:21:46 CEST 2009 - jreidinger@suse.cz
+
+- fail during kernel update if new settings fail to write
+  (bnc #529729) 
+
+-------------------------------------------------------------------
+Tue Aug 11 10:54:30 CEST 2009 - jreidinger@suse.cz
+
+- fix getting extended partition on specific raid controller
+  (bnc #528220) 
+
+-------------------------------------------------------------------
 Tue Aug  4 17:23:48 CEST 2009 - jreidinger@suse.cz
 
 - Allow parameters without root in zipl (bnc #511398)

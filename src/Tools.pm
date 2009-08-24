@@ -188,6 +188,7 @@ See InitLibrary function for example.
 =cut
 
 sub ReadMountPoints {
+    my $udevmap = shift;
     open (FILE, Bootloader::Path::Fstab()) || 
 	die ("ReadMountPoints(): Failed to open /etc/fstab");
 
@@ -200,21 +201,12 @@ sub ReadMountPoints {
 	    my $mp = $2;
 	    if (substr ($dev, 0, 1) ne "#")
 	    {
-		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
+		if ($dev =~ m/^LABEL=(.*)/)
 		{
-                    my $command = Bootloader::Path::Blkid() . " -t $dev |";
-		    open (BLKID, $command) || 
-			die ("ReadMountPoints(): Failed to run blkid");
-
-		    my $line = <BLKID>;
-		    close (BLKID);
-		    chomp ($line);
-		    my $index = index ($line, ":");
-		    if ($index != -1)
-		    {
-			$dev = substr ($line, 0, $index);
-		    }
-		}
+                    $dev = $udevmap->{"/dev/disk/by-label/$1"};
+                } elsif ($dev =~ m/UUID=(.*)/){
+                    $dev = $udevmap->{"/dev/disk/by-uuid/$1"};
+                }
                 $mp =~ s/\\040/ /; #handle spaces in fstab
 		$mountpoints{$mp} = $dev;
 	    }
@@ -748,7 +740,7 @@ needed for it to run properly.
 sub InitLibrary {
     $lib_ref = Bootloader::Library->new ();
     my $um = GetUdevMapping();
-    my $mp = ReadMountPoints ();
+    my $mp = ReadMountPoints ($um);
     my $part = ReadPartitions ($um);
     my $md = ReadRAID1Arrays ();
     my $mpath = GetMultipath ();
@@ -995,9 +987,16 @@ sub SetGlobals {
     }
     $glob_ref->{"__modified"} = 1;
     $lib_ref->SetGlobalSettings ($glob_ref);
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
+    unless (defined $lib_ref->WriteSettings (1)) {
+      $lib_ref->l_error ("Cannot write bootloader configuration file.");
+      DumpLog ($lib_ref->{"loader"});
+      return undef;
+    }
+    unless (defined $lib_ref->UpdateBootloader (1)) { # avoid initialization but write config to the right place
+      $lib_ref->l_error ("Cannot write bootloader configuration file.");
+      DumpLog ($lib_ref->{"loader"});
+      return undef;
+    }
     DumpLog ($lib_ref->{"loader"});
 }
 
@@ -1310,10 +1309,16 @@ sub AddSection {
 			     } keys %{$glob_ref}) . "'\n"
 		       );
 
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
-
+    unless (defined $lib_ref->WriteSettings (1)) {
+      $core_lib->l_error ("Cannot write bootloader configuration file.");
+      DumpLog ($lib_ref->{"loader"});
+      return undef;
+    }
+    unless (defined $lib_ref->UpdateBootloader (1)) { # avoid initialization but write config to the right place
+      $core_lib->l_error ("Cannot write bootloader configuration file.");
+      DumpLog ($lib_ref->{"loader"});
+      return undef;
+    }
     DumpLog ($lib_ref->{"loader"});
 }
 
@@ -1462,9 +1467,16 @@ sub RemoveSections {
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
 				   # may change even if not deleted
     $lib_ref->SetGlobalSettings ($glob_ref);
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
+    unless (defined $lib_ref->WriteSettings (1)) {
+      $core_lib->l_error ("Cannot write bootloader configuration file.");
+      DumpLog ($lib_ref->{"loader"});
+      return undef;
+    }
+    unless (defined $lib_ref->UpdateBootloader (1)) { # avoid initialization but write config to the right place
+      $core_lib->l_error ("Cannot write bootloader configuration file.");
+      DumpLog ($lib_ref->{"loader"});
+      return undef;
+    }
 
     DumpLog ($lib_ref->{"loader"});
 }
