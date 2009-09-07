@@ -467,6 +467,7 @@ if (defined $oper{add}) {
 	    ($arch eq "ia64")) &&
 	    (($opt_image =~ /-default/) ||
 	    ($opt_image =~ /-smp/) ||
+	    ($opt_image =~ /-desktop/) ||
 	    ($opt_image =~ /-bigsmp/) ||
 	    ($opt_image =~ /-pae/)) &&
 	    ($opt_xen != 1)) {

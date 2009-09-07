@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Sep  7 15:05:53 CEST 2009 - jreidinger@suse.cz
+
+- Adapt to new kernel flavor desktop and create fallback section
+  for this section (bnc #537208)
+- 0.5.5 
+
+-------------------------------------------------------------------
 Mon Aug 24 13:55:32 CEST 2009 - jreidinger@suse.cz
 
 - don't use blkid for UUID and label, as it is deprecated and 
