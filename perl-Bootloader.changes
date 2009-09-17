@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Sep 17 09:07:00 CEST 2009 - jreidinger@suse.cz
+
+- doesn't parse # after text for grub bootloader (bnc #481416)
+- 0.4.89.1 
+
+-------------------------------------------------------------------
 Mon Aug  3 14:38:52 CEST 2009 - jreidinger@suse.cz
 
 - disable check for partition table incostitency for lilo

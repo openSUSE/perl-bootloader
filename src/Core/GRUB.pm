@@ -378,6 +378,19 @@ sub Quote {
     return $text;
 }
 
+=item
+C<< $allow_afterline_empty = Bootloader::Core->AllowCommentAfterText(); >>
+
+checks if bootloader configuration allow comments after text on line,
+returns a scalar (1 if true, 0 otherwise).
+
+=cut
+
+# boolean MenuFileLineEmpty (string line)
+sub AllowCommentAfterText {
+  return 0;
+}
+
 sub GetKernelDevice {
     my $self = shift;
     my $device = shift;
