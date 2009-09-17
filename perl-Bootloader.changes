@@ -2,6 +2,9 @@
 Thu Sep 17 09:07:00 CEST 2009 - jreidinger@suse.cz
 
 - doesn't parse # after text for grub bootloader (bnc #481416)
+- allow no root in parameters for zipl (bnc #511398)
+- fix timeout for lilo bootloader and removing color key in grub
+  (bnc #511186)
 - 0.4.89.1 
 
 -------------------------------------------------------------------
