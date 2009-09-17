@@ -5,11 +5,12 @@ Thu Apr 23 09:27:07 CET 2009 - jreidinger@suse.cz
   (bnc#478365, bnc #492895)
 - proper detect of multipath with user friendly names (bnc#468792,
   bnc #470109)
-- avoid non-exist default (bnc #669314)
+- avoid non-exist default (bnc #469314)
 - parse correctly multiline entries (bnc #466250)
 - filter out initrd with empty value (bnc #465148)
 - doesn't output any warnings to console even if storage have empty
   mount points map (happen during autoyast setup) (bnc #464098)
+- doesn't parse # after text for grub bootloader (bnc #481416)
 - 0.4.81.2 
 
 -------------------------------------------------------------------
