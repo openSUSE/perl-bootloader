@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Thu Oct  1 16:16:54 CEST 2009 - jreidinger@suse.cz
+
+- fix ZIPL kernel parameters with root parameter
+- 0.4.19.22
+
+-------------------------------------------------------------------
+Thu Aug 13 12:16:13 CEST 2009 - jreidinger@suse.cz
+
+- backport fix updating kernel in xen enviroment (bnc #530174)
+- 0.4.19.21
+
+-------------------------------------------------------------------
 Fri Jul 17 10:14:24 CEST 2009 - juhliarik@suse.cz
 
 - updated calling /sbin/lilo with option -P ignore (bnc#466427)
