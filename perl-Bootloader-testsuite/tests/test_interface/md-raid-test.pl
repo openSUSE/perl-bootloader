@@ -7,13 +7,13 @@ use Bootloader::Tools;
 
 use Cwd;
 
-$ENV{PERL_BOOTLOADER_TESTSUITE_PATH} = getcwd()."/fake_root1/";
+$ENV{PERL_BOOTLOADER_TESTSUITE_PATH} = getcwd()."/fake_root2/";
 
 my $lib_ref = Bootloader::Library->new();
 
 ok($lib_ref->SetLoaderType("grub"));
 $lib_ref->InitializeBootloader(); #this is expected fail, because it check real hardware
-my %mount_points = ( '/' => '/dev/sda2' );
+my %mount_points = ( '/' => '/dev/md1' );
 ok($lib_ref->DefineMountPoints(\%mount_points));
 my @partition1 = ( "/dev/hdb1", "/dev/hdb","1","130","","","","","/dev/disk/by-id/test");
 my @partition4 = ( "/dev/sda2", "/dev/sda","2","130","","","","","/dev/disk/by-id/test2");

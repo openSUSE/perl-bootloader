@@ -13,6 +13,7 @@ test:
 	perl -w zipl1-test.pl
 	perl -w none-test.pl
 	perl -w multipath-test.pl
+	perl -w md-raid-test.pl
 
 #usefull target after failed test
 clean: 

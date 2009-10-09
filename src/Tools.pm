@@ -590,6 +590,7 @@ sub IsDMRaidSlave {
             chomp @tables;
 
             foreach my $line (@tables) {
+                next if $line !~ /mirror/;
                 my @content = split(/ /, $line);
 
                 foreach my $majmins (@content){
@@ -678,12 +679,13 @@ sub ReadRAID1Arrays {
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
             ($array, $level, $num_devices) = ($1, $2, $3);
+             $logger->milestone("Tools::ReadRAID1Arrays: set array $array level $level and device count to $num_devices");
         }
         elsif ($level eq "raid1" and $line =~ /devices=(\S+)/)
         {
             # we could test $num_device against number of found devices to
             # detect degradedmode but that does not matter here (really?) 
-
+             $logger->milestone("Tools::ReadRAID1Arrays: set to array $array values $1");
              $mapping{$array} = [ split(/,/, $1) ];
         }
     }
