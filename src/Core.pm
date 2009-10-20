@@ -1711,7 +1711,13 @@ sub RunCommand {
     {
 	$command = "$command >/dev/null 2>/dev/null";
     }
-    return system ($command);
+    my $ret = system ($command);
+
+    my $output = `cat $log`;
+    $self->l_milestone("run $command - ret $ret + output: $output");
+    $self->l_error("Command '$command' failed with code $ret and output: $output") unless $ret;
+
+    return $ret;
 }
 
 =item
