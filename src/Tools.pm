@@ -1066,7 +1066,9 @@ bootloader to use the current configuration
 
 
 sub UpdateBootloader {
-    $lib_ref->UpdateBootloader ();
+    my $ret = $lib_ref->UpdateBootloader ();
+    DumpLog ($lib_ref->{"loader"});
+    return $ret;
 }
 
 

@@ -1306,13 +1306,13 @@ sub Section2Info {
 		    if (exists $ret{"xen_append"}) {
 		        my $xen_append = $ret{"xen_append"};
 		        while ($xen_append =~
-			    s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
-		              my $del_console = $2;
-				$xen_append =~
-			        s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
-			}
-                        $xen_append =~ s/\s*(\S*)\s*$/$1/;
-			$ret{"xen_append"} = "console=$console $speed $xen_append";
+			            s/(.*)console=(\S+)\s*(.*)$/$1$3/o) {
+		           my $del_console = $2;
+      				$xen_append =~
+			          s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
+			      }
+            $xen_append =~ s/\s*(\S*)\s*$/$1/;
+      			$ret{"xen_append"} = "console=$console $speed $xen_append";
 		    } else {
 		        $ret{"xen_append"} = "console=$console $speed";
 		    }
@@ -1326,6 +1326,11 @@ sub Section2Info {
 	    {
 		$ret{"xenpcr"} = $2 if $2 ne "";
 		$val = $self->MergeIfDefined ($1, $3);
+	    }
+	    if ($val =~ /^(?:(.*)\s+)?vga=mode-(\S+)(?:\s+(.*))?$/)
+	    {
+		    $ret{"vgamode"} = $2 if $2 ne "";
+    		$val = $self->MergeIfDefined ($1, $3);
 	    }
 	    # split into loader and parameter, note that the regex does
 	    # always match
@@ -1725,12 +1730,13 @@ sub Info2Section {
         }
 	elsif ($key eq "kernel") {
 	    if ($type eq "xen") {
-		$line_ref->{"value"} =
-		    $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root)
-		    . " " . (delete($sectinfo{"xen_append"}) || "");
+        my $xen = $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root);
+        my $append = (delete($sectinfo{"xen_append"}) || "");
+                my $vga = delete ($sectinfo{"vgamode"}) || "";
+                $vga = "vga=mode-$vga " if $vga ne "";
                 my $pcr = delete ($sectinfo{"xenpcr"}) || "";
                 $pcr = "--pcr=$pcr " if $pcr ne "";
-                $line_ref->{"value"} = "$pcr".$line_ref->{"value"};
+                $line_ref->{"value"} = "$pcr$xen $vga$append";
 	    }
 	    elsif ($type eq "image") {
 		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
@@ -1823,7 +1829,9 @@ sub Info2Section {
                       . " " . ($sectinfo{"xen_append"} || "");
       my $pcr = $sectinfo{"xenpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
-      $value = "$pcr$value";
+      my $vga = $sectinfo{"vgamode"} || "";
+      $vga = "vgamode=$vga " if $vga ne "";
+      $value = "$pcr$vga$value";
       push @lines, {
 	"key" => "kernel",
         "value" => $value,

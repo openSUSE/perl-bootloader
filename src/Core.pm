@@ -1715,7 +1715,7 @@ sub RunCommand {
 
     my $output = `cat $log`;
     $self->l_milestone("run $command - ret $ret + output: $output");
-    $self->l_error("Command '$command' failed with code $ret and output: $output") unless $ret;
+    $self->l_error("Command '$command' failed with code $ret and output: $output") unless $ret == 0;
 
     return $ret;
 }
