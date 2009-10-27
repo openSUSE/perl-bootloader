@@ -99,6 +99,7 @@ foreach my $section (@sections) {
     is( $section->{"vgamode"}, '0x332' );
     $section->{'append'} = $lib_ref->UpdateSerialConsole( $section->{'append'},'ttyS1,9600n52r'); #test change console
     $section->{'__modified'} = '1';
+    $section->{'vgamode'} = 'default';
   }
   elsif ( $section->{'original_name'} eq "console" )
   {
@@ -169,7 +170,7 @@ ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
 ok($lib_ref->UpdateBootloader(1));
 
-my $res = qx:grep -c "kernel /boot/xen.gz console=com2 com2=9600n52r testparam=ok" ./fake_root1/boot/grub/menu.lst:;
+my $res = qx:grep -c "kernel /boot/xen.gz vga=mode-default console=com2 com2=9600n52r testparam=ok" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test correct created xen append
 

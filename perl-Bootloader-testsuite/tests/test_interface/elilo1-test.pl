@@ -45,7 +45,7 @@ foreach my $section (@sections) {
     is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10' );
     is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10' );
     is( $section->{'name'}, 'xen' );
-    ok( not defined $section->{'vgamode'} );
+    is ($section->{'vgamode'}, '0x384' );
     is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
     is( $section->{'xen'}, "/boot/xen.gz");
     is( $section->{'xen_append'}, "test");
@@ -53,6 +53,7 @@ foreach my $section (@sections) {
     $section->{"__modified"} = 1;
     $section->{'xen'}= "/boot/xen-pae.gz";
     $section->{'xen_append'} = "test2";
+    $section->{'vgamode'} = 'default';
   } 
 
 }
@@ -65,7 +66,7 @@ my $res = qx:grep -c "vmm = /boot/xen-pae.gz" ./fake_root1/etc/elilo.conf:;
 chomp($res);
 is( $res, 1);
 
-$res = qx:grep -c 'append = "test2 --' ./fake_root1/etc/elilo.conf:;
+$res = qx:grep -c 'append = "vga=mode-default test2 --' ./fake_root1/etc/elilo.conf:;
 chomp($res);
 is( $res, 1);
 
