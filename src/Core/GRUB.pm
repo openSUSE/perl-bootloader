@@ -1732,11 +1732,11 @@ sub Info2Section {
 	    if ($type eq "xen") {
         my $xen = $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root);
         my $append = (delete($sectinfo{"xen_append"}) || "");
-                my $vga = delete ($sectinfo{"vgamode"}) || "";
-                $vga = "vga=mode-$vga " if $vga ne "";
-                my $pcr = delete ($sectinfo{"xenpcr"}) || "";
-                $pcr = "--pcr=$pcr " if $pcr ne "";
-                $line_ref->{"value"} = "$pcr$xen $vga$append";
+        my $vga = delete ($sectinfo{"vgamode"}) || "";
+        $vga = "vga=mode-$vga " if $vga ne "";
+        my $pcr = delete ($sectinfo{"xenpcr"}) || "";
+        $pcr = "--pcr=$pcr " if $pcr ne "";
+        $line_ref->{"value"} = "$pcr$xen $vga$append";
 	    }
 	    elsif ($type eq "image") {
 		$line_ref->{"value"} = $self->CreateKernelLine (\%sectinfo, $grub_root);
@@ -1825,13 +1825,13 @@ sub Info2Section {
 
     # keep a hard order for the following three entries
     if (exists $sectinfo{"xen"} && $type eq "xen") {
-      my $value = $self->UnixPath2GrubPath ($sectinfo{"xen"}, $grub_root)
-                      . " " . ($sectinfo{"xen_append"} || "");
+      my $xen = $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root);
+      my $append = (delete($sectinfo{"xen_append"}) || "");
       my $pcr = $sectinfo{"xenpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
       my $vga = $sectinfo{"vgamode"} || "";
       $vga = "vgamode=$vga " if $vga ne "";
-      $value = "$pcr$vga$value";
+      my $value = "$pcr$xen $vga$append";
       push @lines, {
 	"key" => "kernel",
         "value" => $value,
