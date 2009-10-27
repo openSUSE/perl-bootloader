@@ -628,6 +628,7 @@ sub Info2Section {
         elsif ($key eq "append") 
         {
           my $first = $sectinfo{"xen_append"} || "";
+          $first = "vga=mode-".(delete $sectinfo{"vgamode"})." $first" if ($sectinfo{"vgamode"} ne "");
           my $second = $sectinfo{"append"} || "";  
           my $console = $sectinfo{"console"} || "";
           $console = "console=$console" if ($console ne "");
@@ -669,7 +670,7 @@ sub Info2Section {
 	    $line_ref->{"key"} = "label";
 	    push @lines, $line_ref;
 	}
-        elsif ( $key eq "append" || $key eq "console" || $key eq "xen_append" )
+        elsif ( $key eq "append" || $key eq "console" || $key eq "xen_append"  || $key eq "vgamode")
         {
           if (defined($create_append))
           {
@@ -680,10 +681,10 @@ sub Info2Section {
             if ($type eq "xen")
             {
               my $xen_append = $sectinfo{"xen_append"} || "";
-              $val = "$xen_append -- $val";
+              my $vga = "";
+              $vga="vga=mode-".$sectinfo{"vgamode"}." " if ($sectinfo{"vgamode"} ne "");
+              $val = "$vga$xen_append -- $val";
             }
-
-            
             push @lines, {
 	        "key" => "append",
 	        "value" => $val,
@@ -777,7 +778,12 @@ sub Section2Info {
            {
              $val =~ m/(.*)--(.*)/;
              my $xen_app = $1;
-             my $host_app = $2;
+             my $host_app = $2;             
+             if ($xen_app =~ m/(.*)vga=mode-(\S+)\s*(.*)/)
+             {
+               $ret{"vgamode"} = $2;
+               $xen_app = $self->MergeIfDefined($1,$3)
+             }
              $ret{"xen_append"} = $self->trim($xen_app);
              $ret{"append"} = $self->trim($host_app);
            }
