@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Oct 29 08:52:06 CET 2009 - jreidinger@suse.cz
+
+- print output if command failed (bnc#531252)
+- dump log also during refresh call (bnc#531252)
+- pass vga mode to xen enviroment (FATE#305310)
+- 0.4.89.2
+
+-------------------------------------------------------------------
 Thu Sep 17 09:07:00 CEST 2009 - jreidinger@suse.cz
 
 - doesn't parse # after text for grub bootloader (bnc #481416)

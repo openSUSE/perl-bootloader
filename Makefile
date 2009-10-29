@@ -24,6 +24,8 @@ all:
 	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'test', 'test_clean', 'docs', 'rpm' or 'clean'"
 	@echo
 
+package: export
+
 export:	.checkexportdir .exportdir
 
 docs:
