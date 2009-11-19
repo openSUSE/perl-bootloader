@@ -427,7 +427,7 @@ sub GetUdevMapping {
   }
 
   while (my ($k,$v) = each (%mapping)){
-      $logger->milestone ("UDEV MAPPING: ".$k||""." -> ".$v||""." \n");
+      $logger->milestone ("UDEV MAPPING: ".($k||"")." -> ".($v||""));
   }
 
 
@@ -643,6 +643,7 @@ to initialize the bootloader library properly.
 
 # FIXME: this has to be read through yast::storage
 sub ReadRAID1Arrays {
+    my $udevmapping = shift;
     my $logger = Bootloader::Logger::instance();
     my %mapping = ();
     # use '/sbin/mdadm --detail --verbose --scan'
@@ -679,7 +680,9 @@ sub ReadRAID1Arrays {
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
             ($array, $level, $num_devices) = ($1, $2, $3);
-             $logger->milestone("Tools::ReadRAID1Arrays: set array $array level $level and device count to $num_devices");
+            #udevadm sometime return udev symlink instead of physical device, bnc#547580
+            $array = $udevmapping->{$array} if $udevmapping->{$array};
+            $logger->milestone("Tools::ReadRAID1Arrays: set array $array level $level and device count to $num_devices");
         }
         elsif ($level eq "raid1" and $line =~ /devices=(\S+)/)
         {
@@ -744,7 +747,7 @@ sub InitLibrary {
     my $um = GetUdevMapping();
     my $mp = ReadMountPoints ($um);
     my $part = ReadPartitions ($um);
-    my $md = ReadRAID1Arrays ();
+    my $md = ReadRAID1Arrays ($um);
     my $mpath = GetMultipath ();
 
     $lib_ref->SetLoaderType (GetBootloader ());
