@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Wed Nov 25 13:50:16 UTC 2009 - jreidinger@novell.com
+
+- don't translate during kernel-update mdraid over whole disc
+  (FATE#305883)
+- fix problems with MD Raid (bnc#533866,bnc#547580)
+- pass vga mode to xen kernel (FATE#305310); fix mdraid test to
+  check proper directory
+- 0.5.7
+
+
+-------------------------------------------------------------------
 Fri Oct  9 13:39:06 CEST 2009 - jreidinger@suse.cz
 
 -  add tests for md raid

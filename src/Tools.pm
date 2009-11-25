@@ -689,7 +689,10 @@ sub ReadRAID1Arrays {
             # we could test $num_device against number of found devices to
             # detect degradedmode but that does not matter here (really?) 
              $logger->milestone("Tools::ReadRAID1Arrays: set to array $array values $1");
-             $mapping{$array} = [ split(/,/, $1) ];
+      	     my @devices = split(/,/,$1);
+	           if ($devices[0]=~ m/^.*\d+$/){ #add only non-disc arrays
+      	       $mapping{$array} = [ @devices ];
+      	     }
         }
     }
     $logger->milestone("Tools::ReadRAID1Arrays: finish parsing mdadm --detail --verbose --scan:");
