@@ -361,7 +361,7 @@ sub DefineUdevMapping($) {
 
     while ((my $phys, my $mp) = each (%{$map_ref}))
     {
-	Bootloader::Logger::instance()->milestone ("Library::DefineUdevMapping: Udev device: ".$phys||""." ;  kernel: ".$mp||""."");
+	Bootloader::Logger::instance()->milestone ("Library::DefineUdevMapping: Udev device: ".($phys||"")." ;  kernel: ".($mp||"")."");
     }
 
   $loader->{"udevmap"} = $map_ref;
