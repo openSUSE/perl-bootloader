@@ -335,8 +335,8 @@ sub UnixDev2GrubDev {
     # This gives me the devicename, whether $dev is the device or a link!
     # This works for udev (kernel) devices only, devicemapper doesn't 
     # need to be changed here 
-    my $original = $dev;
     my $kernel_dev = $self->GetKernelDevice($dev);
+    my $original = $kernel_dev;
 
     $self->l_milestone ("GRUB::UnixDev2GrubDev: kernel device: $kernel_dev");
 

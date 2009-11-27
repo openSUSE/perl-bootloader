@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 86;
+use Test::More tests => 85;
 
 use lib "./";
 use Bootloader::Library;
@@ -96,7 +96,6 @@ foreach my $section (@sections) {
     is( $section->{"root"}, '/dev/sda2' );
     is( $section->{"xen"}, '/boot/xen.gz' );
     is( $section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok' );
-    is( $section->{"vgamode"}, '0x332' );
     $section->{'append'} = $lib_ref->UpdateSerialConsole( $section->{'append'},'ttyS1,9600n52r'); #test change console
     $section->{'__modified'} = '1';
   }
@@ -169,49 +168,49 @@ ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
 ok($lib_ref->UpdateBootloader(1));
 
-my $res = qx:grep -c "kernel /boot/xen.gz console=com2 com2=9600n52r testparam=ok" ./fake_root1/boot/grub/menu.lst:;
+my $res = qx:grep -c "kernel /boot/xen.gz console=com2 com2=9600n52r testparam=ok" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test correct created xen append
 
-$res = qx:grep -c "kernel .*/boot/memtest.bin" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "kernel .*/boot/memtest.bin" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test correct created memtest
 
-$res = qx:grep -c "rootnoverify (fd0)" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "rootnoverify (fd0)" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
 
-$res = qx:grep -c "makeactive" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "makeactive" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 0); #test if floppy is correctly repammer for root
 
-$res = qx:grep -c "setkey b a" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "setkey b a" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 0); #test if floppy is correctly repammer for root
 
-$res = qx:grep -c "setkey b c" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "setkey b c" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
 
-$res = qx:grep -c "setkey c a" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "setkey c a" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
 
-$res = qx:grep -c "configfile /boot/grub/menu.lst" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "configfile /boot/grub/menu.lst" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test configfile rewrite
 
-$res = qx:grep -c "configfile /grub/menu.lst" ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -c "configfile /grub/menu.lst" ./fake_root2/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test configfile new write
 
-$res = qx:grep -n 'module .*/boot/vmlinuz-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -n 'module .*/boot/vmlinuz-2.6.30-xen' ./fake_root2/boot/grub/menu.lst:;
 my $imagepos;
 if ( $res =~ m/(\d+):.*/ )
 {
   $imagepos = $1;
 }
-$res = qx:grep -n 'modulenounzip .*/boot/initrd-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
+$res = qx:grep -n 'modulenounzip .*/boot/initrd-2.6.30-xen' ./fake_root2/boot/grub/menu.lst:;
 my $initrdpos;
 if ( $res =~ m/(\d+):.*/ )
 {
@@ -219,15 +218,15 @@ if ( $res =~ m/(\d+):.*/ )
 }
 ok($initrdpos>$imagepos);
 
-$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd0) (hd0,1)' ./fake_root1/etc/grub.conf:;
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd0) (hd0,1)' ./fake_root2/etc/grub.conf:;
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 
-$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd3) (hd0,1)' ./fake_root1/etc/grub.conf:;
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd3) (hd0,1)' ./fake_root2/etc/grub.conf:;
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 
-$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd4) (hd0,1)' ./fake_root1/etc/grub.conf:;
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd4) (hd0,1)' ./fake_root2/etc/grub.conf:;
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 

@@ -1,25 +1,65 @@
 # Modified by YaST2. Last modification on Tue Jul 15 10:54:28 CEST 2008
 default 1
 timeout 8
+setkey a b
+setkey b a
 gfxmenu (hd0,1)/boot/message
 ##YaST - activate
 
 ###Don't change this comment - YaST2 identifier: Original name: linux###
+title Debug -- openSUSE 11.0 - 2.6.25.4-10
+    root (hd0,1)
+    kernel /boot/vmlinuz-2.6.25.4-10-debug \
+    root=/dev/sda2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
+    initrd /boot/initrd-2.6.25.4-10-debug
+
+###Don't change this comment - YaST2 identifier: Original name: linux-2.6.25.4-10-default###
 title openSUSE 11.0 - 2.6.25.4-10
     root (hd0,1)
-    measure (hd0,1)/etc/security/selinux/policy.17 9
-    measure (hd0,1)/opt/jdk1.4.2/jre/lib/security/java.policy 9
-    kernel --pcr=8 /boot/vmlinuz-2.6.25.4-10-default root=/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2 resume=/dev/sda1 splash=silent showopts vga=0x31a
-    initrd --pcr=8 /boot/initrd-2.6.25.4-10-default
+    kernel /boot/vmlinuz-2.6.25.4-10-default root=/dev/sda2 resume=/dev/sda####1 splash=silent showopts vga=0x31a
+    initrd /boot/initrd-2.6.25.4-10-default
+
+###Don't change this comment - YaST2 identifier: Original name: console###
+title double console
+    root (hd0,1)
+    kernel /boot/vmlinuz-2.6.27.4-2-default root=/dev/sda2 console=tty0 console=ttyS0,57600 sysrq_always_enabled panic=100 resume=/dev/sda1 splash=silent crashkernel=0M-:0M@16M showopts vga=normal
+    initrd /boot/initrd-2.6.25.4-10-default
+
+###Don't change this comment - YaST2 identifier: Original name: failsafe###
+title Failsafe -- openSUSE 11.0 - 2.6.25.4-10
+    root (hd0,1)
+    kernel /boot/vmlinuz-2.6.25.4-10-default root=/dev/sda2 showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe
+    initrd /boot/initrd-2.6.25.4-10-default
 
 ###Don't change this comment - YaST2 identifier: Original name: xen###'
 title XEN
     root (hd0,1)
-    kernel --pcr=11 /boot/xen.gz testparam=ok com1=38400n52r console=com1
-    module --pcr=10 /boot/vmlinuz-2.6.25.4-10-xen root=/dev/disk/by-id/scsi-SATA_ST3250620NS_9QE2JXS8-part2 resume=/dev/sda1 splash=silent showopts vga=0x332 console=ttyS0,38400n52r
-    module --pcr=9 /boot/initrd-2.6.25.4-10-xen
+    kernel /boot/xen.gz testparam=ok com1=38400n52r console=com1
+    module /boot/vmlinuz-2.6.25.4-10-xen root=/dev/sda2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
+    module /boot/initrd-2.6.25.4-10-xen
 
-###Don't change this comment - YaST2 identifier: Original name: other###
-title other
-    rootnoverify (hd0,1)
-    chainloader --pcr=8 (hd0,3)+1
+###Don't change this comment - YaST2 identifier: Original name: xen2###'
+title XEN2
+    root (hd0,1)
+    kernel /boot/xen.gz testparam=ok com1=38400n52r console=com1
+    module /boot/vmlinuz-2.6.30-xen root=/dev/sda2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
+    modulenounzip /boot/initrd-2.6.30-xen
+
+###Don't change this comment - YaST2 identifier: Original name: Linux other 1 (/dev/sda4)###
+title Linux other 1 (/dev/sda4)
+    rootnoverify (hd1,0)
+    map (hd0) (hd1)
+    map (hd1) (hd0)
+    makeactive
+    chainloader (hd1,0)+1
+
+###Don't change this comment - YaST2 identifier: Original name: menu###
+title menu
+    root (hd0,1)
+    configfile /boot/grub/menu.lst
+
+
+###Don't change this comment - YaST2 identifier: Original name: floppy###
+title Floppy
+    rootnoverify (fd0)
+    chainloader +1
