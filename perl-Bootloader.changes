@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Dec  1 10:59:15 UTC 2009 - jreidinger@novell.com
+
+- apply udev transformation also on disc which should boot 
+  (bnc#557220)
+- use udev transformation on output of mdadm (bnc#547580)
+- 0.5.6.1
+
+-------------------------------------------------------------------
 Fri Oct  9 13:39:06 CEST 2009 - jreidinger@suse.cz
 
 -  add tests for md raid
