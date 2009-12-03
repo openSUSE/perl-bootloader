@@ -463,7 +463,7 @@ sub Info2Section {
         elsif ($key eq "append") 
         {
           my $first = $sectinfo{"xen_append"} || "";
-          $first = "vga=mode-".(delete $sectinfo{"vgamode"})." $first" if ($sectinfo{"vgamode"} ne "");
+          $first = "vga=mode-".(delete $sectinfo{"vgamode"})." $first" if (defined $sectinfo{'vgamode'} && $sectinfo{"vgamode"} ne "");
           my $second = $sectinfo{"append"} || "";  
           my $console = $sectinfo{"console"} || "";
           $console = "console=$console" if ($console ne "");
@@ -518,7 +518,7 @@ sub Info2Section {
             {
               my $xen_append = $sectinfo{"xen_append"} || "";
               my $vga = "";
-              $vga="vga=mode-".$sectinfo{"vgamode"}." " if ($sectinfo{"vgamode"} ne "");
+              $vga="vga=mode-".$sectinfo{"vgamode"}." " if (defined $sectinfo{"vgamode"} && $sectinfo{"vgamode"} ne "");
               $val = "$vga$xen_append -- $val";
             }
             push @lines, {
