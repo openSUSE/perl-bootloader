@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Fri Dec  4 11:04:29 UTC 2009 - jreidinger@novell.com
+
+- fix warning on IA64 (bnc#559151)
+- adapt failsafe to KMS (bnc#560426)
+- 0.4.89.4
+
+-------------------------------------------------------------------
+Wed Nov 25 17:58:17 UTC 2009 - jreidinger@novell.com
+
+- adapt to md raids over whole disc (FATE#305883)
+- 0.4.89.3
+
+-------------------------------------------------------------------
 Thu Oct 29 08:52:06 CET 2009 - jreidinger@suse.cz
 
 - print output if command failed (bnc#531252)
