@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Dec 15 14:18:51 UTC 2009 - jreidinger@novell.com
+
+- fix md raid duplication of boot sector (bnc#555574)
+- adapt failsafe to disable KMS (bnc#560426)
+- fix printing warning (bnc#559151)
+- 0.5.8
+
+-------------------------------------------------------------------
 Wed Nov 25 13:50:16 UTC 2009 - jreidinger@novell.com
 
 - don't translate during kernel-update mdraid over whole disc
