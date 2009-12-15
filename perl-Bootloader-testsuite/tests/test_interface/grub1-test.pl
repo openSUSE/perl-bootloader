@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 78;
+use Test::More tests => 79;
 
 use lib "./";
 use Bootloader::Library;
@@ -137,13 +137,29 @@ foreach my $section (@sections) {
 my $new_section = {(
   'type' => 'menu',
   'original_name' => 'menu2',
-  'configfile' => '/grub/menu.lst',
   'root' => '/dev/sda2',
   'name' => 'menu2',
+  'configfile' => '/grub/menu.lst',
   '__modified' => '1',
   )};
 
 push @sections, $new_section;
+
+my $new_section2 = { (
+  'type' => 'xen',
+  'original_name' => 'xen-new',
+  'vgamode' => '0x384',
+  'root' => '/dev/sda2',
+  'name' => 'Xen-new',
+  "append" => 'resume=/dev/sda1 splash=silent showopts',
+  "image" => '/boot/vmlinuz-2.6.25.4-10-xen',
+  "initrd" => '/boot/initrd-2.6.25.4-10-xen',
+  "xen" => '/boot/xen.gz',
+  "xen_append" => 'testparam=ok',
+  '__modified' => '1',
+  )};
+
+push @sections, $new_section2;
 
 ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
@@ -180,6 +196,10 @@ is( $res, 1); #test configfile rewrite
 $res = qx:grep -c "configfile /grub/menu.lst" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test configfile new write
+
+$res = qx:grep -c "vga=mode-0x384" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test setting vga-mode
 
 $res = qx:grep -n 'module .*/boot/vmlinuz-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
 my $imagepos;

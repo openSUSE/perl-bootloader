@@ -1830,10 +1830,10 @@ sub Info2Section {
       my $pcr = $sectinfo{"xenpcr"} || "";
       $pcr = "--pcr=$pcr " if $pcr ne "";
       my $vga = $sectinfo{"vgamode"} || "";
-      $vga = "vgamode=$vga " if $vga ne "";
+      $vga = "vga=mode-$vga " if $vga ne "";
       my $value = "$pcr$xen $vga$append";
       push @lines, {
-	"key" => "kernel",
+      	"key" => "kernel",
         "value" => $value,
       };
     }
