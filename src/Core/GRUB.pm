@@ -811,6 +811,8 @@ sub CreateGrubConfLines() {
     my %glob = %{$self->{"global"}};
     my @grub_conf = ();
     my %s1_devices = ();
+    # md_discs stores grub discs which should be synchronized (needed for correct stage2 location)
+    my $md_discs = {};
 
     {
 	my $dev;
@@ -830,13 +832,16 @@ sub CreateGrubConfLines() {
 	}
 
 	# boot_md_mbr   synchronize mbr of disc in md raid 
-        #(it is little tricky as md raid synchronize only partitions)
+  #(it is little tricky as md raid synchronize only partitions)
 	$flag = delete $glob{"boot_md_mbr"};
 	if (defined $flag and $flag ne "") {
             my @discs = split(/,/,$flag);
             chomp @discs;
             foreach my $mbr_disc (@discs){
-	      $s1_devices{$mbr_disc} = 1;
+      	      $s1_devices{$mbr_disc} = 1;
+              my $gdev = $self->UnixDev2GrubDev($mbr_disc);
+              $md_discs->{$gdev} = substr($gdev,1,-1);
+	            $self->l_milestone ("GRUB::CreateGrubConfLines: md_mbr device: $gdev ");
             }
 	}
 
@@ -960,7 +965,17 @@ sub CreateGrubConfLines() {
 	{
 	    my $options = join " ", @{$grub_conf_item->{"options"} || []};
 	    my $location = $self->UnixDev2GrubDev ($grub_conf_item->{"device"});
-	    my $line = "setup $options $location " . $stage1dev || $location;
+      my $stage_location = $stage1dev || $location;
+      if ($md_discs->{$location})
+      {
+        $self->l_milestone("GrubConfCreate: detected md_discs $location");
+        $stage_location =~ m/\(([^,)]+)(,[^)]+)?\)/;
+        my $old_disc = $1;
+        my $new_disc = $md_discs->{$location};
+        $stage_location =~ s/$old_disc/$new_disc/;
+        $self->l_milestone("GrubConfCreate: resulting location $stage_location");
+      }
+	    my $line = "setup $options $location " . $stage_location; 
 	    push @grub_conf, $line;
 	    delete $s1_devices{$grub_conf_item->{"device"}};
 	}

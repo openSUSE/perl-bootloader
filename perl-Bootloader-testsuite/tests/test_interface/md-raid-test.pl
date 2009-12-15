@@ -223,11 +223,11 @@ $res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd0) (hd0,1)' .
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 
-$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd3) (hd0,1)' ./fake_root2/etc/grub.conf:;
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd3) (hd3,1)' ./fake_root2/etc/grub.conf:;
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 
-$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd4) (hd0,1)' ./fake_root2/etc/grub.conf:;
+$res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd4) (hd4,1)' ./fake_root2/etc/grub.conf:;
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 
