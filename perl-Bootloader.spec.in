@@ -45,7 +45,7 @@ Authors:
 %build
 touch Makefile.PL
 perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
-make
+make %{?_smp_mflags}
 pod2man %{SOURCE1} | gzip > update-Bootloader.8.gz
 
 %install
