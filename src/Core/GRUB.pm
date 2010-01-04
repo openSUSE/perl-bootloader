@@ -1971,7 +1971,7 @@ sub Global2Info {
 	    next;
 	}
 
-	my ($type) = split(/:/, $go->{$key}||"");
+	my $type = $go->{$key}||"";
 
 	if ($key eq "root" or $key eq "rootnoverify") {
 	    $grub_root = $val;
@@ -2130,7 +2130,7 @@ sub Info2Global {
 	# only accept known global options :-)
 	next unless exists $go->{$key};
 	next if $key =~ m/^boot_/; # handled else where
-	my ($type) = split /:/, $go->{$key};
+	my $type = $go->{$key} || "";
 
 	if ($key eq "default") {
 	    $value = $self->IndexOfSection ($value, $sections_ref) || 0;
