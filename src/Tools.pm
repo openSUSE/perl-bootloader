@@ -867,9 +867,6 @@ sub ReadRAID1Arrays {
 	open (MD, "$mdadm --detail --verbose --scan |");
     }
     else {
-	print ("The command \"mdadm\" is not available.\n");
-	print ("Is the package \"mdadm\" installed?\n");
-
 	# If the command "mdadm" isn't available, return a reference to an
 	# empty hash
 	return \%mapping;

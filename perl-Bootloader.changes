@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Thu Feb 25 12:19:29 UTC 2010 - jreidinger@novell.com
+
+- expect that there is no md raid if mdadm missing and remove
+  verbose report (bnc#578003)
+- 0.4.89.6
+
+-------------------------------------------------------------------
+Fri Jan  8 12:48:16 UTC 2010 - jreidinger@novell.com
+
+- fix warning message during installation (bnc#566020)
+- fix passing vga mode to xen kernel (bnc#564415)
+- 0.4.89.5
+
+-------------------------------------------------------------------
 Fri Dec  4 11:04:29 UTC 2009 - jreidinger@novell.com
 
 - fix warning on IA64 (bnc#559151)
