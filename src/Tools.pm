@@ -661,14 +661,13 @@ sub ReadRAID1Arrays {
 	open (MD, "$mdadm --detail --verbose --scan |");
     }
     else {
-	$logger->error ("The command \"mdadm\" is not available.");
-	$logger->error ("Is the package \"mdadm\" installed?");
+    	$logger->milestone ("The command \"mdadm\" is not available.");
+    	$logger->milestone ("Expect that system doesn't have MD array.");
 
-	# If the command "mdadm" isn't available, return a reference to an
-	# empty hash
-	return \%mapping;
+    	# If the command "mdadm" isn't available, return a reference to an
+    	# empty hash
+    	return \%mapping;
     }
-    
 
     my ($array, $level, $num_devices);
     $logger->milestone("Tools::ReadRAID1Arrays: start parsing mdadm --detail --verbose --scan:");
