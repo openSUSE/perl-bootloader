@@ -117,6 +117,7 @@ allowed together with --add operation
  
 sub GetProduct {
     my $namever;
+    my $loader = Bootloader::Tools::GetBootloader();
      
     # first try: use zypper
     if ( -f '/usr/bin/zypper' ){
