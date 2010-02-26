@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Feb 26 14:01:47 UTC 2010 - jreidinger@novell.com
+
+- don't print outside if mdadm missing (bnc#578003)
+- fix splitting of values which now doesn't use that structure
+  (bnc#566020)
+- adapt to new version of getting product description (bnc#583034)
+- 0.5.9
+
+-------------------------------------------------------------------
 Sun Jan  3 15:41:34 CET 2010 - jengelh@medozas.de
 
 - enable parallel build
