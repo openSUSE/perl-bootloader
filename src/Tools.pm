@@ -203,9 +203,9 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=(.*)/)
 		{
-                    $dev = $udevmap->{"/dev/disk/by-label/$1"};
+                    $dev = "/dev/disk/by-label/$1"; #do not translate otherwise it changes root always bnc#575362
                 } elsif ($dev =~ m/UUID=(.*)/){
-                    $dev = $udevmap->{"/dev/disk/by-uuid/$1"};
+                    $dev = "/dev/disk/by-uuid/$1";
                 }
                 $mp =~ s/\\040/ /; #handle spaces in fstab
 		$mountpoints{$mp} = $dev;

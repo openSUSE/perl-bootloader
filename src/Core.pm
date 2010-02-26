@@ -18,10 +18,6 @@ use Bootloader::Core;
 
 C<< $res = Bootloader::Core->trim ($string); >>
 
-C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
-
-C<< $device = Bootloader::Core->MP2Dev ($mountpoint); >>
-
 C<< $members_ref = Bootloader::Core->MD2Members ($md_device); >>
 
 C<< $md_dev = Bootloader::Core->Member2MD (string $md_member); >>
@@ -200,45 +196,6 @@ sub l_error {
     $self->{"logger"}->error($message);
 }
 
-
-=item
-C<< $mountpoint = Bootloader::Core->Dev2MP ($device); >>
-
-Gets the mount point where a specified device is mounted. As argument
-takes the device to examinate (string, eg. C<'/dev/hda1'>), returns the
-mountopint where the device is mounter (string, eg. C<'/boot'>), or undef
-if the device is not mounted (according to /etc/fstab).
-
-=cut
-
-# string Dev2MP (string device)
-sub Dev2MP {
-    my $self = shift;
-    my $dev = shift;
-
-    foreach my $mp ( keys %{$self->{"mountpoints"}}) {
-	return $mp if $self->{"mountpoints"}->{$mp} eq $dev;
-    }
-    return undef;
-}
-
-=item
-C<< $device = Bootloader::Core->MP2Dev ($mountpoint); >>
-
-Gets the device where filesystem mounted at a specified mountpoint is
-located. As argument takes the mount point (string, eg. C<'/boot'>), returns
-the device (string, eg. C<'/dev/hda1'>), or undef if there is no device mounted
-in the specified directory
-
-=cut
-
-# string MP2Dev (string mountpoint)
-sub MP2Dev {
-    my $self = shift;
-    my $mp = shift;
-
-    return $self->{"mountpoints"}{$mp} || undef;
-}
 
 =item
 C<< $members_ref = Bootloader::Core->MD2Members ($md_device); >>
