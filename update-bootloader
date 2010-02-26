@@ -111,41 +111,22 @@ allowed together with --add operation
 =cut
 
 # Get product name and version
-# FIXME: There is still no guaranteed-to-work solution
-# FIXME: as Commandline:: always prints to stderr, which is risky
-# FIXME: to get garbage.
-# If Commandline:: prints garbage, use /etc/SuSE-release instead  
+# If zypper is not available or versions is empty, use /etc/SuSE-release instead
+# linux is last possible fallback
  
 sub GetProduct {
     my $namever;
-     
-    # first try: new zypp-query-pool adopted to our needs
-    my @product_query = split ('\|', qx{/usr/lib/zypp/zypp-query-pool products \@system});
-    my $found = 0;
-    my $i = 0;
-
-    for ($i = 0; $i <=  @product_query; $i++){
-	if ($product_query[$i] eq "base"){
-            $found = 1;
-	    last;
-	}
-    }
-
-    # Determine the bootloader type, because long product names may only 
-    # be used in case of grub
     my $loader = Bootloader::Tools::GetBootloader();
-    # Substitude whitespaces with an underscore
-    if ($found){
-        if ($loader ne "grub") {
-            $namever = $product_query[$i+1];
-	    $namever =~ s/\s/_/g;
-        }
-        else{
-            $namever = $product_query[$i+2];
-        }
-        chomp $namever;
+     
+    # first try: use zypper
+    if ( -f '/usr/bin/zypper' ){
+      my $zypper_xml = qx{ZYPP_READONLY_HACK=1 zypper -qx --no-refresh pd -i | grep 'isbase="1"'};
+      if ($zypper_xml =~ m/^.*summary="([^"]*)".*shortname="([^"]*)".*$/){
+        return $1 if ($1 ne ""); #FIXME add here exceptions if bootloader has problems with long names
+        return $2 if ($2 ne "");
+      }
     }
-    return "$namever" if $namever ne '' and $namever !~ /\n/;
+
 
     # Second try: Is there a usable /etc/SuSE-release?
     # This should really not be used anymore, as the syntax changed
