@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 16 15:54:36 UTC 2010 - jreidinger@novell.com
+
+- add fix for restricted section names also for ia64 (bnc#588609)
+- 0.4.89.9
+
+-------------------------------------------------------------------
 Tue Mar 16 13:43:20 UTC 2010 - jreidinger@novell.com
 
 - fix problems with long names on ppc (bnc#588612)
