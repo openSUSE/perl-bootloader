@@ -122,8 +122,13 @@ sub GetProduct {
     # first try: use zypper
     if ( -f '/usr/bin/zypper' ){
       my $zypper_xml = qx{ZYPP_READONLY_HACK=1 zypper -qx --no-refresh pd -i | grep 'isbase="1"'};
+      my $logname = Bootloader::Path::Logname();
+      open (LOG, ">>$logname");
+      print LOG ("zypper product xml :\n $zypper_xml\n");
+      close LOG;
       if ($zypper_xml =~ m/^.*summary="([^"]*)".*shortname="([^"]*)".*$/){
-        return $1 if ($1 ne ""); #FIXME add here exceptions if bootloader has problems with long names
+        #restriction for long names - ppc can be only 15 chars and no spaces
+        return $1 if ($1 ne "" && $loader ne "ppc"); 
         return $2 if ($2 ne "");
       }
     }

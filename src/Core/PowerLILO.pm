@@ -304,6 +304,11 @@ sub FixSectionName {
     # beside space equal sign and quote signs should be ok, no length limit
     $name =~ s/[^\w.-]/_/g;
 
+    if (length($name) > 15)
+    {
+      $name = substr $name,0,13; #cut more to have space to unique fix
+    }
+
     # and make the section name unique
     $name = $self->SUPER::FixSectionName($name, $names_ref, $orig_name);
 
@@ -468,6 +473,8 @@ sub Info2Global {
     my @lines_new = ();
     my $go = $self->{"exports"}{"global_options"};
     my $arch = $self->{"exports"}{"arch"};
+
+    $globinfo{"default"} = $self->FixSectionName($globinfo{"default"},[]);
 
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;
