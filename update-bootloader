@@ -128,7 +128,7 @@ sub GetProduct {
       close LOG;
       if ($zypper_xml =~ m/^.*summary="([^"]*)".*shortname="([^"]*)".*$/){
         #restriction for long names - ppc can be only 15 chars and no spaces
-        return $1 if ($1 ne "" && $loader ne "ppc"); 
+        return $1 if ($1 ne "" && $loader ne "ppc" && $loader ne "elilo"); 
         return $2 if ($2 ne "");
       }
     }

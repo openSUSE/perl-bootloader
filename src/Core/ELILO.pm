@@ -493,6 +493,7 @@ sub Info2Global {
     my @lines_new = ();
     my $go = $self->{"exports"}{"global_options"};
     $globinfo{"default"} = $sections[0]->{"name"} unless (defined $globinfo{"default"});
+    $globinfo{"default"} = $self->FixSectionName($globinfo{"default"},[]);
 
     # FIXME: Do we need the arch stuff???
     #my $arch = $self->{"exports"}{"arch"};
