@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Mar 22 08:48:50 UTC 2010 - jreidinger@novell.com
+
+- exclude DASD dump sections from menu (bnc#582705)
+
+-------------------------------------------------------------------
 Thu May 14 08:46:19 CEST 2009 - jreidinger@suse.cz
 
 - Improve multipath partition recognize (bnc#483617) 
