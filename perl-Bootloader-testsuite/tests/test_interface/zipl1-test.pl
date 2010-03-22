@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 40;
+use Test::More tests => 44;
 
 use lib "./";
 use Bootloader::Library;
@@ -89,5 +89,21 @@ is( $res, 1); #test if floppy is correctly repammer for root
 my $res = qx:grep -c 'parameters = "root=/dev/sda2 term=dumb 5"' ./fake_root1/etc/zipl.conf:;
 chomp($res);
 is( $res, 1); #test if floppy is correctly repammer for root
+
+my $res = qx:grep -c '1 = noroot' ./fake_root1/etc/zipl.conf:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
+
+my $res = qx:grep -c '2 = withroot' ./fake_root1/etc/zipl.conf:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
+
+my $res = qx:grep -c '3 = Failsafe' ./fake_root1/etc/zipl.conf:;
+chomp($res);
+is( $res, 1); #test if floppy is correctly repammer for root
+
+my $res = qx:grep -c '4 = ' ./fake_root1/etc/zipl.conf:;
+chomp($res);
+is( $res, 0); #test if floppy is correctly repammer for root
 
 Bootloader::Tools::DumpLog( $lib_ref );
