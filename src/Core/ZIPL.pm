@@ -819,17 +819,18 @@ sub PrepareMenuFileLines {
     # Search for sections in @sect_names array which are not yet in "list" of
     # menu section and which are not a menu section theirselves. If found,
     # append them to the "list" of the menu section.
-    foreach my $sect_name (@sect_names) {
+    foreach my $sect (@sectinfo) {
        my $found = 0;
 
        foreach my $entry (@menu_list_array) {
-           if ($entry eq $sect_name) {
+           if ($entry eq $sect->{"name"}) {
                $found = 1;
            }
        }
-
-       if (!$found and $sect_name ne "menu") {
-           push @sect_names_to_append, $sect_name;
+       my $is_dump = ($sect->{"type"} eq "dump") and
+         (defined $sect->{"type"}) and ($sect->{"dumpto"} ne "");
+       if (!$found and $sect->{"name"} ne "menu" and !$is_dump) {
+           push @sect_names_to_append, $sect->{"name"};
        }
     }
     if (scalar @sect_names_to_append > 0) {

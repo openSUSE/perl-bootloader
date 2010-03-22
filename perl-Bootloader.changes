@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Mar 22 08:40:23 UTC 2010 - jreidinger@novell.com
+
+- exclude DASD dump sections from menu (bnc#582705) 
+- 0.4.89.10
+
+-------------------------------------------------------------------
 Tue Mar 16 15:54:36 UTC 2010 - jreidinger@novell.com
 
 - add fix for restricted section names also for ia64 (bnc#588609)
