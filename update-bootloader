@@ -121,16 +121,15 @@ sub GetProduct {
      
     # first try: use zypper
     if ( -f '/usr/bin/zypper' ){
-      my $zypper_xml = qx{ZYPP_READONLY_HACK=1 zypper -qx --no-refresh pd -i | grep 'isbase="1"'};
+      my $summary = qx{grep '<summary>' /etc/products.d/baseproduct | sed 's:.*<summary>\\(.*\\)</summary>.*:\\1:'};
+      my $short = qx{grep '<shortsummary>' /etc/products.d/baseproduct | sed 's:.*<shortsummary>\\(.*\\)</shortsummary>.*:\\1:'};
       my $logname = Bootloader::Path::Logname();
       open (LOG, ">>$logname");
-      print LOG ("zypper product xml :\n $zypper_xml\n");
-      close LOG;
-      if ($zypper_xml =~ m/^.*summary="([^"]*)".*shortname="([^"]*)".*$/){
-        #restriction for long names - ppc can be only 15 chars and no spaces
-        return $1 if ($1 ne "" && $loader ne "ppc" && $loader ne "elilo"); 
-        return $2 if ($2 ne "");
-      }
+      print LOG ("baseproduct names: short $short and long $summary \n");
+      close LOG;      
+      #restriction for long names - ppc can be only 15 chars and no spaces
+      return $summary if ($summary ne "" && $loader eq "grub"); 
+      return $short if ($short ne "");
     }
 
     # Second try: Is there a usable /etc/SuSE-release?
