@@ -709,7 +709,7 @@ sub UnixPath2GrubPath {
     }
 
     $path = $dev . $path;
-    $self->l_debug ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
+    $self->l_milestone ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
     return $path;
 }
 
