@@ -1469,21 +1469,24 @@ sub EvalSectionType {
     my $image = 0;
 
     foreach my $line_ref (@lines) {
-	if ($line_ref->{"key"} eq "module") {
-	    $modules++;
-	}
-	elsif ($line_ref->{"key"} eq "kernel" && $line_ref->{"value"} =~ m/xen/) {
-	    $kernel_xen = 1;
-	}
-	elsif ($line_ref->{"key"} eq "chainloader") {
-	    $chainloader = 1;
-	}
-	elsif ($line_ref->{"key"} eq "configfile") {
-	    $configfile = 1;
-	}
-        elsif ($line_ref->{"key"} eq "kernel" or $line_ref->{"key"} eq "image") {
-            $image = 1;
+    	if ($line_ref->{"key"} eq "module") {
+	      $modules++;
+    	}
+      elsif ($line_ref->{"key"} eq "kernel" or $line_ref->{"key"} eq "image")
+      {
+        # kernel name contain xen it should be xen, but also image section in xen enviroment
+        if ( $line_ref->{"value"} =~ m/xen/ )
+        {
+          $kernel_xen = 1;
         }
+        $image = 1;
+      }
+    	elsif ($line_ref->{"key"} eq "chainloader") {
+	      $chainloader = 1;
+    	}
+    	elsif ($line_ref->{"key"} eq "configfile") {
+	      $configfile = 1;
+    	}
     }
     if ($configfile) {
 	return "menu";
