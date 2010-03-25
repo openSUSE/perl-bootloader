@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Mar 24 08:20:35 UTC 2010 - jreidinger@novell.com
+
+- avoid warning if path is not generated (bnc#590459)
+
+-------------------------------------------------------------------
 Tue Mar 23 09:32:44 UTC 2010 - jreidinger@novell.com
 
 - fix hang during distro update (bnc#586303)
