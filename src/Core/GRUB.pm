@@ -820,7 +820,7 @@ sub CreateGrubConfLines() {
 
 	# boot_custom => "selectdevice:Custom Boot Partition::"
 	$dev = delete($glob{"boot_custom"});
-	$s1_devices{$dev} = 1 if defined $dev;
+	$s1_devices{$dev} = 1 if (defined $dev and $dev ne "");
 	
 	# boot_mbr    => "bool:Boot from Master Boot Record:false",
 	$flag = delete $glob{"boot_mbr"};

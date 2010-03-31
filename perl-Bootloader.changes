@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Mar 31 08:21:21 UTC 2010 - jreidinger@novell.com
+
+- don't allow empty custom boot for GRUB (bnc#589433)
+
+-------------------------------------------------------------------
 Fri Feb 26 14:01:47 UTC 2010 - jreidinger@novell.com
 
 - don't print outside if mdadm missing (bnc#578003)
