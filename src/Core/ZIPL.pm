@@ -828,7 +828,7 @@ sub PrepareMenuFileLines {
            }
        }
        my $is_dump = (($sect->{"type"} eq "dump") and
-         (defined $sect->{"type"}) and ($sect->{"dumpto"} ne ""));
+         (defined $sect->{"dumpto"}) and ($sect->{"dumpto"} ne ""));
        if (!$found and $sect->{"name"} ne "menu" and !$is_dump) {
            push @sect_names_to_append, $sect->{"name"};
        }
