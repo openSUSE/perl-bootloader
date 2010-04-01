@@ -3,6 +3,7 @@ Thu Mar 25 12:42:31 UTC 2010 - jreidinger@novell.com
 
 - avoid problems with xen in kernel append for non-xen entries
   (bnc#590465) 
+- 0.4.19.23
 
 -------------------------------------------------------------------
 Mon Mar 22 08:48:35 UTC 2010 - jreidinger@novell.com
