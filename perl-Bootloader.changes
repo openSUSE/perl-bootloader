@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Apr  8 08:30:03 UTC 2010 - jreidinger@novell.com
+
+- create failsafe section after kernel update on s390x to have same
+  behavior as installation (bnc#576874)
+- 0.4.89.12
+
+-------------------------------------------------------------------
 Wed Mar 24 08:20:35 UTC 2010 - jreidinger@novell.com
 
 - avoid warning if path is not generated (bnc#590459)
