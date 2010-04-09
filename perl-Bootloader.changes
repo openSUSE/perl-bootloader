@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Apr  9 09:08:34 UTC 2010 - jreidinger@novell.com
+
+- use same root as it is in etc/fstab (bnc#575362)
+- use new zypper method to get boot label (prevent hang during
+  installation)
+- 0.5.10
+
+-------------------------------------------------------------------
 Wed Mar 31 08:21:21 UTC 2010 - jreidinger@novell.com
 
 - don't allow empty custom boot for GRUB (bnc#589433)
