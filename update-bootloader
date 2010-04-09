@@ -120,9 +120,9 @@ sub GetProduct {
      
     # first try: use zypper
     if ( -f '/usr/bin/zypper' ){
-      my $zypper_xml = qx{ZYPP_READONLY_HACK=1 zypper -qx --no-refresh pd -i | grep 'isbase="1"'};
-      if ($zypper_xml =~ m/^.*summary="([^"]*)".*shortname="([^"]*)".*$/){
-        return $1 if ($1 ne ""); #FIXME add here exceptions if bootloader has problems with long names
+      my $zypper_out = qx{zypper --terse tos -l};
+      if ($zypper_out =~ m/^labelLong\s*(\S.*\S)\s*\nlabelShort\s*(\S.*\S)[\s\n]*$/){
+        return $1 if ($1 ne "" && $loader eq "grub");
         return $2 if ($2 ne "");
       }
     }
