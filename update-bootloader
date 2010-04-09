@@ -445,6 +445,7 @@ if (defined $oper{add}) {
 	# smp, bigsmp or pae and not a xen kernel.
 	if ((($arch eq "i386") ||
 	    ($arch eq "x86_64") ||
+	    ($arch eq "s390x") ||
 	    ($arch eq "ia64")) &&
 	    (($opt_image =~ /-default/) ||
 	    ($opt_image =~ /-smp/) ||
