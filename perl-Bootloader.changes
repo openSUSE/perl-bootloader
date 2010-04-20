@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Apr  8 10:34:01 UTC 2010 - jreidinger@novell.com
+
+- trim any whitespace and remove any endline from product name
+  (bnc#594397)
+- 0.4.89.13
+
+-------------------------------------------------------------------
 Thu Apr  8 08:30:03 UTC 2010 - jreidinger@novell.com
 
 - create failsafe section after kernel update on s390x to have same
