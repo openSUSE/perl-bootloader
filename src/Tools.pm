@@ -151,7 +151,7 @@ sub DumpLog {
 
 	    # If writing to perl logfile, also print warnings to STDERR
 	    if ($using_logfile) {
-		print STDERR (timestamp() . " WARNING: $message\n");
+		print STDERR ("perl-bootloader: ".timestamp() . " WARNING: $message\n");
 	    }
 	}
 	elsif ($level eq "error")
@@ -160,7 +160,7 @@ sub DumpLog {
 
 	    # If writing to perl logfile, also print errors to STDERR
 	    if ($using_logfile) {
-		print STDERR (timestamp() . " ERROR: $message\n");
+		print STDERR ("perl-bootloader: ".timestamp() . " ERROR: $message\n");
 	    }
 	}
 	else
