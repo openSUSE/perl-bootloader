@@ -883,6 +883,9 @@ sub ReadRAID1Arrays {
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
             ($array, $level, $num_devices) = ($1, $2, $3);
+            my $kdevice = `readlink -f $array`; #avoid problems with link /dev/md/* bnc#597812
+            $array = $kdevice if $? == 0;
+            $array = "/dev/md$1" if $array =~ m:^/dev/md/([0-9]+)$:;
         }
         elsif ($level eq "raid1" and $line =~ /devices=(\S+)/)
         {
