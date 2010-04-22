@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Apr 22 11:18:37 UTC 2010 - jreidinger@novell.com
+
+- add fix for mdadm link return (bnc#597812)
+- explicitelly mention that output come from pbl (bnc#597810)
+- fix problematic fix for product name (bnc#583034)
+- 0.4.89.14
+
+-------------------------------------------------------------------
 Thu Apr  8 10:34:01 UTC 2010 - jreidinger@novell.com
 
 - trim any whitespace and remove any endline from product name
