@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Thu Apr 22 12:48:03 UTC 2010 - jreidinger@novell.com
+
+- adapt to new kernel which use only ext_range (bnc#597774)
+- explicitelly mention that output come from pbl (bnc#597810)
+- port changes from SP1 - avoid warning if path is not used 
+  and create failsafe also on s390
+- 0.5.11
+
+-------------------------------------------------------------------
 Fri Apr  9 09:08:34 UTC 2010 - jreidinger@novell.com
 
 - use same root as it is in etc/fstab (bnc#575362)
