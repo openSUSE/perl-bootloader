@@ -1032,12 +1032,13 @@ sub ExamineMBR($){
 sub CountGRUBPassword{
   my $self = shift;
   my $pass = shift;
+  return $pass if $pass =~ m/--md5/ #check if password is already hashed
   my $res = qx{echo "md5crypt \
   $pass" | grub --batch | grep Encrypted };
   $res =~ s/Encrypted:\s+(.*)$/$1/;
   Bootloader::Logger::instance()->milestone("Library::CountGRUBPassword result $res" );
   return undef unless $res =~ m/^\$1\$.*\$.*$/;
-  return $res;
+  return "--md5 $res";
 }
 
 sub UpdateSerialConsole{
