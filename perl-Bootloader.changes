@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Apr 26 09:03:49 UTC 2010 - jreidinger@novell.com
+
+- extend partition detection by ext_range, so also mdraid which is
+  partitioned is detected (bnc#598057)
+- 0.4.89.15
+
+-------------------------------------------------------------------
 Thu Apr 22 11:18:37 UTC 2010 - jreidinger@novell.com
 
 - add fix for mdadm link return (bnc#597812)
