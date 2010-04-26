@@ -299,7 +299,7 @@ sub ReadPartitions {
 
     # get disk devices
     my @disks = grep {
-	!m/^\./ and -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1
+	!m/^\./ && (( -r "$sb/$_/ext_range" and qx{ cat $sb/$_/ext_range } > 1) || ( -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1))
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
