@@ -1345,6 +1345,9 @@ sub AddSection {
 	elsif ($arch eq "ia64") {
 	    $new{"append"} = "ide=nodma nohalt noresume 3";
 	}
+	elsif ($arch eq "s390x") {
+	    $new{"append"} = "";
+  }
 	else {
 	    print ("Architecture $arch does not support failsafe entries.\n");
 	}
