@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May  4 11:02:21 UTC 2010 - jreidinger@novell.com
+
+- fix adding failsafe options to ZIPL menu (never add it as first
+  otherwise it is used as default boot) (bnc#600847)
+- 0.4.89.16
+
+-------------------------------------------------------------------
 Mon Apr 26 09:03:49 UTC 2010 - jreidinger@novell.com
 
 - extend partition detection by ext_range, so also mdraid which is
