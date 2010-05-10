@@ -818,9 +818,9 @@ sub ParseLines {
           #multipath handling, multipath need real device, because multipath
           # device have broken geometry (bnc #448110)
           if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$2}){
-            $devmap{ $self->{"multipath"}->{$2} } = $1;
+            $devmap{ $self->{"multipath"}->{$self->GetKernelDevice($2)} } = $1;
           } else {
-	    $devmap{$2} = $1;
+      	    $devmap{$2} = $1;
           }
 	}
     };
