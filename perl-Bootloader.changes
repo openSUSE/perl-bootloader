@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon May 10 11:43:42 UTC 2010 - jreidinger@novell.com
+
+- chomp readlink output and read devices for multipath (bnc#597812)
+- 0.4.89.17
+
+-------------------------------------------------------------------
 Tue May  4 11:02:21 UTC 2010 - jreidinger@novell.com
 
 - fix adding failsafe options to ZIPL menu (never add it as first

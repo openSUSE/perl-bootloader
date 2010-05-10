@@ -817,7 +817,7 @@ sub ParseLines {
 	{
           #multipath handling, multipath need real device, because multipath
           # device have broken geometry (bnc #448110)
-          if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$2}){
+          if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$self->GetKernelDevice($2)}){
             $devmap{ $self->{"multipath"}->{$self->GetKernelDevice($2)} } = $1;
           } else {
       	    $devmap{$2} = $1;
@@ -2281,9 +2281,9 @@ sub GrubDev2MountPoint {
 	$self->l_debug ("GRUB::GrubDev2MountPoint : MD Array: $md ; Members: $members");
 
 	foreach my $md_member (@{$members_ref}) {
-	    if ($device eq $md_member) {
+	    if ($self->GetKernelDevice($device) eq $self->GetKernelDevice($md_member)) {
 	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find md: $md");
-		push (@devices, $md);
+      		push (@devices, $md);
 	    }
 	}
     }
@@ -2294,7 +2294,7 @@ sub GrubDev2MountPoint {
     foreach $device (@devices) {
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
 	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
-	    if ($self->GetKernelDevice($d) eq $device) { 
+	    if ($self->GetKernelDevice($d) eq $self->GetKernelDevice($device)) { 
 	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find mountpoint: $mp");
 		$mountpoint = $mp;
 	    }
