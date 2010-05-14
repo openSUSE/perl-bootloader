@@ -25,8 +25,6 @@ C<< $path = Bootloader::Path::Logname(); >>
 
 C<< $path = Bootloader::Path::Fstab(); >>
 
-C<< $path = Bootloader::Path::Blkid(); >>
-
 C<< $path = Bootloader::Path::Sysconfig(); >>
 
 C<< $path = Bootloader::Path::Grub_menulst(); >>
@@ -96,18 +94,6 @@ Gets fstab path.
 
 sub Fstab {
   my $value = "/etc/fstab";
-  return Prefix($value);
-}
-
-=item
-C<< $path = Bootloader::Path::Blkid(); >>
-
-Gets path for utility blkid.
-
-=cut
-
-sub Blkid {
-  my $value = "/sbin/blkid";
   return Prefix($value);
 }
 
