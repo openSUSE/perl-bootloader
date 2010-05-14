@@ -188,7 +188,7 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
-		    open (BLKID, "/sbin/blkid -t $dev |") || 
+		    open (BLKID, "/sbin/blkid -l -t $dev |") || 
 			die ("ReadMoountPoints(): Failed to run blkid");
 
 		    my $line = <BLKID>;
