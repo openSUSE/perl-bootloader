@@ -1032,7 +1032,7 @@ sub ExamineMBR($){
 sub CountGRUBPassword{
   my $self = shift;
   my $pass = shift;
-  return $pass if $pass =~ m/--md5/ #check if password is already hashed
+  return $pass if $pass =~ m/--md5/; #check if password is already hashed
   my $res = qx{echo "md5crypt \
   $pass" | grub --batch | grep Encrypted };
   $res =~ s/Encrypted:\s+(.*)$/$1/;
