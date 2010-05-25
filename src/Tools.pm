@@ -273,13 +273,15 @@ sub ReadPartitions {
             $logger->milestone("ReadPartitions: Finded parts: ". join (",",@parts));
 
 	    # generate proper device names and other info for all @part[ition]s
+      #raid have ! in names for /dev/raid/name (bnc#607852)
+      $dev_disk =~ s:!:/:;
 	    foreach my $part (@parts)
 	    {
 	        chomp ($part);
 	        $part = "/dev/$part";
-                #raid have ! in names for /dev/raid/name
-                $part =~ s:!:/:;
-                $part = $udevmap->{$part} if (defined $udevmap->{$part});
+          #raid have ! in names for /dev/raid/name
+          $part =~ s:!:/:;
+          $part = $udevmap->{$part} if (defined $udevmap->{$part});
 
 	        my $index = substr ($part, length ($dev_disk));
 	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
