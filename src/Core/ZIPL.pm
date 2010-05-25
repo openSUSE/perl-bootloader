@@ -786,25 +786,41 @@ sub PrepareMenuFileLines {
     # the @sect_names array
     my @menu_list_array = split (/\s*,\s*/, $menu_list);
     my @sect_names_to_append = ();
+    my @failsafe_sect_names_to_append = ();
 
     # Search for sections in @sect_names array which are not yet in "list" of
     # menu section and which are not a menu section theirselves. If found,
     # append them to the "list" of the menu section.
-    foreach my $sect_name (@sect_names) {
+    foreach my $sect (@sectinfo) {
        my $found = 0;
 
        foreach my $entry (@menu_list_array) {
-           if ($entry eq $sect_name) {
+           if ($entry eq $sect->{"name"}) {
                $found = 1;
            }
        }
-
-       if (!$found and $sect_name ne "menu") {
-           push @sect_names_to_append, $sect_name;
+       my $is_dump = (($sect->{"type"} eq "dump") and
+         (defined $sect->{"dumpto"}) and ($sect->{"dumpto"} ne ""));
+       if (!$found and $sect->{"name"} ne "menu" and !$is_dump) {
+	 if ($sect->{"original_name"} =~ /failsafe/i || $sect->{"name"} =~ /failsafe/i)
+	 {
+	   push @failsafe_sect_names_to_append, $sect->{"name"};
+	 }
+	 else
+	 {
+           push @sect_names_to_append, $sect->{"name"};
+	 }
        }
     }
     if (scalar @sect_names_to_append > 0) {
+       unshift @menu_list_array, @failsafe_sect_names_to_append if (scalar @failsafe_sect_names_to_append > 0);
        unshift @menu_list_array, @sect_names_to_append;
+       $menu_list = join (', ', @menu_list_array);
+    } elsif (scalar @failsafe_sect_names_to_append > 0){
+       #do not add failsafe as first option bnc#600847
+       my $name = shift @menu_list_array;
+       unshift @menu_list_array, @failsafe_sect_names_to_append;
+       unshift @menu_list_array, $name;
        $menu_list = join (', ', @menu_list_array);
     }
 

@@ -349,6 +349,7 @@ sub Info2Global {
     my @lines_new = ();
     my $go = $self->{"options"}{"global"};
     $globinfo{"default"} = $sections[0]->{"name"} unless (defined $globinfo{"default"});
+    $globinfo{"default"} = $self->FixSectionName($globinfo{"default"},[]);
 
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;

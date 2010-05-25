@@ -660,7 +660,7 @@ sub ReadRAID1Arrays {
     $mdadm = AddPathToExecutable("mdadm");
 
     if (-e $mdadm) {
-	open (MD, "$mdadm --detail --verbose --scan |");
+      open (MD, "$mdadm --detail --verbose --scan |");
     }
     else {
     	$logger->milestone ("The command \"mdadm\" is not available.");
@@ -1139,6 +1139,9 @@ sub AddSection {
 	elsif ($arch eq "ia64") {
 	    $new{"append"} = "ide=nodma nohalt noresume 3";
 	}
+	elsif ($arch eq "s390x") {
+	    $new{"append"} = "";
+  }
 	else {
 	    print ("Architecture $arch does not support failsafe entries.\n");
 	}
