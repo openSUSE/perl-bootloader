@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue May 25 14:53:23 UTC 2010 - jreidinger@novell.com
+
+- port changes from SLE11SP1
+- user properly names for raid disc in partition map (bnc#607852)
+- add missing keyword to hashed password (bnc#598025)
+- 0.5.12
+
+-------------------------------------------------------------------
 Thu Apr 22 12:48:03 UTC 2010 - jreidinger@novell.com
 
 - adapt to new kernel which use only ext_range (bnc#597774)
