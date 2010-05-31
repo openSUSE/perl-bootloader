@@ -546,7 +546,7 @@ sub UnixDev2GrubDev {
     if ($dev =~ m#/dev/md\d+#) {
 	my @members = @{$self->MD2Members ($dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
-	$kernel_dev = $members[0] || $kernel_dev;
+	$kernel_dev = $self->GetKernelDevice($members[0] || $kernel_dev );
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: First device of MDRaid: $original --> $kernel_dev");
     }
 
