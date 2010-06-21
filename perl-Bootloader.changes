@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jun  2 06:41:49 UTC 2010 - jreidinger@novell.com
+
+- fix translation of dm devices which is in md raid (bnc#597812)
+- 0.4.89.18
+-------------------------------------------------------------------
 Mon May 10 11:43:42 UTC 2010 - jreidinger@novell.com
 
 - chomp readlink output and read devices for multipath (bnc#597812)
