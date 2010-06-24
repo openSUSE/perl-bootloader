@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Jun 24 11:03:31 UTC 2010 - jreidinger@novell.com
+
+- remove incorrect workaround for geometry of multipath, as it
+  ignores passive paths. Instead use new multipath-tools which fix
+  geometry issue.
+- 0.4.89.19
+
+-------------------------------------------------------------------
 Wed Jun  2 06:41:49 UTC 2010 - jreidinger@novell.com
 
 - fix translation of dm devices which is in md raid (bnc#597812)

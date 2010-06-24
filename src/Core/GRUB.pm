@@ -993,15 +993,6 @@ sub CreateLines {
     my @device_map = ();
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
-        #multipath handling, multipath need real device, because multipath
-        # device have broken geometry (bnc #448110)
-        if ( defined $self->{"multipath"} ){
-          while ((my $phys, my $mp) = each (%{$self->{"multipath"}})){
-            if ( $mp eq $self->GetKernelDevice($unix) ) {
-              $unix = $phys;
-            }
-          }
-        }
 	my $line = "($fw)\t$unix";
 	push @device_map, $line;
     }
