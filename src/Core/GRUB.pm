@@ -341,8 +341,8 @@ sub UnixDev2GrubDev {
     $self->l_milestone ("GRUB::UnixDev2GrubDev: kernel device: $kernel_dev");
 
     my $partition = undef;
-    if ($dev =~ m#/dev/md\d+#) {
-	my @members = @{$self->MD2Members ($dev) || []};
+    if ($kernel_dev =~ m#/dev/md\d+#) {
+	my @members = @{$self->MD2Members ($kernel_dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
 	$kernel_dev = $members[0] || $kernel_dev;
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: First device of MDRaid: $original --> $kernel_dev");
@@ -619,7 +619,7 @@ sub ParseLines {
           }
 	}
     };
-    $self->l_debug ("GRUB::Parselines: avoided_reading device map.") if (! $avoid_reading_device_map );
+    $self->l_milestone ("GRUB::Parselines: avoided_reading device map.") if ($avoid_reading_device_map );
     $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
 
     # and now proceed with menu.lst
