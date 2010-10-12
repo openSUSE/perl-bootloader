@@ -415,7 +415,8 @@ sub GetUdevMapping {
       $logger->error("UDEVMAPPING: dmdev $dev doesn't have defined DM_NAME in udev") unless defined $dmdev;
       my $prevdev = $dev;
       $dev = "/dev/mapper/$dmdev";
-      $dev = $dev."_part$dmpart" if defined $dmpart;
+      # DM_NAME could contain also part in some case (bnc#590637)
+      $dev = $dev."_part$dmpart" if (defined $dmpart and $dev !~ /_part[0-9]+$/);
       $mapping{$prevdev} = $dev; #maps also dm dev to device mapper
     } #end of workaround
 
