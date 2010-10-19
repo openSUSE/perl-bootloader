@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Tue Oct 19 09:49:28 UTC 2010 - jreidinger@novell.com
+
+- DM_NAME could contain also partition number in some case
+  (bnc#590637)
+- fix detect of md raid (bnc#626132)
+- 0.5.13
+
+-------------------------------------------------------------------
+Tue Oct 19 08:47:51 UTC 2010 - coolo@novell.com  
+
+- add perl as explicit buildrequire  
+
+------------------------------------------------------------------- 
 Tue May 25 14:53:23 UTC 2010 - jreidinger@novell.com
 
 - port changes from SLE11SP1

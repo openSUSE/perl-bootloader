@@ -25,6 +25,7 @@ Source1:        update-bootloader
 Source2:        bootloader_entry
 Source3:        boot.readme
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  perl
 #!BuildIgnore: mdadm e2fsprogs limal-bootloader
 
 %description
