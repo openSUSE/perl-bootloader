@@ -479,16 +479,13 @@ sub match_section {
 		my $grub_boot_dev = Bootloader::Core::GRUB::BootDev2GrubDev ($device_map_ref);
 		$opt_ref->{"$opt"} =~ s#/boot#$grub_boot_dev#;
 	    }
-      my $first = ResolveCrossDeviceSymlinks($sect_ref->{"$opt"});
-      my $first = substr $first, (rindex($first,"/")+1);
-      my $second = $opt_ref->{"$opt"};
-      my $second = substr $second, (rindex($second,"/")+1);
-	    $match = ($first eq $second);
+	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
+		      $opt_ref->{"$opt"});
 
 	    # Print info for this match
 	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
-		$first .
-		", with: " . $second . ", result: $match");
+		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
+		", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
