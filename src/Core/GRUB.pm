@@ -1555,7 +1555,7 @@ sub Info2Section {
       my $xen = $self->UnixPath2GrubPath (delete($sectinfo{"xen"}), $grub_root);
       my $append = (delete($sectinfo{"xen_append"}) || "");
       my $vga = $sectinfo{"vgamode"} || "";
-      $vga = "vgamode=$vga " if $vga ne "";
+      $vga = "vga=mode-$vga " if $vga ne "";
       my $value = "$xen $vga$append";
       push @lines, {
 	"key" => "kernel",
