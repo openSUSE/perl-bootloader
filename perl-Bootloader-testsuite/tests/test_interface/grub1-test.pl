@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 86;
+use Test::More tests => 88;
 
 use lib "./";
 use Bootloader::Library;
@@ -108,6 +108,7 @@ foreach my $section (@sections) {
   elsif ( $section->{'original_name'} eq "xen2" )
   {
     is($section->{'nounzip'},2);
+    is($section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok debug=yes loglvl=all guest_loglvl=all crashkernel=256M@16M');
     $section->{'__modified'} = '1';
   }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
@@ -232,5 +233,8 @@ $res = qx:grep -c 'setup --stage2=/boot/grub/stage2 --force-lba (hd4) (hd4,1)' .
 chomp $res;
 is( $res, 1); #test boot_md_mbr correctness
 
+$res = qx:grep -c 'debug=yes loglvl=all guest_loglvl=all crashkernel=' ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test proper xen append write
 
 Bootloader::Tools::DumpLog( $lib_ref );
