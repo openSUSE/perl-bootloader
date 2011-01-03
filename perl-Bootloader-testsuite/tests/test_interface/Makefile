@@ -10,6 +10,7 @@ test:
 	perl -w grub-trusted-test.pl
 	perl -w none-test.pl
 	perl -w multipath-test.pl
+	perl -w grub-device_map.pl
 	rm -rf Bootloader/*
 	rm -rf fake_root[12]
 

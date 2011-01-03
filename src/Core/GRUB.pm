@@ -1307,7 +1307,7 @@ sub Section2Info {
       				$xen_append =~
 			          s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
 			      }
-            $xen_append =~ s/\s*(\S*)\s*$/$1/;
+            $xen_append =~ s/^\s*(\S*)\s*$/$1/;
       			$ret{"xen_append"} = "console=$console $speed $xen_append";
 		    } else {
 		        $ret{"xen_append"} = "console=$console $speed";

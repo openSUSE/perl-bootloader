@@ -42,7 +42,7 @@ title XEN
 ###Don't change this comment - YaST2 identifier: Original name: xen2###'
 title XEN2
     root (hd0,1)
-    kernel /boot/xen.gz testparam=ok com1=38400n52r console=com1 vga=mode-0x332
+    kernel /boot/xen.gz testparam=ok com1=38400n52r console=com1 vga=mode-0x332 debug=yes loglvl=all guest_loglvl=all crashkernel=256M@16M
     module /boot/vmlinuz-2.6.30-xen root=/dev/sda2 resume=/dev/sda1 splash=silent showopts console=ttyS0,38400n52r
     modulenounzip /boot/initrd-2.6.30-xen
 

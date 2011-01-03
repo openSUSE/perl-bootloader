@@ -3,7 +3,7 @@ Thu Jun 24 11:03:31 UTC 2010 - jreidinger@novell.com
 
 - remove incorrect workaround for geometry of multipath, as it
   ignores passive paths. Instead use new multipath-tools which fix
-  geometry issue.
+  geometry issue.(bnc#613363)
 - 0.4.89.19
 
 -------------------------------------------------------------------
