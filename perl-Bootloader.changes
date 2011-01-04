@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jan  4 13:12:51 UTC 2011 - jreidinger@novell.com
+
+- fix build with new perl missing .packlist
+- fix malformed xen append (bnc#657911)
+- 0.5.15
+
+-------------------------------------------------------------------
 Mon Dec  6 18:02:40 UTC 2010 - jreidinger@novell.com
 
 - fix creating new xen section with vga mode
