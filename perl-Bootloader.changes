@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Jan 18 14:28:41 UTC 2011 - jreidinger@novell.com
+
+- fix malforming xen append (bnc#657911)
+- handle if udev variable DM_NAME contain also partition number
+  (bnc#590637)
+- 0.4.89.20
+
+-------------------------------------------------------------------
 Thu Jun 24 11:03:31 UTC 2010 - jreidinger@novell.com
 
 - remove incorrect workaround for geometry of multipath, as it
