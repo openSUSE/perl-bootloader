@@ -16,7 +16,7 @@ Release:        0
 Requires:       perl-base = %{perl_version}
 Requires:       e2fsprogs
 Recommends:     perl-gettext
-Autoreqprov:    on
+AutoReqProv:    on
 Group:          System/Boot
 License:        GNU General Public License (GPL)
 Summary:        Library for Configuring Boot Loaders
