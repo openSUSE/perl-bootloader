@@ -1,4 +1,19 @@
 -------------------------------------------------------------------
+Mon Feb 21 16:03:34 UTC 2011 - jreidinger@novell.com
+
+- in tools return reference for easy to implement advanced command line scripts
+- force order of serial and terminal configuration (bnc#650150)
+- fix detecting extended partition on virtual discs (bnc#659905)
+- 0.5.16
+
+-------------------------------------------------------------------
+Thu Feb 17 12:29:28 UTC 2011 - lnussel@suse.de
+
+- own /var/log/YaST2 as perl-Bootloader can be installed without
+  yast but spams stderr with debug output if the log dir is not
+  present.
+
+-------------------------------------------------------------------
 Tue Jan  4 13:12:51 UTC 2011 - jreidinger@novell.com
 
 - fix build with new perl missing .packlist
