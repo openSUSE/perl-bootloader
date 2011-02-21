@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 88;
+use Test::More tests => 89;
 
 use lib "./";
 use Bootloader::Library;
@@ -51,6 +51,8 @@ is($globals->{"boot_md_mbr"},"/dev/sda,/dev/sdc");
 $globals->{"setkeys"}->{"b"} = "c";
 $globals->{"setkeys"}->{"c"} = "a";
 $globals->{"boot_md_mbr"} = "/dev/sda,/dev/sdc,/dev/sdb";
+$globals->{"serial"} = "--unit=0 --speed=115200";
+$globals->{"terminal"} = "serial";
 $globals->{"__modified"} = 1;
 ok($lib_ref->SetGlobalSettings($globals));
 
@@ -236,5 +238,11 @@ is( $res, 1); #test boot_md_mbr correctness
 $res = qx:grep -c 'debug=yes loglvl=all guest_loglvl=all crashkernel=' ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test proper xen append write
+
+my $serial = qx:grep -n 'serial --unit=0' ./fake_root1/boot/grub/menu.lst:;
+$serial =~ s/^(\d+):.*$/$1/;
+my $terminal = qx:grep -n 'terminal serial' ./fake_root1/boot/grub/menu.lst:;
+$terminal =~ s/^(\d+):.*$/$1/;
+ok($serial < $terminal, "serial $serial, terminal $terminal");
 
 Bootloader::Tools::DumpLog( $lib_ref );

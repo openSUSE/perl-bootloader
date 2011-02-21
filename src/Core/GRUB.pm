@@ -1861,6 +1861,15 @@ sub Info2Global {
           }
           next;
         }
+  elsif ($key eq "serial"){
+    my $index = 0;
+    foreach my $i (@lines) {
+        last if ($i->{"key"} eq "terminal"); #force order of terminal/serial bnc#650150
+        $index++;
+    }
+    splice @lines, $index, 0, { "key" => $key, "value" => $value };
+    next;
+  }
 	# bool values appear in a config file or not
 	elsif ($type eq "bool") {
 	    next if $value ne "true";
