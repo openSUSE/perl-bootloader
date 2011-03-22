@@ -14,6 +14,7 @@ test:
 	perl -w none-test.pl
 	perl -w multipath-test.pl
 	perl -w md-raid-test.pl
+	perl -w core-test.pl
 
 #usefull target after failed test
 clean: 
