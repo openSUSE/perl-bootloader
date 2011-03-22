@@ -25,6 +25,7 @@ Source1:        update-bootloader
 Source2:        bootloader_entry
 Source3:        boot.readme
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+Conflicts:      multipath-tools < 0.4.8-40.25.1
 #!BuildIgnore: mdadm e2fsprogs limal-bootloader
 
 %description

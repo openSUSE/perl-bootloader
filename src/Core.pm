@@ -1906,7 +1906,7 @@ sub ResolveCrossDeviceSymlinks($$) {
 	my $here = $self->ConcatPath($resolved, $&);
 	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: here: $here, resolved: $resolved");
 
-	if (-l $here && $self->SymlinkCrossesDevice($here)) {
+	if (-l $here){
 	    my $readlink = readlink($here);
 	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: readlink: $readlink");
 	    $resolved = ""
@@ -1921,7 +1921,7 @@ sub ResolveCrossDeviceSymlinks($$) {
     }
     $resolved = $self->ConcatPath($resolved, $path);
     $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: returns resolved: $resolved, path: $path");
-    return $resolved;
+    return $self->CanonicalPath($resolved);
 }
 
 =item

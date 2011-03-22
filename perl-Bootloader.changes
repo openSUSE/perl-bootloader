@@ -7,11 +7,22 @@ Tue Jan 18 14:28:41 UTC 2011 - jreidinger@novell.com
 - 0.4.89.20
 
 -------------------------------------------------------------------
+Wed Jan 12 11:48:23 CET 2011 - dmueller@suse.de
+
+- conflict with an old multipath-tools (bnc#448110 comment #44)
+
+-------------------------------------------------------------------
+Tue Jun 29 16:08:03 CEST 2010 - bg@suse.de
+
+- add patchinfo bugzilla number to changelog:
+  fix for (bnc#613363)
+
+-------------------------------------------------------------------
 Thu Jun 24 11:03:31 UTC 2010 - jreidinger@novell.com
 
 - remove incorrect workaround for geometry of multipath, as it
   ignores passive paths. Instead use new multipath-tools which fix
-  geometry issue.(bnc#613363)
+  geometry issue.
 - 0.4.89.19
 
 -------------------------------------------------------------------

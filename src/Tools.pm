@@ -182,7 +182,7 @@ sub ResolveCrossDeviceSymlinks {
     my $path = shift;
 
     my $core_lib = Bootloader::Core->new ();
-    $path = $core_lib->RealFileName ($path);
+    $path = $core_lib->ResolveCrossDeviceSymlinks ($path);
 
     DumpLog ($core_lib);
     return $path;
@@ -984,11 +984,11 @@ sub match_section {
 	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
-		      $opt_ref->{"$opt"});
+		      ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}));
 	    # Print info for this match
 	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
 		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
-		", with: " . $opt_ref->{"$opt"} . ", result: $match");
+		", with: " . ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}) . ", result: $match");
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
