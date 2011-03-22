@@ -171,7 +171,7 @@ sub ResolveCrossDeviceSymlinks {
     my $path = shift;
 
     my $core_lib = Bootloader::Core->new ();
-    $path = $core_lib->RealFileName ($path);
+    $path = $core_lib->ResolveCrossDeviceSymlinks ($path);
 
     DumpLog ($core_lib);
     return $path;
