@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Apr 14 13:49:56 CEST 2011 - snwint@suse.de
+
+- backport fix for removing kernel with symlink in path (bnc #680775)
+- 0.4.89.21
+
+-------------------------------------------------------------------
 Tue Jan 18 14:28:41 UTC 2011 - jreidinger@novell.com
 
 - fix malforming xen append (bnc#657911)
