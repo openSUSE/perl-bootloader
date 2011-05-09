@@ -561,12 +561,11 @@ sub UnixDev2GrubDev {
 	}
     }
 
-    for my $map_dev (keys  %{$self->{"device_map"}}){
-      if ($kernel_dev eq $self->GetKernelDevice($map_dev)){
-        $dev =  $self->{"device_map"}->{$map_dev};
-        values %{$self->{"device_map"}}; #reset hash iterator
-        return "($dev)" if ( $kernel_dev eq $original ); #disk dev, no partition
-      }
+    # handle disk devices (not partitions)
+    if (!defined $partition) {
+	for my $map_dev (keys %{$self->{device_map}}) {
+	    return "($self->{device_map}{$map_dev})" if $kernel_dev eq $self->GetKernelDevice($map_dev);
+	}
     }
 
     # print all entries of device.map. This is rather for debugging

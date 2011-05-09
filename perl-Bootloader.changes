@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May  5 14:29:12 CEST 2011 - snwint@suse.de
+
+- fix conversion function from unix disk names to grub names (bnc #688418)
+- 0.4.89.22
+
+-------------------------------------------------------------------
 Thu Apr 14 13:49:56 CEST 2011 - snwint@suse.de
 
 - backport fix for removing kernel with symlink in path (bnc #680775)
