@@ -78,6 +78,8 @@ C<< Bootloader::Tools::AdjustSectionNameAppendix ($mode, $sect_ref_new, $sect_re
 
 C<< $exec_with_path = Bootloader::Tools::AddPathToExecutable($executable); >>
 
+C<< Bootloader::Tools::DeviceMapperActive (); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -106,6 +108,7 @@ my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
 my $multipath = undef;
+my $devicemapper = undef;
 
 sub DumpLog {
     my $core_lib = shift;
@@ -433,6 +436,8 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 sub GetMultipath {
   my %ret = {};
 
+  return \%ret unless DeviceMapperActive();
+
   $multipath = AddPathToExecutable("multipath");
 
   if (-e $multipath){
@@ -479,16 +484,7 @@ Return 0 if no device, 1 if there are any.
 sub DMRaidAvailable {
     my $retval = 0;
 
-    my $logname = Bootloader::Path::Logname();
-    qx{cat /proc/misc >> $logname};
-
-    # Check if device-mapper is available in /proc/misc
-    my $dm_available = qx{grep device-mapper /proc/misc};
-    chomp $dm_available;
-
-    if ($dm_available eq "") {
-	return $retval;
-    }
+    return $retval unless DeviceMapperActive();
 
     $dmsetup = AddPathToExecutable("dmsetup");
 
@@ -1856,6 +1852,38 @@ sub AddPathToExecutable {
 
     return $retval; 
 }
+
+
+=item
+C<< Bootloader::Tools::DeviceMapperActive (); >>
+
+Check if device-mapper is currently active (kernel module loaded).
+It is needed for dmraid and multipath configurations.
+
+Note: we cache the result from the first call.
+
+=cut
+
+sub DeviceMapperActive
+{
+  local $_;
+
+  return $devicemapper if defined $devicemapper;
+
+  open my $f, "/proc/misc";
+  my @misc = <$f>;
+  close $f;
+
+  $devicemapper = 0;
+  for (@misc) { $devicemapper = 1, last if /\bdevice-mapper\b/ }
+
+  open $f, ">>", Bootloader::Path::Logname();
+  print $f "/proc/misc:\n", @misc, "device-mapper: $devicemapper\n";
+  close $f;
+
+  return $devicemapper;
+}
+
  
 1;
 

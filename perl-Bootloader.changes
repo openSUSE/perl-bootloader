@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon May  9 15:50:59 CEST 2011 - snwint@suse.de
+
+- rework old device-mapper check (from bnc #393229) and apply also to
+  multipath setups (bnc #692127)
+- 0.4.89.23
+
+-------------------------------------------------------------------
 Thu May  5 14:29:12 CEST 2011 - snwint@suse.de
 
 - fix conversion function from unix disk names to grub names (bnc #688418)
