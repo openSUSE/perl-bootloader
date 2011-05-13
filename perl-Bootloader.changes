@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri May 13 12:19:30 CEST 2011 - snwint@suse.de
+
+- fix conversion function from unix disk names to grub names (bnc #688418)
+- 0.5.17
+
+-------------------------------------------------------------------
 Mon Feb 21 16:03:34 UTC 2011 - jreidinger@novell.com
 
 - in tools return reference for easy to implement advanced command line scripts
