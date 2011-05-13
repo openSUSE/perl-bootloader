@@ -216,7 +216,7 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
-                    my $command = Bootloader::Path::Blkid() . " -t $dev |";
+                    my $command = Bootloader::Path::Blkid() . " -l -t $dev |";
 		    open (BLKID, $command) || 
 			die ("ReadMountPoints(): Failed to run blkid");
 

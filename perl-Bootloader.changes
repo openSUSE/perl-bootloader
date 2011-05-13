@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri May 13 12:06:31 CEST 2011 - snwint@suse.de
+
+- call blkdev with '-l' option (bnc #693466, bnc #597399)
+- 0.4.89.24
+
+-------------------------------------------------------------------
 Mon May  9 15:50:59 CEST 2011 - snwint@suse.de
 
 - rework old device-mapper check (from bnc #393229) and apply also to
