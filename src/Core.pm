@@ -1899,6 +1899,7 @@ sub ResolveCrossDeviceSymlinks($$) {
     my $self = shift;
     my $path = shift;
     my $resolved = '';
+    my $readlink;
 
     while ($path =~ s#^(/*)[^/]+##) {
 	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: path: $path, \$1: $1, \$&: $&");
@@ -1906,8 +1907,7 @@ sub ResolveCrossDeviceSymlinks($$) {
 	my $here = $self->ConcatPath($resolved, $&);
 	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: here: $here, resolved: $resolved");
 
-	if (-l $here){
-	    my $readlink = readlink($here);
+	if (-l $here && ($readlink = readlink $here) =~ /\//) {
 	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: readlink: $readlink");
 	    $resolved = ""
 	    	if ($readlink =~ m#^/#);
