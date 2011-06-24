@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jun 24 13:13:30 CEST 2011 - snwint@suse.de
+
+- add script for fixing xen issue intruduced in 0.4.89.21 (bnc #692007,
+  bnc #698564, bnc #699839)
+
+-------------------------------------------------------------------
 Thu Jun  9 17:53:54 CEST 2011 - snwint@suse.de
 
 - don't resolve symlinks more often than necessary (bnc #698564)
