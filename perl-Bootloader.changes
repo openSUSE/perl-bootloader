@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jul  5 16:32:11 CEST 2011 - snwint@suse.de
+
+- ignore error if we fail to open md devices
+- 0.4.89.27
+
+-------------------------------------------------------------------
 Fri Jun 24 13:13:30 CEST 2011 - snwint@suse.de
 
 - add script for fixing xen issue intruduced in 0.4.89.21 (bnc #692007,

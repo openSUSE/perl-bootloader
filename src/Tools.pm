@@ -369,8 +369,15 @@ sub ReadPartitions {
 
         if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)){
 	    # get partitions of $disk
-	    opendir(BLOCK_DEVICES, "$sb/$disk") ||
-	        die ("ReadPartitions(): Failed to open dir $sb/$disk");
+	    if(!opendir(BLOCK_DEVICES, "$sb/$disk")) {
+	        # md* devices may vanish as a result of the parted call above
+	        # so, don't act too surprised...
+                open LOG, ">>$logname";
+	        print LOG "ReadPartitions(): Failed to open dir $sb/$disk\n";
+                close LOG;
+
+                next;
+            }
 
 	    my @parts = grep {
 	        !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
