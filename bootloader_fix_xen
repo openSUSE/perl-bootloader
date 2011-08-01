@@ -1,0 +1,19 @@
+#! /usr/bin/perl -pi
+
+# fix menu.lst (bnc #692007, bnc #698564, bnc #699839)
+#
+# perl-Bootloader 0.4.89.21 - 0.4.89.24 replaced the symlink xen.gz with its
+# destination xen-<version>.gz breaking menu.lst after updating xen.rpm as
+# the xen.gz version changes but menu.lst is not updated in xen.rpm's
+# postinstall.
+#
+# This script replaces xen-<version>.gz with xen.gz.
+#
+# usage: bootloader_fix_xen /boot/grub/menu.lst
+
+$xen = 0, $title = 0 if /^###/;
+$xen = 1, $title = 0, next if /Original name: xen###/;
+$title++, next if /^\s*title\s/;
+
+# be sure to only modify the perl-Bootloader generated entry
+s/^(\s*kernel\s+\S*\/xen)(-\d(\S*))(\.gz\s)/$1$4/ if $title == 1;

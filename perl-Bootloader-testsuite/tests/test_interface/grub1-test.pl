@@ -148,9 +148,9 @@ foreach my $section (@sections) {
 my $new_section = {(
   'type' => 'menu',
   'original_name' => 'menu2',
-  'configfile' => '/grub/menu.lst',
   'root' => '/dev/sda2',
   'name' => 'menu2',
+  'configfile' => '/grub/menu.lst',
   '__modified' => '1',
   )};
 
@@ -208,6 +208,10 @@ is( $res, 1); #test configfile rewrite
 $res = qx:grep -c "configfile /grub/menu.lst" ./fake_root1/boot/grub/menu.lst:;
 chomp($res);
 is( $res, 1); #test configfile new write
+
+$res = qx:grep -c "vga=mode-0x384" ./fake_root1/boot/grub/menu.lst:;
+chomp($res);
+is( $res, 1); #test setting vga-mode
 
 $res = qx:grep -n 'module .*/boot/vmlinuz-2.6.30-xen' ./fake_root1/boot/grub/menu.lst:;
 my $imagepos;

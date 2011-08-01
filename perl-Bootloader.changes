@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Mon Aug  1 14:39:07 UTC 2011 - jreidinger@novell.com
+
+- prepare for use perl-Bootloader for other boot management tools
+  (bnc#672471#c8) 
+- change behavior during kernel update to first try use parameters
+  from fitting section and have sysconfig only as failsafe
+  (FATE#310946)
+
+-------------------------------------------------------------------
 Fri May 13 12:19:30 CEST 2011 - snwint@suse.de
 
 - fix conversion function from unix disk names to grub names (bnc #688418)
