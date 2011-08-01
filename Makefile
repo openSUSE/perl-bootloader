@@ -29,7 +29,7 @@ package: test
 	rm -rf package
 	mkdir -p package
 	read lv < version ; \
-	git archive $(BRANCH) | bzip2 > package/${PKG}-$${lv}.tar.bz2
+	git archive --prefix=${PKG}-$${lv}/ $(BRANCH) | bzip2 > package/${PKG}-$${lv}.tar.bz2; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
 	cp $(PKG).changes bootloader_entry bootloader_fix_xen boot.readme update-bootloader package/
 

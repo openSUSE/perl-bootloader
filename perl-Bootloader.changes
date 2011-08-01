@@ -1,5 +1,5 @@
 -------------------------------------------------------------------
-Fri Jul 22 13:58:43 CEST 2011 - snwint@suse.de$
+Fri Jul 22 13:58:43 CEST 2011 - snwint@suse.de
 
 - fix bootloader_fix_xen & postin script (bnc #698564)
 

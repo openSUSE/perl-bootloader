@@ -44,6 +44,8 @@ Authors:
 %prep
 %setup -q
 rm -rf perl-Bootloader-testsuite
+mkdir -p lib
+mv src lib/Bootloader
 
 %build
 touch Makefile.PL
