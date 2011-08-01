@@ -9,7 +9,7 @@ Mon Aug  1 14:39:07 UTC 2011 - jreidinger@novell.com
 - 0.4.89.28
 
 -------------------------------------------------------------------
-Fri Jul 22 13:58:43 CEST 2011 - snwint@suse.de$
+Fri Jul 22 13:58:43 CEST 2011 - snwint@suse.de
 
 - fix bootloader_fix_xen & postin script (bnc #698564)
 
