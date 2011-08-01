@@ -16,4 +16,4 @@ $xen = 1, $title = 0, next if /Original name: xen###/;
 $title++, next if /^\s*title\s/;
 
 # be sure to only modify the perl-Bootloader generated entry
-s/^(\s*kernel\s+\/boot\/xen)(-\d(\S*))(\.gz\s)/$1$4/ if $title == 1;
+s/^(\s*kernel\s+\S*\/xen)(-\d(\S*))(\.gz\s)/$1$4/ if $title == 1;

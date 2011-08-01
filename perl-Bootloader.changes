@@ -9,6 +9,11 @@ Mon Aug  1 14:39:07 UTC 2011 - jreidinger@novell.com
 - 0.4.89.28
 
 -------------------------------------------------------------------
+Fri Jul 22 13:58:43 CEST 2011 - snwint@suse.de$
+
+- fix bootloader_fix_xen & postin script (bnc #698564)
+
+-------------------------------------------------------------------
 Tue Jul  5 16:32:11 CEST 2011 - snwint@suse.de
 
 - ignore error if we fail to open md devices
