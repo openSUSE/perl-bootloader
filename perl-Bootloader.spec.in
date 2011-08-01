@@ -43,6 +43,7 @@ Authors:
 
 %prep
 %setup -q
+rm -rf perl-Bootloader-testsuite
 
 %build
 touch Makefile.PL
