@@ -967,6 +967,8 @@ sub InitLibrary {
     $lib_ref->ReadSettings();
 
     DumpLog ($lib_ref->{"loader"});
+
+    return $lib_ref;
 }
 
 
