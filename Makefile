@@ -31,7 +31,7 @@ package: test
 	read lv < version ; \
 	git archive --prefix=${PKG}-$${lv}/ $(BRANCH) | bzip2 > package/${PKG}-$${lv}.tar.bz2; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
-	cp $(PKG).changes bootloader_entry bootloader_fix_xen boot.readme update-bootloader package/
+	cp $(PKG).changes bootloader_entry boot.readme update-bootloader package/
 
 export:	.checkexportdir .exportdir
 
