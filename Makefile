@@ -17,7 +17,7 @@ BUILD_ROOT=/tmp/buildsystem.$(HOST).root
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
 DISTMAIL=/work/src/bin/distmail
-BRANCH=SLE11-SP2
+BRANCH=master
 
 .PHONY:	export build mbuild submit rpm clean package test
 
