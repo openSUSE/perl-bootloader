@@ -6,6 +6,7 @@ Mon Aug  1 14:39:07 UTC 2011 - jreidinger@novell.com
 - change behavior during kernel update to first try use parameters
   from fitting section and have sysconfig only as failsafe
   (FATE#310946)
+- 0.5.18
 
 -------------------------------------------------------------------
 Fri May 13 12:19:30 CEST 2011 - snwint@suse.de
