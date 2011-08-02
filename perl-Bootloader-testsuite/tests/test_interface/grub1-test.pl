@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 89;
+use Test::More tests => 90;
 
 use lib "./";
 use Bootloader::Library;
@@ -111,6 +111,7 @@ foreach my $section (@sections) {
   {
     is($section->{'nounzip'},2);
     is($section->{"xen_append"}, 'console=com1 com1=38400n52r testparam=ok debug=yes loglvl=all guest_loglvl=all crashkernel=256M@16M');
+    $section->{'vgamode'} = '0x384';
     $section->{'__modified'} = '1';
   }
   elsif ( $section->{'original_name'} eq "Linux other 1 (/dev/sda4)" )
