@@ -126,7 +126,7 @@ use strict;
 
 my $headline = "# Modified by YaST2. Last modification on ";
 my $headline2 = "# THIS FILE WILL BE PARTIALLY OVERWRITTEN by perl-Bootloader";
-my $headline3 = "# Configure custom boot parameters for updated kernels in /etc/sysconfig/bootloader";
+my $headline3 = "# For the new kernel it try to figure out old parameters. In case we are not able to recognize it (e.g. change of flavor or strange install order ) it it use as fallback installation parameters from /etc/sysconfig/bootloader";
 
 # variables
 
@@ -1920,6 +1920,7 @@ sub ResolveCrossDeviceSymlinks($$) {
     my $self = shift;
     my $path = shift;
     my $resolved = '';
+    my $readlink;
 
     while ($path =~ s#^(/*)[^/]+##) {
 	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: path: $path, \$1: $1, \$&: $&");
@@ -1927,8 +1928,7 @@ sub ResolveCrossDeviceSymlinks($$) {
 	my $here = $self->ConcatPath($resolved, $&);
 	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: here: $here, resolved: $resolved");
 
-	if (-l $here){
-	    my $readlink = readlink($here);
+	if (-l $here && ($readlink = readlink $here) =~ /\//) {
 	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: readlink: $readlink");
 	    $resolved = ""
 	    	if ($readlink =~ m#^/#);

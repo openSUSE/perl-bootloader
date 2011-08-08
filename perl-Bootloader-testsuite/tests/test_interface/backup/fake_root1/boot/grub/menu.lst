@@ -4,6 +4,7 @@ timeout 8
 setkey a b
 setkey b a
 gfxmenu (hd0,1)/boot/message
+color navy blue/green
 ##YaST - activate
 
 ###Don't change this comment - YaST2 identifier: Original name: linux###
