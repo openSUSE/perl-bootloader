@@ -397,6 +397,8 @@ sub Info2Global {
    
     $globinfo{"default"} = $self->FixSectionName($globinfo{"default"},[]);
 
+    $globinfo{"default"} = $self->FixSectionName($globinfo{"default"},[]);
+
     # allow to keep the section unchanged
     return \@lines unless $globinfo{"__modified"} || 0;
 

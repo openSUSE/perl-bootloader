@@ -1,6 +1,7 @@
 main: prepare test clean
 
 prepare: clean
+	mkdir -p Bootloader
 	@cp -r ../../../src/* Bootloader/
 	cp -rf backup/fake_root1 .
 	cp -rf backup/fake_root2 .
@@ -15,10 +16,12 @@ test:
 	perl -w multipath-test.pl
 	perl -w md-raid-test.pl
 	perl -w core-test.pl
+	rm -rf Bootloader
+	rm -rf fake_root[12]
 
 #usefull target after failed test
 clean: 
-	@rm -rf Bootloader/*
+	@rm -rf Bootloader
 	rm -rf fake_root*
 	cp -rf backup/fake_root1 .
 	cp -rf backup/fake_root2 .

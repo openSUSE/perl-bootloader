@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 21;
+use Test::More tests => 23;
 
 use lib "./";
 use Bootloader::Library;
@@ -42,15 +42,29 @@ foreach my $section (@sections) {
     $section->{'__modified'} = 1;
   } 
 }
-
-
+#create new section with long name to test changing globals and also fixing long names
+my %section = (  'name' => "Suse Linux Enteprise Edition 11 SP1",
+              'type' => "image",
+              'append' => " quiet sysrq=1",
+              'image' => "/boot/vmlinux",
+              'initrd' => "/boot/initrd",
+              '__modified' => 1
+    );
+push @sections, \%section;
+$globals->{'default'} = "Suse Linux Enteprise Edition 11 SP1";
+$globals->{'__modified'} = 1;
 
 ok($lib_ref->SetSections(\@sections));
+ok($lib_ref->SetGlobalSettings($globals));
 ok($lib_ref->WriteSettings());
 ok($lib_ref->UpdateBootloader(1));
 
 my $res = qx:grep -c "optional" ./fake_root1/etc/lilo.conf:;
 chomp($res);
 is( $res, 1); #test correct created xen append
+
+my $res = qx:grep -c 'default = Suse_Linux_En' ./fake_root1/etc/lilo.conf:;
+chomp($res);
+is( $res, 1); #test correct default
 
 Bootloader::Tools::DumpLog( $lib_ref );

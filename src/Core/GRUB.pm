@@ -86,6 +86,7 @@ sub GetOptions{
   $options{"global_options"} = {
         boot     => "",
         activate => "bool",
+        color => "",
         timeout  => "",
         default  => "",
         generic_mbr => "bool",
@@ -344,7 +345,7 @@ sub UnixDev2GrubDev {
     if ($kernel_dev =~ m#/dev/md\d+#) {
 	my @members = @{$self->MD2Members ($kernel_dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
-	$kernel_dev = $members[0] || $kernel_dev;
+	$kernel_dev = $self->GetKernelDevice($members[0] || $kernel_dev );
 	$self->l_milestone ("GRUB::UnixDev2GrubDev: First device of MDRaid: $original --> $kernel_dev");
     }
 
@@ -613,6 +614,10 @@ sub ParseLines {
     };
     $self->l_milestone ("GRUB::Parselines: avoided_reading device map.") if ($avoid_reading_device_map );
     $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
+    $self->l_milestone ("GRUB::Parselines: device_map: ".$self->{"device_map"});
+    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
+        $self->l_milestone ("GRUB::Parselines: device_map: $unix <-> $fw.");
+    }
 
     # and now proceed with menu.lst
     my @menu_lst = @{$files{Bootloader::Path::Grub_menulst()} || []};
@@ -774,15 +779,6 @@ sub CreateLines {
     my @device_map = ();
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
-        #multipath handling, multipath need real device, because multipath
-        # device have broken geometry (bnc #448110)
-        if ( defined $self->{"multipath"} ){
-          while ((my $phys, my $mp) = each (%{$self->{"multipath"}})){
-            if ( $mp eq $self->GetKernelDevice($unix) ) {
-              $unix = $phys;
-            }
-          }
-        }
 	my $line = "($fw)\t$unix";
 	push @device_map, $line;
     }
@@ -1550,7 +1546,7 @@ sub Info2Section {
       $vga = "vga=mode-$vga " if $vga ne "";
       my $value = "$xen $vga$append";
       push @lines, {
-	"key" => "kernel",
+      	"key" => "kernel",
         "value" => $value,
       };
     }
@@ -2012,7 +2008,7 @@ sub GrubDev2MountPoint {
 	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
 	    if ($self->GetKernelDevice($d) eq $self->GetKernelDevice($device)) { 
 	      $self->l_milestone ("GRUB::GrubDev2MountPoint : find mountpoint: $mp");
-    		$mountpoint = $mp;
+    	  $mountpoint = $mp;
 	    }
 	}
     }

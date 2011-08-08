@@ -66,6 +66,8 @@ C<< Bootloader::Tools::AdjustSectionNameAppendix ($mode, $sect_ref_new, $sect_re
 
 C<< $exec_with_path = Bootloader::Tools::AddPathToExecutable($executable); >>
 
+C<< Bootloader::Tools::DeviceMapperActive (); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -80,7 +82,7 @@ use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
 		 RemoveImageSections GetDefaultImage
-		 GetDefaultInitrd GetBootloader UpdateBootloader
+		 GetDefaultInitrd GetBootloader UpdateBootloader GetFittingSection
 		 GetGlobals SetGlobals 
 		 GetSectionList GetSection 
 		 AddSection RemoveSections
@@ -95,6 +97,7 @@ my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
 my $multipath = undef;
+my $devicemapper = undef;
 
 sub DumpLog {
     my $core_lib = shift;
@@ -766,6 +769,7 @@ sub InitLibrary {
     $lib_ref->ReadSettings();
 
     DumpLog ($lib_ref->{"loader"});
+
     return $lib_ref;
 }
 
@@ -786,7 +790,7 @@ sub match_section {
 	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
 	if ($opt eq "image" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
-		      (ResolveCrossDeviceSymlinks($opt_ref->{"$opt"})));
+		      ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}));
 	    # Print info for this match
 	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
 		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
@@ -1066,6 +1070,54 @@ sub GetSection {
     return undef;
 }
 
+=item
+C<< Bootloader::Tools::GetFittingSection($name, $image, $type, \@sections); >>
+
+Fing fitting section for given name and image type.
+If not find return undef.
+
+=cut
+
+sub GetFittingSection {
+  my $name = shift;
+  my $image = shift;
+  my $type = shift;
+  my $sections = shift;
+  my $ret = undef;
+
+
+  if ($image !~ m/^.*-([a-zA-Z0-9]+)(\..*)?$/) {
+    return undef;
+  }
+  my $flavor = $1;
+  my $fallback = ($name =~ m/failsafe/i);
+ 
+  # Heuristic one - try find same flavor
+  foreach my $s (@{$sections}) {
+    next unless $s->{"type"} eq $type;
+    if (defined ($s->{"image"}) && $s->{"image"} =~ m/$flavor/) {
+      my $sec_fallback = (defined $s->{"original_name"} && $s->{"original_name"} =~ m/failsafe/i) ||
+                         (defined $s->{"name"} && $s->{"name"} =~ m/failsafe/i);
+      next if ($sec_fallback xor $fallback); #skip if they are not same failsafe or non-failsafe
+      $ret = $s;
+      last;
+    }
+  }
+
+  return $ret if $ret;
+
+  # Heuristic two - first fitting section with same type
+  foreach my $s (@{$sections}) {
+    next unless $s->{"type"} eq $type;
+    my $sec_fallback = (defined $s->{"original_name"} && $s->{"original_name"} =~ m/failsafe/i) ||
+                       (defined $s->{"name"} && $s->{"name"} =~ m/failsafe/i);
+    next if ($sec_fallback xor $fallback); #skip if they are not same failsafe or non-failsafe
+    $ret = $s;
+    last;
+  }
+
+  return $ret;
+}
 
 =item
 C<< Bootloader::Tools::AddSection($name, @params); >>
@@ -1096,27 +1148,68 @@ sub AddSection {
     my %def = ();
 
     my @sections = @{$lib_ref->GetSections ()};
+    my $core_lib = $lib_ref->{"loader"};
 
-    # FIXME: sf@: what is this code good for?
-    # FIXME: removed resetting root parameter if it's already set
-    foreach my $s (@sections) {
-	if (defined ($s->{"initial"}) && $s->{"initial"}) {
-	    %def = %{$s};
-	    last;
-	}
-    }
+    my $fitting_section = GetFittingSection($name,$option{"image"},$option{"type"},\@sections);
 
-    while ((my $k, my $v) = each (%def)) {
-	if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
-		&& $k ne "initrd") {
-	    if (!defined $new{$k}) {
-		$new{$k} = $v;
-	    }	
-	}
+    if ($fitting_section) {
+      %def = %{$fitting_section};
+      $core_lib->l_milestone ("Tools::AddSection: Fitting section found so use it");
+      while ((my $k, my $v) = each (%def)) {
+        if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
+        		&& $k ne "initrd") {
+          $new{$k} = $v;
+      	}
+      }
+
+      if (exists $option{"image"}) {
+        if (exists $new{"kernel"}) { 
+    	    $new{"kernel"} = delete $option{"image"};
+        }	else {	
+    	    $new{"image"} = delete $option{"image"};
+      	}
+      }
+      } else {
+        $core_lib->l_milestone ("Tools::AddSection: Fitting section not found. Use sysconfig values as fallback.");
+        my $sysconf;
+        if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
+          $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
+          $new{"append"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("FAILSAFE_VGA");
+          $new{"vgamode"} = $sysconf if (defined $sysconf);
+          $sysconf = GetSysconfigValue("IMAGEPCR");
+        }
+        elsif ($option{"type"} eq "xen") 
+        {
+          $sysconf = GetSysconfigValue("XEN_KERNEL_APPEND");
+          $new{"append"} = $sysconf if (defined $sysconf);
+          $sysconf =  GetSysconfigValue("XEN_VGA");
+          $new{"vgamode"} = $sysconf if (defined $sysconf);
+          $sysconf =  GetSysconfigValue("XEN_APPEND");
+          $new{"xen_append"} =  $sysconf if (defined $sysconf);
+        }
+        else 
+        {
+          #RT kernel have special args bnc #450153
+          if ($new{"image"} =~ m/-rt$/ && defined (GetSysconfigValue("RT_APPEND"))){
+            $sysconf = GetSysconfigValue("RT_APPEND");
+            $new{"append"} = $sysconf if (defined $sysconf);
+            $sysconf = GetSysconfigValue("RT_VGA");
+            $new{"vgamode"} = $sysconf if (defined $sysconf);
+          } else {
+            $sysconf = GetSysconfigValue("DEFAULT_APPEND");
+            $new{"append"} = $sysconf if (defined $sysconf);
+            $sysconf = GetSysconfigValue("DEFAULT_VGA");
+            $new{"vgamode"} = $sysconf if (defined $sysconf);
+          }
+      }
+
+      $sysconf = GetSysconfigValue("CONSOLE");
+      $new{"console"} = $sysconf if (defined $sysconf);
     }
 
     foreach (keys %option) {
-	$new{"$_"} = $option{"$_"};
+      $new{"$_"} = $option{"$_"};
     }
     $new{"name"} = $name;
 
@@ -1124,72 +1217,11 @@ sub AddSection {
     AdjustSectionNameAppendix ("add", \%new);
 
     my $failsafe_modified = 0;
-
-
-
-    # FIXME: Failsafe parameters should be set dynamically in the future
-    if ($name =~ m/^Failsafe.*$/) {
-	my $arch = `uname --hardware-platform`;
-	chomp ($arch);
-
-	if ($arch eq "i386") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume nosmp noapic maxcpus=0 edd=off x11failsafe nomodeset";
-	}
-	elsif ($arch eq "x86_64") {
-	    $new{"append"} = "showopts ide=nodma apm=off acpi=off noresume edd=off x11failsafe nomodeset";
-	}
-	elsif ($arch eq "ia64") {
-	    $new{"append"} = "ide=nodma nohalt noresume 3";
-	}
-	elsif ($arch eq "s390x") {
-	    $new{"append"} = "";
-  }
-	else {
-	    print ("Architecture $arch does not support failsafe entries.\n");
-	}
-
-	$failsafe_modified = 1;
-
-	# Don't make the failsafe entry the default one
-	$default = 0;
-    }
-
-    my $sysconf;
     if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
-        $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
-        $new{"append"} = $sysconf if (defined $sysconf);
-        $sysconf = GetSysconfigValue("FAILSAFE_VGA");
-        $new{"vgamode"} = $sysconf if (defined $sysconf);
-        $failsafe_modified = 1;
-	$default = 0;
+      $failsafe_modified = 1;
+	    $default = 0;
     }
-    elsif ($option{"type"} eq "xen") 
-    {
-        $sysconf = GetSysconfigValue("XEN_KERNEL_APPEND");
-        $new{"append"} = $sysconf if (defined $sysconf);
-        $sysconf =  GetSysconfigValue("XEN_VGA");
-        $new{"vgamode"} = $sysconf if (defined $sysconf);
-        $sysconf =  GetSysconfigValue("XEN_APPEND");
-        $new{"xen_append"} =  $sysconf if (defined $sysconf);
-    }
-    else 
-    {
-        #RT kernel have special args bnc #450153
-        if ($new{"image"} =~ m/-rt$/ && defined (GetSysconfigValue("RT_APPEND"))){
-          $sysconf = GetSysconfigValue("RT_APPEND");
-          $new{"append"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("RT_VGA");
-          $new{"vgamode"} = $sysconf if (defined $sysconf);
-        } else {
-          $sysconf = GetSysconfigValue("DEFAULT_APPEND");
-          $new{"append"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("DEFAULT_VGA");
-          $new{"vgamode"} = $sysconf if (defined $sysconf);
-        }
-     }
 
-    $sysconf = GetSysconfigValue("CONSOLE");
-    $new{"console"} = $sysconf if (defined $sysconf);
     $new{"__modified"} = 1;
     $new{"root"} = $lib_ref->GetMountPoints()->{"/"};
 
@@ -1215,8 +1247,6 @@ sub AddSection {
 	    }
 	}
     }
-
-    my $core_lib = $lib_ref->{"loader"};
 
     # Print new section to be added to logfile
     $core_lib->l_milestone ("Tools::AddSection: New section to be added :\n\n' " .
