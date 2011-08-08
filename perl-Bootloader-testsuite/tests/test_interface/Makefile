@@ -11,6 +11,7 @@ test:
 	perl -w grub-trusted-test.pl
 	perl -w none-test.pl
 	perl -w multipath-test.pl
+	perl -w md-raid-test.pl
 	perl -w core-test.pl
 	rm -rf Bootloader
 	rm -rf fake_root[12]
