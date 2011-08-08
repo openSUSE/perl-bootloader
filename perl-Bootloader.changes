@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Aug  8 15:40:27 CEST 2011 - snwint@suse.de
+
+- implement pbl part of md raid failover boot configuration (fate #305008)
+
+-------------------------------------------------------------------
 Mon Aug  1 14:39:07 UTC 2011 - jreidinger@novell.com
 
 - prepare for use perl-Bootloader for other boot management tools
