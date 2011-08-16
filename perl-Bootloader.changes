@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug 16 11:26:33 CEST 2011 - snwint@suse.de
+
+- rewrite UnixDev2GrubDev()
+- 0.4.89.30
+
+-------------------------------------------------------------------
 Mon Aug  8 15:40:27 CEST 2011 - snwint@suse.de
 
 - implement pbl part of md raid failover boot configuration (fate #305008)
