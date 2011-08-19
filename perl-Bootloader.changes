@@ -1,7 +1,9 @@
 -------------------------------------------------------------------
-Tue Aug 16 11:26:33 CEST 2011 - snwint@suse.de
+Fri Aug 19 17:44:21 CEST 2011 - snwint@suse.de
 
 - rewrite UnixDev2GrubDev()
+- another dev translation fix
+- fix boot_md_mbr detection
 - 0.4.89.30
 
 -------------------------------------------------------------------
