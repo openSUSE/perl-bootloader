@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep  2 14:08:54 CEST 2011 - snwint@suse.de
+
+- use UnixDev2GrubDev() from sle11-sp2
+- 0.5.19
+
+-------------------------------------------------------------------
 Mon Aug  1 14:39:07 UTC 2011 - jreidinger@novell.com
 
 - prepare for use perl-Bootloader for other boot management tools
