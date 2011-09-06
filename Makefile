@@ -14,12 +14,21 @@ BUILD_ROOT=/abuild/buildsystem.$(HOST).$(LOGNAME)
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
 DISTMAIL=/work/src/bin/distmail
+BRANCH=SLE11-SP2
 
-.PHONY:	export build mbuild submit rpm clean
+.PHONY:	export build mbuild submit rpm clean package
 
 all:
 	@echo "Choose one target out of 'export', 'build', 'mbuild', 'submit', 'rpm' or 'clean'"
 	@echo
+
+package:
+	rm -rf package
+	mkdir -p package
+	read lv < version ; \
+  git archive --prefix=${PKG}-$${lv}/ $(BRANCH) | bzip2 > package/${PKG}-$${lv}.tar.bz2; \
+  sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
+  cp $(PKG).changes bootloader_entry update-bootloader package/
 
 export:	.checkexportdir .exportdir
 
