@@ -40,6 +40,8 @@ Authors:
 
 %prep
 %setup -q
+mkdir -p lib
+mv src lib/Bootloader
 
 %build
 touch Makefile.PL
