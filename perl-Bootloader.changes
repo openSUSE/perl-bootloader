@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Sep 19 16:54:56 CEST 2011 - snwint@suse.de
+
+- add warning to log if udev is missing
+- 0.5.20
+
+-------------------------------------------------------------------
 Fri Sep  2 14:08:54 CEST 2011 - snwint@suse.de
 
 - use UnixDev2GrubDev() from sle11-sp2
