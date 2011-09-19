@@ -248,7 +248,7 @@ sub ReadPartitions {
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
-    $logger->milestone("ReadPartitions: Finded disks: ". join (",",@disks));
+    $logger->milestone("ReadPartitions: Found disks: ". join (",",@disks));
 
     # get partition info for all partitions on all @disks
     my @devices = ();
@@ -273,7 +273,7 @@ sub ReadPartitions {
 	    } readdir (BLOCK_DEVICES);
 	    closedir BLOCK_DEVICES;
 
-            $logger->milestone("ReadPartitions: Finded parts: ". join (",",@parts));
+            $logger->milestone("ReadPartitions: Found parts: ". join (",",@parts));
 
 	    # generate proper device names and other info for all @part[ition]s
       #raid have ! in names for /dev/raid/name (bnc#607852)
@@ -389,6 +389,7 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 
 sub GetUdevMapping {
   my %mapping= ();
+  local $_;
 
   my @output = `find -P /dev -type b`;
   chomp @output;
@@ -423,19 +424,23 @@ sub GetUdevMapping {
       $mapping{$prevdev} = $dev; #maps also dm dev to device mapper
     } #end of workaround
 
-    for my $line (@output2)
-    {
-      if ($line =~ m/S:\s(.*)$/)
-      {
-        $mapping{"/dev/$1"} = $dev;
-      }
+    for (@output2) {
+      $mapping{"/dev/$1"} = $dev if /S:\s(.*)$/;
     }
   }
 
   while (my ($k,$v) = each (%mapping)){
-      $logger->milestone ("UDEV MAPPING: ".($k||"")." -> ".($v||""));
+    $logger->milestone("UDEV MAPPING: ".($k||"")." -> ".($v||""));
   }
 
+  if(!(keys %mapping)) {
+    $logger->milestone("*** WARNING: No UDEV mapping! ***");
+    $logger->milestone("device tree:");
+    for (`find -L /dev -type b 2>/dev/null`) {
+      chomp;
+      $logger->milestone("  $_");
+    }
+  }
 
   return \%mapping;
 }
