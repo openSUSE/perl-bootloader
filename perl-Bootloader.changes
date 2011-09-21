@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Sep 21 14:42:12 CEST 2011 - snwint@suse.de
+
+- fix library initialization for grubby usage (bnc#672471)
+- 0.4.19.25
+
+-------------------------------------------------------------------
 Tue Oct 19 17:09:06 UTC 2010 - jreidinger@novell.com
 
 - optimalize blkid usage (bnc#597399)
