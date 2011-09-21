@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Sep 21 15:51:01 CEST 2011 - snwint@suse.de
+
+- create failsafe section after kernel update on s390x to have same
+  behavior as installation (bnc#576874)
+- 0.4.19.26
+
+-------------------------------------------------------------------
 Wed Sep 21 14:42:12 CEST 2011 - snwint@suse.de
 
 - fix library initialization for grubby usage (bnc#672471)
