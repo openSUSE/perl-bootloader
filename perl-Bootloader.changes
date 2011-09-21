@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Sep 21 12:26:34 CEST 2011 - snwint@suse.de
+
+- also log udevinfo
+- 0.5.21
+
+-------------------------------------------------------------------
 Mon Sep 19 16:54:56 CEST 2011 - snwint@suse.de
 
 - add warning to log if udev is missing
