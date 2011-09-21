@@ -436,7 +436,12 @@ sub GetUdevMapping {
   if(!(keys %mapping)) {
     $logger->milestone("*** WARNING: No UDEV mapping! ***");
     $logger->milestone("device tree:");
-    for (`find -L /dev -type b 2>/dev/null`) {
+    for (`find -P /dev -type b -ls 2>/dev/null`) {
+      chomp;
+      $logger->milestone("  $_");
+    }
+    $logger->milestone("udevinfo:");
+    for (`udevadm info -e 2>&1`) {
       chomp;
       $logger->milestone("  $_");
     }
