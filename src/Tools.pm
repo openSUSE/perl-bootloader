@@ -936,7 +936,7 @@ See AddSection for example
 sub GetSysconfigValue {
     my $key = shift;
     my $file = Bootloader::Path::Sysconfig();
-    return undef if ( qx{ grep -c ^[:space:]*$key $file} == 0);
+    return undef if ( qx{ grep -c ^[[:space:]]*$key $file} == 0);
     my $value = qx{ . $file && echo \$$key } || "";
     chomp ($value);
     return $value;
@@ -967,6 +967,8 @@ sub InitLibrary {
     $lib_ref->ReadSettings();
 
     DumpLog ($lib_ref->{"loader"});
+
+    return $lib_ref;
 }
 
 

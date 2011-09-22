@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Sep 22 11:50:52 CEST 2011 - snwint@suse.de
+
+- prepare for use perl-Bootloader for other boot management tools
+  (bnc#672471#c8)
+- fix regexp typo (bnc #719323)
+- 0.4.89.28
+
+-------------------------------------------------------------------
 Fri Jul 22 13:58:43 CEST 2011 - snwint@suse.de
 
 - fix bootloader_fix_xen & postin script (bnc #698564)
