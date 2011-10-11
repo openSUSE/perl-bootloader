@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 11 14:28:29 CEST 2011 - snwint@suse.de
+
+- use UnixDev2GrubDev() from sle11-sp2 (bnc #722966)
+- 0.4.89.29
+
+-------------------------------------------------------------------
 Thu Sep 22 11:50:52 CEST 2011 - snwint@suse.de
 
 - prepare for use perl-Bootloader for other boot management tools
