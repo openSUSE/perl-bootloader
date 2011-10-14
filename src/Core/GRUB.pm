@@ -394,7 +394,7 @@ sub UnixDev2GrubDev {
         $partition = undef;
 
         if (
-            $original =~ m#^/dev/[hs]d[a-z]{1,2}(\d+)$# ||
+            $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
             $original =~ m#^/dev/\S+\-part(\d+)$# ||
             $original =~ m#^/dev(?:/[^/]+){1,2}p(\d+)$#
         ) {
