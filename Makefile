@@ -119,4 +119,4 @@ endif
 
 clean:
 	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
-	rm -f .exportdir .built .submitted
+	rm -f .exportdir .built .submitted *~ */*~ */*/*~

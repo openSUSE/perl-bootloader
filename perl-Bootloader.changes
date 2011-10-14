@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Oct 14 09:31:40 CEST 2011 - snwint@suse.de
+
+- support more devices in fallback heuristics
+- add basic grub2 support to update-bootloader
+- 0.5.22
+
+-------------------------------------------------------------------
 Wed Sep 21 12:26:34 CEST 2011 - snwint@suse.de
 
 - also log udevinfo
