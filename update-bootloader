@@ -212,6 +212,26 @@ if (Bootloader::Tools::GetBootloader() eq "none")
   exit 0;
 }
 
+if (Bootloader::Tools::GetBootloader() eq "grub2")
+{
+  open (LOG, ">>$logname");
+  print LOG ("grub2 bootloader, let grub2-mkconfig handle everything\n");
+  close LOG;
+
+  if (! -d '/boot/grub2' ) {
+    open (LOG, ">>$logname");
+    print LOG ("grub2: Run grub2-install first!\n");
+    close LOG;
+
+    exit 1;
+  }
+
+  system ("cp /boot/grub2/grub.cfg /boot/grub2/grub.cfg.old");
+  system ("/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg >>$logname 2>&1");
+
+  exit 0;
+}
+
 if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
 }
