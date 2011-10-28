@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Oct 28 15:15:18 CEST 2011 - snwint@suse.de
+
+- support more devices in fallback heuristics (bnc #726209)
+- 0.4.89.32
+
+-------------------------------------------------------------------
 Wed Sep 21 10:10:32 CEST 2011 - snwint@suse.de
 
 - fix regexp typo (bnc #719323)
