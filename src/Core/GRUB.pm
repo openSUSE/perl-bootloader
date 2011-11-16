@@ -78,6 +78,9 @@ use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
 
+use Data::Dumper;
+$Data::Dumper::Terse = 1;
+
 #module interface
 
 sub bootable($) {
@@ -1660,6 +1663,9 @@ sub Info2Section {
     my $type = $sectinfo{"type"} || "";
     my $so = $self->{'options'}{'section_options'};
     my $modules = 0;
+
+    my $s = Dumper(\%sectinfo);
+    $self->l_milestone ("GRUB::Info2Section: sectinfo = $s");
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))

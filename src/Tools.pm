@@ -104,6 +104,9 @@ use Bootloader::Library;
 use Bootloader::Core;
 use Bootloader::Path;
 
+use Data::Dumper;
+$Data::Dumper::Terse = 1;
+
 my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
@@ -1336,6 +1339,9 @@ sub AddSection {
     return unless defined $name;
     return unless exists $option{"type"};
 
+    my $s = Dumper(\%option);
+    $lib_ref->{loader}->l_milestone ("Tools::AddSection: option = $s");
+
     my $default = delete $option{"default"} || 0;
     my %new = ();
     my %def = ();
@@ -1416,6 +1422,9 @@ sub AddSection {
           }
       }
 
+      my $root_dev = ReadMountPoints()->{'/'};
+      $new{root} = $root_dev if $root_dev;
+
       $sysconf = GetSysconfigValue("CONSOLE");
       $new{"console"} = $sysconf if (defined $sysconf);
     }
@@ -1427,8 +1436,6 @@ sub AddSection {
 
     # Append flavor appendix to section label if necessary
     AdjustSectionNameAppendix ("add", \%new);
-
-
 
     my $failsafe_modified = 0;
     if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
@@ -1471,16 +1478,6 @@ sub AddSection {
 
     # Put new entries on top
     unshift @sections, \%new;
-
-    my $mp_ref = ReadMountPoints ();
-    my $root_mp = '';
-    my $boot_mp = '';
-    my $valid_part = 1;
-
-    while ((my $k, my $v) = each (%$mp_ref)) {
-	$root_mp = $v if ($k eq "/");
-	$boot_mp = $v if ($k eq "/boot");
-    }
 
     # Switch the first 2 entries in @sections array to put the normal entry on
     # top of corresponding failsafe entry

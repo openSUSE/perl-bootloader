@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov 16 15:16:27 CET 2011 - snwint@suse.de
+
+- add 'root' option if no fitting section was found (bnc #730405)
+- 0.4.89.34
+
+-------------------------------------------------------------------
 Wed Nov 16 10:59:07 CET 2011 - snwint@suse.de
 
 - fix ReadMountPoints() (bnc #730467)
