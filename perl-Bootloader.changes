@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov 16 10:59:07 CET 2011 - snwint@suse.de
+
+- fix ReadMountPoints() (bnc #730467)
+- 0.4.89.33
+
+-------------------------------------------------------------------
 Fri Oct 28 15:15:18 CEST 2011 - snwint@suse.de
 
 - support more devices in fallback heuristics (bnc #726209)

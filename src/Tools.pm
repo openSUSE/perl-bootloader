@@ -216,18 +216,14 @@ sub ReadMountPoints {
 	    {
 		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
 		{
-                    my $command = Bootloader::Path::Blkid() . " -l -t $dev |";
+                    my $command = Bootloader::Path::Blkid() . " -l -o device -t $dev |";
 		    open (BLKID, $command) || 
 			die ("ReadMountPoints(): Failed to run blkid");
 
 		    my $line = <BLKID>;
 		    close (BLKID);
-		    chomp ($line);
-		    my $index = index ($line, ":");
-		    if ($index != -1)
-		    {
-			$dev = substr ($line, 0, $index);
-		    }
+		    chomp $line;
+		    $dev = $line if $line ne "";
 		}
 		$mountpoints{$mp} = $dev;
 	    }
