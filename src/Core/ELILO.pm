@@ -38,6 +38,8 @@ C<< $status = Bootloader::Core::ELILO->InitializeBootloader (); >>
 package Bootloader::Core::ELILO;
 
 use strict;
+use Data::Dumper;
+$Data::Dumper::Terse = 1;
 
 use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
@@ -595,6 +597,9 @@ sub Info2Section {
     my $so = $self->{"exports"}{"section_options"};
     my @lines_new = ();
 
+    my $xxx = Dumper \%sectinfo;
+    $self->l_milestone("ELILO::Info2Section: \%sectinfo = $xxx");
+
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
     {
@@ -695,6 +700,9 @@ sub Info2Section {
         }
         elsif ($key eq "xen" and $type eq "xen")
         {
+            # weird hack because elilo can't do multiboot (bnc #717828)
+            # see also Section2Info()
+            $value =~ s#^/boot/xen.gz#xen.efi#;
             push @lines, {
 	        "key" => "vmm",
 	        "value" => $value,
@@ -765,6 +773,9 @@ sub Section2Info {
         elsif ($key eq "vmm")
         {
             $ret{"type"} = "xen";
+            # weird hack because elilo can't do multiboot (bnc #717828)
+            # see also Info2Section()
+            $val =~ s#^xen.efi#/boot/xen.gz#;
             $ret{"xen"} = $val;
             next;
         }
@@ -810,6 +821,10 @@ sub Section2Info {
 	$ret{$key} = $val;
     }
     $ret{"__lines"} = \@lines;
+
+    my $xxx = Dumper \%ret;
+    $self->l_milestone("ELILO::Section2Info() = $xxx");
+
     return \%ret;
 }
 

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov 23 17:31:30 CET 2011 - snwint@suse.de
+
+- get xen and uefi getting along (bnc #717828)
+- 0.4.89.35
+
+-------------------------------------------------------------------
 Wed Nov 16 15:16:27 CET 2011 - snwint@suse.de
 
 - add 'root' option if no fitting section was found (bnc #730405)
