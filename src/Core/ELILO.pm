@@ -597,8 +597,7 @@ sub Info2Section {
     my $so = $self->{"exports"}{"section_options"};
     my @lines_new = ();
 
-    my $xxx = Dumper \%sectinfo;
-    $self->l_milestone("ELILO::Info2Section: \%sectinfo = $xxx");
+    $self->l_milestone("ELILO::Info2Section 1: \%sectinfo = " . Dumper \%sectinfo);
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
@@ -616,6 +615,10 @@ sub Info2Section {
         if ($key eq "vmm")
         {
           $key = "xen";
+          my $xen_arg = $sectinfo{xen_append} || "";
+          $xen_arg = "vga=mode-$sectinfo{vgamode} $xen_arg" if $sectinfo{vgamode};
+          $line_ref->{value} = "xen.efi";
+          $line_ref->{value} .= " $xen_arg" if $xen_arg ne ""
         }
 
 	if ($key eq "label")
@@ -633,21 +636,18 @@ sub Info2Section {
         #append in xen contains also xen append, so it must handled special
         elsif ($key eq "append") 
         {
-          my $first = $sectinfo{"xen_append"} || "";
-          $first = "vga=mode-".(delete $sectinfo{"vgamode"})." $first" if (defined $sectinfo{'vgamode'} && $sectinfo{"vgamode"} ne "");
           my $second = $sectinfo{"append"} || "";  
           my $console = $sectinfo{"console"} || "";
           $console = "console=$console" if ($console ne "");
           my $value = "$second $console";
-          $value = "$first -- $value" if ($type eq "xen");
           $value = $self->trim($value);
           $line_ref->{"value"} = $value;
-          delete $sectinfo{"xen_append"};
           delete $sectinfo{"append"};
           delete $sectinfo{"console"};
         }
 	else
 	{
+            next if $key eq "xen";
 	    next unless defined ($sectinfo{$key});
 
 	    $line_ref->{"value"} = $sectinfo{$key};
@@ -665,6 +665,7 @@ sub Info2Section {
 
     @lines = @lines_new;
 
+    $self->l_milestone("ELILO::Info2Section 2: \%sectinfo = " . Dumper \%sectinfo);
 
     my $create_append = 1;
     while ((my $key, my $value) = each (%sectinfo))
@@ -676,7 +677,7 @@ sub Info2Section {
 	    $line_ref->{"key"} = "label";
 	    push @lines, $line_ref;
 	}
-        elsif ( $key eq "append" || $key eq "console" || $key eq "xen_append"  || $key eq "vgamode")
+        elsif ( $key eq "append" || $key eq "console")
         {
           if (defined($create_append))
           {
@@ -684,13 +685,6 @@ sub Info2Section {
             my $console = $sectinfo{"console"} || "";
             $console = "console=$console" if ($console ne "");
             my $val = "$append $console";
-            if ($type eq "xen")
-            {
-              my $xen_append = $sectinfo{"xen_append"} || "";
-              my $vga = "";
-              $vga="vga=mode-".$sectinfo{"vgamode"}." " if (defined $sectinfo{"vgamode"} && $sectinfo{"vgamode"} ne "");
-              $val = "$vga$xen_append -- $val";
-            }
             push @lines, {
 	        "key" => "append",
 	        "value" => $val,
@@ -702,7 +696,10 @@ sub Info2Section {
         {
             # weird hack because elilo can't do multiboot (bnc #717828)
             # see also Section2Info()
-            $value =~ s#^/boot/xen.gz#xen.efi#;
+            my $xen_arg = $sectinfo{xen_append} || "";
+            $xen_arg = "vga=mode-$sectinfo{vgamode} $xen_arg" if $sectinfo{vgamode};
+            $value =~ s#^/boot/xen\.gz#xen.efi#;
+            $value .= " $xen_arg" if $xen_arg ne "";
             push @lines, {
 	        "key" => "vmm",
 	        "value" => $value,
@@ -717,6 +714,8 @@ sub Info2Section {
 	}
 	else
 	{
+	    next if $key eq "xen_append" || $key eq "vgamode";
+
 	    my ($stype) = split /:/, $so->{$type . "_" . $key};
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
@@ -775,8 +774,15 @@ sub Section2Info {
             $ret{"type"} = "xen";
             # weird hack because elilo can't do multiboot (bnc #717828)
             # see also Info2Section()
-            $val =~ s#^xen.efi#/boot/xen.gz#;
+            $val =~ s#^xen\.efi\s*(.*?)$#/boot/xen.gz#;
+            my $xen_arg = $1;
             $ret{"xen"} = $val;
+            if($xen_arg =~ m/(.*)vga=mode-(\S+)\s*(.*)/)
+            {
+              $ret{"vgamode"} = $2;
+              $xen_arg = $self->MergeIfDefined($1,$3)
+            }
+            $ret{"xen_append"} = $self->trim($xen_arg);
             next;
         }
         elsif ($key eq "append")
@@ -786,23 +792,8 @@ sub Section2Info {
               $ret{"console"} = "ttyS$2,$3" if $2 ne "";
               $val = $self->MergeIfDefined( $1, $4);
            }
-           if ($val =~ m/--/) #value contains separator between hypervisor and host
-           {
-             $val =~ m/(.*)--(.*)/;
-             my $xen_app = $1;
-             my $host_app = $2;             
-             if ($xen_app =~ m/(.*)vga=mode-(\S+)\s*(.*)/)
-             {
-               $ret{"vgamode"} = $2;
-               $xen_app = $self->MergeIfDefined($1,$3)
-             }
-             $ret{"xen_append"} = $self->trim($xen_app);
-             $ret{"append"} = $self->trim($host_app);
-           }
-           else
-           {
-             $ret{"append"} = $val if $val ne "";
-           }
+
+           $ret{"append"} = $val if $val ne "";
            next;
         }
 
@@ -822,8 +813,7 @@ sub Section2Info {
     }
     $ret{"__lines"} = \@lines;
 
-    my $xxx = Dumper \%ret;
-    $self->l_milestone("ELILO::Section2Info() = $xxx");
+    $self->l_milestone("ELILO::Section2Info() = " . Dumper \%ret);
 
     return \%ret;
 }
