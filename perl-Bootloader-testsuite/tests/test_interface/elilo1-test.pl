@@ -45,13 +45,13 @@ foreach my $section (@sections) {
     is( $section->{'image'}, '/boot/vmlinuz-2.6.25.4-10' );
     is( $section->{'initrd'}, '/boot/initrd-2.6.25.4-10' );
     is( $section->{'name'}, 'xen' );
-    is ($section->{'vgamode'}, '0x384' );
+    is( $section->{'vgamode'}, '0x384' );
     is( $section->{'append'}, 'resume=/dev/sda1 splash=silent showopts' );
     is( $section->{'xen'}, "/boot/xen.gz");
     is( $section->{'xen_append'}, "test");
     is( $section->{'console'}, 'ttyS0,38400n52r' );
     $section->{"__modified"} = 1;
-    $section->{'xen'}= "/boot/xen-pae.gz";
+    $section->{'xen'}= "xen.efi";
     $section->{'xen_append'} = "test2";
     $section->{'vgamode'} = 'default';
   } 
@@ -62,12 +62,12 @@ ok($lib_ref->SetSections(\@sections));
 ok($lib_ref->WriteSettings());
 $lib_ref->UpdateBootloader(1);
 
-my $res = qx:grep -c "vmm = /boot/xen-pae.gz" ./fake_root1/etc/elilo.conf:;
+my $res = qx:grep -c 'vmm = "xen.efi vga=mode-default test2' ./fake_root1/etc/elilo.conf:;
 chomp($res);
 is( $res, 1);
 
-$res = qx:grep -c 'append = "vga=mode-default test2 --' ./fake_root1/etc/elilo.conf:;
+$res = qx:grep -c 'append = "resume=' ./fake_root1/etc/elilo.conf:;
 chomp($res);
-is( $res, 1);
+is( $res, 2);
 
 Bootloader::Tools::DumpLog( $lib_ref );
