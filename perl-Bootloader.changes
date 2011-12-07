@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Dec  7 11:27:08 CET 2011 - snwint@suse.de
+
+- add another workaround in case udev is not working (bnc #735073)
+- 0.4.89.36
+
+-------------------------------------------------------------------
 Wed Nov 23 17:31:30 CET 2011 - snwint@suse.de
 
 - get xen and uefi getting along (bnc #717828)

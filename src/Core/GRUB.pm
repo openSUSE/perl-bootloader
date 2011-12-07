@@ -74,6 +74,8 @@ package Bootloader::Core::GRUB;
 
 use strict;
 
+use Cwd "realpath";
+
 use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
@@ -398,18 +400,21 @@ sub GetKernelDevice {
     my $self = shift;
     my $device = shift;
     # resolve symlinks.....
-    my $cmd = "udevadm info  -q name -n $device";
+    my $cmd = "udevadm info -q name -n $device";
     my $dev = "";
-    if (my $resolved_link = qx{$cmd 2> /dev/null}) {
-        if ($? > 0){
-          return $device;
-        }
-	chomp ($resolved_link);
-	$dev = "/dev/" . $resolved_link; 
-    } else {
-      return $device;
+
+    chomp ($dev = qx{$cmd 2> /dev/null});
+
+    if($? || $dev eq "") {
+      $self->l_milestone("GRUB::GetKernelDevice: udevadm failed, using readlink");
+      $dev = realpath $device;
     }
-    $self->l_milestone ("GRUB::GetKernelDevice: udevadm info returned: $dev");
+    else {
+      $dev = "/dev/$dev";
+    }
+
+    $self->l_milestone ("GRUB::GetKernelDevice: $device -> $dev");
+
     if ($dev =~ m:^/dev/dm-\d+:){
       my $name = qx{udevadm info  -q env -n $device | grep DM_NAME};
       chomp $name;
@@ -420,8 +425,7 @@ sub GetKernelDevice {
       $dev = "/dev/mapper/$1";
       my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
       chomp $part;
-      #DM_NAME could contain in some cases partition number (bnc#590637)
-      if ($part =~ m/^DM_PART=(\d+)$/ and $dev !~ /_part[0-9]+$/){
+      if ($part =~ m/^DM_PART=(\d+)$/){
         $dev = $dev."_part$1";
       }
       $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
@@ -451,6 +455,8 @@ sub GrubDev2UnixDev {
 	$self->l_warning ("GRUB::GrubDev2UnixDev: Not translating device $dev");
 	return $dev;
     }
+
+    $self->l_milestone ("GRUB::GrubDev2UnixDev: Translating $dev ...");
 
     my $original = $dev;
     my $partition = undef;
