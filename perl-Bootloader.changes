@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Dec  9 08:17:46 CET 2011 - snwint@suse.de
+
+- putting back accidentally lost fix for bnc #590637 from 0.4.89.20
+- 0.4.89.37
+
+-------------------------------------------------------------------
 Wed Dec  7 11:27:08 CET 2011 - snwint@suse.de
 
 - add another workaround in case udev is not working (bnc #735073)

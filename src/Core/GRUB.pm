@@ -425,7 +425,8 @@ sub GetKernelDevice {
       $dev = "/dev/mapper/$1";
       my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
       chomp $part;
-      if ($part =~ m/^DM_PART=(\d+)$/){
+      #DM_NAME could contain in some cases partition number (bnc#590637)
+      if ($part =~ m/^DM_PART=(\d+)$/ and $dev !~ /_part[0-9]+$/){
         $dev = $dev."_part$1";
       }
       $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
