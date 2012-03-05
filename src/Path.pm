@@ -49,6 +49,10 @@ C<< $path = Bootloader::Path::Zipl_conf(); >>
 
 C<< $path = Bootloader::Path::Zipl_zipl(); >>
 
+C<< $path = Bootloader::Path::Grub2_devicemap(); >>
+
+C<< $path = Bootloader::Path::Grub2_installdevice(); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -239,6 +243,30 @@ Gets path to zipl binary.
 
 sub Zipl_zipl {
   my $value = "/sbin/zipl";
+  return Prefix($value);
+}
+
+=item
+C<< $path = Bootloader::Path::Grub2_devicemap(); >>
+
+Gets path for grub2 configuration file device.map.
+
+=cut
+
+sub Grub2_devicemap {
+  my $value = "/boot/grub2/device.map";
+  return Prefix($value);
+}
+
+=item
+C<< $path = Bootloader::Path::Grub2_installdevice(); >>
+
+Gets path for grub2 configuration file grub_installdevice.
+
+=cut
+
+sub Grub2_installdevice {
+  my $value = "/etc/default/grub_installdevice";
   return Prefix($value);
 }
 

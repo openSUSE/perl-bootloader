@@ -122,7 +122,7 @@ sub GetProduct {
     if ( -f '/usr/bin/zypper' ){
       my $zypper_out = qx{zypper --terse tos -l};
       if ($zypper_out =~ m/^labelLong\s*(\S.*\S)\s*\nlabelShort\s*(\S.*\S)[\s\n]*$/){
-        return $1 if ($1 ne "" && $loader eq "grub");
+        return $1 if ($1 ne "" && ($loader eq "grub" || $loader eq "grub2"));
         return $2 if ($2 ne "");
       }
     }
@@ -131,7 +131,7 @@ sub GetProduct {
     # Second try: Is there a usable /etc/SuSE-release?
     # This should really not be used anymore, as the syntax changed
     # no 'SP1' in the output. 
-    if (open(RELEASE, "</etc/SuSE-release") && $loader eq "grub") {
+    if (open(RELEASE, "</etc/SuSE-release") && ($loader eq "grub" || $loader eq "grub2")) {
 	# first line is sufficient
 	$namever = <RELEASE>;
 
@@ -212,26 +212,6 @@ if (Bootloader::Tools::GetBootloader() eq "none")
   exit 0;
 }
 
-if (Bootloader::Tools::GetBootloader() eq "grub2")
-{
-  open (LOG, ">>$logname");
-  print LOG ("grub2 bootloader, let grub2-mkconfig handle everything\n");
-  close LOG;
-
-  if (! -d '/boot/grub2' ) {
-    open (LOG, ">>$logname");
-    print LOG ("grub2: Run grub2-install first!\n");
-    close LOG;
-
-    exit 1;
-  }
-
-  system ("cp /boot/grub2/grub.cfg /boot/grub2/grub.cfg.old");
-  system ("/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg >>$logname 2>&1");
-
-  exit 0;
-}
-
 if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
 }
@@ -273,7 +253,7 @@ if (defined $oper{add}) {
 
     unless ($opt_name) {
 	if ($opt_xen and $opt_previous) {
-	    if ($loader eq "grub" || $loader eq "lilo") {
+	    if ($loader eq "grub" || $loader eq "lilo" || $loader eq "grub2") {
 		$opt_name = "Previous Xen";
 		$add_product = 1;
 	    }
@@ -282,7 +262,7 @@ if (defined $oper{add}) {
 	    }
 	}
 	elsif ($opt_xen) {
-	    if ($loader eq "grub" || $loader eq "lilo") {
+	    if ($loader eq "grub" || $loader eq "lilo" || $loader eq "grub2") {
 		$opt_name = "Xen";
 		$add_product = 1;
 	    }
@@ -291,7 +271,7 @@ if (defined $oper{add}) {
 	    }
 	}
 	elsif ($opt_previous) {
-	    if ($loader eq "grub" || $loader eq "lilo") {
+	    if ($loader eq "grub" || $loader eq "lilo" || $loader eq "grub2") {
 		$opt_name = "Previous Kernel";
 		$add_product = 1;
 	    }
@@ -335,7 +315,7 @@ if (defined $oper{add}) {
 	($opt_name =~ /-bigsmp/) ||
 	($opt_name =~ /-pae/)) {
 
-	if ($loader eq "grub") {
+	if ($loader eq "grub" || $loader eq "grub2") {
 	    $opt_name =~ s/-[^-]*$//;
 	    $opt_failsafe = "Failsafe -- " . GetProduct() . " - " . $opt_name;
 	    $opt_name = GetProduct() . " - " . $opt_name;
@@ -347,7 +327,7 @@ if (defined $oper{add}) {
     }
     # Naming scheme for all xen kernels, thus xen and xenpae
     elsif ($opt_xen) {
-	if ($loader eq "grub") {
+	if ($loader eq "grub" || $loader eq "grub2") {
 	    my $version = $opt_name;
 	    $version =~ s/-xen.*$//;
 
@@ -368,7 +348,7 @@ if (defined $oper{add}) {
 	$flavor = ucfirst ($flavor);
 
 	# Create long labels for grub
-	if ($loader eq "grub") {
+	if ($loader eq "grub" || $loader eq "grub2") {
 	    my $version = $opt_name;
 	    $version =~ s/-[^-]*$//;
 
