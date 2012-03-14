@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 14 11:12:26 CET 2012 - snwint@suse.de
+
+- speed up dmraid parsing (bnc #750182)
+- 0.4.89.38
+
+-------------------------------------------------------------------
 Fri Dec  9 08:17:46 CET 2011 - snwint@suse.de
 
 - putting back accidentally lost fix for bnc #590637 from 0.4.89.20

@@ -290,6 +290,9 @@ sub ReadPartitions {
     my $sb = "/sys/block";
     my $mounted = undef;
     my $logname = Bootloader::Path::Logname();
+    # cache result from dmsetup call
+    my $cache = {};
+
     unless (-e $sb) {
       $mounted = `mount /sys`;
        open (LOG, ">>$logname");
@@ -366,7 +369,7 @@ sub ReadPartitions {
 	    }
 	}
 
-        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)){
+        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk, $cache)){
 	    # get partitions of $disk
 	    if(!opendir(BLOCK_DEVICES, "$sb/$disk")) {
 	        # md* devices may vanish as a result of the parted call above
@@ -620,37 +623,36 @@ returns 1 if yes, 0 if no
 sub IsDMRaidSlave {
 
     my $disk = shift;
+    my $cache = shift;		# cache dmsetup results
     my $majmin_disk = Udev2MajMin($disk);
     chomp($majmin_disk);
     my @dmparts = ();
 
-    unless (-e $dmsetup) {
-        return 0;
-    }
+    return 0 unless -e $dmsetup;
 
-    my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
-    chomp @dm_devs;
+    if(!$cache->{ok}) {
+      $cache->{ok} = 1;
 
-    if ($dm_devs[0] !~ /No devices found/) {
-        foreach my $dmdisk (@dm_devs) {
-            my @tables = qx{$dmsetup table '$dmdisk'};
-            chomp @tables;
+      my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
+      chomp @dm_devs;
 
-            foreach my $line (@tables) {
-                my @content = split(/ /, $line);
+      if($dm_devs[0] !~ /No devices found/) {
+        for my $dmdisk (@dm_devs) {
+          my @tables = qx{$dmsetup table '$dmdisk'};
+          chomp @tables;
 
-                foreach my $majmins (@content){
-                    if ($majmins =~ m/(\d+):(\d+)/) {
-                    	if ("$majmins" eq "$majmin_disk") {
-			    return 1;
-		    	}
-                    }
-                }
+          for my $line (@tables) {
+            my @content = split(/ /, $line);
+
+            for my $majmins (@content) {
+              $cache->{ids}{$majmins} = 1 if $majmins =~ /^\d+:\d+$/;
             }
+          }
         }
+      }
     }
 
-    return 0;
+    return $cache->{ids}{$majmin_disk} ? 1 : 0;
 }
 
 =item
