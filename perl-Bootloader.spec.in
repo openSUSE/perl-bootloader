@@ -18,7 +18,7 @@ Requires:       e2fsprogs
 Recommends:     perl-gettext
 Autoreqprov:    on
 Group:          System/Boot
-License:        GNU General Public License (GPL)
+License:        GPL-2.0+
 Summary:        Library for Configuring Boot Loaders
 Source:         perl-Bootloader-%{version}.tar.bz2
 Source1:        update-bootloader

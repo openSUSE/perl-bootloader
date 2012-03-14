@@ -5,6 +5,11 @@ Wed Mar 14 11:12:26 CET 2012 - snwint@suse.de
 - 0.4.89.38
 
 -------------------------------------------------------------------
+Thu Jan 19 14:38:34 CET 2012 - snwint@suse.de
+
+- require rpm (bnc #742295)
+
+-------------------------------------------------------------------
 Fri Dec  9 08:17:46 CET 2011 - snwint@suse.de
 
 - putting back accidentally lost fix for bnc #590637 from 0.4.89.20
