@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Mar 22 10:30:33 UTC 2012 - mchang@suse.com
+
+- grub2-efi-module.patch: add new grub2-efi module to support
+  booting on UEFI firmware.
+
+-------------------------------------------------------------------
 Fri Mar  9 08:40:15 UTC 2012 - mchang@suse.com
 
 - grub2-skip-fs-probe-for-extended-partition.patch (bnc#750897) 

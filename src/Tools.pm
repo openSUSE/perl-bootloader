@@ -882,7 +882,9 @@ bootloader to use the current configuration
 
 
 sub UpdateBootloader {
-    my $ret = $lib_ref->UpdateBootloader ();
+    my $avoid_init = shift;
+
+    my $ret = $lib_ref->UpdateBootloader ($avoid_init);
     DumpLog ($lib_ref->{"loader"});
     return $ret;
 }

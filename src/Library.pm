@@ -137,6 +137,11 @@ sub SetLoaderType {
         require Bootloader::Core::GRUB2;
 	$loader = Bootloader::Core::GRUB2->new ($loader);
     }
+    elsif ($bootloader eq "grub2-efi")
+    {
+        require Bootloader::Core::GRUB2EFI;
+        $loader = Bootloader::Core::GRUB2EFI->new ($loader);
+    }
     elsif ($bootloader eq "lilo")
     {
         require Bootloader::Core::LILO;

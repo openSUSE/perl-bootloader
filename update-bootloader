@@ -122,7 +122,7 @@ sub GetProduct {
     if ( -f '/usr/bin/zypper' ){
       my $zypper_out = qx{zypper --terse tos -l};
       if ($zypper_out =~ m/^labelLong\s*(\S.*\S)\s*\nlabelShort\s*(\S.*\S)[\s\n]*$/){
-        return $1 if ($1 ne "" && ($loader eq "grub" || $loader eq "grub2"));
+        return $1 if ($1 ne "" && ($loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi"));
         return $2 if ($2 ne "");
       }
     }
@@ -131,7 +131,7 @@ sub GetProduct {
     # Second try: Is there a usable /etc/SuSE-release?
     # This should really not be used anymore, as the syntax changed
     # no 'SP1' in the output. 
-    if (open(RELEASE, "</etc/SuSE-release") && ($loader eq "grub" || $loader eq "grub2")) {
+    if (open(RELEASE, "</etc/SuSE-release") && ($loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi")) {
 	# first line is sufficient
 	$namever = <RELEASE>;
 
@@ -506,7 +506,10 @@ if (defined $oper{remove}) {
 }
 
 if (defined $oper{refresh}) {
-    my $ret = UpdateBootloader();
+    my $loader = Bootloader::Tools::GetBootloader();
+    my $avoid_init = ($loader eq "grub2" || $loader eq "grub2-efi") ? 1 : 0;
+
+    my $ret = UpdateBootloader($avoid_init);
     exit 1 if ( !$ret );
 }
 
