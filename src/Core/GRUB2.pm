@@ -655,12 +655,20 @@ Returns undef on fail, defined nonzero value otherwise
 # boolean InitializeBootloader ()
 sub InitializeBootloader {
     my $self = shift;
+    my %glob = %{$self->{"global"}};
     my $file = Bootloader::Path::Grub2_installdevice();
     my $files_ref = $self->ReadFiles ([$file,]);
 
     if (! defined ($files_ref))
     {
         return undef;
+    }
+
+    my $install_opts = "--force";
+    my $skip_fs_probe = delete $glob{"boot_extended"};
+
+    if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
+        $install_opts .= " --skip-fs-probe ";
     }
 
     my @devices = @{$files_ref->{$file} || []};
@@ -679,7 +687,7 @@ sub InitializeBootloader {
             # the tradeoff is we can't capture errors
             # only patch grub2 package is possible way
             # to get around this problem
-            "/usr/sbin/grub2-install --force $dev",
+            "/usr/sbin/grub2-install $install_opts $dev",
             "/var/log/YaST2/y2log_bootloader"
         );
 
