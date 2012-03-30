@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Mar 22 10:30:34 UTC 2012 - mchang@suse.com
+
+- grub2-kernel-commandline.patch: add kerenl parameters (detected
+  necessary and user specfied one during installation) to grub2's
+  config file.(bnc#752939)
+- 0.6.1
+
+-------------------------------------------------------------------
 Thu Mar 22 10:30:33 UTC 2012 - mchang@suse.com
 
 - grub2-efi-module.patch: add new grub2-efi module to support

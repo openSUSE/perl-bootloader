@@ -270,4 +270,16 @@ sub Grub2_installdevice {
   return Prefix($value);
 }
 
+=item
+C<< $path = Bootloader::Path::Grub2_defaultconf(); >>
+
+Gets path for grub configuration file grub
+(this file contains commands for initialize bootloader).
+
+=cut
+
+sub Grub2_defaultconf {
+  my $value = "/etc/default/grub";
+  return Prefix($value);
+}
 1;
