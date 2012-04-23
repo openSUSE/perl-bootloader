@@ -194,6 +194,10 @@ function add_entry()
 					update_bootloader --refresh || exit 1
 				;;
 			esac
+		elif [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/sysconfig/bootloader ] &&
+		     [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2/grub.cfg -o \
+		       -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2-efi/grub.cfg ]; then
+			update_bootloader --refresh || exit 1
 		fi
 	fi
 }
@@ -265,6 +269,10 @@ function remove_entry()
 		fi
 
 		# Run the bootloader (e.g., lilo).
+		update_bootloader --refresh || exit 1
+		elif [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/sysconfig/bootloader ] &&
+		     [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2/grub.cfg -o \
+		       -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2-efi/grub.cfg ]; then
 		update_bootloader --refresh || exit 1
                 fi
 	fi
