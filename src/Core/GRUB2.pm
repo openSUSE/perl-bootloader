@@ -681,6 +681,12 @@ sub Global2Info {
             $timeout = $val;
         } elsif ($key =~ m/@?GRUB_HIDDEN_TIMEOUT$/) {
             $hidden_timeout = $val;
+        } elsif ($key =~ m/@?GRUB_TERMINAL/) {
+            if ($val =~ m/^(serial|console|gfxterm)$/) {
+                $ret{"terminal"} = $val;
+            }
+        } elsif ($key =~ m/@?GRUB_SERIAL_COMMAND/) {
+            $ret{"serial"} = $val;
         }
     }
 
@@ -818,6 +824,8 @@ sub Info2Global {
     my $append = delete $globinfo{"append"} || "";
     my $timeout = delete $globinfo{"timeout"} || "";
     my $hiddenmenu = delete $globinfo{"hiddenmenu"} || "";
+    my $terminal = delete $globinfo{"terminal"} || "";
+    my $serial = delete $globinfo{"serial"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -843,6 +851,25 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_HIDDEN_TIMEOUT$/) {
             $line_ref->{"value"} = "$hidden_timeout" if "$hidden_timeout" ne "";
             $hidden_timeout = "";
+        } elsif ($key =~ m/@?GRUB_SERIAL_COMMAND/) {
+            if ($serial eq "") {
+                $line_ref->{"key"} = '@GRUB_SERIAL_COMMAND';
+            } else {
+                $line_ref->{"key"} = "GRUB_SERIAL_COMMAND";
+                $line_ref->{"value"} = $serial;
+                $serial = "";
+            }
+        } elsif ($key =~ m/@?GRUB_TERMINAL/) {
+            if ($terminal eq "") {
+                $line_ref->{"key"} = '@GRUB_TERMINAL';
+                $line_ref->{"value"} = "console";
+            } else {
+                $line_ref->{"key"} = "GRUB_TERMINAL";
+                if ($terminal =~ m/^(serial|console|gfxterm)$/) {
+                    $line_ref->{"value"} = "$terminal" if "$terminal" ne "";
+                }
+                $terminal = "";
+            }
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -865,6 +892,20 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_HIDDEN_TIMEOUT",
             "value" => "$hidden_timeout",
+        }
+    }
+
+    if ($terminal ne "") {
+        push @lines, {
+            "key" => "GRUB_TERMINAL",
+            "value" => "$terminal",
+        }
+    }
+
+    if ($serial ne "") {
+        push @lines, {
+            "key" => "GRUB_SERIAL_COMMAND",
+            "value" => "$serial",
         }
     }
 
