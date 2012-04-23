@@ -87,7 +87,8 @@ Returns undef on fail
 sub ListFiles {
     my $self = shift;
 
-    return [ Bootloader::Path::Grub2_defaultconf() ];
+    return [ Bootloader::Path::Grub2_defaultconf(),
+             Bootloader::Path::Grub2_eficonf() ];
 }
 
 
@@ -130,7 +131,17 @@ sub ParseLines {
         \@defaultconf
     );
 
+    my @confs = @{$files{Bootloader::Path::Grub2_eficonf()} || []};
+    my @entries = ();
+    foreach my $conf (@confs) {
+        if ($conf =~ /^menuentry\s+['"](.*)['"]\s+/) {
+	    push @entries, { "menuentry" =>  $1 };
+        }
+    }
+
     $self->{"global"} = $glob_ref;
+    $self->{"sections"} = \@entries;
+
     return 1;
 }
 
@@ -192,6 +203,9 @@ sub Global2Info {
     my %ret = ();
     $ret{"__lines"} = \@lines;
 
+    my $timeout;
+    my $hidden_timeout;
+
     foreach my $line_ref (@lines) {
         my $key = $line_ref->{"key"};
         my $val = $line_ref->{"value"};
@@ -199,7 +213,7 @@ sub Global2Info {
         # Check if key is defined to prevent perl warnings
         next if (!defined($key));
 
-        if ($key =~ m/@?GRUB_CMDLINE_LINUX_DEFAULT/)
+        if ($key =~ m/@?GRUB_CMDLINE_LINUX_DEFAULT$/)
         {
             if ($val =~ /^(?:(.*)\s+)?vga=(\S+)(?:\s+(.*))?$/)
             {
@@ -208,6 +222,25 @@ sub Global2Info {
             }
 
             $ret{"append"} = $val;
+        } elsif ($key =~ m/@?GRUB_TIMEOUT$/) {
+            $timeout = $val;
+        } elsif ($key =~ m/@?GRUB_HIDDEN_TIMEOUT$/) {
+            $hidden_timeout = $val;
+        }
+    }
+
+    if (defined $timeout) {
+        if ($timeout == 0) {
+            if (defined $hidden_timeout) {
+                $ret{"timeout"} = $hidden_timeout;
+                $ret{"hiddenmenu"} = "true";
+            } else {
+                $ret{"timeout"} = $timeout;
+                $ret{"hiddenmenu"} = "true";
+            }
+        } else {
+            $ret{"timeout"} = $timeout;
+            $ret{"hiddenmenu"} = "false";
         }
     }
 
@@ -250,7 +283,7 @@ sub Info2Global {
             },
             {
                 'key' => 'GRUB_DEFAULT',
-                'value' => '0',
+                'value' => 'saved',
             },
             {
                 'key' => 'GRUB_HIDDEN_TIMEOUT',
@@ -327,18 +360,33 @@ sub Info2Global {
     # my $root = delete $globinfo{"root"} || "";
     my $vga = delete $globinfo{"vgamode"} || "";
     my $append = delete $globinfo{"append"} || "";
+    my $timeout = delete $globinfo{"timeout"} || "";
+    my $hiddenmenu = delete $globinfo{"hiddenmenu"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
 
+    my $hidden_timeout = "$timeout";
+    if ("$hiddenmenu" eq "true") {
+        $timeout = "0" if "$timeout" ne "";
+    } else {
+        $hidden_timeout = "0" if "$hidden_timeout" ne "";
+    }
+
     @lines = map {
         my $line_ref = $_;
         my $key = $line_ref->{"key"};
-        if ($key =~ m/@?GRUB_CMDLINE_LINUX_DEFAULT/)
+        if ($key =~ m/@?GRUB_CMDLINE_LINUX_DEFAULT$/)
         {
             $line_ref->{"value"} = "$append$vga" if "$append$vga" ne "";
             $append = "";
             $vga = "";
+        } elsif ($key =~ m/@?GRUB_TIMEOUT$/) {
+            $line_ref->{"value"} = "$timeout" if "$timeout" ne "";
+            $timeout = "";
+        } elsif ($key =~ m/@?GRUB_HIDDEN_TIMEOUT$/) {
+            $line_ref->{"value"} = "$hidden_timeout" if "$hidden_timeout" ne "";
+            $hidden_timeout = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -347,6 +395,20 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_CMDLINE_LINUX_DEFAULT",
             "value" => "$append$vga",
+        }
+    }
+
+    if ("$timeout" ne "") {
+        push @lines, {
+            "key" => "GRUB_TIMEOUT",
+            "value" => "$timeout",
+        }
+    }
+
+    if ("$hidden_timeout" ne "") {
+        push @lines, {
+            "key" => "GRUB_HIDDEN_TIMEOUT",
+            "value" => "$hidden_timeout",
         }
     }
 
@@ -365,6 +427,24 @@ from the system, but returns internal structures.
 sub GetSettings {
     my $self = shift;
     my $ret = $self->SUPER::GetSettings ();
+
+    my $sections = $ret->{"sections"};
+    my $globals = $ret->{"global"};
+    my $saved_entry = `/usr/bin/grub2-efi-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
+
+    chomp $saved_entry;
+    if ($saved_entry ne "") {
+        if ($saved_entry =~ m/^\d+$/) {
+            my $sect = $sections->[$saved_entry];
+
+            if (defined $sect) {
+                $globals->{"default"} = $sect->{"menuentry"};
+            }
+        } else {
+            $globals->{"default"} = $saved_entry;
+        }
+    }
+
     return $ret;
 }
 
@@ -381,6 +461,16 @@ Returns undef on fail, defined nonzero value on success.
 sub SetSettings {
     my $self = shift;
     my %settings = %{+shift};
+
+    my $default  = delete $settings{"global"}->{"default"};
+
+    if (defined $default and $default ne "") {
+        $self->RunCommand (
+            "/usr/sbin/grub2-efi-set-default '$default'",
+            "/var/log/YaST2/y2log_bootloader"
+        );
+    }
+
     return $self->SUPER::SetSettings (\%settings);
 }
 

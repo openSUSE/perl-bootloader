@@ -295,4 +295,17 @@ sub Grub2_conf {
   my $value = "/boot/grub2/grub.cfg";
   return Prefix($value);
 }
+
+=item
+C<< $path = Bootloader::Path::Grub2_eficonf(); >>
+
+Gets path for grub configuration file grub2-efi
+
+=cut
+
+sub Grub2_eficonf {
+  my $value = "/boot/grub2-efi/grub.cfg";
+  return Prefix($value);
+}
+
 1;
