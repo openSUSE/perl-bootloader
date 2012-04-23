@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Mon Apr 23 11:26:15 CEST 2012 - mchang@suse.de
+
+- add read/write grub2-efi's settings for global options from yast2's
+  bootloader option widgets, including timeout, hiddenmenu, vgamode, append
+  and default
+- add read/write grub2's settings for serial console from yast2's bootloader
+  option widgets
+- add read/write grub2's settings for global options from yast2's bootloader
+  option widgets, including timeout, hiddenmenu, vgamode, append and default
+- fix bootloader_entry util to correctly handle grub2's case (bnc#755183)
+
+-------------------------------------------------------------------
 Thu Mar 22 10:30:34 UTC 2012 - mchang@suse.com
 
 - grub2-kernel-commandline.patch: add kerenl parameters (detected
