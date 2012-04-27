@@ -516,10 +516,8 @@ if (defined $oper{remove}) {
 }
 
 if (defined $oper{refresh}) {
-    my $loader = Bootloader::Tools::GetBootloader();
-    my $avoid_init = ($loader eq "grub2" || $loader eq "grub2-efi") ? 1 : 0;
-
-    my $ret = UpdateBootloader($avoid_init);
+    # Always set $avoid_init=0 to guarentee bootloader installed (bnc#759224)
+    my $ret = UpdateBootloader(0);
     exit 1 if ( !$ret );
 }
 

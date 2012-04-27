@@ -399,6 +399,13 @@ sub ParseLines {
         # in glob_ref accordingly
         my ($boot_dev,) = $self->SplitDevPath ("/boot");
         my ($root_dev,) = $self->SplitDevPath ("/");
+
+        # $boot_dev and $root_dev should be kernel device
+        # otherwise GetExtendedPartition() may not work
+        # as expected
+        $boot_dev = $self->GetKernelDevice($boot_dev);
+        $root_dev = $self->GetKernelDevice($root_dev);
+
         my $extended_dev = $self->GetExtendedPartition($boot_dev) || "";
         # mbr_dev is the first bios device
         my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
@@ -1022,13 +1029,19 @@ sub InitializeBootloader {
         return undef;
     }
 
-    my $install_opts = "--force";
-    my $skip_fs_probe = delete $glob{"boot_extended"};
+    # Since Bootloader::Tools::ReadPartitions didn't assign
+    # correct part_type, the skip-fs-probe check based
+    # on `extended may not work.
 
-    if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
-        $install_opts .= " --skip-fs-probe ";
-    }
+    #my $skip_fs_probe = delete $glob{"boot_extended"};
 
+    #if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
+    #    $install_opts .= " --skip-fs-probe ";
+    #}
+
+    # Do skip-fs-probe to avoid error when embedding stage1
+    # to extended partition
+    my $install_opts = "--force --skip-fs-probe";
     my @devices = @{$files_ref->{$file} || []};
 
     # Hmm .. grub2-install must has been run before
