@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Apr 27 12:06:09 CEST 2012 - mchang@suse.de
+
+- fix after grub2 package update, the system become unbootable. (bnc#758570)
+  also fix running update-bootloader --refresh returns error when extended
+  partition is to be installed.
+- 0.6.3
+
+-------------------------------------------------------------------
 Mon Apr 23 11:26:15 CEST 2012 - mchang@suse.de
 
 - add read/write grub2-efi's settings for global options from yast2's
