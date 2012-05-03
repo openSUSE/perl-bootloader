@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May  3 12:22:18 CEST 2012 - snwint@suse.de
+
+- make dependency on Pod::Usage optional (bnc #760464)
+- 0.4.89.40
+
+-------------------------------------------------------------------
 Wed Apr 25 15:26:32 CEST 2012 - snwint@suse.de
 
 - fix product file parsing (bnc #757565)
