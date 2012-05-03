@@ -110,30 +110,50 @@ allowed together with --add operation
 =cut
 
 # Get product name.
-# If zypper is not available use /etc/SuSE-release.
+# If zypper is not available use /etc/products.d/baseproduct and /etc/SuSE-release.
 sub GetProduct {
   my $prod;
-  my $loader = Bootloader::Tools::GetBootloader();
+  my $src;
+  my $loader = "grub"; # Bootloader::Tools::GetBootloader();
   my $long_names_ok = $loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi";
  
   # 1st try: ask zypper
+  # note: may fail as older zypper versions don't support '--label'
   if(-x '/usr/bin/zypper') {
-    if(`zypper --terse tos -l` =~ /^labelLong\s*(.*?)\s*\nlabelShort\s*(.*?)\s*$/) {
+    if(`zypper --terse targetos --label 2>/dev/null` =~ /^labelLong\s*(.*?)\s*\nlabelShort\s*(.*?)\s*$/) {
       $prod = $1 ne "" && $long_names_ok ? $1 : $2;
+      $src = "zypper";
     }
   }
 
-  # 2nd try: 1st line of /etc/SuSE-release
-  if($prod eq "" && $long_names_ok && open(RELEASE, "</etc/SuSE-release")) {
-    ($prod = <RELEASE>) =~ s/\s*\(.*//s;
-    close RELEASE;
+  # 2nd try: read /etc/products.d/baseproduct
+  if($prod eq "" && open(my $f, "</etc/products.d/baseproduct")) {
+    my $tag = $long_names_ok ? "summary" : "shortsummary";
+    while(<$f>) {
+      $prod .= "$1", last if /<$tag>\s*(.*?)\s*<\/$tag>/o;
+    }
+    close $f;
+    $src = "baseproduct";
+  }
+
+  # 3rd try: read /etc/SuSE-release
+  if($prod eq "" && $long_names_ok && open(my $f, "</etc/SuSE-release")) {
+    ($prod = <$f>) =~ s/\s*\(.*//s;
+    while(<$f>) {
+      $prod .= " SP$1", last if /^\s*PATCHLEVEL\s*=\s*(\d+)/ && $1 > 0;
+    }
+    close $f;
+    $src = "SuSE-release";
   }
 
   # the last line of defense...
-  $prod = "Linux" if $prod eq "";
+  if($prod eq "") {
+    $prod = "Linux";
+    $src = "fallback";
+  }
 
   open LOG, ">>", Bootloader::Path::Logname();
-  print LOG "update-bootloader::GetProduct() = $prod\n";
+  print LOG "update-bootloader::GetProduct($src) = $prod\n";
   close LOG;
 
   return $prod;
