@@ -122,7 +122,7 @@ allowed together with --add operation
 sub GetProduct {
   my $prod;
   my $src;
-  my $loader = "grub"; # Bootloader::Tools::GetBootloader();
+  my $loader = Bootloader::Tools::GetBootloader();
   my $long_names_ok = $loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi";
  
   # 1st try: ask zypper
@@ -138,7 +138,7 @@ sub GetProduct {
   if($prod eq "" && open(my $f, "</etc/products.d/baseproduct")) {
     my $tag = $long_names_ok ? "summary" : "shortsummary";
     while(<$f>) {
-      $prod .= "$1", last if /<$tag>\s*(.*?)\s*<\/$tag>/o;
+      $prod = $1 if /<$tag>\s*(.*?)\s*<\/$tag>/o;
     }
     close $f;
     $src = "baseproduct";
