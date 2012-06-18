@@ -215,7 +215,7 @@ sub Global2Info {
 
         if ($key =~ m/@?GRUB_CMDLINE_LINUX_DEFAULT$/)
         {
-            if ($val =~ /^(?:(.*)\s+)?vga=(\S+)(?:\s+(.*))?$/)
+            if ($val =~ /^(?:(.*)\s+)?video=(\S+)(?:\s+(.*))?$/)
             {
                 $ret{"vgamode"} = $2 if $2 ne "";
                 $val = $self->MergeIfDefined ($1, $3);
@@ -377,7 +377,7 @@ sub Info2Global {
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
     my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
     # $root = " root=$root" if $root ne "";
-    $vga = " vga=$vga" if $vga ne "";
+    $vga = " video=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
 
     my $hidden_timeout = "$timeout";
