@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jun 29 16:20:02 CEST 2012 - snwint@suse.de
+
+- mchang: fix error caused by grub.cfg missing (bnc#769350)
+- make dependency on Pod::Usage optional (bnc#760464)
+- 0.6.5
+
+-------------------------------------------------------------------
 Mon Jun  4 15:40:15 CEST 2012 - mchang@suse.com
 
 - support console related global options gfxterm, serial, gfxbackground and gfxmode
