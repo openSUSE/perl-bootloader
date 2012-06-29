@@ -2,11 +2,19 @@
 
 use POSIX;
 use Getopt::Long;
-use Pod::Usage;
 use Bootloader::Tools;
 use Bootloader::Path;
 use Bootloader::MBRTools;
 use strict;
+
+# keep Pod::Usage optional (bnc #760464)
+eval "use Pod::Usage";
+
+if(!exists $::{pod2usage}) {
+  sub pod2usage {
+    die "usage: update-bootloader [operation] [options]\n";
+  }
+}
 
 my %oper;
 my ($opt_default, $opt_force, $opt_force_default, $opt_help, $opt_man, $opt_previous, $opt_xen)
@@ -184,13 +192,13 @@ GetOptions (\%oper,
 pod2usage(1) if $opt_help;
 pod2usage(-exitstatus => 0, -verbose => 2) if $opt_man;
 
-pod2usage("Specify exactly one operation, either 'add', 'remove' or 'refresh'")
+die("Specify exactly one operation, either 'add', 'remove' or 'refresh'\n")
     unless scalar keys(%oper) == 1;
 
-pod2usage("Option 'default' is only allowed for operation 'add'")
+die("Option 'default' is only allowed for operation 'add'\n")
     if ($opt_default and not defined $oper{add});
 
-pod2usage("Option 'force-default' is only allowed for operation 'add'")
+die("Option 'force-default' is only allowed for operation 'add'\n")
     if ($opt_force_default and not defined $oper{add});
     
 if (defined $oper{"examinembr"}) {
@@ -379,10 +387,10 @@ if (defined $oper{add}) {
 if (defined $oper{add}) {
     open (LOG, ">>$logname");
     print LOG ("update-bootloader: now executing operation add\n");
-    print LOG ("update-bootloader: changed opt name is $opt_name \n");
+    print LOG ("update-bootloader: changed opt name is $opt_name\n");
     close LOG;
 
-    pod2usage("Please specify name and kernel image for new section")
+    die("Please specify name and kernel image for new section\n")
 	unless $opt_name and $opt_image;
 
     my @params = (
@@ -391,7 +399,7 @@ if (defined $oper{add}) {
     );
     if (CountSections(@params) != 0) {
     	if (not $opt_force) {
-	    pod2usage("There are already sections with image '$opt_image'");
+	    die("There are already sections with image '$opt_image'\n");
 	}
         open (LOG, ">>$logname");
         print LOG ("update-bootloader: section already exist. Skip add.\n");
@@ -496,7 +504,7 @@ if (defined $oper{remove}) {
             print LOG ("update-bootloader: found $num sections, no opt_force: not removing\n");
             close LOG;
 
-	    pod2usage("There is more than one section with image '$opt_image'");
+	    die("There is more than one section with image '$opt_image'\n");
 	} else {
             open (LOG, ">>$logname");
             print LOG ("update-bootloader: calling Tools::RemoveSections\n");
