@@ -86,9 +86,13 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
+    my @ret = (Bootloader::Path::Grub2_defaultconf());
 
-    return [ Bootloader::Path::Grub2_defaultconf(),
-             Bootloader::Path::Grub2_eficonf() ];
+    if (-e Bootloader::Path::Grub2_eficonf()) {
+        push @ret, Bootloader::Path::Grub2_eficonf();
+    }
+
+    return \@ret;
 }
 
 

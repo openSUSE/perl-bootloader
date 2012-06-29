@@ -314,11 +314,15 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
+    my @ret = ( Bootloader::Path::Grub2_devicemap(),
+                Bootloader::Path::Grub2_installdevice(),
+                Bootloader::Path::Grub2_defaultconf() );
 
-    return [ Bootloader::Path::Grub2_devicemap(),
-             Bootloader::Path::Grub2_installdevice(),
-             Bootloader::Path::Grub2_defaultconf(),
-             Bootloader::Path::Grub2_conf() ];
+    if (-e Bootloader::Path::Grub2_conf()) {
+        push @ret, Bootloader::Path::Grub2_conf();
+    }
+
+    return \@ret;
 }
 
 =item
