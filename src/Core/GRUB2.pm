@@ -702,6 +702,8 @@ sub Global2Info {
             $ret{"gfxmode"} = $val;
         } elsif ($key =~ m/@?GRUB_THEME/) {
             $ret{"gfxtheme"} = $val;
+        } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
+            $ret{"distributor"} = $val;
         }
     }
 
@@ -843,6 +845,7 @@ sub Info2Global {
     my $serial = delete $globinfo{"serial"} || "";
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
+    my $distributor = delete $globinfo{"distributor"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -901,6 +904,9 @@ sub Info2Global {
                 }
                 $terminal = "";
             }
+        } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
+            $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
+            $distributor = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -951,6 +957,13 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_THEME",
             "value" => "$gfxtheme",
+        }
+    }
+
+    if ("$distributor" ne "") {
+        push @lines, {
+            "key" => "GRUB_DISTRIBUTOR",
+            "value" => "$distributor",
         }
     }
     return \@lines;
