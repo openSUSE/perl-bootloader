@@ -700,8 +700,10 @@ sub Global2Info {
             $ret{"serial"} = $val;
         } elsif ($key =~ m/@?GRUB_GFXMODE/) {
             $ret{"gfxmode"} = $val;
-        } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
-            $ret{"gfxbackground"} = $val;
+        } elsif ($key =~ m/@?GRUB_THEME/) {
+            $ret{"gfxtheme"} = $val;
+        } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
+            $ret{"distributor"} = $val;
         }
     }
 
@@ -800,7 +802,7 @@ sub Info2Global {
             },
             {
                 'key' => '@GRUB_GFXMODE',
-                'value' => '640x480',
+                'value' => 'auto',
                 'comment_before' => [
                   '# The resolution used on graphical terminal',
                   '# note that you can use only modes which your graphic card supports via VBE',
@@ -842,7 +844,8 @@ sub Info2Global {
     my $terminal = delete $globinfo{"terminal"} || "";
     my $serial = delete $globinfo{"serial"} || "";
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
-    my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
+    my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
+    my $distributor = delete $globinfo{"distributor"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -882,14 +885,14 @@ sub Info2Global {
                 $line_ref->{"value"} = $gfxmode;
             }
             $gfxmode = "";
-        } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
-            if ($gfxbackground ne "") {
-                $line_ref->{"key"} = "GRUB_BACKGROUND";
-                $line_ref->{"value"} = $gfxbackground;
+        } elsif ($key =~ m/@?GRUB_THEME/) {
+            if ($gfxtheme ne "") {
+                $line_ref->{"key"} = "GRUB_THEME";
+                $line_ref->{"value"} = $gfxtheme;
             } else {
                 $line_ref = undef;
             }
-            $gfxbackground = "";
+            $gfxtheme = "";
         } elsif ($key =~ m/@?GRUB_TERMINAL/) {
             if ($terminal eq "") {
                 $line_ref->{"key"} = '@GRUB_TERMINAL';
@@ -901,6 +904,9 @@ sub Info2Global {
                 }
                 $terminal = "";
             }
+        } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
+            $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
+            $distributor = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -947,10 +953,17 @@ sub Info2Global {
         }
     }
 
-    if ($gfxbackground ne "") {
+    if ($gfxtheme ne "") {
         push @lines, {
-            "key" => "GRUB_BACKGROUND",
-            "value" => "$gfxbackground",
+            "key" => "GRUB_THEME",
+            "value" => "$gfxtheme",
+        }
+    }
+
+    if ("$distributor" ne "") {
+        push @lines, {
+            "key" => "GRUB_DISTRIBUTOR",
+            "value" => "$distributor",
         }
     }
     return \@lines;
