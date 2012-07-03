@@ -337,7 +337,7 @@ sub Info2Global {
             },
             {
                 'key' => '@GRUB_GFXMODE',
-                'value' => '640x480',
+                'value' => 'auto',
                 'comment_before' => [
                   '# The resolution used on graphical terminal',
                   '# note that you can use only modes which your graphic card supports via VBE',
