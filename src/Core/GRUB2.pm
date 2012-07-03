@@ -700,8 +700,8 @@ sub Global2Info {
             $ret{"serial"} = $val;
         } elsif ($key =~ m/@?GRUB_GFXMODE/) {
             $ret{"gfxmode"} = $val;
-        } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
-            $ret{"gfxbackground"} = $val;
+        } elsif ($key =~ m/@?GRUB_THEME/) {
+            $ret{"gfxtheme"} = $val;
         }
     }
 
@@ -842,7 +842,7 @@ sub Info2Global {
     my $terminal = delete $globinfo{"terminal"} || "";
     my $serial = delete $globinfo{"serial"} || "";
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
-    my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
+    my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -882,14 +882,14 @@ sub Info2Global {
                 $line_ref->{"value"} = $gfxmode;
             }
             $gfxmode = "";
-        } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
-            if ($gfxbackground ne "") {
-                $line_ref->{"key"} = "GRUB_BACKGROUND";
-                $line_ref->{"value"} = $gfxbackground;
+        } elsif ($key =~ m/@?GRUB_THEME/) {
+            if ($gfxtheme ne "") {
+                $line_ref->{"key"} = "GRUB_THEME";
+                $line_ref->{"value"} = $gfxtheme;
             } else {
                 $line_ref = undef;
             }
-            $gfxbackground = "";
+            $gfxtheme = "";
         } elsif ($key =~ m/@?GRUB_TERMINAL/) {
             if ($terminal eq "") {
                 $line_ref->{"key"} = '@GRUB_TERMINAL';
@@ -947,10 +947,10 @@ sub Info2Global {
         }
     }
 
-    if ($gfxbackground ne "") {
+    if ($gfxtheme ne "") {
         push @lines, {
-            "key" => "GRUB_BACKGROUND",
-            "value" => "$gfxbackground",
+            "key" => "GRUB_THEME",
+            "value" => "$gfxtheme",
         }
     }
     return \@lines;
