@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Jul  6 14:18:45 CEST 2012 - mchang@suse.com
+
+- use 'auto' for default gfxmode
+- replace background with theme
+- support editing GRUB_DISTRIBUTOR
+- re-enable to create device.map from BootStorage
+- 0.6.6
+
+-------------------------------------------------------------------
 Fri Jun 29 16:20:02 CEST 2012 - snwint@suse.de
 
 - mchang: fix error caused by grub.cfg missing (bnc#769350)
