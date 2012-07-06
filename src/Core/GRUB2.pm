@@ -631,21 +631,19 @@ sub CreateLines {
             $conf =~ s/^\s*@/#/;
         }
     }
-    # TODO: as we know the grub2-install also create device map
-    # I skipped creating them by yast ..
 
     # now process the device map
-    ## my %glob = %{$self->{"global"}};
-    ## my @device_map = ();
-    ## while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
-    ## {
-    ##	my $line = "($fw)\t$unix";
-    ##	push @device_map, $line;
-    ## }
+    my %glob = %{$self->{"global"}};
+    my @device_map = ();
+    while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
+    {
+        my $line = "($fw)\t$unix";
+        push @device_map, $line;
+    }
     return {
 	Bootloader::Path::Grub2_installdevice() => $grub2_installdev,
    Bootloader::Path::Grub2_defaultconf() => $grub2_defaultconf,
-    ##	Bootloader::Path::Grub2_devicemap() => \@device_map,
+	Bootloader::Path::Grub2_devicemap() => \@device_map,
     }
 }
 
