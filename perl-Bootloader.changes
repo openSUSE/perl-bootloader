@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jul 10 10:28:10 CEST 2012 - snwint@suse.de
+
+- fix disambiguation of section entry names (bnc #765663)
+- 0.4.89.42
+
+-------------------------------------------------------------------
 Wed May 16 14:25:21 CEST 2012 - snwint@suse.de
 
 - fix product file parsing fix (bnc #757565)

@@ -1452,22 +1452,18 @@ sub AddSection {
 
     my $loader = Bootloader::Tools::GetBootloader ();
 
-    if ($loader ne "grub" and $loader ne "lilo") {
-        # Search for duplicate boot entry label and rename them in a unique way
-	foreach my $s (@sections) {
-	    while ((my $k, my $v) = each (%$s)) {
-		if ($k eq "name" && index ($v, $new{"name"}) >= 0) {
-		    $match += 1;
-		    $new_name = $new{"name"} . "V" . $match;
+    # If we have a bootloader that uses label names to specify the default
+    # entry we need unique labels: so, append '_NUMBER', if necessary.
+    #
+    # cf. Core::FixSectionName()
 
-		    if ($new_name eq $v) {
-			$match += 1;
-			$new_name = $new{"name"} . "V" . $match;
-		    }
-		    $new{"name"} = $new_name;
-		}
-	    }
-	}
+    if ($loader ne "grub" && $loader ne "grub2") {
+        my $max_idx = undef;
+        for my $s (@sections) {
+            $max_idx = $2 + 0 if $s->{name} =~ /^$new{name}(_(\d+))?$/ && $2 >= $max_idx;
+        }
+
+        $new{name} .= "_" . ($max_idx + 1) if defined $max_idx;
     }
 
     # Print new section to be added to logfile
