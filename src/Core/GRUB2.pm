@@ -474,9 +474,23 @@ sub ParseLines {
 
     my @confs = @{$files{Bootloader::Path::Grub2_conf()} || []};
     my @entries = ();
+    my $submenu = "";
     foreach my $conf (@confs) {
-        if ($conf =~ /^menuentry\s+['"](.*)['"]\s+/) {
-	    push @entries, { "menuentry" =>  $1 };
+        my $menuentry = "";
+
+        if ($conf =~ /^menuentry\s+['"](.*?)['"]\s+/) {
+            $menuentry = $1;
+            $submenu = "";
+        } elsif ($conf =~ m/^submenu\s+['"](.*?)['"]\s+/) {
+            $submenu = $1;
+        }
+        if ($submenu ne "") {
+            if ($conf =~ m/^\s+menuentry\s+['"](.*?)['"]\s+/) {
+                $menuentry = "$submenu>$1"
+            }
+        }
+        if ($menuentry ne "") {
+	    push @entries, { "menuentry" =>  $menuentry };
         }
     }
 
