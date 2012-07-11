@@ -716,6 +716,8 @@ sub Global2Info {
             $ret{"gfxtheme"} = $val;
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
             $ret{"distributor"} = $val;
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
+            $ret{"append_failsafe"} = $val;
         }
     }
 
@@ -793,6 +795,13 @@ sub Info2Global {
                 'value' => 'quiet splash=silent',
             },
             {
+                'key' => 'GRUB_CMDLINE_LINUX_RECOVERY',
+                'value' => 'single',
+                'comment_before' => [
+                  '# kernel command line options for failsafe mode',
+                ],
+            },
+            {
                 'key' => 'GRUB_CMDLINE_LINUX',
                 'value' =>  '""',
             },
@@ -858,6 +867,7 @@ sub Info2Global {
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
     my $distributor = delete $globinfo{"distributor"} || "";
+    my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -919,6 +929,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
             $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
             $distributor = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
+            $line_ref->{"value"} = "$append_failsafe" if "$append_failsafe" ne "";
+            $append_failsafe = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -976,6 +989,13 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_DISTRIBUTOR",
             "value" => "$distributor",
+        }
+    }
+
+    if ("$append_failsafe" ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_LINUX_RECOVERY",
+            "value" => "$append_failsafe",
         }
     }
     return \@lines;
