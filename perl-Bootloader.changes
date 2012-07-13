@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jul 13 15:45:47 CEST 2012 - mchang@suse.com
+
+- fix new menuentry format introduced by 2.0
+- support failsafe kernel parameters
+- 0.6.7
+
+-------------------------------------------------------------------
 Fri Jul  6 14:18:45 CEST 2012 - mchang@suse.com
 
 - use 'auto' for default gfxmode
