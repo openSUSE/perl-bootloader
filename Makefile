@@ -1,8 +1,6 @@
 # $Id$
 PKG=perl-Bootloader
 SUBMIT_DIR=/work/src/done/STABLE
-#SUBMIT_DIR=/work/src/done/10.2
-#SUBMIT_DIR2=/work/src/done/SLES10
 #BUILD_DIST=ppc
 ifeq ($(BUILD_DIST),ppc)
 BUILD=powerpc32 /work/src/bin/build
@@ -19,11 +17,30 @@ SVNREP=.
 DISTMAIL=/work/src/bin/distmail
 BRANCH=master
 
-.PHONY:	export build mbuild submit rpm clean package test
+.PHONY:	export build mbuild submit rpm clean package test install
 
 all:
 	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'test', 'test_clean', 'docs', 'rpm' or 'clean'"
 	@echo
+
+install:
+	@rm -rf .install
+	@mkdir -p .install/lib
+	@cp -a src .install/lib/Bootloader
+	rm -f `find .install/lib/Bootloader -name '*~'`
+	@cd .install ; \
+	touch Makefile.PL ; \
+	perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")' ; \
+	make install_vendor
+	@mkdir -p $(DESTDIR)/sbin
+	@install -m 755 update-bootloader $(DESTDIR)/sbin
+	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
+	@install -m 755 bootloader_entry $(DESTDIR)/usr/lib/bootloader
+	@install -d -m 755 $(DESTDIR)/boot
+	@install -m 644 boot.readme $(DESTDIR)/boot/
+	@install -d -m 755 $(DESTDIR)/usr/share/man/man8/
+	@pod2man update-bootloader >$(DESTDIR)/usr/share/man/man8/update-bootloader.8
+	@chmod 644 $(DESTDIR)/usr/share/man/man8/update-bootloader.8
 
 package: test
 	rm -rf package
@@ -119,4 +136,5 @@ endif
 
 clean:
 	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
+	rm -rf .install
 	rm -f .exportdir .built .submitted *~ */*~ */*/*~
