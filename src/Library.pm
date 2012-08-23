@@ -596,6 +596,7 @@ sub GetFilesContents {
     while ((my $fn, my $lines_ref) = each (%{$new_lines_ref}))
     {
 	$files{$fn} = join "\n", @{$lines_ref};
+	$files{$fn} .= "\n";
     }
     return \%files;
 }
