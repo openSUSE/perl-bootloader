@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug 23 16:52:34 CEST 2012 - snwint@suse.de
+
+- rewite pbl's logging functions
+- start new version number scheme
+- 0.700
+
+-------------------------------------------------------------------
 Mon Aug 20 14:06:18 CEST 2012 - mchang@suse.com
 
 - fix missing newline in the config
