@@ -108,26 +108,31 @@ First argumetn is old configuration and second is architecture string like x86_6
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
-    my $arch = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
+  my $arch = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [
-	{ "key" => "timeout", "value" => 80 },
-    ];
-    if ($arch eq "ia64")
-    {
-      my $line = { "key" => "relocatable",  "value" => "" };
-      push  @{$loader->{"default_global_lines"}},  $line ;
-    }
-    $loader->{"arch"} = $arch;
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->GetOptions();
-    $loader->l_milestone ("ELILO::new: Created ELILO instance");
-    return $loader;
+  $loader->{default_global_lines} = [
+    { key => "timeout", value => 80 },
+  ];
+
+  if($arch eq "ia64") {
+    my $line = { key => "relocatable",  value => "" };
+    push @{$loader->{default_global_lines}}, $line;
+  }
+
+  $loader->{arch} = $arch;
+  $loader->GetOptions();
+
+  $loader->milestone ("Created ELILO instance");
+
+  return $loader;
 }
 
 =item
@@ -205,7 +210,7 @@ sub ParseLines {
         my $val = $opt_ref->{"value"};
         if ($key eq "append")
         {
-           $self->l_milestone("ELILO::ParseLines - GLOBAL APPEND: $val \n"); 
+           $self->milestone("GLOBAL APPEND: $val \n"); 
         }
     }
 
@@ -365,8 +370,7 @@ sub Info2Global {
 	# only accept known global options :-)
 	unless (exists $go->{$key})
         {
-	    $self->l_milestone (
-		"ELILO::Info2Global: Ignoring key '$key' for global section");
+	    $self->milestone("Ignoring key '$key' for global section");
             next;
         }
 
@@ -456,8 +460,7 @@ sub Info2Section {
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
 	    # only accept known section options :-)
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
         #append in xen contains also xen append, so it must handled special
@@ -539,8 +542,7 @@ sub Info2Section {
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
 	    # only accept known section options :-)
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
@@ -633,9 +635,7 @@ sub Section2Info {
 
 	unless (exists $ret{"type"} && exists $so->{$ret{"type"} . "_" . $key}) {
 	    # only accept known section options :-)
-	    $self->l_milestone (
-		"ELILO::Section2Info: Ignoring key '$key' for section"
-		. " type '" . $ret{"type"} . "'");
+	    $self->milestone("Ignoring key '$key' for section" . " type '" . $ret{"type"} . "'");
 	    next; 
 	}
 	
@@ -674,10 +674,9 @@ sub UpdateBootloader {
     my $efi = Bootloader::Path::Elilo_efi();
     system ("mkdir -p $efi") unless -d "$efi";
  
-    my $elilo = Bootloader::Path::Elilo_elilo(); 
     return 0 == $self->RunCommand (
-	"$elilo -v",
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::Elilo_elilo() . " -v",
+	Bootloader::Path::BootCommandLogname()
     );
 }
 

@@ -1,5 +1,5 @@
-# $Id$
 PKG=perl-Bootloader
+VERSION := $(shell cat version)
 SUBMIT_DIR=/work/src/done/STABLE
 #BUILD_DIST=ppc
 ifeq ($(BUILD_DIST),ppc)
@@ -17,20 +17,26 @@ SVNREP=.
 DISTMAIL=/work/src/bin/distmail
 BRANCH=master
 
-.PHONY:	export build mbuild submit rpm clean package test install
+PM_FILES = $(shell find src -name '*.pm')
+
+.PHONY:	export build mbuild submit rpm clean package test install check
 
 all:
 	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'test', 'test_clean', 'docs', 'rpm' or 'clean'"
 	@echo
 
-install:
+check: $(PM_FILES)
+	@for i in $^ ; do perl -c $$i || break; done
+
+install: check
 	@rm -rf .install
 	@mkdir -p .install/lib
 	@cp -a src .install/lib/Bootloader
-	rm -f `find .install/lib/Bootloader -name '*~'`
+	@rm -f `find .install/lib/Bootloader -name '*~'`
+	@perl -pi -e 's/0\.000/$(VERSION)/ if /^package /' .install/lib/Bootloader/Library.pm
 	@cd .install ; \
 	touch Makefile.PL ; \
-	perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")' ; \
+	perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader", VERSION_FROM => "lib/Bootloader/Library.pm" )' ; \
 	make install_vendor
 	@mkdir -p $(DESTDIR)/sbin
 	@install -m 755 update-bootloader $(DESTDIR)/sbin

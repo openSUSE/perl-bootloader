@@ -63,7 +63,7 @@ my $res = qx:grep -c "optional" ./fake_root1/etc/lilo.conf:;
 chomp($res);
 is( $res, 1); #test correct created xen append
 
-my $res = qx:grep -c 'default = Suse_Linux_En' ./fake_root1/etc/lilo.conf:;
+$res = qx:grep -c 'default = Suse_Linux_En' ./fake_root1/etc/lilo.conf:;
 chomp($res);
 is( $res, 1); #test correct default
 

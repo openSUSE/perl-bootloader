@@ -55,15 +55,18 @@ Creates an instance of the Bootloader::Core::NONE class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->l_milestone ("NONE::new: Created NONE instance");
-    return $loader;
+  $loader->milestone("Created NONE instance");
+
+  return $loader;
 }
 
 =item

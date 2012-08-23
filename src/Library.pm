@@ -74,14 +74,20 @@ C<< $result = Bootloader::Library::WriteThinkpadMBR ($disk); >>
 =cut
 
 
-package Bootloader::Library;
+package Bootloader::Library 0.000;
 
 use strict;
 
 use Bootloader::Core;
 use Bootloader::MBRTools;
-use Bootloader::Logger;
+use Bootloader::Path;
 
+use base qw ( Bootloader::MBRTools Bootloader::Logger );
+
+our $VERSION;
+
+my $instances = 0;
+my $global_id;
 
 =item
 C<< $obj_ref = Bootloader::Library->new (); >>
@@ -89,18 +95,44 @@ C<< $obj_ref = Bootloader::Library->new (); >>
 Creates an instance of the Bootloader::Library class.
 
 =cut
-sub new {
-    my $self = shift;
+sub new
+{
+  my $self = shift;
 
-    my $lib = {};
-    bless ($lib);
-    return $lib;
-}
+  my $lib = {};
+  bless ($lib);
 
-sub GetLogRecords {
-    my $self = shift;
-  
-    return Bootloader::Logger::instance()->GetLogRecords();
+  my ($c0, $c1, $c2);
+
+  $c0 = (caller(0))[0];
+
+  my $idx = 0;
+  while($c1 = (caller($idx))[1]) { $c2 = $c1; $idx++ }
+
+  ($c1 = $c2) =~ s#.*/##;
+
+  my $name = 'xxx';
+
+  if($c1 eq 'Bootloader_API.pm') {
+    $name = 'yast';
+  }
+  elsif($c1 eq 'update-bootloader') {
+    $name = 'pbl';
+  }
+  elsif($c0 eq 'Bootloader::Tools') {
+    $name = 'libpbl';
+  }
+
+  $global_id = $name . sprintf("-%04d.", int rand 10000) unless defined $global_id;
+  $lib->{session_id} = $global_id . ++$instances;
+
+  my $l = "$lib->{session_id} = $c2 (via $c0), version = $VERSION, chroot = " . readlink "/proc/self/root";
+
+  $lib->StartLog();
+
+  $lib->milestone($l);
+
+  return $lib;
 }
 
 =item
@@ -120,73 +152,61 @@ EXAMPLE:
 
 =cut
 
-sub SetLoaderType {
-    my $self = shift;
-    my $bootloader = shift;
-    my $arch = shift;
+sub SetLoaderType
+{
+  my $self = shift;
+  my $bootloader = shift;
+  my $arch = shift;
 
-    my $loader = exists $self->{"loader"} ? $self->{"loader"} : undef;
+  my $loader = exists $self->{loader} ? $self->{loader} : undef;
 
-    if ($bootloader eq "grub")
-    {
-        require Bootloader::Core::GRUB;
-	$loader = Bootloader::Core::GRUB->new ($loader);
+  if($bootloader eq "grub") {
+    require Bootloader::Core::GRUB;
+    $loader = Bootloader::Core::GRUB->new($self, $loader);
+  }
+  elsif($bootloader eq "grub2") {
+    require Bootloader::Core::GRUB2;
+    $loader = Bootloader::Core::GRUB2->new($self, $loader);
+  }
+  elsif($bootloader eq "grub2-efi") {
+    require Bootloader::Core::GRUB2EFI;
+    $loader = Bootloader::Core::GRUB2EFI->new($self, $loader);
+  }
+  elsif($bootloader eq "lilo") {
+    require Bootloader::Core::LILO;
+    $loader = Bootloader::Core::LILO->new($self, $loader);
+  }
+  elsif($bootloader eq "elilo") {
+    require Bootloader::Core::ELILO;
+    unless (defined $arch) {
+      $self->warning("Missing arch for elilo, using ia64.");
+      $arch = "ia64";
     }
-    elsif ($bootloader eq "grub2")
-    {
-        require Bootloader::Core::GRUB2;
-	$loader = Bootloader::Core::GRUB2->new ($loader);
+    $loader = Bootloader::Core::ELILO->new($self, $loader, $arch);
+  }
+  elsif($bootloader eq "zipl") {
+    require Bootloader::Core::ZIPL;
+    $loader = Bootloader::Core::ZIPL->new($self, $loader);
+  }
+  elsif($bootloader eq "ppc") {
+    require Bootloader::Core::PowerLILO;
+    unless (defined $arch) {
+      $self->warning("Missing subarch for powerlilo, using chrp.");
+      $arch = "chrp";
     }
-    elsif ($bootloader eq "grub2-efi")
-    {
-        require Bootloader::Core::GRUB2EFI;
-        $loader = Bootloader::Core::GRUB2EFI->new ($loader);
-    }
-    elsif ($bootloader eq "lilo")
-    {
-        require Bootloader::Core::LILO;
-	$loader = Bootloader::Core::LILO->new ($loader);
-    }
-    elsif ($bootloader eq "elilo")
-    {
-        require Bootloader::Core::ELILO;
-        unless (defined $arch)
-        {
-          Bootloader::Logger::instance()->warning("Bootloader::Library::SetLoaderType: Missing arch for elilo.");
-          $arch = "ia64";
-        }
-        $loader = Bootloader::Core::ELILO->new ($loader,$arch);
-    }
-    elsif ($bootloader eq "zipl")
-    {
-        require Bootloader::Core::ZIPL;
-        $loader = Bootloader::Core::ZIPL->new ($loader);
-    }
-    elsif ($bootloader eq "ppc")
-    {
-        require Bootloader::Core::PowerLILO;
-        unless (defined $arch)
-        {
-          Bootloader::Logger::instance()->warning("Bootloader::Library::SetLoaderType: Missing subarch for powerlilo.");
-          $arch = "chrp";
-        }
-	$loader = Bootloader::Core::PowerLILO->new ($loader,$arch);
-    }
-    elsif ($bootloader eq "none")
-    {
-        require Bootloader::Core::NONE;
-	$loader = Bootloader::Core::NONE->new ($loader);
-    }
-    else
-    {
-        require Bootloader::Core::NONE;
-	$loader = Bootloader::Core::NONE->new ($loader);
-        Bootloader::Logger::instance()->error("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader, fallback to none");
-    }
+    $loader = Bootloader::Core::PowerLILO->new($self, $loader, $arch);
+  }
+  else {
+    $self->error("Initializing for unknown bootloader $bootloader, fallback to none") if $bootloader ne "none";
 
-    $self->{"loader"} = $loader;
-    Bootloader::Logger::instance()->milestone ("Bootloader::Library::SetLoaderType: TRACE new $bootloader");
-    return 1;
+    require Bootloader::Core::NONE;
+    $loader = Bootloader::Core::NONE->new ($self, $loader);
+  }
+
+  $self->{loader} = $loader;
+  $self->milestone("loader = $bootloader");
+
+  return 1;
 }
 
 =item
@@ -217,7 +237,7 @@ sub DefineMountPoints {
 
     while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
     {
-	Bootloader::Logger::instance()->milestone ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
+	$self->milestone ("Mount point: $mp ; Device: $dev");
     }
     $loader->{"mountpoints"} = $mountpoints_ref;
     return 1;
@@ -227,7 +247,7 @@ sub GetMountPoints {
     my $self = shift;
 
     my $loader = $self->{"loader"};
-    Bootloader::Logger::instance()->milestone ("Library::GetMountPoints: TRACE");
+    $self->milestone ("TRACE");
     return $loader->{"mountpoints"};
 }
 
@@ -261,7 +281,7 @@ sub DefinePartitions {
     foreach my $part_ref (@{$partitions_ref})
     {
 	my ($part, $disk, $num, @part_info ) = @{$part_ref};
-	Bootloader::Logger::instance()->milestone ("Library::DefinePartitions: Partition: $part ; " .
+	$self->milestone ("Partition: $part ; " .
 			  "Disk: $disk ; Number: $num ; Info: " .
 			  join(", ", map { "$_"; } @part_info) );
     }
@@ -302,7 +322,7 @@ sub DefineMDArrays {
     while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
     {
 	my $members = join ", ", @{$members_ref};
-	Bootloader::Logger::instance()->milestone ("Library::DefineMDArrays: MD Array: $md ; Members: $members");
+	$self->milestone ("MD Array: $md ; Members: $members");
     }
     $loader->{"md_arrays"} = $md_arrays_ref;
     return 1;
@@ -337,7 +357,7 @@ sub DefineMultipath {
 
     while ((my $phys, my $mp) = each (%{$mp_ref}))
     {
-	Bootloader::Logger::instance()->milestone ("Library::DefineMultipath: Real device: $phys ;  multipath $mp");
+	$self->milestone ("Real device: $phys ;  multipath $mp");
     }
     $loader->{"multipath"} = $mp_ref;
     return 1;
@@ -366,17 +386,20 @@ sub DefineUdevMapping($) {
     my $self = shift;
     my $map_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
     while ((my $phys, my $mp) = each (%{$map_ref}))
     {
-	Bootloader::Logger::instance()->milestone ("Library::DefineUdevMapping: Udev device: ".($phys||"")." ;  kernel: ".($mp||"")."");
+	$self->milestone ("Udev device: ".($phys||"")." ;  kernel: ".($mp||"")."");
     }
 
-  $loader->{"udevmap"} = $map_ref;
+  $loader->{udevmap} = $map_ref;
+
   return 1;
 }
+
+
 =item
 C<< $status = Bootloader::Library->ReadSettings (); >>
 
@@ -400,7 +423,7 @@ sub ReadSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone( "Library::ReadSettings: TRACE" );
+    $self->milestone( "TRACE" );
     my $files_ref = $loader->ReadFiles ($loader->ListFiles ());
     if (! defined ($files_ref))
     {
@@ -435,7 +458,7 @@ sub WriteSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone(" Library::WriteSettings: TRACE menu_only:". ($menu_only || "undefined"));
+    $self->milestone("TRACE menu_only:". ($menu_only || "undefined"));
     $loader->{"resolve_symlinks"} = 1;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -468,7 +491,7 @@ sub ReadSettingsTmp {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone(" Library::ReadSettingsTmp: TRACE tmp_dir $tmp_dir ");
+    $self->milestone("TRACE tmp_dir $tmp_dir ");
 
     my @files = @{$loader->ListFiles ()};
     my %filenames = ();
@@ -516,7 +539,7 @@ sub WriteSettingsTmp {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone(" Library::WriteSettingsTmp: TRACE tmp_dir $tmp_dir ");
+    $self->milestone("TRACE tmp_dir $tmp_dir ");
 
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -560,14 +583,13 @@ sub GetFilesContents {
     if (! defined $loader or $loader eq "none") {
 	return undef;
     }
-    my $logger = Bootloader::Logger::instance();
-    $logger->milestone(" Library::GetFilesContents TRACE ");
+    $self->milestone("TRACE ");
 
     $loader->{"resolve_symlinks"} = 0;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
     {
-	$logger->error ("Library::GetFileContents: Error while getting files contents occurred");
+	$self->error ("Library::GetFileContents: Error while getting files contents occurred");
 	return undef;
     }
     my %files = ();
@@ -594,7 +616,7 @@ sub SetFilesContents {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone(" Library::SetFilesContents TRACE ");
+    $self->milestone("TRACE ");
 
     my %lines = ();
     while ((my $fn, my $contents) = each (%{$files_ref}))
@@ -625,17 +647,20 @@ EXAMPLE:
 
 =cut
 
-sub UpdateBootloader {
-    my $self = shift;
-    my $avoid_init = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+sub UpdateBootloader
+{
+  my $self = shift;
+  my $avoid_init = shift;
 
-    Bootloader::Logger::instance()->milestone("Library::UpdateBootloader: TRACE avoid_init ".($avoid_init||""));
+  my $loader = $self->{"loader"};
+  return undef unless defined $loader;
 
-    return $loader->UpdateBootloader ($avoid_init);
+  $self->milestone("avoid_init = " . ($avoid_init || ""));
+
+  return $loader->UpdateBootloader($avoid_init);
 }
+
 
 =item
 C<< $status = Bootloader::Library->InitializeBootloader (); >>
@@ -659,7 +684,7 @@ sub InitializeBootloader {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone( "Library::InitializeBootloader: TRACE");
+    $self->milestone( "TRACE");
 
     return $loader->InitializeBootloader ();
 }
@@ -690,7 +715,7 @@ sub ListConfigurationFiles {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone( "Library::ListConfigurationFiles TRACE");
+    $self->milestone( "TRACE");
 
     return $loader->ListFiles ();
 }
@@ -713,7 +738,7 @@ sub GetSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone( "Library::GetSettings TRACE");
+    $self->milestone( "TRACE");
     return $loader->GetSettings ();
 }
 
@@ -736,7 +761,7 @@ sub SetSettings {
     my $loader = $self->{"loader"};
     return undef unless defined $loader;
 
-    Bootloader::Logger::instance()->milestone( "Library::SetSettings TRACE");
+    $self->milestone("TRACE");
 
     return $loader->SetSettings ($settings_ref);
 }
@@ -764,15 +789,16 @@ EXAMPLE:
 
 =cut
 
+# return empty array if none were read, not undef
 sub GetSections {
     my $self = shift;
 
     my $settings_ref = $self->GetSettings ();
     if (! defined ($settings_ref))
     {
-	return undef;
+	return [];
     }
-    return $settings_ref->{"sections"};
+    return $settings_ref->{"sections"} || [];
 }
 
 =item
@@ -950,7 +976,7 @@ sub GrubDev2UnixDev {
     my $grub_dev = shift;
     my $loader = $self->{loader} || return undef;
 
-    Bootloader::Logger::instance()->milestone( "Library::GrubDev2UnixDev grub_dev: $grub_dev" );
+    $self->milestone("grub_dev: $grub_dev");
 
     my $unix_dev = $loader->GrubDev2UnixDev ($grub_dev);
 
@@ -973,9 +999,9 @@ sub SplitPath {
     my @ret = $loader->SplitDevPath ($opath);
 
     if (scalar (@ret) == 2){
-        Bootloader::Logger::instance()->milestone( "Library::SplitPath arg:: $opath result dev: ".($ret[0]||"")." result path: ".($ret[1]||"") );
+        $self->milestone( "arg:: $opath result dev: ".($ret[0]||"")." result path: ".($ret[1]||"") );
     }else{
-        Bootloader::Logger::instance()->milestone( "Library::SplitPath arg:: $opath result undef");
+        $self->milestone( "arg:: $opath result undef");
     }
 
     return @ret;
@@ -989,11 +1015,12 @@ Try detect on disk if contains ThinkpadMBR. Return true if detected.
 =cut
 
 #  DetectThinkpadMBR (string disk)
-sub DetectThinkpadMBR {
+sub DetectThinkpadMBR
+{
   my $self = shift;
   my $disk = shift;
-  my $res = Bootloader::MBRTools::IsThinkpadMBR($disk);
-  Bootloader::Logger::instance()->milestone("Library::DetectThinkpadMBR on $disk result $res" );
+  my $res = $self->IsThinkpadMBR($disk);
+  $self->milestone("on $disk result $res" );
   return $res;
 }
 
@@ -1005,11 +1032,12 @@ Write generic mbr to disk on thinkpad. Return undef if fail.
 =cut
 
 #  WriteThinkpadMBR (string disk)
-sub WriteThinkpadMBR {
+sub WriteThinkpadMBR
+{
    my $self = shift;
    my $disk = shift;
-   my $res = Bootloader::MBRTools::PatchThinkpadMBR($disk);
-   Bootloader::Logger::instance()->milestone("Library::WriteThinkpadMBR on $disk result $res" );
+   my $res = $self->PatchThinkpadMBR($disk);
+   $self->milestone("on $disk result $res" );
    return $res;
 }
 
@@ -1030,11 +1058,12 @@ Possible string is:
 =cut
 
 #  ExamineMBR (string disk)
-sub ExamineMBR($){
+sub ExamineMBR()
+{
   my $self = shift;
   my $disk = shift;
-  my $res = Bootloader::MBRTools::examineMBR($disk);
-  Bootloader::Logger::instance()->milestone("Library::ExamineMBR on $disk result ".($res||"nil"));
+  my $res = $self->examineMBR($disk);
+  $self->milestone("on $disk result ".($res||"nil"));
   
   return $res;
 }
@@ -1046,7 +1075,7 @@ sub CountGRUBPassword{
   my $res = qx{echo "md5crypt \
   $pass" | grub --batch | grep Encrypted };
   $res =~ s/Encrypted:\s+(.*)$/$1/;
-  Bootloader::Logger::instance()->milestone("Library::CountGRUBPassword result $res" );
+  $self->milestone("result $res" );
   return undef unless $res =~ m/^\$1\$.*\$.*$/;
   return "--md5 $res";
 }
@@ -1064,7 +1093,7 @@ sub UpdateSerialConsole{
     $ret = "$append $console";
   }
 
-  Bootloader::Logger::instance()->milestone("Library::UpdateSerialConsole append $append console $console res $ret" );
+  $self->milestone("append $append console $console res $ret" );
 
   return $ret;
 }

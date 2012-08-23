@@ -100,14 +100,6 @@ C<< $canonical = Bootloader::Core->CanonicalPath ($path); >>
 
 C<< $real = Bootloader::Core->RealFileName ($filename); >>
 
-C<< Bootloader::Core->l_debug ($message); >>
-
-C<< Bootloader::Core->l_milestone ($message); >>
-
-C<< Bootloader::Core->l_warning ($message); >>
-
-C<< Bootloader::Core->l_error ($message); >>
-
 C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
 
 C<< Bootloader::Core->MangleSections (\@sections, \%global); >>
@@ -121,6 +113,8 @@ C<< Bootloader::Core->MangleSections (\@sections, \%global); >>
 package Bootloader::Core;
 
 use strict;
+
+use base qw ( Bootloader::Logger );
 
 #constants
 
@@ -143,59 +137,6 @@ sub trim{
     $string =~ s/\s+$//;
     return $string;
 }
-
-=item
-C<< Bootloader::Core->l_debug ($message); >>
-
-Writes a debug message to the system log buffer.
-
-=cut
-sub l_debug {
-    my $self = shift;
-    my $message = shift;
- 
-    $self->{"logger"}->debug($message);
-}
-
-=item
-C<< Bootloader::Core->l_milestone ($message); >>
-
-Writes a milestone message to the system log buffer.
-
-=cut
-sub l_milestone {
-    my $self = shift;
-    my $message = shift;
- 
-    $self->{"logger"}->milestone($message);
-}
-
-=item
-C<< Bootloader::Core->l_warning ($message); >>
-
-Writes a warning message to the system log buffer.
-
-=cut
-sub l_warning {
-    my $self = shift;
-    my $message = shift;
- 
-    $self->{"logger"}->warning($message);
-}
-
-=item
-C<< Bootloader::Core->l_error ($message); >>
-
-Writes an error message to the system log buffer.
-
-=cut
-sub l_error {
-    my $self = shift;
-    my $message = shift;
-
-    $self->{"logger"}->error($message);
-}
-
 
 =item
 C<< $members_ref = Bootloader::Core->MD2Members ($md_device); >>
@@ -303,12 +244,12 @@ sub SplitDevPath {
     my $mp = $path || "/";
     until (exists $self->{"mountpoints"}{$mp}) {
 	unless ($mp =~ s#/[^/]*$##) {
-	    $self->l_error ("Core::SplitDevPath: Cannot get device for $path");
+	    $self->error("Cannot get device for $path");
 	    return undef;
 	}
  	if ($mp eq "") {
 	    unless (exists $self->{"mountpoints"}{"/"}) {
-	    	$self->l_error ("Core::SplitDevPath: Cannot get device for $path, no root mount point set");
+	    	$self->error("Cannot get device for $path, no root mount point set");
 	    	return undef;
 	    }
 	    $mp = "/";
@@ -317,7 +258,7 @@ sub SplitDevPath {
 
     my $dev = $self->{"mountpoints"}{$mp};
     $path =~ s#^$mp/?#/#;
-    $self->l_milestone ("Core::SplitDevPath: $orig was split to $dev + $path");
+    $self->milestone("$orig was split to $dev + $path");
     return ($dev, $path);
 }
 
@@ -338,7 +279,7 @@ sub GetExtendedPartition {
 
     # Check for valid devices
     unless (defined $part_dev and $part_dev =~ m/^\/dev\/[shv]d[a-z](\d+)?$/) {
-	$self->l_milestone ("Core::GetExtendedPartition: Specified device ".
+	$self->milestone("Specified device ".
 	    $part_dev||"undefined partdev".
             " is not valid and cannot be used as base for detecting an
             extended partition on the same disk.");
@@ -817,28 +758,35 @@ C<< $obj_ref = Bootloader::Core->new ($old); >>
 Creates an instance of the Bootloader::Core class.
 Optional parameter 'old' is object reference to former bootloader
 =cut
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = {};
-    # keep old settings if given as parameter
-    if (defined($old)) {
-	foreach my $key (keys %{$old}) {
-	    $loader->{$key} = $old->{$key};
-	}
+  my $loader = {};
+  bless($loader);
+
+  # keep old settings if given as parameter
+  if(defined $old) {
+    $ref->milestone("keeping old settings");
+    for my $key (keys %{$old}) {
+      $loader->{$key} = $old->{$key};
     }
-    $loader->{"logger"} = Bootloader::Logger::instance();
+  }
 
-    bless ($loader);
-    return $loader;
+  # copy log data from Library object
+  $loader->CloneLog($ref);
+
+  return $loader;
 }
+
 
 # list<string> ListFiles ();
 # must be overridden
 sub ListFiles {
     my $self = shift;
-    $self->l_error ("Bootloader::Core::ListFiles: Running generic function, it should never be called");
+    $self->error("Running generic function, it should never be called");
     return [];
 }
 
@@ -877,7 +825,7 @@ sub ReadFiles {
 	my @lines = ();
 	if (not open (FILE, $filename))
 	{
-	    $self->l_error ("Core::ReadFiles: Failed to open $filename") && return undef;
+	    $self->error("Failed to open $filename") && return undef;
 	}
 	while (my $line = <FILE>)
 	{
@@ -925,14 +873,14 @@ sub WriteFiles {
     {
 	if (! defined ($menu_files{$filename}))
 	{
-	    $self->l_milestone ("Core::WriteFiles: Not writing $filename");
+	    $self->milestone("Not writing $filename");
 	    next;
 	}
 
 	$filename = "$filename$suffix";
 	if (not open (FILE, ">$filename"))
 	{
-	    $self->l_error ("Core::WriteFiles: Failed to open $filename") && return undef;
+	    $self->error("Failed to open $filename") && return undef;
 	}
 	my @lines = @{$lines_ref};
 	foreach my $line (@lines)
@@ -957,7 +905,7 @@ sub CompleteSection($) {
 
   unless (defined $info->{"__handled"})
   {
-    $self->l_milestone("Core::CompleteSection: Add missing handled section");
+    $self->milestone("Add missing handled section");
     if ($info->{"type"} eq "image"
       || $info->{"type"} eq "xen")
     {
@@ -1053,13 +1001,13 @@ sub UpdateSectionNameLine {
           my $flavor = $section->{"__flavor"};
           my $comment = sprintf($auto_comment_write, $original_name, $flavor);
 	  push @comment_before, $comment;
-          $self->l_milestone( "Core::UpdateSectionNameLine: section name: $name comment: $comment" );
+          $self->milestone("section name: $name comment: $comment" );
         }
         elsif( $section->{"__handled"} eq "manual")
         {
           my $comment = sprintf($manual_comment_write, $original_name);
 	  push @comment_before, $comment;
-          $self->l_milestone( "Core::UpdateSectionNameLine: section name: $name comment: $comment" );
+          $self->milestone("section name: $name comment: $comment" );
         }
 =cut
 	$line_ref->{"comment_before"} = \@comment_before;
@@ -1103,7 +1051,7 @@ sub CreateRemovedDefaultLine {
 
     push @comment_before, "${remove_default_comment}";
 
-    $self->l_milestone("Core::CreateRemovedDefaultLine: put removed default comment");
+    $self->milestone("put removed default comment");
 		
     $line_ref->{"comment_before"} = \@comment_before;
 
@@ -1308,7 +1256,7 @@ sub Info2Section {
 	}
         else
         {
-          $self->l_milestone ("Core::Info2Section: Unknown key $key with value $value");
+          $self->milestone("Unknown key $key with value $value");
         }
     }
 
@@ -1584,14 +1532,14 @@ sub ParseMenuFileLines {
     my @global = @{+shift @sects};
 
     @sects = map {
-	$self->l_milestone ("Core::ParseMenuFileLines: section lines to convert :\n'" .
+	$self->milestone("section lines to convert :\n'" .
 			join("'\n' ",
 			     map {
 				 $_->{"key"} . " => " . $_->{"value"};
 			     } @{$_}) . "'"
 			);
 	my $s = $self->Section2Info ($_);
-	$self->l_milestone ("Core::ParseMenuFileLines: parsing result :\n'" .
+	$self->milestone("parsing result :\n'" .
 			join("'\n' ",
 			     map {
 				 m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1648,7 +1596,7 @@ sub PrepareMenuFileLines {
 # must be overridden
 sub ParseLines {
     my $self = shift;
-    $self->l_error ("Bootloader::Core::ParseLines: Running generic function, it should never be called");
+    $self->error("Running generic function, it should never be called");
     return undef;
 }
 
@@ -1656,7 +1604,7 @@ sub ParseLines {
 # must be overridden
 sub CreateLines {
     my $self = shift;
-    $self->l_error ("Bootloader::Core::CreateLines: Running generic function, it should never be called");
+    $self->error("Running generic function, it should never be called");
     return {};
 }
 
@@ -1700,7 +1648,7 @@ sub UpdateBootloader {
               }
             }
 	    unless ( rename "$file.new",  "$file" ) {
-		$self->l_error ("Core::UpdateBootloader: Error occurred while updating file $file");
+		$self->error("Error occurred while updating file $file");
 		$ok = undef;
 	    }
 	}
@@ -1735,8 +1683,8 @@ sub RunCommand {
     my $ret = system ($command);
 
     my $output = `cat $log`;
-    $self->l_milestone("run $command - ret $ret + output: $output");
-    $self->l_error("Command '$command' failed with code $ret and output: $output") unless $ret == 0;
+    $self->milestone("run $command - ret $ret + output: $output");
+    $self->error("Command '$command' failed with code $ret and output: $output") unless $ret == 0;
 
     return $ret;
 }
@@ -1772,10 +1720,10 @@ sub SetDeviceMapping {
     my $self = shift;
     my $devmap_ref = shift;
 
-    $self->l_debug ("Core::SetDeviceMapping: called.");
+    $self->debug("TRACE");
     $self->{"device_map"} = $devmap_ref;
     while  ( my ($key, $value) = each (%$devmap_ref)){
-        $self->l_milestone ("Core::SetDeviceMapping: device_mapping: $key <=> $value");
+        $self->milestone("device_mapping: $key <=> $value");
     }
     return 1;
 }
@@ -1802,16 +1750,16 @@ sub GetSettings {
             {
               foreach my $section (@{$ret{$key}})
               {
-                $self->l_milestone ("Core::GetSettings: store: $key:" . join( " - ", %{$section}));
+                $self->milestone("store: $key:" . join( " - ", %{$section}));
               }
             }
             elsif ($key eq "global" or $key eq "device_map")
             {
-              $self->l_milestone ("Core::GetSettings: store: $key:" . join( ",", %{$ret{$key}}));
+              $self->milestone("store: $key:" . join( ",", %{$ret{$key}}));
             }
             else
             {
-              $self->l_milestone ("Core::GetSettings: store: $key:" . join( ",", $ret{$key}));
+              $self->milestone("store: $key:" . join( ",", $ret{$key}));
             }
 	}
     }
@@ -1841,16 +1789,16 @@ sub SetSettings {
             {
               foreach my $section (@{$settings{$key}})
               {
-                $self->l_milestone ("Core::SetSettings: store: $key:" . join( " - ", %{$section}||""));
+                $self->milestone("store: $key:" . join( " - ", %{$section}||""));
               }
             }
             elsif ($key eq "global" or $key eq "device_map")
             {
-              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", %{$settings{$key}} || ""));
+              $self->milestone("store: $key:" . join( ",", %{$settings{$key}} || ""));
             }
             else
             {
-              $self->l_milestone ("Core::SetSettings: store: $key:" . join( ",", $settings{$key}||""));
+              $self->milestone("store: $key:" . join( ",", $settings{$key}||""));
             }
         }
     }
@@ -1897,7 +1845,7 @@ sub SymlinkCrossesDevice($$) {
 
     my ($dev_file,)  = stat($path);
     my ($dev_symlink,) = lstat($path);
-    $self->l_milestone ("Core::SymlinkCrossesDevice: dev_file: $dev_file, dev_symlink: $dev_symlink");
+    $self->milestone("dev_file: $dev_file, dev_symlink: $dev_symlink");
 
     if (defined ($dev_file) && defined ($dev_symlink))
     {
@@ -1923,25 +1871,25 @@ sub ResolveCrossDeviceSymlinks($$) {
     my $readlink;
 
     while ($path =~ s#^(/*)[^/]+##) {
-	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: path: $path, \$1: $1, \$&: $&");
+	$self->milestone("path: $path, \$1: $1, \$&: $&");
 
 	my $here = $self->ConcatPath($resolved, $&);
-	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: here: $here, resolved: $resolved");
+	$self->milestone("here: $here, resolved: $resolved");
 
 	if (-l $here && ($readlink = readlink $here) =~ /\//) {
-	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: readlink: $readlink");
+	    $self->milestone("readlink: $readlink");
 	    $resolved = ""
 	    	if ($readlink =~ m#^/#);
-	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: \$&: $&");
+	    $self->milestone("\$&: $&");
 	    $path = $self->ConcatPath(($1 || '') . $readlink, $path);
-	    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: path: $path, \$1: $1");
+	    $self->milestone("path: $path, \$1: $1");
 	    next;
 	}
 	$resolved = $self->ConcatPath($resolved, $&);
-	$self->l_milestone ("Core::ResolveCrossDeviceSymlinks: resolved: $path, \$&: $&");
+	$self->milestone("resolved: $path, \$&: $&");
     }
     $resolved = $self->ConcatPath($resolved, $path);
-    $self->l_milestone ("Core::ResolveCrossDeviceSymlinks: returns resolved: $resolved, path: $path");
+    $self->milestone("returns resolved: $resolved, path: $path");
     return $self->CanonicalPath($resolved);
 }
 
@@ -1964,7 +1912,7 @@ sub CanonicalPath($$) {
     while ($path =~ s#/[^/]+/\.\.(/|$)#$1#) { }
     while ($path =~ s#/\.(/|$)#$1#) { }
     while ($path =~ s#//#/#) { }
-    $self->l_milestone ("Core::CanonicalPath: ret path: $path");
+    $self->milestone("ret path: $path");
     return $path;
 }
 
@@ -1987,14 +1935,14 @@ sub RealFileName {
     my $ret = "";
     if ($self->{"resolve_symlinks"})
     {
-	$self->l_milestone ("Core::RealFileName: resolve_symlinks:" . $self->{"resolve_symlinks"});
+	$self->milestone("resolve_symlinks:" . $self->{"resolve_symlinks"});
 	$ret = $self->CanonicalPath($self->ResolveCrossDeviceSymlinks ($filename));
     }
     else
     {
 	$ret = $self->CanonicalPath($filename);
     }
-    $self->l_milestone ("Core::RealFileName: Filename $filename after resolving symlinks: $ret");
+    $self->milestone("Filename $filename after resolving symlinks: $ret");
     return $ret;
 }
 

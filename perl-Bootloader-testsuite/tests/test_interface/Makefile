@@ -5,6 +5,7 @@ prepare: clean
 	@cp -r ../../../src/* Bootloader/
 	cp -rf backup/fake_root1 .
 	cp -rf backup/fake_root2 .
+	@mkdir -p fake_root{1,2}/var/log/YaST2
 
 test:
 	perl -w grub1-test.pl

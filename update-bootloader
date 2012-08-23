@@ -1,11 +1,11 @@
 #! /usr/bin/perl
 
+use strict;
 use POSIX;
 use Getopt::Long;
+
 use Bootloader::Tools;
-use Bootloader::Path;
 use Bootloader::MBRTools;
-use strict;
 
 # keep Pod::Usage optional (bnc #760464)
 eval "use Pod::Usage";
@@ -167,10 +167,7 @@ sub test_gettext {
   return undef
 }
 
-my $logname = Bootloader::Path::Logname();
-open (LOG, ">>$logname");
-print LOG ("update-bootloader called:\n" . $0 . " " . join (" ", @ARGV) .  "\n");
-close LOG;
+my $cmdline = join " ", ($0, @ARGV);
 
 GetOptions (\%oper,
     'add|a'    	 ,
@@ -201,8 +198,12 @@ die("Option 'default' is only allowed for operation 'add'\n")
 die("Option 'force-default' is only allowed for operation 'add'\n")
     if ($opt_force_default and not defined $oper{add});
     
+my $logger = Bootloader::Library->new();
+
+$logger->milestone($cmdline);
+
 if (defined $oper{"examinembr"}) {
-  my $ret = Bootloader::MBRTools::examineMBR($oper{"examinembr"});
+  my $ret = $logger->examineMBR($oper{"examinembr"});
   if (defined $ret){
     print "$ret\n";
     exit 0;
@@ -213,18 +214,14 @@ if (defined $oper{"examinembr"}) {
 
 if (Bootloader::Tools::GetBootloader() eq "none")
 {
-  open (LOG, ">>$logname");
-  print LOG ("none bootloader, skipped updating \n");
-  close LOG;
+  $logger->milestone("none bootloader, skipped updating");
   
   exit 0;
 }
 
 if (Bootloader::Tools::GetBootloader() =~ /^(grub2|grub2-efi)$/)
 {
-  open (LOG, ">>$logname");
-  print LOG ("grub2 bootloader, no add/remove section support\n");
-  close LOG;
+  $logger->milestone("grub2 bootloader, no add/remove section support");
 
   delete $oper{add};
   delete $oper{remove};
@@ -253,7 +250,6 @@ if (defined $opt_xen_kernel) {
 my $type = $opt_xen ? "xen" : "image";
 
 InitLibrary();
-
 
 if ($opt_previous) {
     unless ($opt_image)	{
@@ -315,10 +311,7 @@ if (defined $oper{add}) {
 	chomp ($opt_trans);
 
         #log what is translated
-        my $logname = Bootloader::Path::Logname();
-        open (LOG, ">>$logname");
-        print LOG ("translate :\n" . $0 . " " . join (" ", @ARGV) .  "\n");
-        close LOG;
+        $logger->milestone("translate :\n" . $0 . " " . join (" ", @ARGV));
 	
 	# check whether translation only contains [a-zA-Z0-9 _]
 	# otherwise fall back to untranslated string
@@ -385,10 +378,8 @@ if (defined $oper{add}) {
 #  execute selected operation
 #
 if (defined $oper{add}) {
-    open (LOG, ">>$logname");
-    print LOG ("update-bootloader: now executing operation add\n");
-    print LOG ("update-bootloader: changed opt name is $opt_name\n");
-    close LOG;
+    $logger->milestone("update-bootloader: now executing operation add");
+    $logger->milestone("update-bootloader: changed opt name is $opt_name");
 
     die("Please specify name and kernel image for new section\n")
 	unless $opt_name and $opt_image;
@@ -401,9 +392,7 @@ if (defined $oper{add}) {
     	if (not $opt_force) {
 	    die("There are already sections with image '$opt_image'\n");
 	}
-        open (LOG, ">>$logname");
-        print LOG ("update-bootloader: section already exist. Skip add.\n");
-        close LOG;
+        $logger->milestone("update-bootloader: section already exist. Skip add.");
     } else {
 
 	# If, if option $opt_force_default is set, let this new kernel be
@@ -437,9 +426,7 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "xen";
 
-            open (LOG, ">>$logname");
-            print LOG ("update-bootloader: calling Tools::AddSection (XEN)\n");
-            close LOG;
+            $logger->milestone("update-bootloader: calling Tools::AddSection (XEN)");
 
 	    AddSection($opt_xen_name, @params);
 	}
@@ -448,9 +435,7 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "linux";
 
-            open (LOG, ">>$logname");
-            print LOG ("update-bootloader: calling Tools::AddSection (normal)\n");
-            close LOG;
+            $logger->milestone("update-bootloader: calling Tools::AddSection (normal)");
 
 	    AddSection($opt_name, @params);
 	}
@@ -474,9 +459,7 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "failsafe";
 
-            open (LOG, ">>$logname");
-            print LOG ("update-bootloader: calling Tools::AddSection (failsafe)\n");
-            close LOG;
+            $logger->milestone("update-bootloader: calling Tools::AddSection (failsafe)");
 
 	    AddSection($opt_failsafe, @params);
 	}
@@ -492,34 +475,24 @@ if (defined $oper{remove}) {
     push @params, initrd => $opt_initrd if $opt_initrd;
     push @params, name   => $opt_name if $opt_name;
 		      
-    open (LOG, ">>$logname");
-    print LOG ("update-bootloader: now executing operation remove\n");
-    close LOG;
+    $logger->milestone("update-bootloader: now executing operation remove");
 
     my $num = CountSections(@params);
 
     if ($num > 0) {
         if ($num > 1 and not $opt_force) {
-            open (LOG, ">>$logname");
-            print LOG ("update-bootloader: found $num sections, no opt_force: not removing\n");
-            close LOG;
+            $logger->milestone("update-bootloader: found $num sections, no opt_force: not removing");
 
 	    die("There is more than one section with image '$opt_image'\n");
 	} else {
-            open (LOG, ">>$logname");
-            print LOG ("update-bootloader: calling Tools::RemoveSections\n");
-            close LOG;
+            $logger->milestone("update-bootloader: calling Tools::RemoveSections");
 
 	    RemoveSections(@params);
 	}
     } else {
-	open (LOG, ">>$logname");
-	print LOG ("update-bootloader: no $opt_image found\n");
-	close LOG;
+	$logger->milestone("update-bootloader: no $opt_image found");
     }
-    open (LOG, ">>$logname");
-    print LOG ("update-bootloader: finished operation remove\n");
-    close LOG;
+    $logger->milestone("update-bootloader: finished operation remove");
 
 }
 

@@ -91,7 +91,6 @@ our @EXPORT = qw(InitLibrary CountImageSections CountSections
 use Bootloader::Library;
 use Bootloader::Core;
 use Bootloader::Path;
-use Bootloader::Logger;
 
 my $lib_ref = undef;
 my $dmsetup = undef;
@@ -99,86 +98,20 @@ my $mdadm = undef;
 my $multipath = undef;
 my $devicemapper = undef;
 
-sub DumpLog {
-    my $core_lib = shift;
 
-    my $using_logfile = 1;
-    my $logname = Bootloader::Path::Logname();
+# dummy compat function
+sub DumpLog { }
 
-    if (not open LOGFILE, ">>$logname") {
-	$using_logfile = 0;
-	open LOGFILE, ">&STDERR" or die "Can't dup STDERR: $!";
-	print LOGFILE ("WARNING: Can't open $logname, using STDERR instead.\n");
-    }
-
-    # Adding timestamp to log messages
-    use POSIX qw(strftime);
-
-    sub timestamp () {
-	return strftime ( "%Y-%m-%d %H:%M:%S", localtime);
-    }
-
-    foreach my $rec (@{Bootloader::Logger::instance()->GetLogRecords()})
-    {
-	my $message = $rec->{"message"};
-	my $level = $rec->{"level"};
-
-	# If debug messages should be printed, the environment variable
-	# Y2DEBUG has to be set ("export Y2DEBUG=1").
-	if ($level eq "debug" and defined $ENV{'Y2DEBUG'})
-	{
-	    print LOGFILE (timestamp() . " DEBUG: $message\n");
-	}
-	elsif ($level eq "debug" and not defined $ENV{'Y2DEBUG'})
-	{
-	    # Omit debug messages
-	}
-	elsif ($level eq "milestone")
-	{
-	    print LOGFILE (timestamp() . " MILESTONE: $message\n");
-	}
-	elsif ($level eq "warning")
-	{
-	    print LOGFILE (timestamp() . " WARNING: $message\n");
-
-	    # If writing to perl logfile, also print warnings to STDERR
-	    if ($using_logfile) {
-		print STDERR ("Perl-Bootloader: ".timestamp() . " WARNING: $message\n");
-	    }
-	}
-	elsif ($level eq "error")
-	{
-	    print LOGFILE (timestamp() . " ERROR: $message\n");
-
-	    # If writing to perl logfile, also print errors to STDERR
-	    if ($using_logfile) {
-		print STDERR ("Perl-Bootloader: ".timestamp() . " ERROR: $message\n");
-	    }
-	}
-	else
-	{
-	    print LOGFILE (timestamp() . " ERROR: Uncomplete log record\n");
-	    print LOGFILE (timestamp() . " ERROR: $message\n");
-
-	    # If writing to perl logfile, also print errors to STDERR
-	    if ($using_logfile) {
-		print STDERR (timestamp() . " ERROR: Uncomplete log record\n");
-		print STDERR (timestamp() . " ERROR: $message\n");
-	    }
-	}
-    }
-    close LOGFILE;
-}
 
 sub ResolveCrossDeviceSymlinks {
-    my $path = shift;
+  my $path = shift;
 
-    my $core_lib = Bootloader::Core->new ();
-    $path = $core_lib->ResolveCrossDeviceSymlinks ($path);
+  my $core_lib = Bootloader::Core->new($lib_ref);
+  $path = $core_lib->ResolveCrossDeviceSymlinks($path);
 
-    DumpLog ($core_lib);
-    return $path;
+  return $path;
 }
+
 
 =item
 C<< $mp_ref = Bootloader::Tools::ReadMountPoints (); >>
@@ -234,10 +167,9 @@ sub ReadPartitions {
     my $udevmap = shift;
     my $sb = "/sys/block";
     my $mounted = undef;
-    my $logger = Bootloader::Logger::instance();
     unless (-e $sb) {
       $mounted = `mount /sys`;
-      $logger->milestone("ReadPartitions: Mount /sys");
+      $lib_ref->milestone("Mount /sys");
     }
     opendir(BLOCK_DEVICES, "$sb") || 
 	die ("ReadPartitions(): Failed to open dir $sb");
@@ -248,7 +180,7 @@ sub ReadPartitions {
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
-    $logger->milestone("ReadPartitions: Found disks: ". join (",",@disks));
+    $lib_ref->milestone("Found disks: ". join (",",@disks));
 
     # get partition info for all partitions on all @disks
     my @devices = ();
@@ -273,7 +205,7 @@ sub ReadPartitions {
 	    } readdir (BLOCK_DEVICES);
 	    closedir BLOCK_DEVICES;
 
-            $logger->milestone("ReadPartitions: Found parts: ". join (",",@parts));
+            $lib_ref->milestone("Found parts: ". join (",",@parts));
 
 	    # generate proper device names and other info for all @part[ition]s
       #raid have ! in names for /dev/raid/name (bnc#607852)
@@ -325,7 +257,6 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 
 sub GetMultipath {
   my %ret = ();
-  my $logger = Bootloader::Logger::instance();
 
   unless (DMRaidAvailable())
   {
@@ -340,9 +271,9 @@ sub GetMultipath {
     # return if problems occurs...typical is not loaded kernel module
     if ( $? ) {
       if ($result[0] =~ m/kernel driver not loaded/) {
-        $logger->milestone("Tools::GetMultipath: multipath kernel module is not loaded Ecode:$?.");
+        $lib_ref->milestone("multipath kernel module is not loaded Ecode:$?.");
       } else {
-        $logger->warning("Tools::GetMultipath: multipath command failed with $?.");
+        $lib_ref->warning("multipath command failed with $?.");
       }
       return \%ret;
     }
@@ -352,7 +283,7 @@ sub GetMultipath {
     my $line = "";
     $line = shift @result if (scalar @result != 0);
     while (scalar @result != 0){
-      $logger->milestone("Tools::GetMultipath: processing line $line");
+      $lib_ref->milestone("processing line $line");
       if ($line !~ m/^(\S+)\s.*dm-\d+.*$/){
         $line = shift @result;
         next;
@@ -361,20 +292,20 @@ sub GetMultipath {
       while (scalar @result != 0){
         $line = shift @result;
         chomp $line;
-        $logger->milestone("Tools::GetMultipath: processing line $line");
+        $lib_ref->milestone("processing line $line");
         if ($line =~ m/(.*)dm-.*$/){
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
           $ret{"/dev/$1"} = $multipathdev;
-          $logger->milestone("Tools::GetMultipath: added /dev/$1 -> $multipathdev");
+          $lib_ref->milestone("added /dev/$1 -> $multipathdev");
         }
       }
     }
   }
   else
   {
-    $logger->milestone("Tools::GetMultipath: multipath command not installed");
+    $lib_ref->milestone("multipath command not installed");
   }
 
   return \%ret;
@@ -393,7 +324,6 @@ sub GetUdevMapping {
 
   my @output = `find -P /dev -type b`;
   chomp @output;
-  my $logger = Bootloader::Logger::instance();
   for my $dev (@output) {
     next if ($dev =~ m:^/dev/mapper/:);
 
@@ -416,7 +346,7 @@ sub GetUdevMapping {
         }
       }
 
-      $logger->error("UDEVMAPPING: dmdev $dev doesn't have defined DM_NAME in udev") unless defined $dmdev;
+      $lib_ref->error("UDEVMAPPING: dmdev $dev doesn't have defined DM_NAME in udev") unless defined $dmdev;
       my $prevdev = $dev;
       $dev = "/dev/mapper/$dmdev";
       # DM_NAME could contain also part in some case (bnc#590637)
@@ -430,20 +360,20 @@ sub GetUdevMapping {
   }
 
   while (my ($k,$v) = each (%mapping)){
-    $logger->milestone("UDEV MAPPING: ".($k||"")." -> ".($v||""));
+    $lib_ref->milestone("UDEV MAPPING: ".($k||"")." -> ".($v||""));
   }
 
   if(!(keys %mapping)) {
-    $logger->milestone("*** WARNING: No UDEV mapping! ***");
-    $logger->milestone("device tree:");
+    $lib_ref->milestone("*** WARNING: No UDEV mapping! ***");
+    $lib_ref->milestone("device tree:");
     for (`find -P /dev -type b -ls 2>/dev/null`) {
       chomp;
-      $logger->milestone("  $_");
+      $lib_ref->milestone("  $_");
     }
-    $logger->milestone("udevinfo:");
+    $lib_ref->milestone("udevinfo:");
     for (`udevadm info -e 2>&1`) {
       chomp;
-      $logger->milestone("  $_");
+      $lib_ref->milestone("  $_");
     }
   }
 
@@ -461,8 +391,7 @@ Return 0 if no device, 1 if there are any.
 sub DMRaidAvailable {
     my $retval = 0;
 
-    my $logger = Bootloader::Logger::instance();
-    $logger->milestone(`cat /proc/misc`);
+    $lib_ref->milestone(`cat /proc/misc`);
 
     # Check if device-mapper is available in /proc/misc
     my $dm_available = qx{grep device-mapper /proc/misc};
@@ -481,8 +410,8 @@ sub DMRaidAvailable {
 	$retval = $dm_devices ne "No devices found";
     }
     else {
-	$logger->error("The command \"dmsetup\" is not available.");
-	$logger->error("Is the package \"device-mapper\" installed?");
+	$lib_ref->error("The command \"dmsetup\" is not available.");
+	$lib_ref->error("Is the package \"device-mapper\" installed?");
     }
     
     return $retval;
@@ -508,8 +437,6 @@ sub ReadDMRaidPartitions {
     my @dmdisks = ();
     my @dmparts = ();
 
-    my $logger = Bootloader::Logger::instance();
-
     open(DMDEV, "$dmsetup info -c --noheadings -o name |") || 
 	die ("ReadDMRaidPartitions(): dmsetup failed.");
 
@@ -519,14 +446,14 @@ sub ReadDMRaidPartitions {
 
 	#FIXME: I should not need to do this twice
 	if ($dmdev !~ m/part/) {
-            $logger->milestone("Find raid partition $dmdev");
+            $lib_ref->milestone("Find raid partition $dmdev");
 	    # $dmdev is the base device
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmdisks, $dmdev;
 	}
 	#FIXME: need to check what needs to be removed
 	else {
-            $logger->milestone("Find raid disk $dmdev");
+            $lib_ref->milestone("Find raid disk $dmdev");
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmparts, $dmdev;
 	}
@@ -660,7 +587,6 @@ to initialize the bootloader library properly.
 # FIXME: this has to be read through yast::storage
 sub ReadRAID1Arrays {
     my $udevmapping = shift;
-    my $logger = Bootloader::Logger::instance();
     my %mapping = ();
     # use '/sbin/mdadm --detail --verbose --scan'
     # Assuming an output format like:
@@ -677,8 +603,8 @@ sub ReadRAID1Arrays {
       open (MD, "$mdadm --detail --verbose --scan |");
     }
     else {
-    	$logger->milestone ("The command \"mdadm\" is not available.");
-    	$logger->milestone ("Expect that system doesn't have MD array.");
+    	$lib_ref->milestone ("The command \"mdadm\" is not available.");
+    	$lib_ref->milestone ("Expect that system doesn't have MD array.");
 
     	# If the command "mdadm" isn't available, return a reference to an
     	# empty hash
@@ -686,31 +612,31 @@ sub ReadRAID1Arrays {
     }
 
     my ($array, $level, $num_devices);
-    $logger->milestone("Tools::ReadRAID1Arrays: start parsing mdadm --detail --verbose --scan:");
+    $lib_ref->milestone("start parsing mdadm --detail --verbose --scan:");
     while (my $line = <MD>)
     {
         chomp ($line);
-        $logger->milestone("Tools::ReadRAID1Arrays: $line");
+        $lib_ref->milestone("$line");
 
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
             ($array, $level, $num_devices) = ($1, $2, $3);
             #udevadm sometime return udev symlink instead of physical device, bnc#547580
             $array = $udevmapping->{$array} if $udevmapping->{$array};
-            $logger->milestone("Tools::ReadRAID1Arrays: set array $array level $level and device count to $num_devices");
+            $lib_ref->milestone("set array $array level $level and device count to $num_devices");
         }
         elsif ($level eq "raid1" and $line =~ /devices=(\S+)/)
         {
             # we could test $num_device against number of found devices to
             # detect degradedmode but that does not matter here (really?) 
-             $logger->milestone("Tools::ReadRAID1Arrays: set to array $array values $1");
+             $lib_ref->milestone("set to array $array values $1");
       	     my @devices = split(/,/,$1);
 	           if ($devices[0]=~ m/^.*\d+$/){ #add only non-disc arrays
       	       $mapping{$array} = [ @devices ];
       	     }
         }
     }
-    $logger->milestone("Tools::ReadRAID1Arrays: finish parsing mdadm --detail --verbose --scan:");
+    $lib_ref->milestone("finish parsing mdadm --detail --verbose --scan:");
     close( MD );
     return \%mapping;
 }
@@ -760,27 +686,27 @@ needed for it to run properly.
 
 =cut
 
-sub InitLibrary {
-    $lib_ref = Bootloader::Library->new ();
-    my $um = GetUdevMapping();
-    my $mp = ReadMountPoints ($um);
-    my $part = ReadPartitions ($um);
-    my $md = ReadRAID1Arrays ($um);
-    my $mpath = GetMultipath ();
+sub InitLibrary
+{
+  $lib_ref = Bootloader::Library->new();
 
-    $lib_ref->SetLoaderType (GetBootloader ());
-    $lib_ref->DefineMountPoints ($mp);
-    $lib_ref->DefinePartitions ($part);
-    $lib_ref->DefineMDArrays ($md);
-    $lib_ref->DefineMultipath ($mpath);
-    $lib_ref->DefineUdevMapping($um);
+  my $um = GetUdevMapping();
+  my $mp = ReadMountPoints($um);
+  my $part = ReadPartitions($um);
+  my $md = ReadRAID1Arrays($um);
+  my $mpath = GetMultipath();
 
-    # parse Bootloader configuration files   
-    $lib_ref->ReadSettings();
+  $lib_ref->SetLoaderType(GetBootloader());
+  $lib_ref->DefineMountPoints($mp);
+  $lib_ref->DefinePartitions($part);
+  $lib_ref->DefineMDArrays($md);
+  $lib_ref->DefineMultipath($mpath);
+  $lib_ref->DefineUdevMapping($um);
 
-    DumpLog ($lib_ref->{"loader"});
+  # parse Bootloader configuration files   
+  $lib_ref->ReadSettings();
 
-    return $lib_ref;
+  return $lib_ref;
 }
 
 
@@ -789,32 +715,30 @@ sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
     my $match = 1;
 
-    my $core_lib = $lib_ref->{"loader"};
-
-    $core_lib->l_milestone ("Tools::match_section: matching section name: " . $sect_ref->{"name"});
+    $lib_ref->milestone("matching section name: " . $sect_ref->{"name"});
 
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
-	$core_lib->l_milestone ("Tools::match_section: matching key: $opt");
+	$lib_ref->milestone("matching key: $opt");
 	if ($opt eq "image" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}));
 	    # Print info for this match
-	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
+	    $lib_ref->milestone("key: $opt, matched: " .
 		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
 		", with: " . ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}) . ", result: $match");
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
 	    # Print info for this match
-	    $core_lib->l_milestone ("Tools::match_section: key: $opt, matched: " .
+	    $lib_ref->milestone("key: $opt, matched: " .
 		$sect_ref->{"$opt"} . ", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	last unless $match;
     }
-    $core_lib->l_milestone ("Tools::match_section: end result: $match");
+    $lib_ref->milestone("end result: $match");
     return $match;
 }
 
@@ -823,14 +747,12 @@ sub match_section {
 sub normalize_options {
     my $opt_ref = shift;
 
-    my $core_lib = $lib_ref->{"loader"};
-
     foreach ("image", "initrd" ) {
 	# Print found sections to logfile
-	$core_lib->l_milestone ("Tools::normalize_options: key: $_, resolving if exists:" . $opt_ref->{"$_"});
+	$lib_ref->milestone("key: $_, resolving if exists:" . $opt_ref->{"$_"});
 	$opt_ref->{"$_"} = ResolveCrossDeviceSymlinks($opt_ref->{"$_"})
 	    if exists $opt_ref->{"$_"};
-	$core_lib->l_milestone ("Tools::normalize_options: resolved result:" . $opt_ref->{"$_"});
+	$lib_ref->milestone("resolved result:" . $opt_ref->{"$_"});
     }
 }
 
@@ -881,12 +803,11 @@ bootloader to use the current configuration
 =cut
 
 
-sub UpdateBootloader {
-    my $avoid_init = shift;
+sub UpdateBootloader
+{
+  my $avoid_init = shift;
 
-    my $ret = $lib_ref->UpdateBootloader ($avoid_init);
-    DumpLog ($lib_ref->{"loader"});
-    return $ret;
+  return $lib_ref->UpdateBootloader($avoid_init);
 }
 
 
@@ -1017,16 +938,13 @@ sub SetGlobals {
     $glob_ref->{"__modified"} = 1;
     $lib_ref->SetGlobalSettings ($glob_ref);
     unless (defined $lib_ref->WriteSettings (1)) {
-      $lib_ref->l_error ("Cannot write bootloader configuration file.");
-      DumpLog ($lib_ref->{"loader"});
+      $lib_ref->error("Cannot write bootloader configuration file.");
       return undef;
     }
     unless (defined $lib_ref->UpdateBootloader (1)) { # avoid initialization but write config to the right place
-      $lib_ref->l_error ("Cannot write bootloader configuration file.");
-      DumpLog ($lib_ref->{"loader"});
+      $lib_ref->error("Cannot write bootloader configuration file.");
       return undef;
     }
-    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1040,13 +958,11 @@ sub GetSectionList {
     my %option = @_;
     my $loader = GetBootloader ();
 
-    my $core_lib = $lib_ref->{"loader"};
-
     normalize_options(\%option);
     my @sections = @{$lib_ref->GetSections ()};
 
     # Print sections from file to logfile
-    $core_lib->l_milestone ("Tools::GetSectionList: sections from file:\n' " .
+    $lib_ref->milestone("sections from file:\n' " .
 			join("'\n' ",
 			     map {
 				 $_->{"name"};
@@ -1058,11 +974,10 @@ sub GetSectionList {
     } @sections;
 
     # Print found sections to logfile
-    $core_lib->l_milestone ("Tools::GetSectionList: Found sections:\n' " .
+    $lib_ref->milestone("Found sections:\n' " .
 			join("'\n' ", @section_names) . "'\n"
 		       );
 
-    DumpLog ($lib_ref->{"loader"});
     return @section_names;
 }
 
@@ -1160,13 +1075,12 @@ sub AddSection {
     my %def = ();
 
     my @sections = @{$lib_ref->GetSections ()};
-    my $core_lib = $lib_ref->{"loader"};
 
     my $fitting_section = GetFittingSection($name,$option{"image"},$option{"type"},\@sections);
 
     if ($fitting_section) {
       %def = %{$fitting_section};
-      $core_lib->l_milestone ("Tools::AddSection: Fitting section found so use it");
+      $lib_ref->milestone("Fitting section found so use it.");
       while ((my $k, my $v) = each (%def)) {
         if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
         		&& $k ne "initrd") {
@@ -1182,7 +1096,7 @@ sub AddSection {
       	}
       }
       } else {
-        $core_lib->l_milestone ("Tools::AddSection: Fitting section not found. Use sysconfig values as fallback.");
+        $lib_ref->milestone("Fitting section not found. Use sysconfig values as fallback.");
         my $sysconf;
         if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
           $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
@@ -1261,7 +1175,7 @@ sub AddSection {
     }
 
     # Print new section to be added to logfile
-    $core_lib->l_milestone ("Tools::AddSection: New section to be added :\n\n' " .
+    $lib_ref->milestone("New section to be added:\n\n' " .
 			join("'\n' ",
 			     map {
 				 $_ . " => '" . $new{$_} . "'";
@@ -1314,12 +1228,11 @@ sub AddSection {
     }
 
     # Print all available sections to logfile
-    $core_lib->l_milestone (
-	"Tools::AddSection: All available sections (including new ones):\n");
+    $lib_ref->milestone("All available sections (including new ones):\n");
 
     my $section_count = 1;
     foreach my $s (@sections) {
-	$core_lib->l_milestone ("$section_count. section :\n' " .
+	$lib_ref->milestone("$section_count. section :\n' " .
 			    join("'\n' ",
 				 map {
 				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1360,7 +1273,7 @@ sub AddSection {
     }
 
     # Print globals to logfile
-    $core_lib->l_milestone ("Tools::AddSection: Global section of config :\n\n' " .
+    $lib_ref->milestone("Global section of config:\n\n' " .
 			join("'\n' ",
 			     map {
 				 m/^__/ ? () : $_ . " => '" . $glob_ref->{$_} . "'";
@@ -1368,16 +1281,13 @@ sub AddSection {
 		       );
 
     unless (defined $lib_ref->WriteSettings (1)) {
-      $core_lib->l_error ("Cannot write bootloader configuration file.");
-      DumpLog ($lib_ref->{"loader"});
+      $lib_ref->error("Cannot write bootloader configuration file.");
       return undef;
     }
     unless (defined $lib_ref->UpdateBootloader (1)) { # avoid initialization but write config to the right place
-      $core_lib->l_error ("Cannot write bootloader configuration file.");
-      DumpLog ($lib_ref->{"loader"});
+      $lib_ref->error("Cannot write bootloader configuration file.");
       return undef;
     }
-    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1415,12 +1325,10 @@ sub RemoveSections {
     my $default_section = $glob_ref->{"default"} || "";
     my $default_removed = 0;
 
-    my $loader = GetBootloader ();
-
-    my $core_lib = $lib_ref->{"loader"};
+    my $loader = GetBootloader();
 
     # Print section to be removed to logfile
-    $core_lib->l_milestone ("Tools::RemoveSections: Old section to be removed :\n\n' " .
+    $lib_ref->milestone("Old section to be removed :\n\n' " .
 			join("'\n' ",
 			     map {
 				 $_ . " => '" . $option{$_} . "'";
@@ -1428,12 +1336,11 @@ sub RemoveSections {
 		       );
 
     # Print all available sections (before removal) to logfile
-    $core_lib->l_milestone (
-	"Tools::RemoveSections: All available sections (before removal):\n");
+    $lib_ref->milestone("All available sections (before removal):\n");
 
     my $section_count = 1;
     foreach my $s (@sections) {
-	$core_lib->l_milestone ("$section_count. section :\n' " .
+	$lib_ref->milestone("$section_count. section :\n' " .
 			    join("'\n' ",
 				 map {
 				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1456,7 +1363,7 @@ sub RemoveSections {
 	    if $match and $default_section eq $_->{"name"};
 	!$match;
     } @sections;
-    $core_lib->l_milestone("default is removed by grep") if $default_removed;
+    $lib_ref->milestone("default is removed by grep") if $default_removed;
 
     # Detect wether we have an entry with an initrd line referring to a non
     # existing initrd file and remove this section respectively.
@@ -1478,8 +1385,8 @@ sub RemoveSections {
 		if (!$other_part and !-f $initrd_name and
 		    ($_->{"type"} eq "image" or $_->{"type"} eq "xen")) {
 		    $match = 0;
-                    $core_lib->l_milestone (
-                	"Tools::RemoveSections: Remove non-existing initrd :".$_->{"name"}." -- $initrd_name \n");
+                    $lib_ref->milestone(
+                	"Remove non-existing initrd :".$_->{"name"}." -- $initrd_name \n");
 		}
 
 		$default_removed = 1
@@ -1502,12 +1409,12 @@ sub RemoveSections {
 	\@section_names_after_removal);
 
     # Print all available sections (after removal) to logfile
-    $core_lib->l_milestone (
-	"Tools::RemoveSections: All available sections (after removal):\n");
+    $lib_ref->milestone(
+	"All available sections (after removal):\n");
 
     $section_count = 1;
     foreach my $s (@sections) {
-	$core_lib->l_milestone ("$section_count. section :\n' " .
+	$lib_ref->milestone("$section_count. section :\n' " .
 			    join("'\n' ",
 				 map {
 				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1519,24 +1426,20 @@ sub RemoveSections {
     $lib_ref->SetSections (\@sections);
     if ($default_removed) {
 	$glob_ref->{"default"} = $sections[0]{"name"};
-        $core_lib->l_milestone ( "removed default");
+        $lib_ref->milestone("removed default");
 	$glob_ref->{"removed_default"} = 1;
     }
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
 				   # may change even if not deleted
     $lib_ref->SetGlobalSettings ($glob_ref);
     unless (defined $lib_ref->WriteSettings (1)) {
-      $core_lib->l_error ("Cannot write bootloader configuration file.");
-      DumpLog ($lib_ref->{"loader"});
+      $lib_ref->error("Cannot write bootloader configuration file.");
       return undef;
     }
     unless (defined $lib_ref->UpdateBootloader (1)) { # avoid initialization but write config to the right place
-      $core_lib->l_error ("Cannot write bootloader configuration file.");
-      DumpLog ($lib_ref->{"loader"});
+      $lib_ref->error("Cannot write bootloader configuration file.");
       return undef;
     }
-
-    DumpLog ($lib_ref->{"loader"});
 }
 
 

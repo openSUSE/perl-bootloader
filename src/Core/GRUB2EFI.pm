@@ -62,17 +62,20 @@ Creates an instance of the Bootloader::Core::GRUB2EFI class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    bless ($loader);
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    $loader->l_milestone ("GRUB2EFI::new: Created GRUB2EFI instance");
-    return $loader;
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
+
+  $loader->milestone("Created GRUB2EFI instance");
+
+  return $loader;
 }
-
 
 
 =item
@@ -117,8 +120,7 @@ sub ParseLines {
 
     # and now proceed with /etc/default/grub
     my @defaultconf = @{$files{Bootloader::Path::Grub2_defaultconf()} || []};
-    $self->l_milestone ("GRUB2::Parselines: input from default conf :\n'" .
-                        join("'\n' ", @defaultconf) . "'");
+    $self->milestone("input from default conf :\n'" . join("'\n' ", @defaultconf) . "'");
 
     # prefix commented config with '@' instread of '#'
     # this is to new notation for "commented config" and
@@ -592,7 +594,7 @@ sub SetSettings {
     if (defined $default and $default ne "") {
         $self->RunCommand (
             "/usr/sbin/grub2-efi-set-default '$default'",
-            "/var/log/YaST2/y2log_bootloader"
+            Bootloader::Path::BootCommandLogname()
         );
     }
 
@@ -628,7 +630,7 @@ sub UpdateBootloader {
 
     return 0 == $self->RunCommand (
         "/usr/sbin/grub2-efi-mkconfig -o /boot/grub2-efi/grub.cfg",
-        "/var/log/YaST2/y2log_bootloader"
+        Bootloader::Path::BootCommandLogname()
     );
 }
 
@@ -647,14 +649,14 @@ sub InitializeBootloader {
 
     my $ret = $self->RunCommand (
         "/usr/sbin/grub2-efi-install",
-        "/var/log/YaST2/y2log_bootloader"
+        Bootloader::Path::BootCommandLogname()
     );
 
     return 0 if (0 != $ret);
 
     return 0 == $self->RunCommand (
         "/usr/sbin/grub2-efi-mkconfig -o /boot/grub2-efi/grub.cfg",
-        "/var/log/YaST2/y2log_bootloader"
+        Bootloader::Path::BootCommandLogname()
     );
 }
 

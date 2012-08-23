@@ -31,21 +31,25 @@ C<< $value = Bootloader::MBRTools::PatchThinkpadMBR ($disk); >>
 package Bootloader::MBRTools;
 
 use strict;
-use base 'Exporter';
 
 use Bootloader::Logger;
 
-our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR examineMBR
-);
+use base qw ( Exporter );
 
-sub IsThinkpadMBR($) {
+our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR examineMBR );
+
+
+sub IsThinkpadMBR()
+{
+  my $self = shift;
+
   my $disk = shift;
   my $mbr = qx{dd status=noxfer if=$disk bs=512 count=1 2>/dev/null | od -v -t x1 -};
   $mbr =~ s/\d{7}//g; #remove address
   $mbr =~ s/\n//g; #remove end lines
   $mbr =~ s/\s//g; #remove whitespace
 
-  Bootloader::Logger::instance()->milestone("checked mbr is: $mbr");
+  $self->milestone("checked mbr is: $mbr");
   
   my $first_segment = hex("0x".substr ($mbr, 4, 2));
   my $second_segment = hex("0x".substr ($mbr, 6, 2));
@@ -60,6 +64,7 @@ sub IsThinkpadMBR($) {
   return $ret;
 }
 
+
 # crc function
 sub crc
 {
@@ -71,8 +76,13 @@ sub crc
   return $c;
 }
 
-sub PatchThinkpadMBR($) {
+
+sub PatchThinkpadMBR()
+{
+  my $self = shift;
+
   my $disk = shift;
+
   my $new_mbr = 
    "\x31\xc0\x8e\xd0\x66\xbc\x00\x7c\x00\x00\x8e\xc0\x8e\xd8\x89\xe6" .
    "\x66\xbf\x00\x06\x00\x00\x66\xb9\x00\x01\x00\x00\xf3\xa5\xea\x23" .
@@ -115,7 +125,7 @@ sub PatchThinkpadMBR($) {
 
   unless (seek F, ($old_mbr_sec - 1) << 9, 0)
   {
-    Bootloader::Logger::instance()->error("$disk $! \n");
+    $self->error("$disk $! \n");
     return 0;
   }
 
@@ -131,11 +141,11 @@ sub PatchThinkpadMBR($) {
   # verify crc
 
   if($mbr[6] == 0) {
-    Bootloader::Logger::instance()->warning("$disk: orig mbr crc not checked\n");
+    $self->warning("$disk: orig mbr crc not checked\n");
   }
   else {
     unless (crc(\@old_mbr) == $mbr[6]){
-       Bootloader::Logger::instance()->error("$disk: orig mbr crc failure\n");
+       $self->error("$disk: orig mbr crc failure\n");
        return 0;
     }
   }
@@ -163,22 +173,26 @@ sub PatchThinkpadMBR($) {
   return 1;
 }
 
-sub examineMBR($){
+
+sub examineMBR()
+{
+  my $self = shift;
+
   my $device = shift;
   my $MBR;
 
-  Bootloader::Logger::instance()->milestone("Examine MBR for device $device");
+  $self->milestone("Examine MBR for device $device");
 
   return undef unless defined $device;
 
   unless (open(FD, "<" . $device)){
-      Bootloader::Logger::instance()->error("Examine MBR cannot open $device");
+      $self->error("Examine MBR cannot open $device");
       return undef;
   }
 
   my $readed  = sysread(FD, $MBR, 512, 0);
   unless ($readed or $readed == 512){
-      Bootloader::Logger::instance()->error("Examine MBR cannot read 512 bytes from device $device");
+      $self->error("Examine MBR cannot read 512 bytes from device $device");
       return undef;
   }
 
@@ -186,40 +200,41 @@ sub examineMBR($){
 
   if (substr($MBR, 320, 126) =~
         m/invalid partition table.*no operating system/i) {
-        Bootloader::Logger::instance()->milestone("Examine MBR find Generic MBR");
+        $self->milestone("Examine MBR find Generic MBR");
         return "generic";
   }
 
   if (substr($MBR, 346, 100) =~
         m/GRUB .Geom.Hard Disk.Read. Error/) {
-        Bootloader::Logger::instance()->milestone("Examine MBR find Grub MBR");
+        $self->milestone("Examine MBR find Grub MBR");
         return "grub";
   }
 
   if (substr($MBR, 4, 20) =~
         m/LILO/) {
-        Bootloader::Logger::instance()->milestone("Examine MBR find lilo MBR");
+        $self->milestone("Examine MBR find lilo MBR");
         return "lilo";
   }
 
   if (substr($MBR, 12, 500) =~
         m/NTLDR is missing/) {
-        Bootloader::Logger::instance()->milestone("Examine MBR find windows non-vista MBR");
+        $self->milestone("Examine MBR find windows non-vista MBR");
         return "windows";
   }
 
   if (substr($MBR, 0, 440) =~
         m/invalid partition table.*Error loading operating system/i) {
-        Bootloader::Logger::instance()->milestone("Examine MBR find windows Vista MBR");
+        $self->milestone("Examine MBR find windows Vista MBR");
         return "vista";
   }
   
-  if (IsThinkpadMBR($device)){
-    Bootloader::Logger::instance()->milestone("Examine MBR find thinkpad MBR");
+  if ($self->IsThinkpadMBR($device)){
+    $self->milestone("Examine MBR find thinkpad MBR");
     return "thinkpad";
   }
 
   return "unknown";
 }
+
 
 1;

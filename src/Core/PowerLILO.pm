@@ -153,22 +153,26 @@ Creates an instance of the Bootloader::Core::PowerLILO class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
-    my $arch = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
+  my $arch = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"arch"} = $arch;
-    $loader->{"default_global_lines"} = [
-	{ key => "activate", value => "" },
-    ];
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
+  $loader->{default_global_lines} = [
+    { key => "activate", value => "" },
+  ];
 
-    $loader->GetOptions();
-    $loader->l_milestone ("PowerLILO::new: Created PowerLILO instance");
-    return $loader;
+  $loader->{arch} = $arch;
+  $loader->GetOptions();
+
+  $loader->milestone("Created PowerLILO instance");
+
+  return $loader;
 }
 
 
@@ -356,8 +360,7 @@ sub Global2Info {
 
         unless (exists $go->{$key || ""})
         {
-	  $self->l_milestone (
-		"PowerLILO::Global2Info: Ignoring key '$key' for global section");
+	  $self->milestone("Ignoring key '$key' for global section");
           next;
         }
 
@@ -413,28 +416,17 @@ sub Info2Global {
 	# only accept known global options :-)
 	unless (exists $go->{$key})
         {
-	    $self->l_milestone (
-		"PowerLILO::Info2Global: Ignoring key '$key' for global section");
+	    $self->milestone("Ignoring key '$key' for global section");
             next;
         }
 
 	if ($key eq "boot"){
-	    my $special = boot2special($line_ref->{"value"}, $arch);
-            $line_ref->{"value"} = undef;
+	    my $special = boot2special($line_ref->{value}, $arch);
 
-	    if ( exists ($globinfo{$special}) ) {
-		if ( defined ($globinfo{$special})) {
-		    $line_ref->{"value"} = $globinfo{$special};
-		}		
-		delete $globinfo{$special};
-	    }
+	    $line_ref->{value} = delete $globinfo{$special};
 	}
 	else {
-            $line_ref->{"value"} = undef;
-	    if (defined ($globinfo{$key})) {
-                $line_ref->{"value"} = $line_ref->{"value"}*10 if ($key eq "timeout");
-		$line_ref->{"value"} = delete $globinfo{$key};
-	    }
+	    $line_ref->{value} = delete $globinfo{$key};
 	}
 
 	my $type = $go->{$key};
@@ -515,8 +507,7 @@ sub Info2Section {
 	    delete ($sectinfo{"name"});
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
-	    $self->l_milestone (
-		"PowerLILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
 	else
@@ -564,8 +555,7 @@ sub Info2Section {
         }
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
-	    $self->l_milestone (
-		"PowerLILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
@@ -687,10 +677,9 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
 
-    my $lilo = Bootloader::Path::Lilo_lilo();
     return 0 == $self->RunCommand (
-	"$lilo",
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::Lilo_lilo(),
+	Bootloader::Path::BootCommandLogname()
     );
 }
 

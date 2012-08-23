@@ -135,17 +135,21 @@ Creates an instance of the Bootloader::Core::ZIPL class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [ ];
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->SetOptions();
-    $loader->l_milestone ("ZIPL::new: Created ZIPL instance");
-    return $loader;
+  $loader->{default_global_lines} = [ ];
+  $loader->SetOptions();
+
+  $loader->milestone("Created ZIPL instance");
+
+  return $loader;
 }
 
 =item
@@ -378,7 +382,7 @@ sub InitializeBootloader {
 
     return 0 == $self->RunCommand (
 	Bootloader::Path::Zipl_zipl(),
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::Lilo_lilo()
     );
 }
 
@@ -443,8 +447,7 @@ sub Info2Section {
 	}
         elsif (not exists $so->{$type . "_" . $key})
         {
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    $line_ref = undef; # only accept known section options CAVEAT!
         }
         else
@@ -477,8 +480,7 @@ sub Info2Section {
 	    } # else ignore for unknown section type
         }
         elsif (not exists ($so->{$type . "_" . $key})) {
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
             next; 
         }
 	elsif ($key eq "list") {
@@ -725,7 +727,7 @@ sub Info2Global {
 	}
     }
     unless ($default_type) {
-	$self->l_warning ("Info2Global: default not found, fallback to first entry");
+	$self->warning("default not found, fallback to first entry");
 	$default_sect = $sections[0]->{"name"};
 	$default_type = $sections[0]->{"type"};
     }
