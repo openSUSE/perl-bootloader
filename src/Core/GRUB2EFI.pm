@@ -62,6 +62,53 @@ Creates an instance of the Bootloader::Core::GRUB2EFI class.
 
 =cut
 
+sub GrubCfgSections {
+    my ($parent, $cfg, $sect) = @_;
+    my @m = $cfg =~ /(submenu|menuentry) \s+ '([^']*)' (.*?) ( \{ (?: [^{}]* | (?4))* \} )/sxg;
+
+    for (my $i = 0; $i <= $#m; $i += 4) {
+
+        my $type  = $m[$i];
+        my $title = $m[$i+1];
+        my $args  = $m[$i+2];
+        my $cfg2  = $m[$i+3];
+        my $name  = ($parent) ? "$parent>$title" : "$title";
+
+        if ($type eq "menuentry") {
+            my %sect_info;
+
+            $sect_info{"name"} = $name;
+            $sect_info{"menuentry"} = $name;
+            $sect_info{"type"} = "image";
+
+            if ($args =~ m/'gnulinux-[^\s]+-recovery-[^\s]+'/) {
+                $sect_info{"usage"} = "linux_failsafe";
+            } else {
+                $sect_info{"usage"} = "linux";
+            }
+
+            if ($cfg2 =~ /^\s+linux\s+([^\s]+)\s*(.*)$/m) {
+                my $append = $2;
+                $sect_info{"image"} = $1;
+
+                if ($append =~ /root=/) {
+                    $append =~ s/root=([^\s]+)\s*//;
+                    $sect_info{"root"} = $1;
+                }
+
+                if ($append =~ /vga=/) {
+                    $append =~ s/vga=([^\s]+)\s*//;
+                    $sect_info{"vgamode"} = $1;
+                }
+
+                $sect_info{"append"} = $append;
+            }
+            push @{$sect}, \%sect_info;
+        } elsif ($type eq "submenu") {
+            &GrubCfgSections ($name, $cfg2, $sect);
+        }
+    }
+}
 
 sub new
 {
@@ -137,26 +184,14 @@ sub ParseLines {
         \@defaultconf
     );
 
-    my @confs = @{$files{Bootloader::Path::Grub2_eficonf()} || []};
-    my @entries = ();
-    my $submenu = "";
-    foreach my $conf (@confs) {
-        my $menuentry = "";
+    my @entries;
+    if (open (GRUBCFG, "<", Bootloader::Path::Grub2_eficonf())) {
+        local $/;
+        undef $/;
+        my $cfg = <GRUBCFG>;
 
-        if ($conf =~ /^menuentry\s+['"](.*?)['"]\s+/) {
-            $menuentry = $1;
-            $submenu = "";
-        } elsif ($conf =~ m/^submenu\s+['"](.*?)['"]\s+/) {
-            $submenu = $1;
-        }
-        if ($submenu ne "") {
-            if ($conf =~ m/^\s+menuentry\s+['"](.*?)['"]\s+/) {
-                $menuentry = "$submenu>$1"
-            }
-        }
-        if ($menuentry ne "") {
-	    push @entries, { "menuentry" =>  $menuentry };
-        }
+        &GrubCfgSections ("", $cfg, \@entries);
+        close (GRUBCFG);
     }
 
     $self->{"global"} = $glob_ref;
@@ -178,12 +213,33 @@ ParseLines on success, or undef on fail.
 sub CreateLines {
     my $self = shift;
     my $global = $self->{"global"};
+    my $sections = $self->{"sections"};
 
     if (defined $global->{"__lines"}) {
         foreach my $line (@{$global->{"__lines"}}) {
              if (defined $line->{"value"} && $line->{"value"} eq "" ) {
                  $line->{"value"} = '""';
              }
+        }
+    }
+
+    foreach my $sect (@{$sections}) {
+
+        my $append = undef;
+
+        next unless $sect->{"__modified"} || 0;
+
+        if (exists $sect->{"usage"}) {
+            if ($sect->{"usage"} eq "linux") {
+                $append = \$global->{"append"};
+            } elsif ($sect->{"usage"} eq "linux_failsafe") {
+                $append = \$global->{"append_failsafe"};
+            }
+        }
+
+        if (defined $append && $sect->{"append"} ne ${$append}) {
+            ${$append} = $sect->{"append"};
+            last;
         }
     }
 
