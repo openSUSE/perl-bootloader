@@ -260,6 +260,8 @@ sub Global2Info {
             $ret{"distributor"} = $val;
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
             $ret{"append_failsafe"} = $val;
+        } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
+            $ret{"gfxbackground"} = $val;
         }
     }
 
@@ -407,6 +409,7 @@ sub Info2Global {
     my $serial = delete $globinfo{"serial"} || "";
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
+    my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     # $root = " root=$root" if $root ne "";
@@ -473,6 +476,15 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
             $line_ref->{"value"} = "$append_failsafe" if "$append_failsafe" ne "";
             $append_failsafe = "";
+        } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
+            if ($gfxbackground ne "") {
+                $line_ref->{"key"} = "GRUB_BACKGROUND";
+                $line_ref->{"value"} = $gfxbackground;
+            } else {
+                # delete the line once the value unset
+                $line_ref = undef;
+            }
+            $gfxbackground = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -537,6 +549,13 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_CMDLINE_LINUX_RECOVERY",
             "value" => "$append_failsafe",
+        }
+    }
+
+    if ($gfxbackground ne "") {
+        push @lines, {
+            "key" => "GRUB_BACKGROUND",
+            "value" => "$gfxbackground",
         }
     }
     return \@lines;
