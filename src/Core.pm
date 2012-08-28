@@ -815,27 +815,28 @@ a reference to the list of lines of the file.
 =cut
 
 # map<string,list<string>> ReadFiles (list<string> files)
-sub ReadFiles {
-    my $self = shift;
-    my @filenames = @{+shift};
+sub ReadFiles
+{
+  my $self = shift;
+  my @filenames = @{+shift};
 
-    my %files = ();
-    foreach my $filename (@filenames)
-    {
-	my @lines = ();
-	if (not open (FILE, $filename))
-	{
-	    $self->error("Failed to open $filename") && return undef;
-	}
-	while (my $line = <FILE>)
-	{
-	    chomp $line;
-	    push @lines, $line;
-	}
-	close (FILE);
-	$files{$filename} = \@lines;
+  my %files = ();
+
+  for my $filename (@filenames) {
+    if(open(my $f, $filename)) {
+      my @lines = (<$f>);
+      close ($f);
+      my $l = join '', @lines;
+      chomp @lines;
+      $files{$filename} = \@lines;
+      $self->milestone("$filename =", $l);
     }
-    return \%files;
+    else {
+      $self->error("Failed to open $filename: $!");
+    }
+  }
+
+  return \%files;
 }
 
 =item
@@ -880,7 +881,7 @@ sub WriteFiles {
 	$filename = "$filename$suffix";
 	if (not open (FILE, ">$filename"))
 	{
-	    $self->error("Failed to open $filename") && return undef;
+	    $self->error("Failed to open $filename: $!") && return undef;
 	}
 	my @lines = @{$lines_ref};
 	foreach my $line (@lines)

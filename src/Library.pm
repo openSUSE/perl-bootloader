@@ -228,20 +228,21 @@ EXAMPLE:
 
 =cut
 
-sub DefineMountPoints {
-    my $self = shift;
-    my $mountpoints_ref = shift;
+sub DefineMountPoints
+{
+  my $self = shift;
+  my $mountpoints_ref = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
-    {
-	$self->milestone ("Mount point: $mp ; Device: $dev");
-    }
-    $loader->{"mountpoints"} = $mountpoints_ref;
-    return 1;
+  $loader->{mountpoints} = $mountpoints_ref;
+
+  $self->milestone("mountpoints =", $loader->{mountpoints});
+
+  return 1;
 }
+
 
 sub GetMountPoints {
     my $self = shift;
@@ -271,22 +272,19 @@ EXAMPLE:
 
 =cut
 
-sub DefinePartitions {
-    my $self = shift;
-    my $partitions_ref = shift;
+sub DefinePartitions
+{
+  my $self = shift;
+  my $partitions_ref = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    foreach my $part_ref (@{$partitions_ref})
-    {
-	my ($part, $disk, $num, @part_info ) = @{$part_ref};
-	$self->milestone ("Partition: $part ; " .
-			  "Disk: $disk ; Number: $num ; Info: " .
-			  join(", ", map { "$_"; } @part_info) );
-    }
-    $loader->{"partitions"} = $partitions_ref;
-    return 1;
+  $loader->{partitions} = $partitions_ref;
+
+  $self->milestone("partitions [dev, disk, nr, fsid, fstype, part_type, start_cyl, end_cyl, label] =", $loader->{partitions});
+
+  return 1;
 }
 
 =item
@@ -312,20 +310,19 @@ EXAMPLE:
 
 =cut
 
-sub DefineMDArrays {
-    my $self = shift;
-    my $md_arrays_ref = shift;
+sub DefineMDArrays
+{
+  my $self = shift;
+  my $md_arrays_ref = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
-    {
-	my $members = join ", ", @{$members_ref};
-	$self->milestone ("MD Array: $md ; Members: $members");
-    }
-    $loader->{"md_arrays"} = $md_arrays_ref;
-    return 1;
+  $loader->{md_arrays} = $md_arrays_ref;
+
+  $self->milestone("md_arrays =", $loader->{md_arrays});
+
+  return 1;
 }
 
 =item
@@ -348,23 +345,24 @@ EXAMPLE:
 
 =cut
 
-sub DefineMultipath {
-    my $self = shift;
-    my $mp_ref = shift;
+sub DefineMultipath
+{
+  my $self = shift;
+  my $mp_ref = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    while ((my $phys, my $mp) = each (%{$mp_ref}))
-    {
-	$self->milestone ("Real device: $phys ;  multipath $mp");
-    }
-    $loader->{"multipath"} = $mp_ref;
-    return 1;
+  $loader->{multipath} = $mp_ref;
+
+  $self->milestone("multipath [real_dev, mp_dev] =", $loader->{multipath});
+
+  return 1;
 }
 
+
 =item
-C<< $status = Bootloader::Library->DefineMultipath (\%multipath); >>
+C<< $status = Bootloader::Library->DefineUdevMapping (\%udevmap); >>
 
 Define udev mapping of devices.
 We only need information for GRUB to translate udev device to kernel and then to grub device.
@@ -382,19 +380,17 @@ EXAMPLE:
 
 =cut
 
-sub DefineUdevMapping($) {
-    my $self = shift;
-    my $map_ref = shift;
+sub DefineUdevMapping($)
+{
+  my $self = shift;
+  my $map_ref = shift;
 
-    my $loader = $self->{loader};
-    return undef unless defined $loader;
-
-    while ((my $phys, my $mp) = each (%{$map_ref}))
-    {
-	$self->milestone ("Udev device: ".($phys||"")." ;  kernel: ".($mp||"")."");
-    }
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
   $loader->{udevmap} = $map_ref;
+
+  $self->milestone("udevmap =", $loader->{udevmap});
 
   return 1;
 }

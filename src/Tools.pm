@@ -123,34 +123,33 @@ See InitLibrary function for example.
 
 =cut
 
-sub ReadMountPoints {
-    my $udevmap = shift;
-    open (FILE, Bootloader::Path::Fstab()) || 
-	die ("ReadMountPoints(): Failed to open /etc/fstab");
+sub ReadMountPoints
+{
+  my $self = $lib_ref;
 
-    my %mountpoints = ();
-    while (my $line = <FILE>)
-    {
-	if ($line =~ /^\s*(\S+)\s+(\S+).*/)
-	{
-	    my $dev = $1;
-	    my $mp = $2;
-	    if (substr ($dev, 0, 1) ne "#")
-	    {
-		if ($dev =~ m/^LABEL=(.*)/)
-		{
-                    $dev = "/dev/disk/by-label/$1"; #do not translate otherwise it changes root always bnc#575362
-                } elsif ($dev =~ m/UUID=(.*)/){
-                    $dev = "/dev/disk/by-uuid/$1";
-                }
-                $mp =~ s/\\040/ /; #handle spaces in fstab
-		$mountpoints{$mp} = $dev;
-	    }
-	}
+  my $udevmap = shift;
+
+  my $f = Bootloader::Path::Fstab();
+  my $x = Bootloader::Core::ReadFiles($self, [ $f ]);
+
+  my %mountpoints = ();
+
+  for my $line (@{$x->{$f}}) {
+    (my $dev, my $mp) = split ' ', $line;
+    next if $dev =~ /^#/;
+    if($dev =~ m/^LABEL=(.*)/) {
+      $dev = "/dev/disk/by-label/$1";	# do not translate otherwise it changes root always bnc#575362
     }
-    close (FILE);
-    return \%mountpoints;
+    elsif($dev =~ m/^UUID=(.*)/) {
+      $dev = "/dev/disk/by-uuid/$1";
+    }
+    $mp =~ s/\\040/ /g;			# handle spaces in fstab
+    $mountpoints{$mp} = $dev;
+  }
+
+  return \%mountpoints;
 }
+
 
 =item
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
@@ -359,9 +358,9 @@ sub GetUdevMapping {
     }
   }
 
-  while (my ($k,$v) = each (%mapping)){
-    $lib_ref->milestone("UDEV MAPPING: ".($k||"")." -> ".($v||""));
-  }
+#  while (my ($k,$v) = each (%mapping)){
+#    $lib_ref->milestone("UDEV MAPPING: ".($k||"")." -> ".($v||""));
+#  }
 
   if(!(keys %mapping)) {
     $lib_ref->milestone("*** WARNING: No UDEV mapping! ***");
@@ -377,8 +376,11 @@ sub GetUdevMapping {
     }
   }
 
+  # $lib_ref->milestone("\%mapping =", \%mapping);
+
   return \%mapping;
 }
+
 
 =item
 C<< $numDM = Bootloader::Tools::DMRaidAvailable (); >>
@@ -388,34 +390,48 @@ Return 0 if no device, 1 if there are any.
 
 =cut
 
-sub DMRaidAvailable {
-    my $retval = 0;
+sub DMRaidAvailable
+{
+  my $self = $lib_ref;
 
-    $lib_ref->milestone(`cat /proc/misc`);
+  my $r = $self->{cache}{DMRaidAvailable};
 
-    # Check if device-mapper is available in /proc/misc
-    my $dm_available = qx{grep device-mapper /proc/misc};
-    chomp $dm_available;
+  if(defined $r) {
+    $self->milestone("DMRaidAvailable (cached) = $r");
+    return $r;
+  }
 
-    if ($dm_available eq "") {
-	return $retval;
-    }
+  $self->{tools}{dmsetup} = $dmsetup = AddPathToExecutable("dmsetup");
 
-    $dmsetup = AddPathToExecutable("dmsetup");
+  # check for device-mapper in /proc/misc
+  my $pm = Bootloader::Path::Prefix('/proc/misc');
+  my $x = Bootloader::Core::ReadFiles($self, [ $pm ]);
+  $r = grep /device-mapper/, @{$x->{$pm}};
 
+  $self->milestone("device-mapper = $r");
+
+  if($r) {
+    # check if dmsetup works and reports dm devices
     if (-e $dmsetup) {
-	my $dm_devices = qx{$dmsetup info -c --noheadings -o uuid};
-	chomp($dm_devices);
+      my $dm_devices = qx{$dmsetup info -c --noheadings -o uuid 2>/dev/null};
+      chomp $dm_devices;
+      $r = $dm_devices eq "No devices found" || $dm_devices eq "" ? 0 : 1;
 
-	$retval = $dm_devices ne "No devices found";
+      $self->milestone("dm devices = $r");
     }
     else {
-	$lib_ref->error("The command \"dmsetup\" is not available.");
-	$lib_ref->error("Is the package \"device-mapper\" installed?");
+      $self->error('The command "dmsetup" is not available.');
+      $self->error('Is the package "device-mapper" installed?');
     }
-    
-    return $retval;
+  }
+
+  $r = $r ? 1 : 0;
+
+  $self->milestone("DMRaidAvailable = $r");
+
+  return $self->{cache}{DMRaidAvailable} = $r;
 }
+
 
 =item
 C<< $part_ref = Bootloader::Tools::ReadDMRaidPartitions (); >>
@@ -597,13 +613,13 @@ sub ReadRAID1Arrays {
     #	    devices=/dev/sda1,/dev/sdb1
     #
 
-    $mdadm = AddPathToExecutable("mdadm");
+    $lib_ref->{tools}{mdadm} = $mdadm = AddPathToExecutable("mdadm");
 
     if (-e $mdadm) {
-      open (MD, "$mdadm --detail --verbose --scan |");
+      open (MD, "$mdadm --detail --verbose --scan 2>/dev/null |");
     }
     else {
-    	$lib_ref->milestone ("The command \"mdadm\" is not available.");
+    	$lib_ref->milestone ('The command "mdadm" is not available.');
     	$lib_ref->milestone ("Expect that system doesn't have MD array.");
 
     	# If the command "mdadm" isn't available, return a reference to an
@@ -612,7 +628,7 @@ sub ReadRAID1Arrays {
     }
 
     my ($array, $level, $num_devices);
-    $lib_ref->milestone("start parsing mdadm --detail --verbose --scan:");
+    $lib_ref->milestone("start parsing mdadm --detail --verbose --scan");
     while (my $line = <MD>)
     {
         chomp ($line);
@@ -636,7 +652,7 @@ sub ReadRAID1Arrays {
       	     }
         }
     }
-    $lib_ref->milestone("finish parsing mdadm --detail --verbose --scan:");
+    $lib_ref->milestone("finish parsing mdadm");
     close( MD );
     return \%mapping;
 }
@@ -705,6 +721,8 @@ sub InitLibrary
 
   # parse Bootloader configuration files   
   $lib_ref->ReadSettings();
+
+  $lib_ref->milestone("done");
 
   return $lib_ref;
 }

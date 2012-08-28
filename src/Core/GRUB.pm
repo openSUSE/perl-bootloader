@@ -611,8 +611,9 @@ sub ParseLines {
 
     #first set the device map - other parsing uses it
     my @device_map = @{$files{Bootloader::Path::Grub_devicemap()} || []};
-    $self->milestone("input from device.map :\n'" .
-			join("'\n' ", @device_map) . "'");
+
+    $self->milestone("device.map (input) =", \@device_map);
+
     my %devmap = ();
     foreach my $dm_entry (@device_map)
     {
@@ -627,17 +628,18 @@ sub ParseLines {
           }
 	}
     };
+
     $self->milestone("avoided_reading device map.") if ($avoid_reading_device_map );
+
     $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
-    $self->milestone("device_map: ".$self->{"device_map"});
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->milestone("device_map: $unix <-> $fw.");
-    }
+
+    $self->milestone("device_map (parsed) =", $self->{device_map});
 
     # and now proceed with menu.lst
     my @menu_lst = @{$files{Bootloader::Path::Grub_menulst()} || []};
-    $self->milestone("input from menu.lst :\n'" .
-			join("'\n' ", @menu_lst) . "'");
+
+    $self->milestone("menu.lst (input) =", \@menu_lst);
+
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	0,
 	["title"],
@@ -646,8 +648,9 @@ sub ParseLines {
 
     # and finally get the location from /etc/grub.conf
     my @grub_conf_lines = @{$files{Bootloader::Path::Grub_grubconf()} || []};
-    $self->milestone("input from /etc/grub.conf :\n'" .
-			join("'\n' ", @grub_conf_lines) . "'");
+
+    $self->milestone("grub.conf (input) =", \@grub_conf_lines);
+
     my $grub_root = "";
     my @grub_conf = ();
     my @devices = ();
@@ -752,9 +755,15 @@ sub ParseLines {
       }			 
     } 
     # $glob_ref->{"stage1_dev"} = \@devices;
-    $self->{"sections"} = $sect_ref;
-    $self->{"global"} = $glob_ref;
-    $self->{"grub_conf"} = \@grub_conf;
+
+    $self->{global} = $glob_ref;
+    $self->{sections} = $sect_ref;
+    $self->{grub_conf} = \@grub_conf;
+
+    $self->milestone("global =", $self->{global});
+    $self->milestone("sections =", $self->{sections});
+    $self->milestone("grub_conf (parsed) =", $self->{grub_conf});
+
     return 1;
 }
 

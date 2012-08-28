@@ -35,6 +35,9 @@ use POSIX qw ( strftime );
 use Bootloader::Path;
 
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 1;
 
 my (@log_level_name, %log_level_num);
 
@@ -139,6 +142,19 @@ sub __log
 
   $message = "<$level> $id $func.$line: $message";
 
+  if($_[0]) {
+    my $x = $_[0];
+    if(ref $x) {
+      chomp($x = Dumper $x);
+    }
+    else {
+      chomp $x;
+      $x = "<<<<<<<<\n$x\n>>>>>>>>";
+    }
+
+    $message .= "\n$x";
+  }
+
   push @{$self->{logger}{logs}}, {
     message => $message,
     prefix => $prefix,
@@ -162,7 +178,7 @@ sub debug
   my $self = shift;
   my $message = shift;
 
-  $self->__log(0, $message);
+  $self->__log(0, $message, @_);
 }
 
 
@@ -171,7 +187,7 @@ sub milestone
   my $self = shift;
   my $message = shift;
 
-  $self->__log(1, $message);
+  $self->__log(1, $message, @_);
 }
 
 
@@ -180,7 +196,7 @@ sub warning
   my $self = shift;
   my $message = shift;
 
-  $self->__log(2, "Warning: $message");
+  $self->__log(2, "Warning: $message", @_);
 }
 
 
@@ -189,7 +205,7 @@ sub error
   my $self = shift;
   my $message = shift;
 
-  $self->__log(3, "Error: $message");
+  $self->__log(3, "Error: $message", @_);
 }
 
 
