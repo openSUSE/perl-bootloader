@@ -311,7 +311,7 @@ if (defined $oper{add}) {
 	chomp ($opt_trans);
 
         #log what is translated
-        $logger->milestone("translate :\n" . $0 . " " . join (" ", @ARGV));
+        $logger->milestone("translate: " . $0 . " " . join (" ", @ARGV));
 	
 	# check whether translation only contains [a-zA-Z0-9 _]
 	# otherwise fall back to untranslated string

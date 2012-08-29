@@ -666,11 +666,7 @@ sub ParseLines {
 
     $self->milestone("menu.lst (input) =", \@menu_lst);
 
-    (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
-	0,
-	["title"],
-	\@menu_lst
-    );
+    (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines(0, [ "title" ], \@menu_lst);
 
     # and finally get the location from /etc/grub.conf
     my @grub_conf_lines = @{$files{Bootloader::Path::Grub_grubconf()} || []};

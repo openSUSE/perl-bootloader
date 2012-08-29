@@ -1482,8 +1482,9 @@ sub MarkInitialSection {
     return \@sects;
 }
 
+
 =item
-C<< ($global_ref, $sections_ref) Bootloader::Core->ParseMenuFileLines ($separator, \@start_keys, \@lines); >>
+C<< ($global_ref, $sections_ref) Bootloader::Core->ParseMenuFileLines($separator, \@start_keys, \@lines); >>
 
 Parses the lines of the file containing the bootloader menu, and creates the hashes representing
 the global settings and the sections. As arguments takes the separator of the key and value in the
@@ -1494,43 +1495,43 @@ reference to a hash representing global options and reference to a list represen
 
 # (map<string,any> global, list<map<string,any>> sections) ParseMenuFileLines
 #   (string separator, list<string> section_start_keys, list<string> lines)
-sub ParseMenuFileLines {
-    my $self = shift;
-    my $separator = shift;
-    my $section_starts_ref = shift;
-    my @lines = @{+shift};
+sub ParseMenuFileLines
+{
+  my $self = shift;
+  my $separator = shift;
+  my $section_starts_ref = shift;
+  my @lines = @{+shift};
 
-    @lines = $self->ProcessMenuFileLines (\@lines, $separator);
-    my @sects = @{$self->SplitLinesToSections (\@lines,
-	$section_starts_ref)};
-    my @global = @{+shift @sects};
+  @lines = $self->ProcessMenuFileLines (\@lines, $separator);
+  my @sects = @{$self->SplitLinesToSections (\@lines, $section_starts_ref)};
+  my @global = @{+shift @sects};
 
-    @sects = map {
-	$self->milestone("section lines to convert :\n'" .
-			join("'\n' ",
-			     map {
-				 $_->{"key"} . " => " . $_->{"value"};
-			     } @{$_}) . "'"
-			);
-	my $s = $self->Section2Info ($_);
-	$self->milestone("parsing result :\n'" .
-			join("'\n' ",
-			     map {
-				 m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
-			     } keys %{$s}) . "'"
-			);
-	$s;
-    } @sects;
+  @sects = map {
+    $self->milestone(
+      "section lines to convert:\n\{\n" .
+      join("\n", map { "  '$_->{key}'" . " => " . "'$_->{value}'" } @$_) .
+      "\n\}"
+    );
 
-    $self->MangleSections(\@sects, \@global);
-    my @sect_names = map {
-	$_->{"name"} || "";
-    } @sects;
-    my %global = %{$self->Global2Info (\@global, \@sect_names)};
-    @sects = @{$self->MarkInitialSection (\@sects, $global{"default"} || "")};
+    my $s = $self->Section2Info($_);
 
-    return (\%global, \@sects);
+    $self->milestone(
+      "parsing result:\n\{\n" .
+      join("\n", map { m/^__/ ? () : "  '$_'" . " => " . "'$s->{$_}'" } keys %$s) .
+      "\n\}"
+    );
+
+    $s;
+  } @sects;
+
+  $self->MangleSections(\@sects, \@global);
+  my @sect_names = map { $_->{name} || "" } @sects;
+  my %global = %{$self->Global2Info (\@global, \@sect_names)};
+  @sects = @{$self->MarkInitialSection (\@sects, $global{default} || "")};
+
+  return (\%global, \@sects);
 }
+
 
 =item
 C<< $lines_ref = Bootloader::Core->PrepareMenuFileLines (\@sectinos, \%global, $indent, $separator); >>
