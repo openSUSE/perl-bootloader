@@ -323,7 +323,8 @@ sub GrubDev2UnixDev
     }
   }
 
-  $u_dev = $self->Member2MD($u_dev) if defined $u_dev;
+  # FIXME: what on earth is this for? (in particular: !$partition ???)
+  $u_dev = $self->Member2MD($u_dev) if defined $u_dev && !defined $partition;
 
   # FIXME: returning original value, is that really sensible?
   $u_dev = $original if !defined $u_dev;
