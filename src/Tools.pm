@@ -129,12 +129,9 @@ sub ReadMountPoints
 
   my $udevmap = shift;
 
-  my $f = Bootloader::Path::Fstab();
-  my $x = Bootloader::Core::ReadFiles($self, [ $f ]);
-
   my %mountpoints = ();
 
-  for my $line (@{$x->{$f}}) {
+  for my $line (@{$self->ReadFile(Bootloader::Path::Fstab())}) {
     (my $dev, my $mp) = split ' ', $line;
     next if $dev =~ /^#/;
     if($dev =~ m/^LABEL=(.*)/) {
@@ -404,9 +401,7 @@ sub DMRaidAvailable
   $self->{tools}{dmsetup} = $dmsetup = AddPathToExecutable("dmsetup");
 
   # check for device-mapper in /proc/misc
-  my $pm = Bootloader::Path::Prefix('/proc/misc');
-  my $x = Bootloader::Core::ReadFiles($self, [ $pm ]);
-  $r = grep /device-mapper/, @{$x->{$pm}};
+  $r = grep /device-mapper/, @{$self->ReadFile(Bootloader::Path::Prefix('/proc/misc'))};
 
   $self->milestone("device-mapper = $r");
 

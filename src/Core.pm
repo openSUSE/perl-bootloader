@@ -114,7 +114,7 @@ package Bootloader::Core;
 
 use strict;
 
-use base qw ( Bootloader::Logger );
+use base qw ( Bootloader::FileIO Bootloader::Logger );
 
 #constants
 
@@ -805,39 +805,6 @@ sub ListMenuFiles {
     return $self->ListFiles ();
 }
 
-=item
-C<< $files_ref = Bootloader::Core->ReadFiles (\@file_names); >>
-
-Actually reads the files from the disk. As argument, takes a reference
-to the list of file names, returns a hash, where key is file name and value
-a reference to the list of lines of the file.
-
-=cut
-
-# map<string,list<string>> ReadFiles (list<string> files)
-sub ReadFiles
-{
-  my $self = shift;
-  my @filenames = @{+shift};
-
-  my %files = ();
-
-  for my $filename (@filenames) {
-    if(open(my $f, $filename)) {
-      my @lines = (<$f>);
-      close ($f);
-      my $l = join '', @lines;
-      chomp @lines;
-      $files{$filename} = \@lines;
-      $self->milestone("$filename =", $l);
-    }
-    else {
-      $self->error("Failed to open $filename: $!");
-    }
-  }
-
-  return \%files;
-}
 
 =item
 C<< $status = Bootloader::Core->WriteFiles (\%files, $suffix, $menu_only); >>

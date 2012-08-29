@@ -82,7 +82,7 @@ use Bootloader::Core;
 use Bootloader::MBRTools;
 use Bootloader::Path;
 
-use base qw ( Bootloader::MBRTools Bootloader::Logger );
+use base qw ( Bootloader::MBRTools Bootloader::FileIO Bootloader::Logger );
 
 our $VERSION;
 
@@ -236,6 +236,8 @@ sub DefineMountPoints
   my $loader = $self->{loader};
   return undef unless defined $loader;
 
+  delete $loader->{cache};
+
   $loader->{mountpoints} = $mountpoints_ref;
 
   $self->milestone("mountpoints =", $loader->{mountpoints});
@@ -280,6 +282,8 @@ sub DefinePartitions
   my $loader = $self->{loader};
   return undef unless defined $loader;
 
+  delete $loader->{cache};
+
   $loader->{partitions} = $partitions_ref;
 
   $self->milestone("partitions [dev, disk, nr, fsid, fstype, part_type, start_cyl, end_cyl, label] =", $loader->{partitions});
@@ -318,6 +322,8 @@ sub DefineMDArrays
   my $loader = $self->{loader};
   return undef unless defined $loader;
 
+  delete $loader->{cache};
+
   $loader->{md_arrays} = $md_arrays_ref;
 
   $self->milestone("md_arrays =", $loader->{md_arrays});
@@ -353,6 +359,8 @@ sub DefineMultipath
   my $loader = $self->{loader};
   return undef unless defined $loader;
 
+  delete $loader->{cache};
+
   $loader->{multipath} = $mp_ref;
 
   $self->milestone("multipath [real_dev, mp_dev] =", $loader->{multipath});
@@ -387,6 +395,8 @@ sub DefineUdevMapping($)
 
   my $loader = $self->{loader};
   return undef unless defined $loader;
+
+  delete $loader->{cache};
 
   $loader->{udevmap} = $map_ref;
 

@@ -210,23 +210,34 @@ sub AllowCommentAfterText {
   return 0;
 }
 
-sub GetKernelDevice {
-    my $self = shift;
-    my $orig = shift;
-    my $device = $orig;
 
-    unless (defined ($self->{"udevmap"}))
-    {
-        $self->warning("Udev mapping is not set");
-        return $orig;
-    }
-    $device =  $self->{"udevmap"}->{$device}
-        if defined ($self->{"udevmap"}->{$device});
+sub GetKernelDevice
+{
+  my $self = shift;
+  my $orig = shift;
 
-    $self->milestone("From $orig to $device");
+  my $dev = $self->{cache}{kerneldevice}{$orig};
+  if(defined $dev) {
+    $self->milestone("(cached): $orig => $dev");
+    return $dev;
+  }
 
-    return $device;
+  if(defined $self->{udevmap}) {
+    $dev = $self->{udevmap}{$orig};
+  }
+  else {
+    $self->warning("udev mapping is not set");
+  }
+
+  $dev = $orig if !defined $dev;
+
+  $self->{cache}{kerneldevice}{$orig} = $dev;
+
+  $self->milestone("$orig => $dev");
+
+  return $dev;
 }
+
 
 =item
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
@@ -238,74 +249,92 @@ or argument if translate fail.
 =cut
 
 # string GrubDev2UnixDev (string grub_dev)
-sub GrubDev2UnixDev {
-    my $self = shift;
-    my $dev = shift;
+sub GrubDev2UnixDev
+{
+  my $self = shift;
+  my $dev = shift;
+  my $u_dev;
+  local $_;
 
-    unless ($dev) {
-	$self->error("Empty device to translate");
-	return $dev;
-    }
-    if ($dev !~ /^\(.*\)$/) {
-	$self->warning("Not translating device $dev");
-	return $dev;
-    }
+  $self->milestone("device = $dev");
 
-    my $original = $dev;
-    my $partition = undef;
-
-    # Check if $dev consists of something like (hd0,0), thus a grub device
-    if ($dev =~ /\(([^,]+),([^,]+)\)/) {
-	$dev = $1;
-	$partition = $2 + 1;
-    }
-    elsif ($dev =~ /\(([^,]+)\)/) {
-	$dev = $1;
-    }
-
-    my $match_found = 0;
-    $self->milestone("device_map: ".$self->{"device_map"});
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->milestone("device_map: $unix <-> $fw.");
-    }
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-	if ($dev eq $fw) {
-	    $dev = $unix;
-	    $match_found = 1;
-	}
-    }
-
-    if ($match_found == 0) {
-        $self->error("did not find a match for $dev in the device map");
-        return $original;
-    }
-
-    # resolve symlinks.....
-    $dev = $self->GetKernelDevice($dev);
-    $self->milestone("Kernel device is $dev");
-
-    if (defined ($partition)) {
-        my $finded = undef;
-	foreach my $dev_ref (@{$self->{"partitions"}}) {
-	    if ( $dev_ref->[1] eq $dev 
-              && $dev_ref->[2] == $partition) {
-		$dev = $dev_ref->[0];
-		$self->milestone("Translated $original to $dev");
-		$finded = 1;;
-	    }
-	}
-        if (defined $finded){
-          return $dev;
-        }
-        #no partition found so return $dev with partition
-	$self->warning("No partition found for $dev with $partition.");
-        return $dev.$partition;
-    }
-
-    $dev = $self->Member2MD ($dev);
-    $self->milestone("Translated GRUB->UNIX: $original to $dev");
+  if($dev eq "") {
+    $self->error("empty device to translate");
     return $dev;
+  }
+
+  if($dev !~ /^\(.*\)$/) {
+    $self->warning("not a grub device: $dev");
+    return $dev;
+  }
+
+  my $original = $dev;
+
+  $u_dev = $self->{cache}{grub2unix}{$original};
+  if(defined $u_dev) {
+    $self->milestone("translated (cached): $original => $u_dev");
+    return $u_dev;
+  }
+
+  my $partition = undef;
+
+  # check if $dev consists of something like (hd0,0), thus a grub device
+  if($dev =~ /\(([^,]+),([^,]+)\)/) {
+    $dev = $1;
+    $partition = $2 + 1;
+  }
+  elsif ($dev =~ /\(([^,]+)\)/) {
+    $dev = $1;
+  }
+
+  for(keys %{$self->{device_map}}) {
+    if($self->{device_map}{$_} eq $dev) {
+      $u_dev = $self->GetKernelDevice($_);
+      last;
+    }
+  }
+
+  if(!defined $u_dev) {
+    $self->error("$dev not in device map");
+  }
+  elsif(defined $partition) {
+    my $part_ok;
+    for(@{$self->{partitions}}) {
+      if($_->[1] eq $u_dev && $_->[2] == $partition) {
+        $u_dev = $_->[0];
+        $part_ok = 1;
+        last;
+      }
+    }
+    if(!$part_ok) {
+      # partition not found, making something up...
+      if($dev =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}$#) {
+        $u_dev .= "";
+      }
+      elsif($dev =~ m#^/dev/disk/#) {
+        $u_dev .= "-part";
+      }
+      elsif($original =~ m#^/dev(?:/[^/]+){1,2}$#) {
+        $u_dev .= "p";
+      }
+      $u_dev .= $partition;
+
+      $self->warning("partition $partition not found, guessing $u_dev");
+    }
+  }
+
+  $u_dev = $self->Member2MD($u_dev) if defined $u_dev;
+
+  # FIXME: returning original value, is that really sensible?
+  $u_dev = $original if !defined $u_dev;
+
+  $self->{cache}{grub2unix}{$original} = $u_dev;
+
+  $self->milestone("translated: $original => $u_dev");
+
+  return $u_dev;
 }
+
 
 =item
 C<< $grub_dev = Bootloader::Core::GRUB->UnixDev2GrubDev ($unix_dev); >>
@@ -320,107 +349,103 @@ As argument takes the UNIX device, returns the GRUB device (both strings).
 # The pattern matches disk or floppy or network or cd
 my $grubdev_pattern = "(?:hd\\d+(?:,\\d+)?|fd\\d+|nd|cd)";
 
-
 # string UnixDev2GrubDev (string unix_dev)
-sub UnixDev2GrubDev {
-    my $self = shift;
-    my $dev = shift;
-    my $g_dev;
-    local $_;
+sub UnixDev2GrubDev
+{
+  my $self = shift;
+  my $dev = shift;
+  my $g_dev;
+  local $_;
 
-    if ($dev eq "") {
-	$self->error("Empty device to translate");
-	return ""; # return an error
+  $self->milestone("device = $dev");
+
+  if($dev eq "") {
+    $self->error("empty device to translate");
+    return ""; # return an error
+  }
+
+  # seems to be a grub device already 
+  if($dev =~ /^\(${grubdev_pattern}\)$/) {
+    $self->warning("not a unix device: $dev");
+    return $dev;
+  }
+
+  # remove parenthesis to be able to handle entries like "(/dev/sda1)" which
+  # might be there by error
+  $dev =~ s/^\((.*)\)$/$1/;
+
+  # This gives me the devicename, whether $dev is the device or a link!
+  # This works for udev (kernel) devices only, devicemapper doesn't 
+  # need to be changed here 
+
+  my $original = $dev;
+
+  $g_dev = $self->{cache}{unix2grub}{$original};
+  if(defined $g_dev) {
+    $self->milestone("translated (cached): $original => $g_dev");
+    return $g_dev;
+  }
+
+  my $kernel_dev = $self->GetKernelDevice($dev);
+
+  my $partition = undef;
+
+  if($kernel_dev =~ m#/dev/md\d+#) {
+    my @members = @{$self->MD2Members ($kernel_dev) || []};
+    # FIXME! This only works for mirroring (Raid1)
+    $kernel_dev = $self->GetKernelDevice($members[0] || $kernel_dev );
+    $self->milestone("first device of MDRaid: $original -> $kernel_dev");
+  }
+
+  # fetch the underlying device (sda1 --> sda)
+  for(@{$self->{partitions}}) {
+    if($_->[0] eq $kernel_dev) {
+      $kernel_dev = $_->[1];
+      $partition = $_->[2] - 1;
+      $self->milestone("device disk part: $_->[0] $_->[1] $_->[2]");
+      last;
     }
+  }
 
-    # Seems to be a grub device already 
-    if ($dev =~ /^\(${grubdev_pattern}\)$/) {
-	$self->warning("Not translating device $dev");
-	return $dev;
+  for(sort keys %{$self->{device_map}}) {
+    if($kernel_dev eq $self->GetKernelDevice($_)) {
+      $g_dev = $self->{device_map}{$_};
+      last;
     }
+  }
 
-    $self->milestone("Translating $dev ...");
+  # fallback if translation has failed - this is good enough for many cases
+  # FIXME: this is nonsense - we should return an error
+  if(!$g_dev) {
+    $self->warning("unknown device/partition, using fallback");
 
-    # remove parenthesis to be able to handle entries like "(/dev/sda1)" which
-    # might be there by error
-    $dev =~ s/^\((.*)\)$/$1/;
+    $g_dev = "hd0";
+    $partition = undef;
 
-    # This gives me the devicename, whether $dev is the device or a link!
-    # This works for udev (kernel) devices only, devicemapper doesn't 
-    # need to be changed here 
-
-    my $original = $dev;
-    my $kernel_dev = $self->GetKernelDevice($dev);
-
-    $self->milestone("kernel device: $kernel_dev");
-
-    my $partition = undef;
-
-    if ($kernel_dev =~ m#/dev/md\d+#) {
-	my @members = @{$self->MD2Members ($kernel_dev) || []};
-	# FIXME! This only works for mirroring (Raid1)
-	$kernel_dev = $self->GetKernelDevice($members[0] || $kernel_dev );
-	$self->milestone("First device of MDRaid: $original -> $kernel_dev");
+    if(
+      $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
+      $original =~ m#^/dev/\S+\-part(\d+)$# ||
+      $original =~ m#^/dev(?:/[^/]+){1,2}p(\d+)$#
+    ) {
+      $partition = $1 - 1;
+      $partition = 0 if $partition < 0;
     }
+  }
 
-    # print all entries of device.map - for debugging
-    if ($self->{device_map}) {
-        $self->milestone("device_map:");
+  if(defined $partition) {
+    $g_dev = "($g_dev,$partition)";
+    $self->milestone("translated partition: $original => $g_dev");
+  }
+  else {
+    $g_dev = "($g_dev)";
+    $self->milestone("translated device: $original => $g_dev");
+  }
 
-	for (sort keys %{$self->{device_map}}) {
-	    $self->milestone("unix device: $_ <==> grub device: $self->{device_map}{$_}");
-	}
-    }
-    else {
-	$self->warning("empty device_map");
-    }
+  $self->{cache}{unix2grub}{$original} = $g_dev;
 
-    # fetch the underlying device (sda1 --> sda)
-    for (@{$self->{partitions}}) {
-	if ($_->[0] eq $kernel_dev) {
-	    $kernel_dev = $_->[1];
-	    $partition = $_->[2] - 1;
-	    $self->milestone("dev base part: $_->[0] $_->[1] $_->[2]");
-	    last;
-	}
-    }
-
-    for (sort keys %{$self->{device_map}}) {
-        if ($kernel_dev eq $self->GetKernelDevice($_)) {
-            $g_dev = $self->{device_map}{$_};
-            last;
-        }
-    }
-
-    # fallback if translation has failed - this is good enough for many cases
-    # FIXME: this is nonsense - we should return an error
-    if (!$g_dev) {
-        $self->warning("Unknown device/partition, using fallback");
-
-        $g_dev = "hd0";
-        $partition = undef;
-
-        if (
-            $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
-            $original =~ m#^/dev/\S+\-part(\d+)$# ||
-            $original =~ m#^/dev(?:/[^/]+){1,2}p(\d+)$#
-        ) {
-            $partition = $1 - 1;
-            $partition = 0 if $partition < 0;
-        }
-    }
-
-    if (defined $partition) {
-        $g_dev = "($g_dev,$partition)";
-        $self->milestone("Translated UNIX partition -> GRUB device: $original to $g_dev");
-    }
-    else {
-        $g_dev = "($g_dev)";
-        $self->milestone("Translated UNIX device -> GRUB device: $original to $g_dev");
-    }
-
-     return $g_dev;
+  return $g_dev;
 }
+
 
 =item
 C<< $unix_path = Bootloader::Core::GRUB->GrubPath2UnixPath ($grub_path, $grub_dev_prefix); >>
