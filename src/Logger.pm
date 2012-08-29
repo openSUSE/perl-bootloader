@@ -61,7 +61,7 @@ sub StartLog
   $self->{logger}{logs} = [];
   $self->{logger}{log_level} = $ENV{Y2DEBUG} ? 0 : 1;
 
-  if(open my $f, ">>", Bootloader::Path::Logname()) {
+  if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::Logname()) {
     my $tmp = select $f;
     $| = 1;
     select $tmp;

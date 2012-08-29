@@ -166,11 +166,14 @@ name.
 =cut
 
 #string Member2MD (string md_member)
-sub Member2MD {
-    my $self = shift;
-    my $member = shift;
+sub Member2MD
+{
+  my $self = shift;
+  my $member = shift;
 
-    my $find = undef;
+  my $orig = $member;
+
+  my $find = undef;
 
     while ((my $md, my $mem_ref) = each (%{$self->{"md_arrays"}}))
     {
@@ -191,7 +194,10 @@ sub Member2MD {
 	}
       }
     }
-    return $member;
+
+  $self->milestone("$orig => $member");
+
+  return $member;
 }
 
 =item
