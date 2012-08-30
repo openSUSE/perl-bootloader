@@ -779,6 +779,8 @@ sub Global2Info {
             $ret{"append_failsafe"} = $val;
         } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
             $ret{"gfxbackground"} = $val;
+        } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
+            $ret{"os_prober"} = ($val eq "true") ? "false" : "true";
         }
     }
 
@@ -912,6 +914,14 @@ sub Info2Global {
                   '# Uncomment to get a beep at grub start'
                 ],
             },
+            {
+                'key' => 'GRUB_DISABLE_OS_PROBER',
+                'value' => 'false',
+                'comment_before' => [
+                  '# Skip 30_os-prober if you experienced very slow in probing them',
+                  '# WARNING foregin OS menu entries will be lost if set true here'
+                ],
+            },
         );
 
     }
@@ -930,6 +940,7 @@ sub Info2Global {
     my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
+    my $os_prober = delete $globinfo{"os_prober"} || "";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -1003,6 +1014,9 @@ sub Info2Global {
                 $line_ref = undef;
             }
             $gfxbackground = "";
+        } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
+            $line_ref->{"value"} = ($os_prober eq "false") ? "true" : "false";
+            $os_prober = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1074,6 +1088,13 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_BACKGROUND",
             "value" => "$gfxbackground",
+        }
+    }
+
+    if ("$os_prober" ne "") {
+        push @lines, {
+            "key" => "GRUB_DISABLE_OS_PROBER",
+            "value" => ($os_prober eq "false") ? "true" : "false",
         }
     }
     return \@lines;
