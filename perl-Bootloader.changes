@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Thu Aug 30 12:07:22 CEST 2012 - snwint@suse.de
+
+- pbl rewrite continued
+- 0.701
+
+-------------------------------------------------------------------
+Thu Aug 30 12:07:21 CEST 2012 - mchang@suse.com
+
+- add management to GRUB_BACKGROUND
+- export section and write as global option
+- manage GRUB_DISABLE_OS_PROBER settings
+- use grub device name in /etc/default/grub_installdevice
+
+-------------------------------------------------------------------
 Thu Aug 23 16:52:34 CEST 2012 - snwint@suse.de
 
 - rewite pbl's logging functions
