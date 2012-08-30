@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Aug 30 14:37:16 CEST 2012 - snwint@suse.de
+
+- fix device name handling of cciss and similar raids (bnc #776915)
+- 0.4.89.43
+
+-------------------------------------------------------------------
 Tue Jul 10 10:28:10 CEST 2012 - snwint@suse.de
 
 - fix disambiguation of section entry names (bnc #765663)

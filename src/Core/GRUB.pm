@@ -608,7 +608,7 @@ sub UnixDev2GrubDev {
         if (
             $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
             $original =~ m#^/dev/\S+\-part(\d+)$# ||
-            $original =~ m#^/dev/[^/]+p(\d+)$#
+            $original =~ m#^/dev(?:/[^/]+){1,2}p(\d+)$#
         ) {
             $partition = $1 - 1;
             $partition = 0 if $partition < 0;

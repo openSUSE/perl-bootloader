@@ -257,7 +257,7 @@ sub Udev2Dev {
 
 	#If $udev consists of both device and partition - e.g. "sda/sda1" -
 	#then only assign the partition.
-    	if ($udev =~ m#\w+/(\w+)#) {
+    	if ($udev =~ m#/([^/]+)#) {
 	    $dev = "/dev/$1";
 	}
 
