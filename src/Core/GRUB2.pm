@@ -480,6 +480,10 @@ sub ParseLines {
 		next;
 	    }
 
+	    if ($dev =~ /^\(${grubdev_pattern}\)$/) {
+		$dev = $self->GrubDev2UnixDev($dev);
+	    }
+
 	    if ($dev eq $mbr_dev) {
 	        $glob_ref->{"boot_mbr"} = "true";
 	        $self->milestone("detected boot_mbr");
@@ -628,7 +632,10 @@ sub CreateGrubInstalldevLines() {
     {
 	foreach my $new_dev (keys (%s1_devices))
 	{
-	    push @grub2_installdev, $new_dev;
+	    $new_dev = $self->UnixDev2GrubDev ($new_dev);
+	    if ($new_dev ne "") {
+		push @grub2_installdev, $new_dev;
+	    }
 	}
     }
 
@@ -1239,7 +1246,7 @@ sub InitializeBootloader {
             # the tradeoff is we can't capture errors
             # only patch grub2 package is possible way
             # to get around this problem
-            "/usr/sbin/grub2-install $install_opts $dev",
+            "/usr/sbin/grub2-install $install_opts \"$dev\"",
             Bootloader::Path::BootCommandLogname()
         );
 
