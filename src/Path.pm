@@ -90,6 +90,18 @@ sub Logname {
 }
 
 =item
+C<< $path = Bootloader::Path::Logname2(); >>
+
+Gets new logname path.
+
+=cut
+
+sub Logname2 {
+  my $value = "/var/log/pbl.log";
+  return Prefix($value);
+}
+
+=item
 C<< $path = Bootloader::Path::BootCommandLogname(); >>
 
 Gets logname path.

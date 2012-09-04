@@ -67,7 +67,18 @@ sub StartLog
     select $tmp;
     $self->{logger}{log_fh} = $f;
   }
-  elsif(open $f, ">&STDERR") {
+
+  if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::Logname2()) {
+    my $tmp = select $f;
+    $| = 1;
+    select $tmp;
+    $self->{logger}{log_fh2} = $f;
+  }
+
+  if(
+    !($self->{logger}{log_fh} || $self->{logger}{log_fh2}) &&
+    open my $f, ">&STDERR"
+  ) {
     $self->{logger}{log_fh} = $f;
     $self->{logger}{log_is_stderr} = 1;
   }
@@ -163,6 +174,10 @@ sub __log
 
   if($self->{logger}{log_fh}) {
     print { $self->{logger}{log_fh} } "$prefix $message\n";
+  }
+
+  if($self->{logger}{log_fh2}) {
+    print { $self->{logger}{log_fh2} } "$prefix $message\n";
   }
 
   # log error messages to STDERR (unless we already did)
