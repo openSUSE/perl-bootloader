@@ -21,9 +21,6 @@ Group:          System/Boot
 License:        GPL-2.0+
 Summary:        Library for Configuring Boot Loaders
 Source:         perl-Bootloader-%{version}.tar.bz2
-Source1:        update-bootloader
-Source2:        bootloader_entry
-Source3:        boot.readme
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  perl
 Conflicts:      multipath-tools < 0.4.8-40.25.1
@@ -77,6 +74,10 @@ sed -i '/ZIPL/D;/PowerLILO/D;/\/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorar
 %endif
 %endif
 
+%post
+echo -n >>/var/log/pbl.log
+chmod 600 /var/log/pbl.log
+
 %files
 %defattr(-, root, root)
 %doc COPYING
@@ -90,5 +91,6 @@ sed -i '/ZIPL/D;/PowerLILO/D;/\/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorar
 /usr/lib/bootloader
 /boot/boot.readme
 %dir %attr(0700,root,root) /var/log/YaST2
+%ghost %attr(0600,root,root) /var/log/pbl.log
 
 %changelog -n perl-Bootloader

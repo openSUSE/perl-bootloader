@@ -92,6 +92,9 @@ use Bootloader::Library;
 use Bootloader::Core;
 use Bootloader::Path;
 
+use Cwd;
+use File::Find;
+
 my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
@@ -308,11 +311,35 @@ sub GetMultipath {
 }
 
 =item
-C<< Bootloader::Tools::GetMultipath (); >>
+C<< Bootloader::Tools::GetDeviceMapping (); >>
 
-Gets multipath configuration. Return reference to hash map, empty if system doesn't contain multipath.
+Return reference to hash with symlinks to block devices.
 
 =cut
+
+# Notes:
+#   - replaces GetUdevMapping()
+#   - no logging as map is passed to DefineUdevMapping() and logged there
+#   - if issues with device mapper arise, check bnc #590637
+sub GetDeviceMapping
+{
+  my $list;
+
+  find({ wanted => sub {
+    if(-l && -b) {
+      my $b = $_;
+      $b =~ s#[^/]+$##;
+      my $l = readlink;
+      if(defined $l) {
+        $l = "$b$l" if $l !~ /^\//;
+        $list->{$_} = Cwd::realpath($l);
+      }
+    }
+  }, no_chdir => 1 } , "/dev");
+
+  return $list;
+}
+
 
 sub GetUdevMapping {
   my %mapping= ();
@@ -701,7 +728,7 @@ sub InitLibrary
 {
   $lib_ref = Bootloader::Library->new();
 
-  my $um = GetUdevMapping();
+  my $um = GetDeviceMapping();
   my $mp = ReadMountPoints($um);
   my $part = ReadPartitions($um);
   my $md = ReadRAID1Arrays($um);

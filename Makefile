@@ -19,7 +19,7 @@ BRANCH=master
 
 PM_FILES = $(shell find src -name '*.pm')
 
-.PHONY:	export build mbuild submit rpm clean package test install check
+.PHONY:	export build mbuild submit rpm clean package package-local test install check
 
 all:
 	@echo "Choose one target out of 'export', 'build', 'abuild', 'mbuild', 'submit', 'test', 'test_clean', 'docs', 'rpm' or 'clean'"
@@ -55,6 +55,18 @@ package: test
 	git archive --prefix=${PKG}-$${lv}/ $(BRANCH) | bzip2 > package/${PKG}-$${lv}.tar.bz2; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
 	cp $(PKG).changes bootloader_entry boot.readme update-bootloader package/
+
+package-local:
+	rm -rf package .package
+	mkdir -p .package
+	read lv < version ; \
+	mkdir .package/${PKG}-$${lv} ; \
+	cp -a * .package/${PKG}-$${lv} ; \
+	mkdir package ; \
+	tar -C .package -zcf package/${PKG}-$${lv}.tar.bz2 ${PKG}-$${lv} ; \
+	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
+	cp $(PKG).changes package ; \
+	rm -rf .package
 
 export:	.checkexportdir .exportdir
 

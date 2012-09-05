@@ -131,10 +131,10 @@ sub new
   my @r0 = stat "/";
   my @r1 = stat "/proc/1/root";
   if(@r0 && @r1) {
-    my $r1 = ($r1[0] >> 8) . ":" . ($r1[0] & 0xff);
-    $r = readlink "/dev/block/$r1";
+    my $r0 = ($r0[0] >> 8) . ":" . ($r0[0] & 0xff);
+    $r = readlink "/dev/block/$r0";
     $r =~ s#^..#/dev#;
-    $r = $r1 unless defined $r;
+    $r = $r0 unless defined $r;
     if($r0[0] != $r1[0] || $r0[1] != $r1[1]) {
       $r .= " (chroot)";
     }
