@@ -32,6 +32,7 @@ package Bootloader::Logger;
 
 use strict;
 use POSIX qw ( strftime );
+use Sys::Hostname;
 use Bootloader::Path;
 
 use Data::Dumper;
@@ -61,6 +62,10 @@ sub StartLog
   $self->{logger}{logs} = [];
   $self->{logger}{log_level} = $ENV{Y2DEBUG} ? 0 : 1;
 
+  $self->{logger}{yast_prefix} = hostname() . "($$) [pbl]";
+
+  # if PBL_DEBUG is set log to STDERR, else to logfile
+
   if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::Logname()) {
     my $tmp = select $f;
     $| = 1;
@@ -68,17 +73,23 @@ sub StartLog
     $self->{logger}{log_fh} = $f;
   }
 
-  if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::Logname2()) {
+  # old logfile for compatibility
+  if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::LognameOld()) {
     my $tmp = select $f;
     $| = 1;
     select $tmp;
-    $self->{logger}{log_fh2} = $f;
+    $self->{logger}{log_fh_old} = $f;
   }
 
-  if(
-    !($self->{logger}{log_fh} || $self->{logger}{log_fh2}) &&
-    open my $f, ">&STDERR"
-  ) {
+  # also log to yast log if called from yast
+  if($self->{session_id} =~ /^yast-/ && open my $f, ">>", Bootloader::Path::LognameYaST()) {
+    my $tmp = select $f;
+    $| = 1;
+    select $tmp;
+    $self->{logger}{log_fh_yast} = $f;
+  }
+
+  if(!$self->{logger}{log_fh} && open my $f, ">&STDERR") {
     $self->{logger}{log_fh} = $f;
     $self->{logger}{log_is_stderr} = 1;
   }
@@ -149,9 +160,9 @@ sub __log
 
   # we split the log line a bit into prefix & message: prefix is not logged by yast
 
-  my $prefix = strftime "%Y-%m-%d %H:%M:%S", localtime;
+  my $prefix = strftime("%Y-%m-%d %H:%M:%S", localtime) . " <$level>";
 
-  $message = "<$level> $id $func.$line: $message";
+  $message = "$id $func.$line: $message";
 
   if($_[0]) {
     my $x = $_[0];
@@ -166,18 +177,25 @@ sub __log
     $message .= "\n$x";
   }
 
-  push @{$self->{logger}{logs}}, {
-    message => $message,
-    prefix => $prefix,
-    level => $level_name,
-  };
+  # don't keep logs if we can log to y2log directly
+  if(!$self->{logger}{log_fh_yast}) {
+    push @{$self->{logger}{logs}}, {
+      message => $message,
+      prefix => $prefix,
+      level => $level_name,
+    };
+  }
 
   if($self->{logger}{log_fh}) {
     print { $self->{logger}{log_fh} } "$prefix $message\n";
   }
 
-  if($self->{logger}{log_fh2}) {
-    print { $self->{logger}{log_fh2} } "$prefix $message\n";
+  if($self->{logger}{log_fh_old}) {
+    print { $self->{logger}{log_fh_old} } "$prefix $message\n";
+  }
+
+  if($self->{logger}{log_fh_yast}) {
+    print { $self->{logger}{log_fh_yast} } "$prefix $self->{logger}{yast_prefix} $message\n";
   }
 
   # log error messages to STDERR (unless we already did)
