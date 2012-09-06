@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Thu Sep  6 16:25:49 CEST 2012 - snwint@suse.de
+
+- if called from yast: log directly to y2log, not via limal
+- don't use udev for device mapping; instead read symlinks in dev tree
+- add package-local make target
+- clean up spec file
+- log root device & chroot
+- use additional log file /var/log/pbl.log for now to work around broken yast logging
+- 0.702
+
+-------------------------------------------------------------------
 Thu Aug 30 12:07:22 CEST 2012 - snwint@suse.de
 
 - pbl rewrite continued
