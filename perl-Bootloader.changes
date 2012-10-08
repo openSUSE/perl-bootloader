@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Oct  8 10:09:58 CEST 2012 - snwint@suse.de
+
+- keep 'serial' and 'terminal' entries ordered (bnc #775183)
+- 0.4.89.44
+
+-------------------------------------------------------------------
 Thu Aug 30 14:37:16 CEST 2012 - snwint@suse.de
 
 - fix device name handling of cciss and similar raids (bnc #776915)
