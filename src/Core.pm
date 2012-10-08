@@ -954,6 +954,22 @@ sub ReadFiles {
     return \%files;
 }
 
+sub Swap2Lines{
+
+my @loc_lines = @_;
+for(my $i=0;$i<@loc_lines;$i++) {
+  if ($loc_lines[$i] =~ /^terminal.*?$/i
+                 and $loc_lines[$i+1] =~ /^serial.*?$/i) {
+    my $tmp = $loc_lines[$i];
+    $loc_lines[$i] = $loc_lines[$i+1];
+    $loc_lines[$i+1] = $tmp;
+  }
+}
+
+return @loc_lines
+
+}
+
 =item
 C<< $status = Bootloader::Core->WriteFiles (\%files, $suffix, $menu_only); >>
 
@@ -998,7 +1014,9 @@ sub WriteFiles {
 	{
 	    $self->l_error ("Core::WriteFiles: Failed to open $filename") && return undef;
 	}
-	my @lines = @{$lines_ref};
+	my @lines_new = @{$lines_ref};
+	my @lines = Swap2Lines(@lines_new);
+
 	foreach my $line (@lines)
 	{
 	    print FILE "$line\n";
