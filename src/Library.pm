@@ -74,7 +74,7 @@ C<< $result = Bootloader::Library::WriteThinkpadMBR ($disk); >>
 =cut
 
 
-package Bootloader::Library 0.000;
+package Bootloader::Library;
 
 use strict;
 
@@ -84,7 +84,7 @@ use Bootloader::Path;
 
 use base qw ( Bootloader::MBRTools Bootloader::FileIO Bootloader::Logger );
 
-our $VERSION;
+our $VERSION = 0.000;
 
 my $instances = 0;
 my $global_id;

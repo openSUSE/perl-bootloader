@@ -26,17 +26,20 @@ all:
 	@echo
 
 check: $(PM_FILES)
-	@for i in $^ ; do perl -c $$i || break; done
+	@rm -rf .check
+	@mkdir -p .check
+	@cp -a src .check/Bootloader
+	@cd .check ; find -name *.pm -exec perl -I. -c '{}' ';'
 
 install: check
 	@rm -rf .install
 	@mkdir -p .install/lib
 	@cp -a src .install/lib/Bootloader
 	@rm -f `find .install/lib/Bootloader -name '*~'`
-	@perl -pi -e 's/0\.000/$(VERSION)/ if /^package /' .install/lib/Bootloader/Library.pm
+	@perl -pi -e 's/0\.000/$(VERSION)/ if /VERSION = /' .install/lib/Bootloader/Library.pm
 	@cd .install ; \
 	touch Makefile.PL ; \
-	perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader", VERSION_FROM => "lib/Bootloader/Library.pm" )' ; \
+	perl -Ilib -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader", VERSION_FROM => "lib/Bootloader/Library.pm" )' ; \
 	make install_vendor
 	@mkdir -p $(DESTDIR)/sbin
 	@install -m 755 update-bootloader $(DESTDIR)/sbin
@@ -154,5 +157,5 @@ endif
 
 clean:
 	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
-	rm -rf .install
+	rm -rf .check .install
 	rm -f .exportdir .built .submitted *~ */*~ */*/*~

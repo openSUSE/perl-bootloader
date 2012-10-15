@@ -1509,7 +1509,7 @@ sub ParseMenuFileLines
   @sects = map {
     $self->milestone(
       "section lines to convert:\n\{\n" .
-      join("\n", map { "  '$_->{key}'" . " => " . "'$_->{value}'" } @$_) .
+      join("\n", map { "  '$_->{key}'" . " => " . "'$_->{value}'," } @$_) .
       "\n\}"
     );
 
@@ -1517,7 +1517,7 @@ sub ParseMenuFileLines
 
     $self->milestone(
       "parsing result:\n\{\n" .
-      join("\n", map { m/^__/ ? () : "  '$_'" . " => " . "'$s->{$_}'" } keys %$s) .
+      join("\n", map { m/^__/ ? () : "  '$_'" . " => " . "'$s->{$_}'," } keys %$s) .
       "\n\}"
     );
 

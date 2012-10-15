@@ -46,6 +46,7 @@ Authors:
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
 install -d -m 700 $RPM_BUILD_ROOT/var/log/YaST2
+touch $RPM_BUILD_ROOT/var/log/pbl.log
 %perl_process_packlist
 #install only needed files for bootloader for specific architecture
 %ifarch %ix86 x86_64
