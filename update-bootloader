@@ -346,7 +346,7 @@ if (defined $oper{add}) {
 	    $opt_xen_name = "$opt_name -- " . GetProduct() . " - " . $version;
 	}
 	else {
-	    $opt_xen_name =~ s/^.*(xen.*)$/$1/;
+	    ($opt_xen_name = $opt_name) =~ s/^.*(xen.*)$/$1/;
 	    $opt_xen_name = ucfirst ($opt_xen_name);
 	}
     }
