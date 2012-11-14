@@ -524,7 +524,7 @@ sub Info2Section {
 		}
 	    }
         }
-	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
+	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target" || $key eq "parmfile") {
 	    $key = "ramdisk" if ($key eq "initrd");
 	    push @lines, {
 		"key" => $key,
@@ -600,7 +600,7 @@ sub Section2Info {
 	    $ret{$key} = $line_ref->{"value"} eq "1" ? "true" : "false";
 	}
 	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
-	       $key eq "timeout" || $key eq "target")
+	       $key eq "timeout" || $key eq "target" || $key eq "parmfile")
 	{
 	    if($key eq "ramdisk")
 	    {
