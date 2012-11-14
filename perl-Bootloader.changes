@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Nov 14 15:06:42 CET 2012 - snwint@suse.de
+
+- support 'parmfile' option in zipl.conf (bnc #788391)
+- fix zipl (s390x) support
+- 0.704
+
+-------------------------------------------------------------------
 Mon Oct 15 13:02:06 CEST 2012 - snwint@suse.de
 
 - fix compat issues with older perl & rpm
