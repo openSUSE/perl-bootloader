@@ -382,7 +382,7 @@ sub InitializeBootloader {
 
     return 0 == $self->RunCommand (
 	Bootloader::Path::Zipl_zipl(),
-	Bootloader::Path::Lilo_lilo()
+	Bootloader::Path::BootCommandLogname()
     );
 }
 
@@ -499,7 +499,7 @@ sub Info2Section {
 		}
 	    }
         }
-	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target") {
+	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target" || $key eq "parmfile") {
 	    $key = "ramdisk" if ($key eq "initrd");
 	    push @lines, {
 		"key" => $key,
@@ -519,7 +519,7 @@ sub Info2Section {
 	    } if ( $value eq "true");
         }
         else {
-            my $stype = $so->$type."_".$key;
+            my ($stype) = split /:/, $so->{$type . "_" . $key};
 	    # bool values appear in a config file or not
 	    if ($stype eq "bool") {
 		next if $value ne "true";
@@ -581,7 +581,7 @@ sub Section2Info {
 	    $ret{$key} = $line_ref->{"value"} eq "1" ? "true" : "false";
 	}
 	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
-	       $key eq "timeout" || $key eq "target")
+	       $key eq "timeout" || $key eq "target" || $key eq "parmfile")
 	{
 	    if($key eq "ramdisk")
 	    {

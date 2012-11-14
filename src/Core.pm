@@ -815,55 +815,33 @@ sub ListMenuFiles {
 =item
 C<< $status = Bootloader::Core->WriteFiles (\%files, $suffix, $menu_only); >>
 
-Writes the files to the disk. As arguments, it takes a reference to a hash,
-where key is file name and value a reference to the list of lines to write
-to the file, and a suffix.
-Does not write the contents directly to the files, but $suffix is
-appended to the file names.
-On success, returns defined value > 0, on fail, returns undef;
+Writes the files to the disk.
+As 1st argument it takes a reference to a hash where the keys are file names and
+values are references to a list of lines to write to the file.
+The 2nd argument is an extra file suffix to append.
+If the 3rd argument is true it only writes those files that ListMenuFiles() returns.
+
+Returns 1 on success, 0 otherwise.
 
 =cut
 
 # boolean WriteFiles (map<string,list<string>>, string suffix, boolean menu_only)
-sub WriteFiles {
-    my $self = shift;
-    my %files = %{+shift};
-    my $suffix = shift || "";
-    my $menu_only = shift || 0;
+sub WriteFiles
+{
+  my $self = shift;
+  my $files = shift;
+  my $suffix = shift;
+  my $menu_only = shift;
+  my $ok = 1;
+  local $_;
 
-    umask 0066;
+  $self->milestone("menu_only = $menu_only, suffix = $suffix, files =", [ sort keys %$files ] );
 
-    my @menu_files = keys (%files);
-    if ($menu_only)
-    {
-	@menu_files = @{$self->ListMenuFiles () || []};
-    }
-    my %menu_files = ();
-    foreach my $mf (@menu_files) {
-	$menu_files{$mf} = 1;
-    }
+  my $files2write = $menu_only ? $self->ListMenuFiles() : [ sort keys %$files ];
 
-    while ((my $filename, my $lines_ref) = each (%files))
-    {
-	if (! defined ($menu_files{$filename}))
-	{
-	    $self->milestone("Not writing $filename");
-	    next;
-	}
+  $ok &= $self->WriteFile($_ . $suffix, $files->{$_}) for @$files2write;
 
-	$filename = "$filename$suffix";
-	if (not open (FILE, ">$filename"))
-	{
-	    $self->error("Failed to open $filename: $!") && return undef;
-	}
-	my @lines = @{$lines_ref};
-	foreach my $line (@lines)
-	{
-	    print FILE "$line\n";
-	};
-	close (FILE);
-    }
-    return 1;
+  return $ok;
 }
 
 =item
@@ -1591,44 +1569,46 @@ up and replaces them with the ones with the '.new' suffix. If other operations
 are needed to make the change effect, they must be done
 in the loader-specific package (eg. not needed for GRUB, run
 '/sbin/lilo' for LILO).
-Returns undef on fail, defined nonzero value on success.
+Returns undef on fail, 1 on success.
 
 =cut
 
 # boolean UpdateBootloader ()
-sub UpdateBootloader {
-    my $self = shift;
+sub UpdateBootloader
+{
+  my $self = shift;
 
-    my $files_ref = $self->ListFiles ();
-    my @files = @{$files_ref};
-    my $ok = 1;
-    foreach my $file (@files) {
-	if ( -f "$file.new" ) {
-            #backup file only if they exist and previos backup is enought old
-            # 6 hours
-            if (-f "$file")
-            {
-              if (-f "$file.old")
-              {
-                my $mtime = time - ( stat("$file.old"))[9];
-                my $hours = $mtime / 3600;
-                if ($hours > 6) 
-                {
-	          rename "$file", "$file.old";
-                }
-              }
-              else
-              {
-	        rename "$file", "$file.old";
-              }
-            }
-	    unless ( rename "$file.new",  "$file" ) {
-		$self->error("Error occurred while updating file $file");
-		$ok = undef;
-	    }
-	}
+  my $files_ref = $self->ListFiles();
+  my @files = @{$files_ref};
+  my $ok = 1;
+
+  foreach my $file (@files) {
+    next unless -f "$file.new";
+
+    # backup file only if is exists and previos backup is older than 6 hours
+    if(-f $file) {
+      if(-f "$file.old") {
+        my $mtime = time - (stat "$file.old")[9];
+        if($mtime > 6 * 3600) {
+          rename $file, "$file.old";
+          $self->milestone("rename $file -> $file.old");
+        }
+      }
+      else {
+        rename $file, "$file.old";
+        $self->milestone("rename $file -> $file.old");
+      }
     }
-    return $ok;
+
+    $self->milestone("rename $file.new -> $file");
+
+    if(!rename("$file.new", $file)) {
+      $self->error("Error occurred while updating $file: $!");
+      $ok = undef;
+    }
+  }
+
+  return $ok;
 }
 
 =item

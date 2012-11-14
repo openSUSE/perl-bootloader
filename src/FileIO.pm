@@ -89,4 +89,40 @@ sub ReadFile
 }
 
 
+=item
+C<< $lines_ref = Bootloader::FileIO->WriteFile($file, $lines); >>
+
+Writes file to disk.
+Returns 1 on success, 0 otherwise.
+
+=cut
+
+sub WriteFile
+{
+  my $self = shift;
+  my $file = shift;
+  my $lines = shift;
+  my $ok = 1;
+
+  my $l = join("\n", @$lines) . "\n";
+
+  $self->milestone("$file =", $l);
+
+  my $saved_umask = umask 0066;
+
+  if(open(my $fh, '>', $file)) {
+    print $fh $l;
+    close $fh;
+  }
+  else {
+    $self->error("Failed to open $file: $!");
+    $ok = 0;
+  }
+
+  umask $saved_umask;
+
+  return $ok;
+}
+
+
 1;

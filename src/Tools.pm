@@ -179,7 +179,7 @@ sub ReadPartitions {
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
-    $lib_ref->milestone("Found disks: ". join (",",@disks));
+    $lib_ref->milestone("disks =", \@disks);
 
     # get partition info for all partitions on all @disks
     my @devices = ();
@@ -204,7 +204,7 @@ sub ReadPartitions {
 	    } readdir (BLOCK_DEVICES);
 	    closedir BLOCK_DEVICES;
 
-            $lib_ref->milestone("Found parts: ". join (",",@parts));
+            $lib_ref->milestone("partitions =", \@parts);
 
 	    # generate proper device names and other info for all @part[ition]s
       #raid have ! in names for /dev/raid/name (bnc#607852)
@@ -784,16 +784,18 @@ sub match_section {
 
 
 # internal: normalize options in a way needed for 'match_section'
-sub normalize_options {
-    my $opt_ref = shift;
+sub normalize_options
+{
+  my $opt_ref = shift;
+  local $_;
 
-    foreach ("image", "initrd" ) {
-	# Print found sections to logfile
-	$lib_ref->milestone("key: $_, resolving if exists:" . $opt_ref->{"$_"});
-	$opt_ref->{"$_"} = ResolveCrossDeviceSymlinks($opt_ref->{"$_"})
-	    if exists $opt_ref->{"$_"};
-	$lib_ref->milestone("resolved result:" . $opt_ref->{"$_"});
-    }
+  for ( "image", "initrd" ) {
+    next unless exists $opt_ref->{$_};
+    # print found sections to logfile
+    $lib_ref->milestone("before: '$_' => '$opt_ref->{$_}'");
+    $opt_ref->{$_} = ResolveCrossDeviceSymlinks($opt_ref->{$_});
+    $lib_ref->milestone("after: '$_' => '$opt_ref->{$_}'");
+  }
 }
 
 
@@ -1189,7 +1191,11 @@ sub AddSection {
     }
 
     $new{"__modified"} = 1;
-    $new{"root"} = $lib_ref->GetMountPoints()->{"/"};
+
+    # if zipl.conf uses only 'parmfile', then don't create extra parameters
+    if(!($fitting_section && $new{parmfile} && !$new{append})) {
+      $new{root} = $lib_ref->GetMountPoints()->{"/"};
+    }
 
     my $match = '';
     my $new_name = '';
@@ -1211,12 +1217,7 @@ sub AddSection {
     }
 
     # Print new section to be added to logfile
-    $lib_ref->milestone("New section to be added:\n\n' " .
-			join("'\n' ",
-			     map {
-				 $_ . " => '" . $new{$_} . "'";
-			     } keys %new) . "'\n"
-		       );
+    $lib_ref->milestone("New section to be added:", \%new);
 
     # Put new entries on top
     unshift @sections, \%new;
@@ -1264,7 +1265,7 @@ sub AddSection {
     }
 
     # Print all available sections to logfile
-    $lib_ref->milestone("All available sections (including new ones):\n");
+    $lib_ref->milestone("All available sections (including new ones):");
 
     my $section_count = 1;
     foreach my $s (@sections) {

@@ -379,7 +379,7 @@ if (defined $oper{add}) {
 #
 if (defined $oper{add}) {
     $logger->milestone("update-bootloader: now executing operation add");
-    $logger->milestone("update-bootloader: changed opt name is $opt_name");
+    $logger->milestone("update-bootloader: opt_name = $opt_name");
 
     die("Please specify name and kernel image for new section\n")
 	unless $opt_name and $opt_image;

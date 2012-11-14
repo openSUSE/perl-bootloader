@@ -471,21 +471,24 @@ EXAMPLE:
 
 =cut
 
-sub WriteSettings {
-    my $self = shift;
-    my $menu_only = shift;
+sub WriteSettings
+{
+  my $self = shift;
+  my $menu_only = shift || 0;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone("TRACE menu_only:". ($menu_only || "undefined"));
-    $loader->{"resolve_symlinks"} = 1;
-    my $new_lines_ref = $loader->CreateLines ();
-    if (! defined ($new_lines_ref))
-    {
-	return undef;
-    }
-    return $loader->WriteFiles ($new_lines_ref, ".new", $menu_only);
+  $self->milestone("menu_only = $menu_only");
+
+  $loader->{resolve_symlinks} = 1;
+  my $new_lines_ref = $loader->CreateLines();
+  if (!defined $new_lines_ref) {
+    $self->warning("no config - nothing written");
+    return undef;
+  }
+
+  return $loader->WriteFiles($new_lines_ref, ".new", $menu_only);
 }
 
 =item
@@ -674,10 +677,10 @@ sub UpdateBootloader
   my $self = shift;
   my $avoid_init = shift;
 
-  my $loader = $self->{"loader"};
+  my $loader = $self->{loader};
   return undef unless defined $loader;
 
-  $self->milestone("avoid_init = " . ($avoid_init || ""));
+  $self->milestone("avoid_init = $avoid_init");
 
   return $loader->UpdateBootloader($avoid_init);
 }
