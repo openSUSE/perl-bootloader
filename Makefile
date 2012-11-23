@@ -157,5 +157,5 @@ endif
 
 clean:
 	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
-	rm -rf .check .install
+	rm -rf .check .install .package package
 	rm -f .exportdir .built .submitted *~ */*~ */*/*~
