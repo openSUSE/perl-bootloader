@@ -55,9 +55,9 @@ package: test
 	rm -rf package
 	mkdir -p package
 	read lv < version ; \
-	git archive --prefix=${PKG}-$${lv}/ $(BRANCH) | bzip2 > package/${PKG}-$${lv}.tar.bz2; \
+	git archive --prefix=${PKG}-$${lv}/ $(BRANCH) | xz > package/${PKG}-$${lv}.tar.xz; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
-	cp $(PKG).changes bootloader_entry boot.readme update-bootloader package/
+	cp $(PKG).changes package/
 
 package-local:
 	rm -rf package .package
@@ -66,7 +66,7 @@ package-local:
 	mkdir .package/${PKG}-$${lv} ; \
 	cp -a * .package/${PKG}-$${lv} ; \
 	mkdir package ; \
-	tar -C .package -zcf package/${PKG}-$${lv}.tar.bz2 ${PKG}-$${lv} ; \
+	tar -C .package -Jcf package/${PKG}-$${lv}.tar.xz ${PKG}-$${lv} ; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
 	cp $(PKG).changes package ; \
 	rm -rf .package
