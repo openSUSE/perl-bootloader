@@ -211,7 +211,13 @@ sub SetLoaderType
     $loader = Bootloader::Core::PowerLILO->new($self, $loader, $arch);
   }
   else {
-    $self->error("Initializing for unknown bootloader $bootloader, fallback to none") if $bootloader ne "none";
+    $bootloader = "none" if $bootloader eq "";
+    if($bootloader ne "none") {
+      $self->error("Initializing for unknown bootloader $bootloader, fallback to none");
+    }
+    else {
+      $self->warning("no bootloader type specified");
+    }
 
     require Bootloader::Core::NONE;
     $loader = Bootloader::Core::NONE->new ($self, $loader);
