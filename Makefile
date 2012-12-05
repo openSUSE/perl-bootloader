@@ -45,6 +45,7 @@ install: check
 	@install -m 755 update-bootloader $(DESTDIR)/sbin
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
 	@install -m 755 bootloader_entry $(DESTDIR)/usr/lib/bootloader
+	@install -m 755 bootloader_fix_xen $(DESTDIR)/usr/lib/bootloader
 	@install -d -m 755 $(DESTDIR)/boot
 	@install -m 644 boot.readme $(DESTDIR)/boot/
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8/
@@ -157,5 +158,5 @@ endif
 
 clean:
 	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
-	rm -rf .check .install
+	rm -rf .check .install .package package
 	rm -f .exportdir .built .submitted *~ */*~ */*/*~
