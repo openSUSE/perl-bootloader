@@ -41,9 +41,10 @@ use strict;
 use Data::Dumper;
 $Data::Dumper::Terse = 1;
 
-use Bootloader::Core;
-our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
+use Bootloader::Core;
+
+our @ISA = qw ( Bootloader::Core );
 
 #module interface
 
@@ -220,27 +221,35 @@ Creates an instance of the Bootloader::Core::ELILO class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [
-	{ "key" => "timeout", "value" => 80 },
-    ];
-    my $arch = `uname --hardware-platform`;
-    chomp ($arch);
-    if ($arch eq "ia64")
-    {
-      my $line = { "key" => "relocatable",  "value" => "" };
-      push  @{$loader->{"default_global_lines"}},  $line ;
-    }
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->GetMetaData();
-    $loader->l_milestone ("ELILO::new: Created ELILO instance");
-    return $loader;
+  my $arch = `uname --hardware-platform`;
+  chomp $arch;
+
+  $loader->{default_global_lines} = [
+    { key => "timeout", value => 80 },
+  ];
+
+  if($arch eq "ia64") {
+    my $line = { key => "relocatable",  value => "" };
+    push @{$loader->{default_global_lines}}, $line;
+  }
+
+  $loader->{arch} = $arch;
+  $loader->GetMetaData();
+
+  $loader->Xmilestone ("Created ELILO instance");
+
+  return $loader;
 }
+
 
 =item
 C<< $files_ref = Bootloader::Core::ELILO->ListFiles (); >>

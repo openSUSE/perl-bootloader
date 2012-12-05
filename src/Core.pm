@@ -126,6 +126,8 @@ package Bootloader::Core;
 
 use strict;
 
+use base qw ( Bootloader::FileIO Bootloader::Logger );
+
 #constants
 
 my $headline = "# Modified by YaST2. Last modification on ";
@@ -881,22 +883,29 @@ C<< $obj_ref = Bootloader::Core->new ($old); >>
 Creates an instance of the Bootloader::Core class.
 Optional parameter 'old' is object reference to former bootloader
 =cut
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = {};
-    # keep old settings if given as parameter
-    if (defined($old)) {
-	foreach my $key (keys %{$old}) {
-	    $loader->{$key} = $old->{$key};
-	}
+  my $loader = {};
+  bless($loader);
+
+  # keep old settings if given as parameter
+  if(defined $old) {
+    $ref->Xmilestone("keeping old settings");
+    for my $key (keys %{$old}) {
+      $loader->{$key} = $old->{$key};
     }
-    $loader->{"log_records"} = [];
+  }
 
-    bless ($loader);
-    return $loader;
+  # copy log data from Library object
+  $loader->CloneLog($ref);
+
+  return $loader;
 }
+
 
 # list<string> ListFiles ();
 # must be overridden

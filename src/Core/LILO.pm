@@ -39,10 +39,10 @@ package Bootloader::Core::LILO;
 
 use strict;
 
-use Bootloader::Core;
-our @ISA = ('Bootloader::Core');
-
 use Bootloader::Path;
+use Bootloader::Core;
+
+our @ISA = qw ( Bootloader::Core );
 
 #module interface
 
@@ -53,23 +53,29 @@ Creates an instance of the Bootloader::Core::LILO class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [
-	{ "key" => "menu-scheme", "value" => "Wb:kw:Wb:Wb" },
-	{ "key" => "timeout", "value" => 80 },
-	{ "key" => "lba32", "value" => "" },
-	{ "key" => "change-rules", "value" => "" },
-	{ "key" => "reset", "value" => "" },
-	{ "key" => "prompt", "value" => "" },
-    ];
-    bless ($loader);
-    $loader->l_milestone ("LILO::new: Created LILO instance");
-    return $loader;
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
+
+  $loader->{default_global_lines} = [
+    { key => "menu-scheme", value => "Wb:kw:Wb:Wb" },
+    { key => "timeout", value => 80 },
+    { key => "lba32", value => "" },
+    { key => "change-rules", value => "" },
+    { key => "reset", value => "" },
+    { key => "prompt", value => "" },
+  ];
+
+  $loader->Xmilestone("Created LILO instance");
+
+  return $loader;
 }
+
 
 =item
 C<< $files_ref = Bootloader::Core::LILO->ListFiles (); >>

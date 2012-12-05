@@ -62,8 +62,10 @@ package Bootloader::Core::ZIPL;
 
 use strict;
 
+use Bootloader::Path;
 use Bootloader::Core;
-our @ISA = qw(Bootloader::Core);
+
+our @ISA = qw ( Bootloader::Core );
 
 
 #module interface
@@ -163,18 +165,25 @@ Creates an instance of the Bootloader::Core::ZIPL class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [ ];
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->GetMetaData();
-    $loader->l_milestone ("ZIPL::new: Created ZIPL instance");
-    return $loader;
+  $loader->{default_global_lines} = [ ];
+  $loader->SetOptions();
+
+  $loader->GetMetaData();
+
+  $loader->Xmilestone("Created ZIPL instance");
+
+  return $loader;
 }
+
 
 =item
 C<< $settings_ref = Bootloader::Core::ZIPL->GetSettings (); >>

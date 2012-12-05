@@ -42,9 +42,10 @@ package Bootloader::Core::NONE;
 
 use strict;
 
-use Bootloader::Core;
-our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
+use Bootloader::Core;
+
+our @ISA = qw ( Bootloader::Core );
 
 #module interface
 
@@ -68,16 +69,20 @@ Creates an instance of the Bootloader::Core::NONE class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->l_milestone ("NONE::new: Created NONE instance");
-    return $loader;
+  $loader->Xmilestone("Created NONE instance");
+
+  return $loader;
 }
+
 
 =item
 C<< $files_ref = Bootloader::Core::NONE->ListFiles (); >>

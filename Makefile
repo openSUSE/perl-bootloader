@@ -1,5 +1,6 @@
 # $Id$
 PKG=perl-Bootloader
+VERSION := $(shell cat version)
 SUBMIT_DIR=/work/src/done/STABLE
 #SUBMIT_DIR=/work/src/done/10.2
 #SUBMIT_DIR2=/work/src/done/SLES10

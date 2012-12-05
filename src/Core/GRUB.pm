@@ -76,9 +76,10 @@ use strict;
 
 use Cwd "realpath";
 
-use Bootloader::Core;
-our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
+use Bootloader::Core;
+
+our @ISA = qw ( Bootloader::Core );
 
 use Data::Dumper;
 $Data::Dumper::Terse = 1;
@@ -337,18 +338,24 @@ Creates an instance of the Bootloader::Core::GRUB class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    bless ($loader);
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    $loader->GetMetaData(); #FIXME this is not need but need test before remove
-    $loader->GetOptions();
-    $loader->l_milestone ("GRUB::new: Created GRUB instance");
-    return $loader;
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
+
+  $loader->GetMetaData(); #FIXME this is not need but need test before remove
+  $loader->GetOptions();
+
+  $loader->Xmilestone("Created GRUB instance");
+
+  return $loader;
 }
+
 
 #internal routines
 

@@ -82,6 +82,7 @@ use strict;
 
 use Bootloader::Core;
 use Bootloader::MBRTools;
+use Bootloader::Path;
 
 # this is bad style, load modules when required
 use Bootloader::Core::GRUB;
@@ -91,25 +92,71 @@ use Bootloader::Core::ZIPL;
 use Bootloader::Core::PowerLILO;
 use Bootloader::Core::NONE;
 
+use base qw ( Bootloader::FileIO Bootloader::Logger );
+
+our $VERSION = "0.000";
+
+my $instances = 0;
+my $global_id;
+
 =item
 C<< $obj_ref = Bootloader::Library->new (); >>
 
 Creates an instance of the Bootloader::Library class.
 
 =cut
-sub new {
-    my $self = shift;
+sub new
+{
+  my $self = shift;
 
-    my $lib = {};
-    bless ($lib);
-    return $lib;
-}
+  my $lib = {};
+  bless ($lib);
 
-sub GetLogRecords {
-    my $self = shift;
+  my ($c0, $c1, $c2);
 
-    my $loader = $self->{"loader"};
-    return defined $loader ? $loader->GetLogRecords () : undef;
+  $c0 = (caller(0))[0];
+
+  my $idx = 0;
+  while($c1 = (caller($idx))[1]) { $c2 = $c1; $idx++ }
+
+  ($c1 = $c2) =~ s#.*/##;
+
+  my $name = 'xxx';
+
+  if($c1 eq 'Bootloader_API.pm') {
+    $name = 'yast';
+  }
+  elsif($c1 eq 'update-bootloader') {
+    $name = 'pbl';
+  }
+  elsif($c0 eq 'Bootloader::Tools') {
+    $name = 'libpbl';
+  }
+
+  $global_id = $name . sprintf("-%04d.", int rand 10000) unless defined $global_id;
+  $lib->{session_id} = $global_id . ++$instances;
+
+  # find root device & detect if we are chroot-ed
+  my $r = "?";
+  my @r0 = stat "/";
+  my @r1 = stat "/proc/1/root";
+  if(@r0 && @r1) {
+    my $r0 = ($r0[0] >> 8) . ":" . ($r0[0] & 0xff);
+    $r = readlink "/dev/block/$r0";
+    $r =~ s#^..#/dev#;
+    $r = $r0 unless defined $r;
+    if($r0[0] != $r1[0] || $r0[1] != $r1[1]) {
+      $r .= " (chroot)";
+    }
+  }
+
+  my $l = "$lib->{session_id} = $c2 (via $c0), version = $VERSION, root = $r";
+
+  $lib->StartLog();
+
+  $lib->Xmilestone($l);
+
+  return $lib;
 }
 
 =item
@@ -129,44 +176,46 @@ EXAMPLE:
 
 =cut
 
-sub SetLoaderType {
+sub SetLoaderType
+{
     my $self = shift;
     my $bootloader = shift;
 
-    my $loader = exists $self->{"loader"} ? $self->{"loader"} : undef;
+    my $loader = $self->{loader};
 
     if ($bootloader eq "grub")
     {
-	$loader = Bootloader::Core::GRUB->new ($loader);
+	$loader = Bootloader::Core::GRUB->new ($self, $loader);
     }
     elsif ($bootloader eq "lilo")
     {
-	$loader = Bootloader::Core::LILO->new ($loader);
+	$loader = Bootloader::Core::LILO->new ($self, $loader);
     }
     elsif ($bootloader eq "elilo")
     {
-        $loader = Bootloader::Core::ELILO->new ($loader);
+        $loader = Bootloader::Core::ELILO->new ($self, $loader);
     }
     elsif ($bootloader eq "zipl")
     {
-        $loader = Bootloader::Core::ZIPL->new ($loader);
+        $loader = Bootloader::Core::ZIPL->new ($self, $loader);
     }
     elsif ($bootloader eq "ppc")
     {
-	$loader = Bootloader::Core::PowerLILO->new ($loader);
+	$loader = Bootloader::Core::PowerLILO->new ($self, $loader);
     }
     elsif ($bootloader eq "none")
     {
-	$loader = Bootloader::Core::NONE->new ($loader);
+	$loader = Bootloader::Core::NONE->new ($self, $loader);
     }
     else
     {
-	$loader = Bootloader::Core::NONE->new ($loader);
-	$loader->l_error ("Bootloader::Library::SetLoaderType: Initializing for unknown bootloader $bootloader, fallback to none");
+	$loader = Bootloader::Core::NONE->new ($self, $loader);
+	$loader->Xerror("Initializing for unknown bootloader $bootloader, fallback to none");
     }
 
-    $self->{"loader"} = $loader;
-    $loader->l_milestone ("Bootloader::Library::SetLoaderType: TRACE new $bootloader");
+    $self->{loader} = $loader;
+    $loader->Xmilestone("loader = $bootloader");
+
     return 1;
 }
 

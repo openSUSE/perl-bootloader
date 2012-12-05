@@ -39,11 +39,11 @@ package Bootloader::Core::PowerLILO;
 
 use strict;
 
+use Bootloader::Path;
 use Bootloader::Core;
 
-our @ISA = qw(Bootloader::Core);
+our @ISA = qw ( Bootloader::Core );
 
-use Bootloader::Path;
 
 #module interface
 
@@ -245,19 +245,24 @@ Creates an instance of the Bootloader::Core::PowerLILO class.
 
 =cut
 
-sub new {
-    my $self = shift;
-    my $old = shift;
+sub new
+{
+  my $self = shift;
+  my $ref = shift;
+  my $old = shift;
 
-    my $loader = $self->SUPER::new ($old);
-    $loader->{"default_global_lines"} = [
-	{ key => "activate", value => "" },
-    ];
-    bless ($loader);
+  my $loader = $self->SUPER::new($ref, $old);
+  bless($loader);
 
-    $loader->GetMetaData();
-    $loader->l_milestone ("PowerLILO::new: Created PowerLILO instance");
-    return $loader;
+  $loader->{default_global_lines} = [
+    { key => "activate", value => "" },
+  ];
+
+  $loader->GetMetaData();
+
+  $loader->Xmilestone("Created PowerLILO instance");
+
+  return $loader;
 }
 
 
