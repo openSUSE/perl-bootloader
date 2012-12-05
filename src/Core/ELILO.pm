@@ -38,8 +38,6 @@ C<< $status = Bootloader::Core::ELILO->InitializeBootloader (); >>
 package Bootloader::Core::ELILO;
 
 use strict;
-use Data::Dumper;
-$Data::Dumper::Terse = 1;
 
 use Bootloader::Path;
 use Bootloader::Core;
@@ -329,7 +327,7 @@ sub ParseLines {
         if ($key eq "append")
         {
            $glob_app = $val;
-           $self->l_milestone("GLOBAL APPEND: $glob_app \n"); 
+           $self->Xmilestone("GLOBAL APPEND: $glob_app"); 
         }
     }
 
@@ -606,7 +604,7 @@ sub Info2Section {
     my $so = $self->{"exports"}{"section_options"};
     my @lines_new = ();
 
-    $self->l_milestone("ELILO::Info2Section 1: \%sectinfo = " . Dumper \%sectinfo);
+    $self->Xmilestone("1: \%sectinfo = ", \%sectinfo);
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
@@ -638,8 +636,7 @@ sub Info2Section {
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
 	    # only accept known section options :-)
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
         #append in xen contains also xen append, so it must handled special
@@ -674,7 +671,7 @@ sub Info2Section {
 
     @lines = @lines_new;
 
-    $self->l_milestone("ELILO::Info2Section 2: \%sectinfo = " . Dumper \%sectinfo);
+    $self->Xmilestone("2: \%sectinfo = ", \%sectinfo);
 
     my $create_append = 1;
     while ((my $key, my $value) = each (%sectinfo))
@@ -717,8 +714,7 @@ sub Info2Section {
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
 	    # only accept known section options :-)
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
@@ -808,9 +804,7 @@ sub Section2Info {
 
 	unless (exists $ret{"type"} && exists $so->{$ret{"type"} . "_" . $key}) {
 	    # only accept known section options :-)
-	    $self->l_milestone (
-		"ELILO::Section2Info: Ignoring key '$key' for section"
-		. " type '" . $ret{"type"} . "'");
+	    $self->Xmilestone("Ignoring key '$key' for section" . " type '" . $ret{"type"} . "'");
 	    next; 
 	}
 	
@@ -822,7 +816,7 @@ sub Section2Info {
     }
     $ret{"__lines"} = \@lines;
 
-    $self->l_milestone("ELILO::Section2Info() = " . Dumper \%ret);
+    $self->Xmilestone("\%ret = ", \%ret);
 
     return \%ret;
 }

@@ -104,85 +104,16 @@ use Bootloader::Library;
 use Bootloader::Core;
 use Bootloader::Path;
 
-use Data::Dumper;
-$Data::Dumper::Terse = 1;
-
 my $lib_ref = undef;
 my $dmsetup = undef;
 my $mdadm = undef;
 my $multipath = undef;
 my $devicemapper = undef;
 
-sub DumpLog {
-    my $core_lib = shift;
 
-    my $using_logfile = 1;
-    my $logname = Bootloader::Path::Logname();
+# dummy compat function
+sub DumpLog { }
 
-    if (not open LOGFILE, ">>$logname") {
-	$using_logfile = 0;
-	open LOGFILE, ">&STDERR" or die "Can't dup STDERR: $!";
-	print LOGFILE ("WARNING: Can't open $logname, using STDERR instead.\n");
-    }
-
-    # Adding timestamp to log messages
-    use POSIX qw(strftime);
-
-    sub timestamp () {
-	return strftime ( "%Y-%m-%d %H:%M:%S", localtime);
-    }
-
-    foreach my $rec (@{$core_lib->GetLogRecords ()})
-    {
-	my $message = $rec->{"message"};
-	my $level = $rec->{"level"};
-
-	# If debug messages should be printed, the environment variable
-	# Y2DEBUG has to be set ("export Y2DEBUG=1").
-	if ($level eq "debug" and defined $ENV{'Y2DEBUG'})
-	{
-	    print LOGFILE (timestamp() . " DEBUG: $message\n");
-	}
-	elsif ($level eq "debug" and not defined $ENV{'Y2DEBUG'})
-	{
-	    # Omit debug messages
-	}
-	elsif ($level eq "milestone")
-	{
-	    print LOGFILE (timestamp() . " MILESTONE: $message\n");
-	}
-	elsif ($level eq "warning")
-	{
-	    print LOGFILE (timestamp() . " WARNING: $message\n");
-
-	    # If writing to perl logfile, also print warnings to STDERR
-	    if ($using_logfile) {
-		print STDERR ("perl-bootloader: ".timestamp() . " WARNING: $message\n");
-	    }
-	}
-	elsif ($level eq "error")
-	{
-	    print LOGFILE (timestamp() . " ERROR: $message\n");
-
-	    # If writing to perl logfile, also print errors to STDERR
-	    if ($using_logfile) {
-		print STDERR ("perl-bootloader: ".timestamp() . " ERROR: $message\n");
-	    }
-	}
-	else
-	{
-	    print LOGFILE (timestamp() . " ERROR: Uncomplete log record\n");
-	    print LOGFILE (timestamp() . " ERROR: $message\n");
-
-	    # If writing to perl logfile, also print errors to STDERR
-	    if ($using_logfile) {
-		print STDERR (timestamp() . " ERROR: Uncomplete log record\n");
-		print STDERR (timestamp() . " ERROR: $message\n");
-	    }
-	}
-    }
-    close LOGFILE;
-}
 
 sub ResolveCrossDeviceSymlinks {
     my $path = shift;
@@ -190,7 +121,6 @@ sub ResolveCrossDeviceSymlinks {
     my $core_lib = Bootloader::Core->new ();
     $path = $core_lib->ResolveCrossDeviceSymlinks ($path);
 
-    DumpLog ($core_lib);
     return $path;
 }
 
@@ -967,8 +897,6 @@ sub InitLibrary {
     # parse Bootloader configuration files   
     $lib_ref->ReadSettings();
 
-    DumpLog ($lib_ref->{"loader"});
-
     return $lib_ref;
 }
 
@@ -1076,7 +1004,7 @@ bootloader to use the current configuration
 
 sub UpdateBootloader {
     my $ret = $lib_ref->UpdateBootloader ();
-    DumpLog ($lib_ref->{"loader"});
+
     return $ret;
 }
 
@@ -1212,7 +1140,6 @@ sub SetGlobals {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
-    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1248,7 +1175,6 @@ sub GetSectionList {
 			join("'\n' ", @section_names) . "'\n"
 		       );
 
-    DumpLog ($lib_ref->{"loader"});
     return @section_names;
 }
 
@@ -1341,8 +1267,7 @@ sub AddSection {
     return unless defined $name;
     return unless exists $option{"type"};
 
-    my $s = Dumper(\%option);
-    $lib_ref->{loader}->l_milestone ("Tools::AddSection: option = $s");
+    $lib_ref->Xmilestone("option = ", \%option);
 
     my $default = delete $option{"default"} || 0;
     my %new = ();
@@ -1572,8 +1497,6 @@ sub AddSection {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
-
-    DumpLog ($lib_ref->{"loader"});
 }
 
 
@@ -1724,8 +1647,6 @@ sub RemoveSections {
     $lib_ref->WriteSettings (1);
     $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
                                     # the right place
-
-    DumpLog ($lib_ref->{"loader"});
 }
 
 

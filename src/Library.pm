@@ -210,11 +210,11 @@ sub SetLoaderType
     else
     {
 	$loader = Bootloader::Core::NONE->new ($self, $loader);
-	$loader->Xerror("Initializing for unknown bootloader $bootloader, fallback to none");
+	$self->Xerror("Initializing for unknown bootloader $bootloader, fallback to none");
     }
 
     $self->{loader} = $loader;
-    $loader->Xmilestone("loader = $bootloader");
+    $self->Xmilestone("loader = $bootloader");
 
     return 1;
 }
@@ -242,23 +242,22 @@ sub DefineMountPoints {
     my $self = shift;
     my $mountpoints_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    while ((my $mp, my $dev) = each (%{$mountpoints_ref}))
-    {
-	$loader->l_milestone ("Library::DefineMountPoints: Mount point: $mp ; Device: $dev");
-    }
-    $loader->{"mountpoints"} = $mountpoints_ref;
+    $loader->{mountpoints} = $mountpoints_ref;
+
+    $self->Xmilestone("mountpoints =", $loader->{mountpoints});
+
     return 1;
 }
 
 sub GetMountPoints {
     my $self = shift;
 
-    my $loader = $self->{"loader"};
-    $loader->l_milestone ("Library::GetMountPoints: TRACE");
-    return $loader->{"mountpoints"};
+    my $loader = $self->{loader};
+    $self->Xmilestone("TRACE");
+    return $loader->{mountpoints};
 }
 
 =item
@@ -285,17 +284,13 @@ sub DefinePartitions {
     my $self = shift;
     my $partitions_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    foreach my $part_ref (@{$partitions_ref})
-    {
-	my ($part, $disk, $num, @part_info ) = @{$part_ref};
-	$loader->l_milestone ("Library::DefinePartitions: Partition: $part ; " .
-			  "Disk: $disk ; Number: $num ; Info: " .
-			  join(", ", map { "$_"; } @part_info) );
-    }
-    $loader->{"partitions"} = $partitions_ref;
+    $loader->{partitions} = $partitions_ref;
+
+    $self->Xmilestone("partitions [dev, disk, nr, fsid, fstype, part_type, start_cyl, end_cyl, label] =", $loader->{partitions});
+
     return 1;
 }
 
@@ -326,15 +321,13 @@ sub DefineMDArrays {
     my $self = shift;
     my $md_arrays_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    while ((my $md, my $members_ref) = each (%{$md_arrays_ref}))
-    {
-	my $members = join ", ", @{$members_ref};
-	$loader->l_milestone ("Library::DefineMDArrays: MD Array: $md ; Members: $members");
-    }
-    $loader->{"md_arrays"} = $md_arrays_ref;
+    $loader->{md_arrays} = $md_arrays_ref;
+
+    $self->Xmilestone("md_arrays =", $loader->{md_arrays});
+
     return 1;
 }
 
@@ -362,14 +355,13 @@ sub DefineMultipath {
     my $self = shift;
     my $mp_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    while ((my $phys, my $mp) = each (%{$mp_ref}))
-    {
-	$loader->l_milestone ("Library::DefineMultipath: Real device: $phys ;  multipath $mp");
-    }
-    $loader->{"multipath"} = $mp_ref;
+    $loader->{multipath} = $mp_ref;
+
+    $self->Xmilestone("multipath [real_dev, mp_dev] =", $loader->{multipath});
+
     return 1;
 }
 
@@ -393,10 +385,10 @@ sub ReadSettings {
     my $self = shift;
     my $avoid_reading_device_map = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone( "Library::ReadSettings: TRACE" );
+    $self->Xmilestone("TRACE");
     my $files_ref = $loader->ReadFiles ($loader->ListFiles ());
     if (! defined ($files_ref))
     {
@@ -426,21 +418,21 @@ EXAMPLE:
 
 sub WriteSettings {
     my $self = shift;
-    my $menu_only = shift;
+    my $menu_only = shift || 0;
 
-# FIXME remove this line after proper testing
-# $menu_only = 0;
-
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone(" Library::WriteSettings: TRACE menu_only:". ($menu_only ||""));
-    $loader->{"resolve_symlinks"} = 1;
+    $self->Xmilestone("menu_only = $menu_only");
+
+    $loader->{resolve_symlinks} = 1;
     my $new_lines_ref = $loader->CreateLines ();
-    if (! defined ($new_lines_ref))
+    if (!defined $new_lines_ref)
     {
+        $self->Xwarning("no config - nothing written");
 	return undef;
     }
+
     return $loader->WriteFiles ($new_lines_ref, ".new", $menu_only);
 }
 
@@ -464,10 +456,10 @@ sub ReadSettingsTmp {
     my $self = shift;
     my $tmp_dir = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone(" Library::ReadSettingsTmp: TRACE tmp_dir $tmp_dir ");
+    $self->Xmilestone("TRACE tmp_dir $tmp_dir");
 
     my @files = @{$loader->ListFiles ()};
     my %filenames = ();
@@ -512,10 +504,10 @@ sub WriteSettingsTmp {
     my $self = shift;
     my $tmp_dir = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone(" Library::WriteSettingsTmp: TRACE tmp_dir $tmp_dir ");
+    $self->Xmilestone("TRACE tmp_dir $tmp_dir");
 
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
@@ -554,19 +546,19 @@ EXAMPLE:
 sub GetFilesContents {
     my $self = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
 
     if (! defined $loader or $loader eq "none") {
 	return undef;
     }
 
-    $loader->l_milestone(" Library::GetFilesContents TRACE ");
+    $self->Xmilestone("TRACE");
 
-    $loader->{"resolve_symlinks"} = 0;
+    $loader->{resolve_symlinks} = 0;
     my $new_lines_ref = $loader->CreateLines ();
     if (! defined ($new_lines_ref))
     {
-	$loader->l_error ("Library::GetFileContents: Error while getting files contents occurred");
+	$self->Xerror("Error while getting files contents occurred");
 	return undef;
     }
     my %files = ();
@@ -590,10 +582,10 @@ sub SetFilesContents {
     my $self = shift;
     my $files_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone(" Library::SetFilesContents TRACE ");
+    $self->Xmilestone("TRACE");
 
     my %lines = ();
     while ((my $fn, my $contents) = each (%{$files_ref}))
@@ -628,10 +620,10 @@ sub UpdateBootloader {
     my $self = shift;
     my $avoid_init = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone("Library::UpdateBootloader: TRACE avoid_init $avoid_init");
+    $self->Xmilestone("avoid_init = $avoid_init");
 
     return $loader->UpdateBootloader ($avoid_init);
 }
@@ -655,10 +647,10 @@ EXAMPLE:
 sub InitializeBootloader {
     my $self = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone( "Library::InitializeBootloader: TRACE");
+    $self->Xmilestone("TRACE");
 
     return $loader->InitializeBootloader ();
 }
@@ -686,10 +678,10 @@ EXAMPLE:
 sub ListConfigurationFiles {
     my $self = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone( "Library::ListConfigurationFiles TRACE");
+    $self->Xmilestone("TRACE");
 
     return $loader->ListFiles ();
 }
@@ -709,10 +701,10 @@ EXAMPLE:
 sub GetSettings {
     my $self = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone( "Library::GetSettings TRACE");
+    $self->Xmilestone("TRACE");
     return $loader->GetSettings ();
 }
 
@@ -732,10 +724,10 @@ sub SetSettings {
     my $self = shift;
     my $settings_ref = shift;
 
-    my $loader = $self->{"loader"};
+    my $loader = $self->{loader};
     return undef unless defined $loader;
 
-    $loader->l_milestone( "Library::SetSettings TRACE");
+    $self->Xmilestone("TRACE");
 
     return $loader->SetSettings ($settings_ref);
 }
@@ -787,7 +779,7 @@ sub GetMetaData {
     my $self = shift;
     my $loader = $self->{loader} || return undef;
 
-    $loader->l_milestone( "Library::GetMetaData TRACE");
+    $self->Xmilestone("TRACE");
 
     return $loader->GetMetaData();;
 }
@@ -967,7 +959,7 @@ sub GrubDev2UnixDev {
     my $grub_dev = shift;
     my $loader = $self->{loader} || return undef;
 
-    $loader->l_milestone( "Library::GrubDev2UnixDev grub_dev: $grub_dev" );
+    $self->Xmilestone("grub_dev: $grub_dev");
 
     my $unix_dev = $loader->GrubDev2UnixDev ($grub_dev);
 
@@ -986,8 +978,7 @@ sub DetectThinkpadMBR {
   my $self = shift;
   my $disk = shift;
   my $res = MBRTools::IsThinkpadMBR($disk);
-  $self->{"loader"}->l_milestone("Library::DetectThinkpadMBR on $disk result $res" )
-      if (defined $self->{"loader"});
+  $self->Xmilestone("on $disk result $res");
   return $res;
 }
 
@@ -1003,8 +994,7 @@ sub WriteThinkpadMBR {
    my $self = shift;
    my $disk = shift;
    my $res = MBRTools::PatchThinkpadMBR($disk);
-   $self->{"loader"}->l_milestone("Library::WriteThinkpadMBR on $disk result $res" ) 
-         if (defined $self->{"loader"});
+   $self->Xmilestone("on $disk result $res");
    return $res;
 }
 
@@ -1014,8 +1004,7 @@ sub CountGRUBPassword{
   my $res = qx{echo "md5crypt \
   $pass" | grub --batch | grep Encrypted };
   $res =~ s/Encrypted:\s+(.*)$/$1/;
-  $self->{"loader"}->l_milestone("Library::CountGRUBPassword result $res" )
-      if (defined $self->{"loader"});
+  $self->Xmilestone("result $res");
   return undef unless $res =~ m/^\$1\$.*\$.*$/;
   return $res;
 
@@ -1037,8 +1026,7 @@ sub UpdateSerialConsole{
     }
   }
 
-  $self->{"loader"}->l_milestone("Library::UpdateSerialConsole append $append console $console res $ret" )
-     if (defined $self->{"loader"});
+  $self->Xmilestone("append $append console $console res $ret");
 
   return $ret;
 }

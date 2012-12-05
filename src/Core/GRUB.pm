@@ -81,9 +81,6 @@ use Bootloader::Core;
 
 our @ISA = qw ( Bootloader::Core );
 
-use Data::Dumper;
-$Data::Dumper::Terse = 1;
-
 #module interface
 
 sub bootable($) {
@@ -413,20 +410,20 @@ sub GetKernelDevice {
     chomp ($dev = qx{$cmd 2> /dev/null});
 
     if($? || $dev eq "") {
-      $self->l_milestone("GRUB::GetKernelDevice: udevadm failed, using readlink");
+      $self->Xmilestone("udevadm failed, using readlink");
       $dev = realpath $device;
     }
     else {
       $dev = "/dev/$dev";
     }
 
-    $self->l_milestone ("GRUB::GetKernelDevice: $device -> $dev");
+    $self->Xmilestone("$device -> $dev");
 
     if ($dev =~ m:^/dev/dm-\d+:){
       my $name = qx{udevadm info  -q env -n $device | grep DM_NAME};
       chomp $name;
       if ($name !~ m/^DM_NAME=(.*)/){
-        $self->l_error ("GRUB::GetKernelDevice: no DM_NAME for dm device: $dev");
+        $self->Xerror("no DM_NAME for dm device: $dev");
         return $dev;
       }
       $dev = "/dev/mapper/$1";
@@ -436,7 +433,7 @@ sub GetKernelDevice {
       if ($part =~ m/^DM_PART=(\d+)$/ and $dev !~ /_part[0-9]+$/){
         $dev = $dev."_part$1";
       }
-      $self->l_milestone("GRUB::GetKernelDevice: dm device translated: $dev");
+      $self->Xmilestone("dm device translated: $dev");
     }
     return $dev;
 }
@@ -456,15 +453,15 @@ sub GrubDev2UnixDev {
     my $dev = shift;
 
     unless ($dev) {
-	$self->l_error ("GRUB::GrubDev2UnixDev: Empty device to translate");
+	$self->Xerror("Empty device to translate");
 	return $dev;
     }
     if ($dev !~ /^\(.*\)$/) {
-	$self->l_warning ("GRUB::GrubDev2UnixDev: Not translating device $dev");
+	$self->Xwarning("Not translating device $dev");
 	return $dev;
     }
 
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: Translating $dev ...");
+    $self->Xmilestone("Translating $dev ...");
 
     my $original = $dev;
     my $partition = undef;
@@ -479,9 +476,9 @@ sub GrubDev2UnixDev {
     }
 
     my $match_found = 0;
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: ".$self->{"device_map"});
+    $self->Xmilestone("device_map: ".$self->{"device_map"});
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->l_milestone ("GRUB::GrubDev2UnixDev: device_map: $unix <-> $fw.");
+        $self->Xmilestone("device_map: $unix <-> $fw.");
     }
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
 	if ($dev eq $fw) {
@@ -491,13 +488,13 @@ sub GrubDev2UnixDev {
     }
 
     if ($match_found == 0) {
-        $self->l_error ("GRUB::GrubDev2UnixDev: did not find a match for $dev in the device map");
+        $self->Xerror("did not find a match for $dev in the device map");
         return $original;
     }
 
     # resolve symlinks.....
     $dev = $self->GetKernelDevice($dev);
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: Kernel device is $dev");
+    $self->Xmilestone("Kernel device is $dev");
 
     if (defined ($partition)) {
 	foreach my $dev_ref (@{$self->{"partitions"}}) {
@@ -505,17 +502,17 @@ sub GrubDev2UnixDev {
               (scalar @{$dev_ref}>8 && $dev_ref->[8] eq $dev)) #FIXME HACK to live install
               && $dev_ref->[2] == $partition) {
 		$dev = $dev_ref->[0];
-		$self->l_milestone ("GRUB::GrubDev2UnixDev: Translated $original to $dev");
+		$self->Xmilestone("Translated $original to $dev");
 		return $dev;
 	    }
 	}
         #no partition found so return $dev with partition
-	$self->l_warning ("GRUB::GrubDev2UnixDev: No partition found for $dev with $partition.");
+	$self->Xwarning("No partition found for $dev with $partition.");
         return $dev.$partition;
     }
 
     $dev = $self->Member2MD ($dev);
-    $self->l_milestone ("GRUB::GrubDev2UnixDev: Translated GRUB->UNIX: $original to $dev");
+    $self->Xmilestone("Translated GRUB->UNIX: $original to $dev");
     return $dev;
 }
 
@@ -541,17 +538,17 @@ sub UnixDev2GrubDev {
     local $_;
 
     if ($dev eq "") {
-	$self->l_error ("GRUB::UnixDev2GrubDev: Empty device to translate");
+	$self->Xerror("Empty device to translate");
 	return ""; # return an error
     }
 
     # Seems to be a grub device already 
     if ($dev =~ /^\(${grubdev_pattern}\)$/) {
-	$self->l_warning ("GRUB::UnixDev2GrubDev: Not translating device $dev");
+	$self->Xwarning("Not translating device $dev");
 	return $dev;
     }
 
-    $self->l_milestone ("GRUB::UnixDev2GrubDev: Translating $dev ...");
+    $self->Xmilestone("Translating $dev ...");
 
     # remove parenthesis to be able to handle entries like "(/dev/sda1)" which
     # might be there by error
@@ -564,7 +561,7 @@ sub UnixDev2GrubDev {
     my $original = $dev;
     my $kernel_dev = $self->GetKernelDevice($dev);
 
-    $self->l_milestone ("GRUB::UnixDev2GrubDev: kernel device: $kernel_dev");
+    $self->Xmilestone("kernel device: $kernel_dev");
 
     my $partition = undef;
 
@@ -572,19 +569,19 @@ sub UnixDev2GrubDev {
 	my @members = @{$self->MD2Members ($kernel_dev) || []};
 	# FIXME! This only works for mirroring (Raid1)
 	$kernel_dev = $self->GetKernelDevice($members[0] || $kernel_dev );
-	$self->l_milestone ("GRUB::UnixDev2GrubDev: First device of MDRaid: $original -> $kernel_dev");
+	$self->Xmilestone("First device of MDRaid: $original -> $kernel_dev");
     }
 
     # print all entries of device.map - for debugging
     if ($self->{device_map}) {
-        $self->l_milestone ("GRUB::UnixDev2UnixDev: device_map:");
+        $self->Xmilestone("device_map:");
 
 	for (sort keys %{$self->{device_map}}) {
-	    $self->l_milestone ("unix device: $_ <==> grub device: $self->{device_map}{$_}");
+	    $self->Xmilestone("unix device: $_ <==> grub device: $self->{device_map}{$_}");
 	}
     }
     else {
-	$self->l_warning ("GRUB::UnixDev2GrubDev: empty device_map");
+	$self->Xwarning("empty device_map");
     }
 
     # fetch the underlying device (sda1 --> sda)
@@ -592,7 +589,7 @@ sub UnixDev2GrubDev {
 	if ($_->[0] eq $kernel_dev) {
 	    $kernel_dev = $_->[1];
 	    $partition = $_->[2] - 1;
-	    $self->l_milestone ("GRUB::UnixDev2GrubDev: dev base part: $_->[0] $_->[1] $_->[2]");
+	    $self->Xmilestone("dev base part: $_->[0] $_->[1] $_->[2]");
 	    last;
 	}
     }
@@ -607,7 +604,7 @@ sub UnixDev2GrubDev {
     # fallback if translation has failed - this is good enough for many cases
     # FIXME: this is nonsense - we should return an error
     if (!$g_dev) {
-        $self->l_warning("GRUB::UnixDev2GrubDev: Unknown device/partition, using fallback");
+        $self->Xwarning("Unknown device/partition, using fallback");
 
         $g_dev = "hd0";
         $partition = undef;
@@ -624,11 +621,11 @@ sub UnixDev2GrubDev {
 
     if (defined $partition) {
         $g_dev = "($g_dev,$partition)";
-        $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX partition -> GRUB device: $original to $g_dev");
+        $self->Xmilestone("Translated UNIX partition -> GRUB device: $original to $g_dev");
     }
     else {
         $g_dev = "($g_dev)";
-        $self->l_milestone ("GRUB::UnixDev2GrubDev: Translated UNIX device -> GRUB device: $original to $g_dev");
+        $self->Xmilestone("Translated UNIX device -> GRUB device: $original to $g_dev");
     }
 
      return $g_dev;
@@ -661,7 +658,7 @@ sub GrubPath2UnixPath {
     }
 
     if ($dev eq "") {
-	$self->l_milestone ("GRUB::GrubPath2UnixPath: Path $orig_path in UNIX form, not modifying it");
+	$self->Xmilestone("Path $orig_path in UNIX form, not modifying it");
 	return $orig_path;
     }
 
@@ -687,13 +684,13 @@ sub GrubPath2UnixPath {
 
     # no mount point found 
     if ($mountpoint eq $dev) {
-	$self->l_milestone ("GRUB::GrubPath2UnixPath: Device $dev does not have mount point, keeping GRUB path $orig_path");
+	$self->Xmilestone("Device $dev does not have mount point, keeping GRUB path $orig_path");
 	return $orig_path;
     }
 
     $path = $mountpoint . $path;
     $path = $self->CanonicalPath ($path);
-    $self->l_debug ("GRUB::GrubPath2UnixPath: Translated GRUB->UNIX dev: $dev, path: $orig_path to: $path");
+    $self->Xdebug("Translated GRUB->UNIX dev: $dev, path: $orig_path to: $path");
     return $path;
 }
 
@@ -718,7 +715,7 @@ sub UnixPath2GrubPath {
     my $path;
 
     if ($orig_path =~ /^(\(.*\))(.+)$/) {
-	$self->l_milestone ("GRUB::UnixPath2GrubPath: Path $orig_path looks like in GRUB form, special treatment");
+	$self->Xmilestone("Path $orig_path looks like in GRUB form, special treatment");
 	$dev = $1;
 	$path = $2;
     }
@@ -732,7 +729,7 @@ sub UnixPath2GrubPath {
     }
 
     $path = $dev . ($path||"");
-    $self->l_milestone ("GRUB::UnixPath2GrubPath: Translated path: $orig_path, prefix $preset_dev, to: $path");
+    $self->Xmilestone("Translated path: $orig_path, prefix $preset_dev, to: $path");
     return $path;
 }
 
@@ -842,7 +839,7 @@ sub ParseLines {
 
     #first set the device map - other parsing uses it
     my @device_map = @{$files{Bootloader::Path::Grub_devicemap()} || []};
-    $self->l_milestone ("GRUB::Parselines: input from device.map :\n'" .
+    $self->Xmilestone("input from device.map :\n'" .
 			join("'\n' ", @device_map) . "'");
     my %devmap = ();
     foreach my $dm_entry (@device_map)
@@ -858,16 +855,16 @@ sub ParseLines {
           }
 	}
     };
-    $self->l_milestone ("GRUB::Parselines: avoided_reading device map.") if ( $avoid_reading_device_map );
+    $self->Xmilestone("avoided_reading device map.") if ( $avoid_reading_device_map );
     $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
-    $self->l_milestone ("GRUB::Parselines: device_map: ".$self->{"device_map"});
+    $self->Xmilestone("device_map: ".$self->{"device_map"});
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->l_milestone ("GRUB::Parselines: device_map: $unix <-> $fw.");
+        $self->Xmilestone("device_map: $unix <-> $fw.");
     }
 
     # and now proceed with menu.lst
     my @menu_lst = @{$files{Bootloader::Path::Grub_menulst()} || []};
-    $self->l_milestone ("GRUB::Parselines: input from menu.lst :\n'" .
+    $self->Xmilestone("input from menu.lst :\n'" .
 			join("'\n' ", @menu_lst) . "'");
     (my $glob_ref, my $sect_ref) = $self->ParseMenuFileLines (
 	0,
@@ -877,18 +874,18 @@ sub ParseLines {
 
     # and finally get the location from /etc/grub.conf
     my @grub_conf_lines = @{$files{Bootloader::Path::Grub_grubconf()} || []};
-    $self->l_milestone ("GRUB::Parselines: input from /etc/grub.conf :\n'" .
+    $self->Xmilestone("input from /etc/grub.conf :\n'" .
 			join("'\n' ", @grub_conf_lines) . "'");
     my $grub_root = "";
     my @grub_conf = ();
     my @devices = ();
 
-    $self->l_milestone ("GRUB::Parselines: global boot setting already found: ". 
+    $self->Xmilestone("global boot setting already found: ". 
 			 join( ", ", grep { m/^boot_/; } keys %$glob_ref));
     #parse grub conf only if mount points is set (hack for generating autoyast profile bnc #464098)
     if (not exists $self->{"mountpoints"}{'/'})
     {
-        $self->l_milestone ("GRUB::Parselines: Mount points doesn't have '/', skipped parsing grub.conf");
+        $self->Xmilestone("Mount points doesn't have '/', skipped parsing grub.conf");
     }
     else
     {
@@ -964,11 +961,11 @@ sub ParseLines {
       my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
 
       foreach my $dev (@devices) {
-	$self->l_milestone ("GRUB::Parselines: checking boot device $dev");
+	$self->Xmilestone("checking boot device $dev");
 
 	if ($dev eq $mbr_dev) {
 	    $glob_ref->{"boot_mbr"} = "true";
-	    $self->l_milestone ("GRUB::Parselines: detected boot_mbr");
+	    $self->Xmilestone("detected boot_mbr");
             if (defined $self->{"md_arrays"}
                 and ((scalar keys %{$self->{"md_arrays"}}) > 0)){
               if (defined $glob_ref->{"boot_md_mbr"} 
@@ -977,20 +974,20 @@ sub ParseLines {
               } else {
                 $glob_ref->{"boot_md_mbr"} =$dev;
               }
-              $self->l_milestone ("GRUB::Parselines: detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
+              $self->Xmilestone("detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
             }
 	}
 	elsif ($dev eq $root_dev) {
 	    $glob_ref->{"boot_root"} = "true";
-	    $self->l_milestone ("GRUB::Parselines: detected boot_root");
+	    $self->Xmilestone("detected boot_root");
 	}
 	elsif ($dev eq $boot_dev) {
 	    $glob_ref->{"boot_boot"} = "true";
-	    $self->l_milestone ("GRUB::Parselines: detected boot_boot");
+	    $self->Xmilestone("detected boot_boot");
 	}
 	elsif ($dev eq $extended_dev) {
 	    $glob_ref->{"boot_extended"} = "true";
-	    $self->l_milestone ("GRUB::Parselines: detected boot_extended");
+	    $self->Xmilestone("detected boot_extended");
 	}
         elsif ($self->IsDisc($dev)
           and defined $self->{"md_arrays"}
@@ -1000,11 +997,11 @@ sub ParseLines {
           } else {
             $glob_ref->{"boot_md_mbr"} =$dev;
           }
-          $self->l_milestone ("GRUB::Parselines: detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
+          $self->Xmilestone("detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
         }
 	else {
 	    $glob_ref->{"boot_custom"} = $dev;
-	    $self->l_milestone ("GRUB::Parselines: set boot_custom");
+	    $self->Xmilestone("set boot_custom");
 	}
       }			 
     } 
@@ -1100,7 +1097,7 @@ sub CreateGrubConfLines() {
               $s1_devices{$mbr_disc} = 1;
               my $gdev = $self->UnixDev2GrubDev($mbr_disc);
               $md_discs->{$gdev} = substr($gdev,1,-1);
-              $self->l_milestone ("GRUB::CreateGrubConfLines: md_mbr device: $gdev ");
+              $self->Xmilestone("md_mbr device: $gdev ");
             }
 	}
 
@@ -1146,7 +1143,7 @@ sub CreateGrubConfLines() {
 	# other options ???
     }
 
-    $self->l_milestone ("GRUB::CreateGrubConfLines: found s1_devices: "
+    $self->Xmilestone("found s1_devices: "
 			. join(",",keys %s1_devices));
 
     # keep the first bootloader setup command for every boot device and drop
@@ -1161,8 +1158,7 @@ sub CreateGrubConfLines() {
 	$keep;
     } @{$self->{"grub_conf"}};
 
-    $self->l_milestone ("GRUB::CreateGrubConfLines: " .
-			"remaining s1_devices to create new lines: "
+    $self->Xmilestone("remaining s1_devices to create new lines: "
 			. join(",",keys %s1_devices));
 
     if (scalar (keys (%s1_devices)) > 0)
@@ -1194,7 +1190,7 @@ sub CreateGrubConfLines() {
 	foreach my $new_dev (keys (%s1_devices))
 	{
 	    my $line = $self->CreateGrubConfLine ($new_dev, $discswitch, 1);
-	    $self->l_milestone ("GRUB::CreateGrubConfLines: new line created:\n\n' " .
+	    $self->Xmilestone("new line created:\n\n' " .
 				join("'\n' ",
 				     map {
 					 $_ . " => '" . $line->{$_} . "'";
@@ -1253,12 +1249,12 @@ sub CreateGrubConfLines() {
       my $stage_location = $stage1dev || $location;
       if ($md_discs->{$location})
       {
-        $self->l_milestone("GrubConfCreate: detected md_discs $location");
+        $self->Xmilestone("detected md_discs $location");
         $stage_location =~ m/\(([^,)]+)(,[^)]+)?\)/;
         my $old_disc = $1;
         my $new_disc = $md_discs->{$location};
         $stage_location =~ s/$old_disc/$new_disc/;
-        $self->l_milestone("GrubConfCreate: resulting location $stage_location");
+        $self->Xmilestone("resulting location $stage_location");
       }
 	    my $line = "setup $options $location $stage_location";
 	    push @grub_conf, $line;
@@ -1678,8 +1674,7 @@ sub Info2Section {
     my $so = $self->{'options'}{'section_options'};
     my $modules = 0;
 
-    my $s = Dumper(\%sectinfo);
-    $self->l_milestone ("GRUB::Info2Section: sectinfo = $s");
+    $self->Xmilestone("sectinfo = ", \%sectinfo);
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
@@ -1701,7 +1696,7 @@ sub Info2Section {
     my $remap_device = undef;
     if (defined ($sectinfo{"remap"}) && $sectinfo{"remap"} eq "true" && defined ($sectinfo{"chainloader"}))
     {
-	$self->l_milestone ("GRUB::Info2Section: Remapping the device map");
+	$self->Xmilestone("Remapping the device map");
 	$remap_device = $sectinfo{"chainloader"};
 	$remap_device = $self->UnixDev2GrubDev ($remap_device);
         if ($remap_device =~ /\(([^,]+),([^,]+)\)/) {
@@ -1711,9 +1706,9 @@ sub Info2Section {
 	    $remap_device = "$1";
 	}
 	else {
-	    $self->l_error ("GRUB::Info2Section: Not valid device $remap_device");
+	    $self->Xerror("Not valid device $remap_device");
 	}
-	$self->l_milestone ("GRUB::Info2Section: Device to remap: $remap_device");
+	$self->Xmilestone("Device to remap: $remap_device");
     }
 
     my $grub_root = "";
@@ -1721,7 +1716,7 @@ sub Info2Section {
     {
 	$grub_root = $self->GetCommonDevice ($sectinfo{"image"}, $sectinfo{"initrd"});
 	$grub_root = $self->UnixDev2GrubDev ($grub_root);
-	$self->l_milestone ("Set GRUB's root to $grub_root");
+	$self->Xmilestone("Set GRUB's root to $grub_root");
     }
     elsif ($type eq "menu" or $type eq "other") {
 	# FIXME: using the boot device of the current installation as the
@@ -1731,11 +1726,11 @@ sub Info2Section {
 	$grub_root = $self->UnixDev2GrubDev (
 	    exists $sectinfo{"root"} ? delete($sectinfo{"root"}) : $boot_dev
         );
-	$self->l_milestone ("Set GRUB's root to $grub_root");
+	$self->Xmilestone("Set GRUB's root to $grub_root");
 	# FIXES the above - maybe: To make makeactive without parameter work,
 	# one needs to pass the chainloader device
 	if (exists $sectinfo{"chainloader"}) {
-	    $self->l_milestone ("Setting GRUB's root to $grub_root ($sectinfo{\"chainloader\"})");
+	    $self->Xmilestone("Setting GRUB's root to $grub_root ($sectinfo{\"chainloader\"})");
 	    $grub_root = $self->UnixDev2GrubDev ($sectinfo{"chainloader"});
 	}
     }
@@ -2088,7 +2083,7 @@ sub Global2Info {
         }
 	elsif ($key =~ m/^boot_/) {
 	    # boot_* parameters are handled else where but should not happen!
-	    $self->l_milestone ("GRUB::Global2Info: Wrong item here $key, ignored");
+	    $self->Xmilestone("Wrong item here $key, ignored");
 	}
 	else {
 	    $ret{$key} = $val;
@@ -2348,18 +2343,18 @@ sub GrubDev2MountPoint {
 
     return $grub_dev if ($grub_dev eq $device); #immediatelly return if GrubDev2UnixDev fail
 
-    $self->l_milestone ("GRUB::GrubDev2MountPoint : device: $device");
+    $self->Xmilestone("device: $device");
 
     # MD-RAID handling: find the corresponding /dev/mdX if any. 
     #FIXME is it needed? isnt't member of array instead of array device error?
     while ((my $md, my $members_ref) = each (%{$self->{"md_arrays"}})) {
 
 	my $members = join ", ", @{$members_ref};
-	$self->l_debug ("GRUB::GrubDev2MountPoint : MD Array: $md ; Members: $members");
+	$self->Xdebug("MD Array: $md ; Members: $members");
 
 	foreach my $md_member (@{$members_ref}) {
 	    if ($self->GetKernelDevice($device) eq $self->GetKernelDevice($md_member)) {
-	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find md: $md");
+	        $self->Xmilestone("find md: $md");
       		push (@devices, $md);
 	    }
 	}
@@ -2370,9 +2365,9 @@ sub GrubDev2MountPoint {
     my $mountpoint = $grub_dev;
     foreach $device (@devices) {
 	while ((my $mp, my $d) = each (%{$self->{"mountpoints"}})) {
-	    $self->l_debug ("GRUB::GrubDev2MountPoint : record $mp <-> $d");
+	    $self->Xdebug("record $mp <-> $d");
 	    if ($self->GetKernelDevice($d) eq $self->GetKernelDevice($device)) { 
-	        $self->l_milestone ("GRUB::GrubDev2MountPoint : find mountpoint: $mp");
+	        $self->Xmilestone("find mountpoint: $mp");
 		$mountpoint = $mp;
 	    }
 	}

@@ -513,8 +513,7 @@ sub Info2Section {
 	    } # else ignore for unknown section type
         }
         elsif (not exists ($so->{$type . "_" . $key})) {
-	    $self->l_milestone (
-		"ELILO::Info2Section: Ignoring key '$key' for section type '$type'");
+	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
             next; 
         }
 	elsif ($key eq "list") {
@@ -745,15 +744,15 @@ sub Info2Global {
     my $default_sect = delete $globinfo{"default"};
     my $default_type = "";
 
-    #$self->l_milestone ("Info2Global: default_sect = $default_sect");
-    #$self->l_milestone ("Info2Global: section_names = ( " . join(",", @section_names) . " )");
-    #$self->l_milestone ("Info2Global: sections = ( " . join(",", @sections) . " )");
+    #$self->milestone("default_sect = $default_sect");
+    #$self->milestone("section_names = ( " . join(",", @section_names) . " )");
+    #$self->milestone("sections = ( " . join(",", @sections) . " )");
 
     if (defined $default_sect) {
 	foreach (@sections) {
 	    if (ref($_) eq "HASH") {
 		my $s = $_;
-		#$self->l_milestone ("Info2Global: this_sect = ( " .
+		#$self->milestone("this_sect = ( " .
 		#		    join(",\n", map {"'$_' -> '$s->{$_}'";} keys %{$s})
 		#		    . " )");
 		if (exists $_->{"name"} && $_->{"name"} eq $default_sect) {
