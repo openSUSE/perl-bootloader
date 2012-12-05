@@ -135,6 +135,8 @@ sub SetLoaderType {
 
     my $loader = exists $self->{"loader"} ? $self->{"loader"} : undef;
 
+    $bootloader = "none" if $bootloader eq "";
+
     if ($bootloader eq "grub")
     {
 	$loader = Bootloader::Core::GRUB->new ($loader);
@@ -158,6 +160,7 @@ sub SetLoaderType {
     elsif ($bootloader eq "none")
     {
 	$loader = Bootloader::Core::NONE->new ($loader);
+	$loader->l_warning("no bootloader type specified");
     }
     else
     {
@@ -166,7 +169,7 @@ sub SetLoaderType {
     }
 
     $self->{"loader"} = $loader;
-    $loader->l_milestone ("Bootloader::Library::SetLoaderType: TRACE new $bootloader");
+    $loader->l_milestone ("Bootloader::Library::SetLoaderType: loader = $bootloader");
     return 1;
 }
 
@@ -714,15 +717,16 @@ EXAMPLE:
 
 =cut
 
+# return empty array if none were read, not undef
 sub GetSections {
     my $self = shift;
 
     my $settings_ref = $self->GetSettings ();
     if (! defined ($settings_ref))
     {
-	return undef;
+	return [];
     }
-    return $settings_ref->{"sections"};
+    return $settings_ref->{"sections"} || [];
 }
 
 =item
