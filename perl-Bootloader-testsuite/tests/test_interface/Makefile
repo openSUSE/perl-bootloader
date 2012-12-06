@@ -1,8 +1,12 @@
-test:
+all: test
+
+test: clean
 	mkdir -p Bootloader
 	@cp -r ../../../src/* Bootloader/
-	cp -rf backup/fake_root1 .
-	cp -rf backup/fake_root2 .
+	@cp -r backup/fake_root1 .
+	@cp -r backup/fake_root2 .
+	@mkdir -p fake_root{1,2}/var/log/YaST2
+
 	perl -w grub1-test.pl
 	perl -w lilo1-test.pl
 	perl -w elilo1-test.pl
@@ -13,12 +17,7 @@ test:
 	perl -w multipath-test.pl
 	perl -w md-raid-test.pl
 	perl -w core-test.pl
-	rm -rf Bootloader
-	rm -rf fake_root[12]
 
-#usefull target after failed test
 clean: 
-	@rm -rf Bootloader
-	rm -rf fake_root*
-	cp -rf backup/fake_root1 .
-	cp -rf backup/fake_root2 .
+	@rm -f *~
+	@rm -rf Bootloader fake_root*

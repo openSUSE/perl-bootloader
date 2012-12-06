@@ -88,10 +88,10 @@ diff:	export
 submit:	.submitted
 
 test:
-	cd perl-Bootloader-testsuite/tests/test_interface/ && make
+	make -C perl-Bootloader-testsuite/tests/test_interface
 
 test_clean:
-	cd perl-Bootloader-testsuite/tests/test_interface/ && make clean
+	make -C perl-Bootloader-testsuite/tests/test_interface clean
 
 # worker targets
 .checkexportdir:
@@ -156,7 +156,7 @@ ifneq ($(SUBMIT_DIR2),)
 endif
 	@touch $@
 
-clean:
+clean: test_clean
 	if [ -f .exportdir ] && [ -d "$$(<.exportdir)" ]; then echo "$$(<.exportdir)"; rm -rf "$$(<.exportdir)"; fi
 	rm -rf .check .install
 	rm -f .exportdir .built .submitted *~ */*~ */*/*~

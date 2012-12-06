@@ -648,6 +648,8 @@ sub GrubPath2UnixPath {
     my $path = shift;
     my $dev = shift;
 
+    $self->milestone("path = $path, dev = $dev");
+
     my $orig_path = $path;
     if ($path =~ /^(\(.+\))(.+)$/) {
 	$dev = $1;
@@ -1457,7 +1459,7 @@ sub Section2Info {
         elsif ($key eq "measure")
         {
           my @parts = split(" ",$val);
-          $parts[0] = $self->GrubPath2UnixPath($parts[0]);
+          $parts[0] = $self->GrubPath2UnixPath($parts[0], $grub_root);
 
           if (exists $ret{"measure"}){
             $ret{"measure"}->{$parts[0]} = $parts[1];

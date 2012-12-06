@@ -175,7 +175,6 @@ sub new
   bless($loader);
 
   $loader->{default_global_lines} = [ ];
-  $loader->SetOptions();
 
   $loader->GetMetaData();
 
