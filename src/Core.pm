@@ -104,8 +104,6 @@ C<< $canonical = Bootloader::Core->CanonicalPath ($path); >>
 
 C<< $real = Bootloader::Core->RealFileName ($filename); >>
 
-C<< Bootloader::Core->l_milestone ($message); >>
-
 C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
 
 C<< Bootloader::Core->MangleSections (\@sections, \%global); >>
@@ -140,37 +138,6 @@ sub trim{
     $string =~ s/^\s+//;
     $string =~ s/\s+$//;
     return $string;
-}
-
-=item
-C<< Bootloader::Core->l_milestone ($message); >>
-
-Writes a milestone message to the system log buffer.
-
-=cut
-sub l_milestone {
-    my $self = shift;
-    my $message = shift;
- 
-    push @{$self->{"log_records"}}, {
-	"message" => $message,
-	"level" => "milestone",
-    };
-}
-
-=item
-C<< $records_ref = Bootloader::Core->GetLogRecords (); >>
-
-
-
-
-=cut
-sub GetLogRecords {
-    my $self = shift;
-
-    my $ret = $self->{"log_records"};
-    $self->{"log_records"} = [];
-    return $ret;
 }
 
 =item

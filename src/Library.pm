@@ -245,6 +245,8 @@ sub DefineMountPoints {
     my $loader = $self->{loader};
     return undef unless defined $loader;
 
+    delete $loader->{cache};
+
     $loader->{mountpoints} = $mountpoints_ref;
 
     $self->Xmilestone("mountpoints =", $loader->{mountpoints});
@@ -287,6 +289,8 @@ sub DefinePartitions {
     my $loader = $self->{loader};
     return undef unless defined $loader;
 
+    delete $loader->{cache};
+
     $loader->{partitions} = $partitions_ref;
 
     $self->Xmilestone("partitions [dev, disk, nr, fsid, fstype, part_type, start_cyl, end_cyl, label] =", $loader->{partitions});
@@ -324,6 +328,8 @@ sub DefineMDArrays {
     my $loader = $self->{loader};
     return undef unless defined $loader;
 
+    delete $loader->{cache};
+
     $loader->{md_arrays} = $md_arrays_ref;
 
     $self->Xmilestone("md_arrays =", $loader->{md_arrays});
@@ -357,6 +363,8 @@ sub DefineMultipath {
 
     my $loader = $self->{loader};
     return undef unless defined $loader;
+
+    delete $loader->{cache};
 
     $loader->{multipath} = $mp_ref;
 
