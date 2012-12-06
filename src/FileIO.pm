@@ -16,9 +16,9 @@ XXX
 
 C<< use Bootloader::FileIO; >>
 
-C<< $files_ref = Bootloader::Core->ReadFiles(\@file_list); >>
+C<< $files_ref = Bootloader::FileIO->ReadFiles(\@file_list); >>
 
-C<< $lines_ref = Bootloader::Core->ReadFile($file_name); >>
+C<< $lines_ref = Bootloader::FileIO->ReadFile($file_name); >>
 
 
 =head1 DESCRIPTION

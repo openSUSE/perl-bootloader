@@ -843,39 +843,6 @@ sub ListMenuFiles {
     return $self->ListFiles ();
 }
 
-=item
-C<< $files_ref = Bootloader::Core->ReadFiles (\@file_names); >>
-
-Actually reads the files from the disk. As argument, takes a reference
-to the list of file names, returns a hash, where key is file name and value
-a reference to the list of lines of the file.
-
-=cut
-
-# map<string,list<string>> ReadFiles (list<string> files)
-sub ReadFiles {
-    my $self = shift;
-    my @filenames = @{+shift};
-
-    my %files = ();
-    foreach my $filename (@filenames)
-    {
-	my @lines = ();
-	if (not open (FILE, $filename))
-	{
-	    $self->error("Failed to open $filename") && return undef;
-	}
-	while (my $line = <FILE>)
-	{
-	    chomp $line;
-	    push @lines, $line;
-	}
-	close (FILE);
-	$files{$filename} = \@lines;
-    }
-    return \%files;
-}
-
 sub Swap2Lines{
 
 my @loc_lines = @_;
@@ -905,48 +872,24 @@ On success, returns defined value > 0, on fail, returns undef;
 =cut
 
 # boolean WriteFiles (map<string,list<string>>, string suffix, boolean menu_only)
-sub WriteFiles {
-    my $self = shift;
-    my %files = %{+shift};
-    my $suffix = shift || "";
-    my $menu_only = shift || 0;
+sub WriteFiles
+{
+  my $self = shift;
+  my $files = shift;
+  my $suffix = shift;
+  my $menu_only = shift;
+  my $ok = 1;
+  local $_;
 
-    umask 0066;
+  $self->milestone("menu_only = $menu_only, suffix = $suffix, files =", [ sort keys %$files ] );
 
-    my @menu_files = keys (%files);
-    if ($menu_only)
-    {
-	@menu_files = @{$self->ListMenuFiles () || []};
-    }
-    my %menu_files = ();
-    foreach my $mf (@menu_files) {
-	$menu_files{$mf} = 1;
-    }
+  my $files2write = $menu_only ? $self->ListMenuFiles() : [ sort keys %$files ];
 
-    while ((my $filename, my $lines_ref) = each (%files))
-    {
-	if (! defined ($menu_files{$filename}))
-	{
-	    $self->debug("Not writing $filename");
-	    next;
-	}
+  $ok &= $self->WriteFile($_ . $suffix, $files->{$_}) for @$files2write;
 
-	$filename = "$filename$suffix";
-	if (not open (FILE, ">$filename"))
-	{
-	    $self->error("Failed to open $filename") && return undef;
-	}
-	my @lines_new = @{$lines_ref};
-	my @lines = Swap2Lines(@lines_new);
-
-	foreach my $line (@lines)
-	{
-	    print FILE "$line\n";
-	};
-	close (FILE);
-    }
-    return 1;
+  return $ok;
 }
+
 
 =item
 C<< $original_name = Bootloader::Core->Comment2OriginalName ($comment); >>
