@@ -27,6 +27,8 @@ C<< $status = Bootloader::Library->DefinePartitions (\@partitions); >>
 
 C<< $status = Bootloader::Library->DefineMDArrays (\%md_arrays); >>
 
+C<< $status = Bootloader::Library->DefineUdevMapping (\%udevmap); >>
+
 C<< $status = Bootloader::Library->ReadSettings (); >>
 
 C<< $status = Bootloader::Library->WriteSettings (); >>
@@ -372,6 +374,44 @@ sub DefineMultipath {
 
     return 1;
 }
+
+
+=item
+C<< $status = Bootloader::Library->DefineUdevMapping (\%udevmap); >>
+
+Define udev mapping of devices.
+We only need information for GRUB to translate udev device to kernel and then to grub device.
+
+As parameter, it takes a reference to a map of all udev names to correspond kernel names.
+Returns undef on fail, defined nonzero value otherwise.
+
+EXAMPLE:
+
+  my $mp = {
+    "/dev/disks/by-id/longhorribleid" => "/dev/sda",
+    "/dev/disks/by-id/longhorribleid-part1" => "/dev/sda1",
+  };
+  Bootloader::Library->DefineUdevMapping ($mp);
+
+=cut
+
+sub DefineUdevMapping($)
+{
+  my $self = shift;
+  my $map_ref = shift;
+
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
+
+  delete $loader->{cache};
+
+  $loader->{udevmap} = $map_ref;
+
+  $self->milestone("udevmap =", $loader->{udevmap});
+
+  return 1;
+}
+
 
 =item
 C<< $status = Bootloader::Library->ReadSettings (); >>

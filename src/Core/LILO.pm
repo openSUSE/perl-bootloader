@@ -287,8 +287,8 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	"/sbin/lilo -P ignore -v -v",
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::Lilo_lilo() . " -P ignore -v -v",
+	Bootloader::Path::BootCommandLogname()
     );
 }
 

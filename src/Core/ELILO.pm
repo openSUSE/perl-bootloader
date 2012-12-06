@@ -845,10 +845,9 @@ sub UpdateBootloader {
     my $efi = Bootloader::Path::Elilo_efi();
     system ("mkdir -p $efi") unless -d "$efi";
  
-    my $elilo = Bootloader::Path::Elilo_elilo(); 
     return 0 == $self->RunCommand (
-	"$elilo -v",
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::Elilo_elilo() . " -v",
+	Bootloader::Path::BootCommandLogname()
     );
 }
 

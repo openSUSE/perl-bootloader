@@ -415,7 +415,7 @@ sub InitializeBootloader {
 
     return 0 == $self->RunCommand (
 	Bootloader::Path::Zipl_zipl(),
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::BootCommandLogname()
     );
 }
 

@@ -780,10 +780,9 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
 
-    my $lilo = Bootloader::Path::Lilo_lilo();
     return 0 == $self->RunCommand (
-	"$lilo",
-	"/var/log/YaST2/y2log_bootloader"
+	Bootloader::Path::Lilo_lilo(),
+	Bootloader::Path::BootCommandLogname()
     );
 }
 

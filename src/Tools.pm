@@ -20,6 +20,8 @@ C<< $mp_ref = Bootloader::Tools::ReadMountPoints (); >>
 
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
+C<< Bootloader::Tools::GetDeviceMapping (); >>
+
 C<< $numDM = Bootloader::Tools::DMRaidAvailable (); >>
 
 C<< $part_ref = Bootloader::Tools::ReadDMRaidPartitions (); >>
@@ -103,6 +105,9 @@ our @EXPORT = qw(InitLibrary CountImageSections CountSections
 use Bootloader::Library;
 use Bootloader::Core;
 use Bootloader::Path;
+
+use Cwd;
+use File::Find;
 
 my $lib_ref = undef;
 my $dmsetup = undef;
@@ -219,15 +224,12 @@ See InitLibrary function for example.
 sub ReadPartitions {
     my $sb = "/sys/block";
     my $mounted = undef;
-    my $logname = Bootloader::Path::Logname();
     # cache result from dmsetup call
     my $cache = {};
 
     unless (-e $sb) {
       $mounted = `mount /sys`;
-       open (LOG, ">>$logname");
-       print LOG ("Mount /sys\n");
-       close LOG;
+      $lib_ref->milestone("Mount /sys");
     }
     opendir(BLOCK_DEVICES, "$sb") || 
 	die ("ReadPartitions(): Failed to open dir $sb");
@@ -238,10 +240,7 @@ sub ReadPartitions {
     } readdir(BLOCK_DEVICES);
     closedir BLOCK_DEVICES;
 
-    open (LOG, ">>$logname");
-    print LOG ("Finded disks: ". join (",",@disks)||"");
-    print LOG ("\n");
-    close LOG;
+    $lib_ref->milestone("disks =", \@disks);
 
     # get partition info for all partitions on all @disks
     my @devices = ();
@@ -250,7 +249,6 @@ sub ReadPartitions {
     if (DMRaidAvailable()){
         my $dev_ref = ReadDMRaidPartitions();   
         push (@devices, @{$dev_ref});
-
     }
 
     foreach my $disk (@disks)
@@ -304,9 +302,7 @@ sub ReadPartitions {
 	    if(!opendir(BLOCK_DEVICES, "$sb/$disk")) {
 	        # md* devices may vanish as a result of the parted call above
 	        # so, don't act too surprised...
-                open LOG, ">>$logname";
-	        print LOG "ReadPartitions(): Failed to open dir $sb/$disk\n";
-                close LOG;
+                $lib_ref->warning("ReadPartitions(): Failed to open dir $sb/$disk");
 
                 next;
             }
@@ -316,18 +312,15 @@ sub ReadPartitions {
 	    } readdir (BLOCK_DEVICES);
 	    closedir BLOCK_DEVICES;
 
-            open (LOG, ">>$logname");
-            print LOG ("Finded parts: ". join (",",@parts)||"");
-            close LOG;
+            $lib_ref->milestone("partitions =", \@parts);
 
 	    # generate proper device names and other info for all @part[ition]s
 	    foreach my $part (@parts)
 	    {
 	        chomp ($part);
 	        $part = Udev2Dev ("$disk/$part");
-                open (LOG, ">>$logname");
-                print LOG ("Processing part: ".(join (",",$part)||"")."\n");
-                close LOG;
+
+                $lib_ref->milestone("Processing part: $part");
 
 	        my $index = substr ($part, length ($dev_disk));
 	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
@@ -372,19 +365,26 @@ Gets multipath configuration. Return reference to hash map, empty if system does
 
 =cut
 
-sub GetMultipath {
-  my %ret = {};
+sub GetMultipath
+{
+  my %ret = ();
 
   return \%ret unless DMRaidAvailable();
 
   $multipath = AddPathToExecutable("multipath");
 
-  if (-e $multipath){
+  if (-e $multipath) {
     my $command = "$multipath -d -l";
  #FIXME log output 
     my @result = qx/$command/;
     # return if problems occurs...typical is not loaded kernel module
     if ( $? ) {
+      if ($result[0] =~ m/kernel driver not loaded/) {
+        $lib_ref->milestone("multipath kernel module is not loaded, error code: $?");
+      } else {
+        $lib_ref->warning("multipath command failed with $?");
+      }
+
       return \%ret;
     }
 
@@ -392,7 +392,7 @@ sub GetMultipath {
 
     my $line = "";
     $line = shift @result if (scalar @result != 0);
-    while (scalar @result != 0){
+    while (scalar @result != 0) {
       if ($line !~ m/^(\S+)\s.*dm-\d+.*$/){
         $line = shift @result;
         next;
@@ -400,17 +400,53 @@ sub GetMultipath {
       my $multipathdev = "/dev/mapper/$1";
       while (scalar @result != 0){
         $line = shift @result;
+        chomp $line;
+        $lib_ref->milestone("processing line: $line");
         if ($line =~ m/(.*)dm-.*$/){
           last;
         }
         if ($line =~ m/\d+:\d+:\d+:\d+\s+(\S+)\s+/){
           $ret{"/dev/$1"} = $multipathdev;
+          $lib_ref->milestone("added /dev/$1 => $multipathdev");
         }
       }
     }
   }
+
   return \%ret;
 }
+
+
+=item
+C<< Bootloader::Tools::GetDeviceMapping (); >>
+
+Return reference to hash with symlinks to block devices.
+
+=cut
+
+# Notes:
+#   - replaces various udev mapping calls
+#   - no logging as map is passed to DefineUdevMapping() and logged there
+#   - if issues with device mapper arise, check bnc #590637
+sub GetDeviceMapping
+{
+  my $list;
+
+  find({ wanted => sub {
+    if(-l && -b) {
+      my $b = $_;
+      $b =~ s#[^/]+$##;
+      my $l = readlink;
+      if(defined $l) {
+        $l = "$b$l" if $l !~ /^\//;
+        $list->{$_} = Cwd::realpath($l);
+      }
+    }
+  }, no_chdir => 1 } , "/dev");
+
+  return $list;
+}
+
 
 =item
 C<< $numDM = Bootloader::Tools::DMRaidAvailable (); >>
@@ -817,24 +853,25 @@ sub ReadRAID1Arrays {
     #	    devices=/dev/sda1,/dev/sdb1
     #
 
-    $mdadm = AddPathToExecutable("mdadm");
+    $lib_ref->{tools}{mdadm} = $mdadm = AddPathToExecutable("mdadm");
 
     if (-e $mdadm) {
-      open (MD, "$mdadm --detail --verbose --scan |");
+      open (MD, "$mdadm --detail --verbose --scan 2>/dev/null |");
     }
     else {
-      # If the command "mdadm" isn't available, return a reference to an
-      # empty hash
+      $lib_ref->milestone('The command "mdadm" is not available.');
+      $lib_ref->milestone("Expect that system doesn't have MD array.");
+
+      # if the command "mdadm" isn't available return ref to empty hash
       return \%mapping;
     }
     
-    my $logname = Bootloader::Path::Logname();
-    qx{ $mdadm --detail --verbose --scan >> $logname};
-
     my ($array, $level, $num_devices);
+    $lib_ref->milestone("start parsing mdadm --detail --verbose --scan");
     while (my $line = <MD>)
     {
         chomp ($line);
+        $lib_ref->milestone("$line");
 
         if ($line =~ /ARRAY (\S+) level=(\w+) num-devices=(\d+)/)
         {
@@ -843,17 +880,20 @@ sub ReadRAID1Arrays {
             $array = $kdevice if $? == 0;
             chomp $array;
             $array = "/dev/md$1" if $array =~ m:^/dev/md/([0-9]+)$:;
+            $lib_ref->milestone("set array $array level $level and device count to $num_devices");
         }
         elsif ($level eq "raid1" and $line =~ /devices=(\S+)/)
         {
             # we could test $num_device against number of found devices to
-            # detect degradedmode but that does not matter here (really?) 
-	     my @devices = split(/,/,$1);
-	     if ($devices[0]=~ m/^.*\d+$/){ #add only non-disc arrays
-	       $mapping{$array} = [ @devices ];
-	     }
+            # detect degradedmode but that does not matter here (really?)
+            $lib_ref->milestone("set to array $array values $1");
+            my @devices = split(/,/,$1);
+            if ($devices[0]=~ m/^.*\d+$/){ #add only non-disc arrays
+                $mapping{$array} = [ @devices ];
+            }
         }
     }
+    $lib_ref->milestone("finish parsing mdadm");
     close( MD );
     return \%mapping;
 }
@@ -907,6 +947,7 @@ sub InitLibrary
 {
   $lib_ref = Bootloader::Library->new();
 
+  my $um = GetDeviceMapping();
   my $mp = ReadMountPoints();
   my $part = ReadPartitions();
   my $md = ReadRAID1Arrays();
@@ -917,6 +958,7 @@ sub InitLibrary
   $lib_ref->DefinePartitions($part);
   $lib_ref->DefineMDArrays($md);
   $lib_ref->DefineMultipath($mpath);
+  $lib_ref->DefineUdevMapping($um);
 
   # parse Bootloader configuration files   
   $lib_ref->ReadSettings();

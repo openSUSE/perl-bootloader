@@ -2302,7 +2302,7 @@ sub InitializeBootloader {
     # FIXME: generic_mbr
     # write generic_mbr in case
 
-    my $log = "/var/log/YaST2/y2log_bootloader";
+    my $log = Bootloader::Path::BootCommandLogname();
     my $grub = Bootloader::Path::Grub_grub();
     my $grubconf = Bootloader::Path::Grub_grubconf();
     my $devicemap = Bootloader::Path::Grub_devicemap();
