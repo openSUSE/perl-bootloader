@@ -427,7 +427,7 @@ sub DMRaidAvailable
   my $r = $self->{cache}{DMRaidAvailable};
 
   if(defined $r) {
-    $self->Xmilestone("DMRaidAvailable (cached) = $r");
+    $self->milestone("DMRaidAvailable (cached) = $r");
     return $r;
   }
 
@@ -436,7 +436,7 @@ sub DMRaidAvailable
   # check for device-mapper in /proc/misc
   $r = grep /device-mapper/, @{$self->ReadFile(Bootloader::Path::Prefix('/proc/misc'))};
 
-  $self->Xmilestone("device-mapper = $r");
+  $self->milestone("device-mapper = $r");
 
   if($r) {
     # check if dmsetup works and reports dm devices
@@ -445,17 +445,17 @@ sub DMRaidAvailable
       chomp $dm_devices;
       $r = $dm_devices eq "No devices found" || $dm_devices eq "" ? 0 : 1;
 
-      $self->Xmilestone("dm devices = $r");
+      $self->milestone("dm devices = $r");
     }
     else {
-      $self->Xerror('The command "dmsetup" is not available.');
-      $self->Xerror('Is the package "device-mapper" installed?');
+      $self->error('The command "dmsetup" is not available.');
+      $self->error('Is the package "device-mapper" installed?');
     }
   }
 
   $r = $r ? 1 : 0;
 
-  $self->Xmilestone("DMRaidAvailable = $r");
+  $self->milestone("DMRaidAvailable = $r");
 
   return $self->{cache}{DMRaidAvailable} = $r;
 }
@@ -921,7 +921,7 @@ sub InitLibrary
   # parse Bootloader configuration files   
   $lib_ref->ReadSettings();
 
-  $lib_ref->Xmilestone("done");
+  $lib_ref->milestone("done");
 
   return $lib_ref;
 }
@@ -932,31 +932,31 @@ sub match_section {
     my ($sect_ref, $opt_ref,) = @_;
     my $match = 1;
 
-    $lib_ref->Xmilestone("matching section name: " . $sect_ref->{name});
+    $lib_ref->milestone("matching section name: " . $sect_ref->{name});
 
     foreach my $opt (keys %{$opt_ref}) {
 	next unless exists $sect_ref->{"$opt"};
 	# FIXME: avoid "kernel"
 	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
         # FIXME: to compare !!
-	$lib_ref->Xmilestone("matching key: $opt");
+	$lib_ref->milestone("matching key: $opt");
 	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
 	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
 		      ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}));
 	    # Print info for this match
-	    $lib_ref->Xmilestone("key: $opt, matched: " .
+	    $lib_ref->milestone("key: $opt, matched: " .
 		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
 		", with: " . ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}) . ", result: $match");
 	}
 	else {
 	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
 	    # Print info for this match
-	    $lib_ref->Xmilestone("key: $opt, matched: " .
+	    $lib_ref->milestone("key: $opt, matched: " .
 		$sect_ref->{"$opt"} . ", with: " . $opt_ref->{"$opt"} . ", result: $match");
 	}
 	last unless $match;
     }
-    $lib_ref->Xmilestone("end result: $match");
+    $lib_ref->milestone("end result: $match");
     return $match;
 }
 
@@ -968,9 +968,9 @@ sub normalize_options {
     foreach ("image", "initrd" ) {
         next unless exists $opt_ref->{$_};
 	# Print found sections to logfile
-        $lib_ref->Xmilestone("before: '$_' => '$opt_ref->{$_}'");
+        $lib_ref->milestone("before: '$_' => '$opt_ref->{$_}'");
 	$opt_ref->{$_} = ResolveCrossDeviceSymlinks($opt_ref->{$_});
-	$lib_ref->Xmilestone("after: '$_' => '$opt_ref->{$_}'");
+	$lib_ref->milestone("after: '$_' => '$opt_ref->{$_}'");
     }
 
     # FIXME: some have "kernel" some have "image" tag, latter makes more sense
@@ -1179,7 +1179,7 @@ sub GetSectionList {
     my @sections = @{$lib_ref->GetSections ()};
 
     # Print sections from file to logfile
-    $lib_ref->Xmilestone("sections from file:\n' " .
+    $lib_ref->milestone("sections from file:\n' " .
 			join("'\n' ",
 			     map {
 				 $_->{"name"};
@@ -1191,7 +1191,7 @@ sub GetSectionList {
     } @sections;
 
     # Print found sections to logfile
-    $lib_ref->Xmilestone("Found sections:\n' " .
+    $lib_ref->milestone("Found sections:\n' " .
 			join("'\n' ", @section_names) . "'\n"
 		       );
 
@@ -1287,7 +1287,7 @@ sub AddSection {
     return unless defined $name;
     return unless exists $option{"type"};
 
-    $lib_ref->Xmilestone("option = ", \%option);
+    $lib_ref->milestone("option = ", \%option);
 
     my $default = delete $option{"default"} || 0;
     my %new = ();
@@ -1299,7 +1299,7 @@ sub AddSection {
 
     if ($fitting_section) {
       %def = %{$fitting_section};
-      $lib_ref->Xmilestone("Fitting section found so use it");
+      $lib_ref->milestone("Fitting section found so use it");
       while ((my $k, my $v) = each (%def)) {
         if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
         		&& $k ne "initrd") {
@@ -1315,7 +1315,7 @@ sub AddSection {
       	}
       }
       } else {
-        $lib_ref->Xmilestone("Fitting section not found. Use sysconfig values as fallback.");
+        $lib_ref->milestone("Fitting section not found. Use sysconfig values as fallback.");
         my $sysconf;
         if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
           $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
@@ -1411,7 +1411,7 @@ sub AddSection {
     }
 
     # Print new section to be added to logfile
-    $lib_ref->Xmilestone("New section to be added:", \%new);
+    $lib_ref->milestone("New section to be added:", \%new);
 
     # Put new entries on top
     unshift @sections, \%new;
@@ -1455,11 +1455,11 @@ sub AddSection {
     }
 
     # Print all available sections to logfile
-    $lib_ref->Xmilestone("All available sections (including new ones):");
+    $lib_ref->milestone("All available sections (including new ones):");
 
     my $section_count = 1;
     foreach my $s (@sections) {
-	$lib_ref->Xmilestone("$section_count. section:\n' " .
+	$lib_ref->milestone("$section_count. section:\n' " .
 			    join("'\n' ",
 				 map {
 				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1500,7 +1500,7 @@ sub AddSection {
     }
 
     # Print globals to logfile
-    $lib_ref->Xmilestone("Global section of config:\n\n' " .
+    $lib_ref->milestone("Global section of config:\n\n' " .
 			join("'\n' ",
 			     map {
 				 m/^__/ ? () : $_ . " => '" . $glob_ref->{$_} . "'";
@@ -1550,7 +1550,7 @@ sub RemoveSections {
     my $loader = GetBootloader ();
 
     # Print section to be removed to logfile
-    $lib_ref->Xmilestone("Old section to be removed:\n\n' " .
+    $lib_ref->milestone("Old section to be removed:\n\n' " .
 			join("'\n' ",
 			     map {
 				 $_ . " => '" . $option{$_} . "'";
@@ -1558,11 +1558,11 @@ sub RemoveSections {
 		       );
 
     # Print all available sections (before removal) to logfile
-    $lib_ref->Xmilestone("All available sections (before removal):\n");
+    $lib_ref->milestone("All available sections (before removal):\n");
 
     my $section_count = 1;
     foreach my $s (@sections) {
-	$lib_ref->Xmilestone("$section_count. section:\n' " .
+	$lib_ref->milestone("$section_count. section:\n' " .
 			    join("'\n' ",
 				 map {
 				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1585,7 +1585,7 @@ sub RemoveSections {
 	    if $match and $default_section eq $_->{"name"};
 	!$match;
     } @sections;
-    $lib_ref->Xmilestone("default is removed by grep") if $default_removed;
+    $lib_ref->milestone("default is removed by grep") if $default_removed;
 
     # Detect wether we have an entry with an initrd line referring to a non
     # existing initrd file and remove this section respectively.
@@ -1607,7 +1607,7 @@ sub RemoveSections {
 		if (!$other_part and !-f $initrd_name and
 		    ($_->{"type"} eq "image" or $_->{"type"} eq "xen")) {
 		    $match = 0;
-                    $lib_ref->Xmilestone("Remove non-existing initrd :".$_->{"name"}." -- $initrd_name \n");
+                    $lib_ref->milestone("Remove non-existing initrd :".$_->{"name"}." -- $initrd_name \n");
 		}
 
 		$default_removed = 1
@@ -1630,11 +1630,11 @@ sub RemoveSections {
 	\@section_names_after_removal);
 
     # Print all available sections (after removal) to logfile
-    $lib_ref->Xmilestone("All available sections (after removal):\n");
+    $lib_ref->milestone("All available sections (after removal):\n");
 
     $section_count = 1;
     foreach my $s (@sections) {
-	$lib_ref->Xmilestone("$section_count. section :\n' " .
+	$lib_ref->milestone("$section_count. section :\n' " .
 			    join("'\n' ",
 				 map {
 				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
@@ -1646,7 +1646,7 @@ sub RemoveSections {
     $lib_ref->SetSections (\@sections);
     if ($default_removed) {
 	$glob_ref->{"default"} = $sections[0]{"name"};
-        $lib_ref->Xmilestone("removed default");
+        $lib_ref->milestone("removed default");
 	$glob_ref->{"removed_default"} = 1;
     }
     $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default

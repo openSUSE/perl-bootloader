@@ -243,7 +243,7 @@ sub new
   $loader->{arch} = $arch;
   $loader->GetMetaData();
 
-  $loader->Xmilestone ("Created ELILO instance");
+  $loader->milestone ("Created ELILO instance");
 
   return $loader;
 }
@@ -327,7 +327,7 @@ sub ParseLines {
         if ($key eq "append")
         {
            $glob_app = $val;
-           $self->Xmilestone("GLOBAL APPEND: $glob_app"); 
+           $self->milestone("GLOBAL APPEND: $glob_app"); 
         }
     }
 
@@ -604,7 +604,7 @@ sub Info2Section {
     my $so = $self->{"exports"}{"section_options"};
     my @lines_new = ();
 
-    $self->Xmilestone("1: \%sectinfo = ", \%sectinfo);
+    $self->milestone("1: \%sectinfo = ", \%sectinfo);
 
     # allow to keep the section unchanged
     if (! ($sectinfo{"__modified"} || 0))
@@ -636,7 +636,7 @@ sub Info2Section {
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
 	    # only accept known section options :-)
-	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
         #append in xen contains also xen append, so it must handled special
@@ -671,7 +671,7 @@ sub Info2Section {
 
     @lines = @lines_new;
 
-    $self->Xmilestone("2: \%sectinfo = ", \%sectinfo);
+    $self->milestone("2: \%sectinfo = ", \%sectinfo);
 
     my $create_append = 1;
     while ((my $key, my $value) = each (%sectinfo))
@@ -714,7 +714,7 @@ sub Info2Section {
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
 	    # only accept known section options :-)
-	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
@@ -804,7 +804,7 @@ sub Section2Info {
 
 	unless (exists $ret{"type"} && exists $so->{$ret{"type"} . "_" . $key}) {
 	    # only accept known section options :-)
-	    $self->Xmilestone("Ignoring key '$key' for section" . " type '" . $ret{"type"} . "'");
+	    $self->milestone("Ignoring key '$key' for section" . " type '" . $ret{"type"} . "'");
 	    next; 
 	}
 	
@@ -816,7 +816,7 @@ sub Section2Info {
     }
     $ret{"__lines"} = \@lines;
 
-    $self->Xmilestone("\%ret = ", \%ret);
+    $self->milestone("\%ret = ", \%ret);
 
     return \%ret;
 }

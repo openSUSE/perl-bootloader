@@ -71,7 +71,7 @@ sub new
     { key => "prompt", value => "" },
   ];
 
-  $loader->Xmilestone("Created LILO instance");
+  $loader->milestone("Created LILO instance");
 
   return $loader;
 }

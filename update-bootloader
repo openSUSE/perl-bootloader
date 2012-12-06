@@ -162,7 +162,7 @@ sub GetProduct {
     $src = "fallback";
   }
 
-  $logger->Xmilestone("update-bootloader::GetProduct($src) = $prod");
+  $logger->milestone("update-bootloader::GetProduct($src) = $prod");
 
   return $prod;
 }
@@ -211,11 +211,11 @@ die("Option 'force-default' is only allowed for operation 'add'\n")
 
 $logger = Bootloader::Library->new();
 
-$logger->Xmilestone($cmdline);
+$logger->milestone($cmdline);
     
 if (Bootloader::Tools::GetBootloader() eq "none")
 {
-  $logger->Xmilestone("none bootloader, skipped updating");
+  $logger->milestone("none bootloader, skipped updating");
   
   exit 0;
 }
@@ -304,7 +304,7 @@ if (defined $oper{add}) {
 	chomp ($opt_trans);
 
         #log what is translated
-        $logger->Xmilestone("translate: " . $0 . " " . join (" ", @ARGV));
+        $logger->milestone("translate: " . $0 . " " . join (" ", @ARGV));
 	
 	# check whether translation only contains [a-zA-Z0-9 _]
 	# otherwise fall back to untranslated string
@@ -373,8 +373,8 @@ if (defined $oper{add}) {
 #  execute selected operation
 #
 if (defined $oper{add}) {
-    $logger->Xmilestone("update-bootloader: now executing operation add");
-    $logger->Xmilestone("update-bootloader: opt_name = $opt_name");
+    $logger->milestone("update-bootloader: now executing operation add");
+    $logger->milestone("update-bootloader: opt_name = $opt_name");
 
     die("Please specify name and kernel image for new section\n")
 	unless $opt_name and $opt_image;
@@ -387,7 +387,7 @@ if (defined $oper{add}) {
     	if (not $opt_force) {
 	    die("There are already sections with image '$opt_image'\n");
 	}
-        $logger->Xmilestone("update-bootloader: section already exists. Skipping add.");
+        $logger->milestone("update-bootloader: section already exists. Skipping add.");
     } else {
 
 	# If, if option $opt_force_default is set, let this new kernel be
@@ -421,7 +421,7 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "xen";
 
-            $logger->Xmilestone("update-bootloader: calling Tools::AddSection (XEN)");
+            $logger->milestone("update-bootloader: calling Tools::AddSection (XEN)");
 
 	    AddSection($opt_xen_name, @params);
 	}
@@ -430,7 +430,7 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "linux";
 
-            $logger->Xmilestone("update-bootloader: calling Tools::AddSection (normal)");
+            $logger->milestone("update-bootloader: calling Tools::AddSection (normal)");
 
 	    AddSection($opt_name, @params);
 	}
@@ -453,7 +453,7 @@ if (defined $oper{add}) {
 	    # Add original_name to params to be able to create comment line
 	    push @params, original_name => "failsafe";
 
-            $logger->Xmilestone("update-bootloader: calling Tools::AddSection (failsafe)");
+            $logger->milestone("update-bootloader: calling Tools::AddSection (failsafe)");
 
 	    AddSection($opt_failsafe, @params);
 	}
@@ -469,24 +469,24 @@ if (defined $oper{remove}) {
     push @params, initrd => $opt_initrd if $opt_initrd;
     push @params, name   => $opt_name if $opt_name;
 		      
-    $logger->Xmilestone("update-bootloader: now executing operation remove");
+    $logger->milestone("update-bootloader: now executing operation remove");
 
     my $num = CountSections(@params);
 
     if ($num > 0) {
         if ($num > 1 and not $opt_force) {
-            $logger->Xmilestone("update-bootloader: found $num sections, no opt_force: not removing");
+            $logger->milestone("update-bootloader: found $num sections, no opt_force: not removing");
 
 	    die("There is more than one section with image '$opt_image'\n");
 	} else {
-            $logger->Xmilestone("update-bootloader: calling Tools::RemoveSections");
+            $logger->milestone("update-bootloader: calling Tools::RemoveSections");
 
 	    RemoveSections(@params);
 	}
     } else {
-        $logger->Xmilestone("update-bootloader: no $opt_image found");
+        $logger->milestone("update-bootloader: no $opt_image found");
     }
-    $logger->Xmilestone("update-bootloader: finished operation remove");
+    $logger->milestone("update-bootloader: finished operation remove");
 
 }
 

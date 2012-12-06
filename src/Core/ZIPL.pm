@@ -179,7 +179,7 @@ sub new
 
   $loader->GetMetaData();
 
-  $loader->Xmilestone("Created ZIPL instance");
+  $loader->milestone("Created ZIPL instance");
 
   return $loader;
 }
@@ -513,7 +513,7 @@ sub Info2Section {
 	    } # else ignore for unknown section type
         }
         elsif (not exists ($so->{$type . "_" . $key})) {
-	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
             next; 
         }
 	elsif ($key eq "list") {

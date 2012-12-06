@@ -42,7 +42,7 @@ $Data::Dumper::Indent = 1;
 
 my (@log_level_name, %log_level_num);
 
-@log_level_name = qw ( Xdebug Xmilestone Xwarning Xerror );
+@log_level_name = qw ( debug milestone warning error );
 @log_level_num{@log_level_name} = ( 0 .. 100 );
 
 
@@ -206,7 +206,7 @@ sub __log
 }
 
 
-sub Xdebug
+sub debug
 {
   my $self = shift;
   my $message = shift;
@@ -215,7 +215,7 @@ sub Xdebug
 }
 
 
-sub Xmilestone
+sub milestone
 {
   my $self = shift;
   my $message = shift;
@@ -224,7 +224,7 @@ sub Xmilestone
 }
 
 
-sub Xwarning
+sub warning
 {
   my $self = shift;
   my $message = shift;
@@ -233,7 +233,7 @@ sub Xwarning
 }
 
 
-sub Xerror
+sub error
 {
   my $self = shift;
   my $message = shift;

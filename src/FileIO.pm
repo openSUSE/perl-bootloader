@@ -79,10 +79,10 @@ sub ReadFile
     close $fh;
     my $l = join '', @$lines;
     chomp @$lines;
-    $self->Xmilestone("$file =", $l);
+    $self->milestone("$file =", $l);
   }
   else {
-    $self->Xerror("Failed to open $file: $!");
+    $self->error("Failed to open $file: $!");
   }
 
   return $lines;

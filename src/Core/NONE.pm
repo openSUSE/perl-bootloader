@@ -78,7 +78,7 @@ sub new
   my $loader = $self->SUPER::new($ref, $old);
   bless($loader);
 
-  $loader->Xmilestone("Created NONE instance");
+  $loader->milestone("Created NONE instance");
 
   return $loader;
 }

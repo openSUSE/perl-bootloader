@@ -260,7 +260,7 @@ sub new
 
   $loader->GetMetaData();
 
-  $loader->Xmilestone("Created PowerLILO instance");
+  $loader->milestone("Created PowerLILO instance");
 
   return $loader;
 }
@@ -610,7 +610,7 @@ sub Info2Section {
 	    delete ($sectinfo{"name"});
 	}
 	elsif (!exists $so->{$type . "_" . $key}) {
-	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next; 
 	}
 	else
@@ -658,7 +658,7 @@ sub Info2Section {
         }
 	elsif (! exists ($so->{$type . "_" . $key}))
 	{
-	    $self->Xmilestone("Ignoring key '$key' for section type '$type'");
+	    $self->milestone("Ignoring key '$key' for section type '$type'");
 	    next;
 	}
 	else
