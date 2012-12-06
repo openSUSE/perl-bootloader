@@ -21,6 +21,10 @@ Group:          System/Boot
 License:        GPL-2.0+
 Summary:        Library for Configuring Boot Loaders
 Source:         perl-Bootloader-%{version}.tar.bz2
+Source1:        update-bootloader
+Source2:        bootloader_entry
+Source3:        boot.readme
+Source4:        bootloader_fix_xen
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Conflicts:      multipath-tools < 0.4.8-40.25.1
 #!BuildIgnore: mdadm e2fsprogs limal-bootloader
@@ -39,13 +43,27 @@ Authors:
 
 %prep
 %setup -q
+rm -rf perl-Bootloader-testsuite
+mkdir -p lib
+mv src lib/Bootloader
 
 %build
+touch Makefile.PL
+perl -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader")'
+make
+pod2man %{SOURCE1} | gzip > update-Bootloader.8.gz
 
 %install
-make DESTDIR=$RPM_BUILD_ROOT install
-install -d -m 700 $RPM_BUILD_ROOT/var/log/YaST2
+make DESTDIR=$RPM_BUILD_ROOT install_vendor
 %perl_process_packlist
+mkdir -p $RPM_BUILD_ROOT/sbin
+install -m 755 %_sourcedir/update-bootloader $RPM_BUILD_ROOT/sbin
+install -d -m 755 $RPM_BUILD_ROOT/usr/lib/bootloader
+install -m 755 %{SOURCE2} %{SOURCE4} $RPM_BUILD_ROOT/usr/lib/bootloader
+install -d -m 755 $RPM_BUILD_ROOT/boot
+install -m 644 %{SOURCE3} $RPM_BUILD_ROOT/boot/
+install -d -m 755 $RPM_BUILD_ROOT/usr/share/man/man8/
+install -m 644 update-Bootloader.8.gz $RPM_BUILD_ROOT/usr/share/man/man8/
 
 %post
 if [ -f /boot/grub/menu.lst ] ; then
