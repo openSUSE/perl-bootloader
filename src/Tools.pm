@@ -908,12 +908,13 @@ See InitLibrary function for example.
 
 =cut
 
-sub GetBootloader {
-    my $path = Bootloader::Path::Sysconfig();
-    my $lt = qx{ . $path && echo \$LOADER_TYPE } or
-	die ("GetBootloader(): Cannot determine the loader type");
-    chomp ($lt);
-    return $lt;
+sub GetBootloader
+{
+  my $val = GetSysconfigValue("LOADER_TYPE");
+
+  $lib_ref->milestone("loader = $val") if $lib_ref;
+
+  return $val;
 }   
 
 =item
@@ -926,13 +927,21 @@ See AddSection for example
 
 =cut
 
-sub GetSysconfigValue {
-    my $key = shift;
-    my $file = Bootloader::Path::Sysconfig();
-    return undef if ( qx{ grep -c ^[[:space:]]*$key $file} == 0);
-    my $value = qx{ . $file && echo \$$key } || "";
-    chomp ($value);
-    return $value;
+sub GetSysconfigValue
+{
+  my $key = shift;
+  my $val;
+  local $_;
+
+  if(open my $fh, Bootloader::Path::Sysconfig()) {
+    while(<$fh>) {
+      $val = $1, last if /^\s*$key\s*=\s*"(.*)"\s*$/;
+    }
+
+    close $fh;
+  }
+
+  return $val;
 }
 
 =item

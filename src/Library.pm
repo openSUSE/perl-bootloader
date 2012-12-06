@@ -185,6 +185,8 @@ sub SetLoaderType
 
     my $loader = $self->{loader};
 
+    $bootloader = "none" if $bootloader eq "";
+
     if ($bootloader eq "grub")
     {
 	$loader = Bootloader::Core::GRUB->new ($self, $loader);
@@ -803,15 +805,16 @@ EXAMPLE:
 
 =cut
 
+# return empty array if none were read, not undef
 sub GetSections {
     my $self = shift;
 
     my $settings_ref = $self->GetSettings ();
     if (! defined ($settings_ref))
     {
-	return undef;
+	return [];
     }
-    return $settings_ref->{"sections"};
+    return $settings_ref->{"sections"} || [];
 }
 
 =item
