@@ -31,8 +31,7 @@ C<< $obj_ref = Bootloader::Logger->new (); >>
 package Bootloader::Logger;
 
 use strict;
-use POSIX qw ( strftime );
-use Sys::Hostname;
+use POSIX qw ( strftime uname );
 use Bootloader::Path;
 
 use Data::Dumper;
@@ -62,7 +61,7 @@ sub StartLog
   $self->{logger}{logs} = [];
   $self->{logger}{log_level} = $ENV{Y2DEBUG} ? 0 : 1;
 
-  $self->{logger}{yast_prefix} = hostname() . "($$) [pbl]";
+  $self->{logger}{yast_prefix} = ((uname())[1] || "unknown") . "($$) [pbl]";
 
   # if PBL_DEBUG is set log to STDERR, else to logfile
 

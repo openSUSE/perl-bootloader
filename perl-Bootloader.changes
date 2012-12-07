@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Dec  6 16:42:59 CET 2012 - snwint@suse.de
+
+- don't report an error if bootloader type is unset (bnc #757942)
+- don't run external grep to read sysconfig variables
+- don't use Sys::Hostname (bnc #792634)
+- 0.705
+
+-------------------------------------------------------------------
 Wed Nov 14 15:06:42 CET 2012 - snwint@suse.de
 
 - support 'parmfile' option in zipl.conf (bnc #788391)
