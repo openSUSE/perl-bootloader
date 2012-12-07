@@ -431,22 +431,25 @@ EXAMPLE:
 
 =cut
 
-sub ReadSettings {
-    my $self = shift;
-    my $avoid_reading_device_map = shift;
+sub ReadSettings
+{
+  my $self = shift;
+  my $avoid_reading_device_map = shift;
 
-    my $loader = $self->{loader};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone("TRACE");
-    my $files_ref = $loader->ReadFiles ($loader->ListFiles ());
-    if (! defined ($files_ref))
-    {
-	return undef;
-    }
-    $loader->ParseLines ($files_ref, $avoid_reading_device_map);
-    return 1;
+  my $file_list = $loader->ListFiles();
+
+  $self->milestone("files =", $file_list);
+  my $files_ref = $loader->ReadFiles($file_list);
+  return undef unless defined $files_ref;
+
+  $loader->ParseLines($files_ref, $avoid_reading_device_map);
+
+  return 1;
 }
+
 
 =item
 C<< $status = Bootloader::Library->WriteSettings (); >>
