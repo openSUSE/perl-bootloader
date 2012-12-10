@@ -31,21 +31,39 @@ C<< $value = Bootloader::MBRTools::PatchThinkpadMBR ($disk); >>
 package Bootloader::MBRTools;
 
 use strict;
-use base 'Exporter';
 
-our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR
-);
+use Bootloader::Logger;
 
-sub IsThinkpadMBR($) {
+use base qw ( Exporter );
+
+our @EXPORT = qw( IsThinkpadMBR PatchThinkpadMBR );
+
+
+sub IsThinkpadMBR()
+{
+  my $self = shift;
+
   my $disk = shift;
-  my $thinkpad_id = "50e46124108ae0e461241038e074f8e2f458c332edb80103ba8000cd13c3be05068a04240cc0e802c3";
   my $mbr = qx{dd status=noxfer if=$disk bs=512 count=1 2>/dev/null | od -v -t x1 -};
   $mbr =~ s/\d{7}//g; #remove address
   $mbr =~ s/\n//g; #remove end lines
-  $mbr =~ s/\S//g; #remove whitespace
+  $mbr =~ s/\s//g; #remove whitespace
 
-  return $mbr =~ m/$thinkpad_id/ ;
+  $self->milestone("checked mbr is: $mbr");
+
+  my $first_segment = hex("0x".substr ($mbr, 4, 2));
+  my $second_segment = hex("0x".substr ($mbr, 6, 2));
+
+  my $ret = $first_segment >= 2;
+  $ret &&= $first_segment <= hex("0x63");
+  $ret &&= $second_segment >= 2;
+  $ret &&= $second_segment <= hex("0x63");
+  $ret &&= hex(substr($mbr,28,2)) == hex("0x4e");
+  $ret &&= hex(substr($mbr,30,2)) == hex("0x50");
+
+  return $ret;
 }
+
 
 # crc function
 sub crc
@@ -58,8 +76,13 @@ sub crc
   return $c;
 }
 
-sub PatchThinkpadMBR($) {
+
+sub PatchThinkpadMBR()
+{
+  my $self = shift;
+
   my $disk = shift;
+
   my $new_mbr = 
    "\x31\xc0\x8e\xd0\x66\xbc\x00\x7c\x00\x00\x8e\xc0\x8e\xd8\x89\xe6" .
    "\x66\xbf\x00\x06\x00\x00\x66\xb9\x00\x01\x00\x00\xf3\xa5\xea\x23" .
@@ -100,7 +123,11 @@ sub PatchThinkpadMBR($) {
 
   # read original mbr
 
-  seek F, ($old_mbr_sec - 1) << 9, 0 or die "$disk: $!\n";
+  unless (seek F, ($old_mbr_sec - 1) << 9, 0)
+  {
+    $self->error("$disk $! \n");
+    return 0;
+  }
 
   my $old_mbr_s;
   sysread F, $old_mbr_s, 0x200;
@@ -114,10 +141,13 @@ sub PatchThinkpadMBR($) {
   # verify crc
 
   if($mbr[6] == 0) {
-    print STDERR "$disk: orig mbr crc not checked\n" if $mbr[6] == 0;
+    $self->warning("$disk: orig mbr crc not checked");
   }
   else {
-    die "$disk: orig mbr crc failure\n" unless crc(\@old_mbr) == $mbr[6];
+    unless (crc(\@old_mbr) == $mbr[6]){
+      $self->error("$disk: orig mbr crc failure\n");
+      return 0;
+    }
   }
 
 

@@ -94,7 +94,7 @@ use Bootloader::Core::ZIPL;
 use Bootloader::Core::PowerLILO;
 use Bootloader::Core::NONE;
 
-use base qw ( Bootloader::FileIO Bootloader::Logger );
+use base qw ( Bootloader::MBRTools Bootloader::FileIO Bootloader::Logger );
 
 our $VERSION = "0.000";
 
@@ -1028,11 +1028,14 @@ Try detect on disk if contains ThinkpadMBR. Return true if detected.
 =cut
 
 #  DetectThinkpadMBR (string disk)
-sub DetectThinkpadMBR {
+sub DetectThinkpadMBR
+{
   my $self = shift;
   my $disk = shift;
-  my $res = MBRTools::IsThinkpadMBR($disk);
+  my $res = $self->IsThinkpadMBR($disk);
+
   $self->milestone("on $disk result $res");
+
   return $res;
 }
 
@@ -1044,12 +1047,15 @@ Write generic mbr to disk on thinkpad. Return undef if fail.
 =cut
 
 #  WriteThinkpadMBR (string disk)
-sub WriteThinkpadMBR {
-   my $self = shift;
-   my $disk = shift;
-   my $res = MBRTools::PatchThinkpadMBR($disk);
-   $self->milestone("on $disk result $res");
-   return $res;
+sub WriteThinkpadMBR
+{
+  my $self = shift;
+  my $disk = shift;
+  my $res = $self->PatchThinkpadMBR($disk);
+
+  $self->milestone("on $disk result $res");
+
+  return $res;
 }
 
 sub CountGRUBPassword{
