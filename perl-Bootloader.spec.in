@@ -45,9 +45,12 @@ Authors:
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
 install -d -m 700 $RPM_BUILD_ROOT/var/log/YaST2
+touch $RPM_BUILD_ROOT/var/log/pbl.log
 %perl_process_packlist
 
 %post
+echo -n >>/var/log/pbl.log
+chmod 600 /var/log/pbl.log
 if [ -f /boot/grub/menu.lst ] ; then
   rpm -q --qf '%%{VERSION}\n' perl-Bootloader | while read ver ; do
     case "$ver" in
@@ -69,5 +72,7 @@ fi
 /sbin/update-bootloader
 /usr/lib/bootloader
 /boot/boot.readme
+%dir %attr(0700,root,root) /var/log/YaST2
+%ghost %attr(0600,root,root) /var/log/pbl.log
 
 %changelog -n perl-Bootloader
