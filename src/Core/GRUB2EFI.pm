@@ -51,6 +51,7 @@ use Bootloader::Core;
 our @ISA = ('Bootloader::Core');
 use Bootloader::Path;
 
+use POSIX;
 use Data::Dumper;
 
 #module interface
@@ -119,7 +120,17 @@ sub new
   my $loader = $self->SUPER::new($ref, $old);
   bless($loader);
 
-  $loader->milestone("Created GRUB2EFI instance");
+  my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
+  # This exactly mimics grub-install logic and needs to be in sync with it
+  if ($machine =~ /^i.86.*/) {
+    $machine = "i386";
+  } elsif ($machine =~ /^(x86_64|amd64).*/) {
+    $machine = "x86_64";
+  }
+  my $target = "$machine-efi";
+  $loader->{'target'} = $target;
+
+  $loader->milestone("Created GRUB2EFI instance for target $target");
 
   return $loader;
 }
@@ -138,8 +149,8 @@ sub ListFiles {
     my $self = shift;
     my @ret = (Bootloader::Path::Grub2_defaultconf());
 
-    if (-e Bootloader::Path::Grub2_eficonf()) {
-        push @ret, Bootloader::Path::Grub2_eficonf();
+    if (-e Bootloader::Path::Grub2_conf()) {
+        push @ret, Bootloader::Path::Grub2_conf();
     }
 
     return \@ret;
@@ -185,7 +196,7 @@ sub ParseLines {
     );
 
     my @entries;
-    if (open (GRUBCFG, "<", Bootloader::Path::Grub2_eficonf())) {
+    if (open (GRUBCFG, "<", Bootloader::Path::Grub2_conf())) {
         local $/;
         undef $/;
         my $cfg = <GRUBCFG>;
@@ -653,7 +664,7 @@ sub GetSettings {
 
     my $sections = $ret->{"sections"};
     my $globals = $ret->{"global"};
-    my $saved_entry = `/usr/bin/grub2-efi-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
+    my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
     if ($saved_entry ne "") {
@@ -689,7 +700,7 @@ sub SetSettings {
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-efi-set-default '$default'",
+            "/usr/sbin/grub2-set-default '$default'",
             Bootloader::Path::BootCommandLogname()
         );
     }
@@ -725,7 +736,7 @@ sub UpdateBootloader {
     }
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-efi-mkconfig -o /boot/grub2-efi/grub.cfg",
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
         Bootloader::Path::BootCommandLogname()
     );
 }
@@ -744,14 +755,14 @@ sub InitializeBootloader {
     my $self = shift;
 
     my $ret = $self->RunCommand (
-        "/usr/sbin/grub2-efi-install",
+        "/usr/sbin/grub2-install --target=$self->{'target'}",
         Bootloader::Path::BootCommandLogname()
     );
 
     return 0 if (0 != $ret);
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-efi-mkconfig -o /boot/grub2-efi/grub.cfg",
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
         Bootloader::Path::BootCommandLogname()
     );
 }
