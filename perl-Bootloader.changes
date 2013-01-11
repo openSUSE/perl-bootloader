@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 11 17:23:53 CET 2013 - snwint@suse.de
+
+- arvidjaar: use explicit target arch for GRUB2 and remove grub2-efi calls
+- mchang: handle add and remove in update-bootloader for grub2
+- 0.706
+
+-------------------------------------------------------------------
 Thu Dec  6 16:42:59 CET 2012 - snwint@suse.de
 
 - don't report an error if bootloader type is unset (bnc #757942)
