@@ -337,7 +337,11 @@ sub new
   my $loader = $self->SUPER::new($ref, $old);
   bless($loader);
 
-  $loader->milestone("Created GRUB2 instance");
+  # Do we support any architecture besides x86?
+  my $target = "i386-pc";
+  $loader->{'target'} = $target;
+
+  $loader->milestone("Created GRUB2 instance for target $target");
 
   return $loader;
 }
@@ -1246,7 +1250,7 @@ sub InitializeBootloader {
             # the tradeoff is we can't capture errors
             # only patch grub2 package is possible way
             # to get around this problem
-            "/usr/sbin/grub2-install $install_opts \"$dev\"",
+            "/usr/sbin/grub2-install --target=$self->{'target'} $install_opts \"$dev\"",
             Bootloader::Path::BootCommandLogname()
         );
 
