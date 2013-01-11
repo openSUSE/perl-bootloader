@@ -1050,7 +1050,9 @@ sub DetectThinkpadMBR
   my $self = shift;
   my $disk = shift;
   my $res = $self->IsThinkpadMBR($disk);
-  $self->milestone("on $disk result $res" );
+
+  $self->milestone("on $disk result $res");
+
   return $res;
 }
 
@@ -1064,11 +1066,13 @@ Write generic mbr to disk on thinkpad. Return undef if fail.
 #  WriteThinkpadMBR (string disk)
 sub WriteThinkpadMBR
 {
-   my $self = shift;
-   my $disk = shift;
-   my $res = $self->PatchThinkpadMBR($disk);
-   $self->milestone("on $disk result $res" );
-   return $res;
+  my $self = shift;
+  my $disk = shift;
+  my $res = $self->PatchThinkpadMBR($disk);
+
+  $self->milestone("on $disk result $res");
+
+  return $res;
 }
 
 =item

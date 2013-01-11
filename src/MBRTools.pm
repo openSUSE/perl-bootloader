@@ -50,7 +50,7 @@ sub IsThinkpadMBR()
   $mbr =~ s/\s//g; #remove whitespace
 
   $self->milestone("checked mbr is: $mbr");
-  
+
   my $first_segment = hex("0x".substr ($mbr, 4, 2));
   my $second_segment = hex("0x".substr ($mbr, 6, 2));
 
@@ -141,12 +141,12 @@ sub PatchThinkpadMBR()
   # verify crc
 
   if($mbr[6] == 0) {
-    $self->warning("$disk: orig mbr crc not checked\n");
+    $self->warning("$disk: orig mbr crc not checked");
   }
   else {
     unless (crc(\@old_mbr) == $mbr[6]){
-       $self->error("$disk: orig mbr crc failure\n");
-       return 0;
+      $self->error("$disk: orig mbr crc failure\n");
+      return 0;
     }
   }
 
