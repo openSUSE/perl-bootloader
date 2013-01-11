@@ -219,14 +219,6 @@ if (Bootloader::Tools::GetBootloader() eq "none")
   exit 0;
 }
 
-if (Bootloader::Tools::GetBootloader() =~ /^(grub2|grub2-efi)$/)
-{
-  $logger->milestone("grub2 bootloader, no add/remove section support");
-
-  delete $oper{add};
-  delete $oper{remove};
-}
-
 if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
 }
@@ -258,6 +250,28 @@ if ($opt_previous) {
     unless($opt_initrd) {
     	$opt_initrd = GetDefaultInitrd() . ".previous";
     }	
+}
+
+# grub2 handles input options differently here ..
+# when refresh, it will update both installation and config ($avoid_init=0)
+# when add or remove, only update config ($avoid_init=1)
+if (Bootloader::Tools::GetBootloader() =~ /^(grub2|grub2-efi)$/)
+{
+	if (defined $oper{refresh}) {
+	    # Always set $avoid_init=0 to guarentee bootloader installed (bnc#759224)
+	    my $ret = UpdateBootloader(0);
+	    exit 1 if ( !$ret );
+	} elsif (defined $oper{add} || defined $oper{remove}) {
+	    # The add or remove should trigger config update (bnc#780622)
+	    # Set $avoid_init=1 to avoid installing bootloader
+	    my $ret = UpdateBootloader(1);
+	    exit 1 if ( !$ret );
+	}
+
+	# clear handled option
+	delete $oper{add};
+	delete $oper{remove};
+	delete $oper{refresh};
 }
 
 # FIXME: these section names should be unified somehow together with multi
