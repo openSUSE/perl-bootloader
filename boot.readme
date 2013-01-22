@@ -16,6 +16,11 @@ for grub (x86*) or trustedgrub -
   /boot/grub/device.map - mapping of real device to grub device
   /etc/grub.conf - batch file for grub if you need update your bootloader location
   
+for grub2 (x86* or ppc)
+  /boot/grub2/grub.cfg - main configuration for sections
+  /boot/grub2/custom.cfg - custom user configuration file sourced by grub.cfg
+  /etc/default/grub - settings to control creation of grub.cfg used by grub2-mkconfig
+  
 for lilo ( x86* or ppc) - 
   /etc/lilo.conf - main configuration file
 
