@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb  4 14:50:59 CET 2013 - snwint@suse.de
+
+- fix undefined value warning (#799644)
+- 0.707
+
+-------------------------------------------------------------------
 Fri Jan 11 17:23:53 CET 2013 - snwint@suse.de
 
 - arvidjaar: use explicit target arch for GRUB2 and remove grub2-efi calls
