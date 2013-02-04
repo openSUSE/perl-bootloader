@@ -145,7 +145,7 @@ sub new
   if(@r0 && @r1) {
     my $r0 = ($r0[0] >> 8) . ":" . ($r0[0] & 0xff);
     $r = readlink "/dev/block/$r0";
-    $r =~ s#^..#/dev#;
+    $r =~ s#^..#/dev# if defined $r;
     $r = $r0 unless defined $r;
     if($r0[0] != $r1[0] || $r0[1] != $r1[1]) {
       $r .= " (chroot)";
