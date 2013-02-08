@@ -171,6 +171,7 @@ sub GetMetaData() {
 	fX		=> "path:Display the Content of a File by Function Keys:",
 	noedd30		=> "bool:Don't force EDD30 Mode if not set:",
 	fpswa		=> "path:Specify the Filename for a specific FPSWA to load:",
+	"secure-boot"	=> "bool:Support Secure Boot:",
 
 	# shadow entries for efi boot manager
 	boot_efilabel	=> "string:EFI Boot Manager Label::",
@@ -438,6 +439,19 @@ sub CreateLines {
 }
 
 
+# Check EFI for current secure boot state.
+sub SecureBootState
+{
+  my $sb;
+
+  open my $f, "/sys/firmware/efi/vars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c/data";
+  sysread $f, $sb, 1 if $f;
+  close $f;
+
+  return $sb eq "\x01" ? "true" : "false";
+}
+
+
 =item
 C<< $glob_info = $Bootloader::Core->Global2Info (\@glob_lines, \@section_names); >>
 
@@ -460,6 +474,10 @@ sub Global2Info {
 
     my %ret = ();
 
+    $ret{"secure-boot"} = SecureBootState();
+
+    $self->milestone("secureboot (EFI) = $ret{'secure-boot'}");
+
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
 	my $val = $line_ref->{"value"};
@@ -479,6 +497,7 @@ sub Global2Info {
 	}
     }
     $ret{"__lines"} = \@lines;
+
     return \%ret;
 }
 

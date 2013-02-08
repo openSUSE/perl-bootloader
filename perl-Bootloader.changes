@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Feb  8 16:06:55 CET 2013 - snwint@suse.de
+
+- added secureboot support in elilo.conf
+- 0.4.89.50
+
+-------------------------------------------------------------------
 Mon Feb  4 13:15:39 CET 2013 - snwint@suse.de
 
 - fix undefined value warning (#799644)
