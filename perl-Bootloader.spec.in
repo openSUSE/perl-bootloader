@@ -20,7 +20,7 @@ Autoreqprov:    on
 Group:          System/Boot
 License:        GPL-2.0+
 Summary:        Library for Configuring Boot Loaders
-Source:         perl-Bootloader-%{version}.tar.bz2
+Source:         perl-Bootloader-%{version}.tar.xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Conflicts:      multipath-tools < 0.4.8-40.25.1
 #!BuildIgnore: mdadm e2fsprogs limal-bootloader
