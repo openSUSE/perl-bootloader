@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Feb 12 14:44:01 CET 2013 - snwint@suse.de
+
+- removed "secure-boot" option
+- 0.4.89.51
+
+-------------------------------------------------------------------
 Fri Feb  8 16:06:55 CET 2013 - snwint@suse.de
 
 - added secureboot support in elilo.conf
