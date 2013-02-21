@@ -501,6 +501,12 @@ sub Info2Global {
         $hidden_timeout = "0" if "$hidden_timeout" ne "";
     }
 
+    my $use_linuxefi = "";
+
+    if (defined $self->{secure_boot}) {
+        $use_linuxefi = $self->{secure_boot} ? "true" : "false";
+    }
+
     @lines = map {
         my $line_ref = $_;
         my $key = $line_ref->{"key"};
@@ -566,6 +572,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $line_ref->{"value"} = ($os_prober eq "false") ? "true" : "false";
             $os_prober = "";
+        } elsif ($key =~ m/@?GRUB_USE_LINUXEFI$/) {
+            $line_ref->{"value"} = "$use_linuxefi" if "$use_linuxefi" ne "";
+            $use_linuxefi = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -646,6 +655,14 @@ sub Info2Global {
             "value" => ($os_prober eq "false") ? "true" : "false",
         }
     }
+
+    if ("$use_linuxefi" ne "") {
+        push @lines, {
+            "key" => "GRUB_USE_LINUXEFI",
+            "value" => "$use_linuxefi",
+        }
+    }
+
     return \@lines;
 }
 
@@ -735,6 +752,26 @@ sub UpdateBootloader {
         return $self->InitializeBootloader ();
     }
 
+    if (defined $self->{secure_boot})
+    {
+        my $opt = $self->{secure_boot} ? "--config-file=/boot/grub2/grub.cfg" : "--clean";
+        my $cmd = "/usr/sbin/shim-install";
+
+        if ($self->{secure_boot}) {
+            $ret = $self->RunCommand (
+                "$cmd $opt",
+                Bootloader::Path::BootCommandLogname()
+            );
+        } else {
+            $ret = $self->RunCommand (
+                "test -x $cmd && $cmd $opt || true",
+                Bootloader::Path::BootCommandLogname()
+            );
+		}
+
+        return 0 if (0 != $ret);
+    }
+
     return 0 == $self->RunCommand (
         "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
         Bootloader::Path::BootCommandLogname()
@@ -760,6 +797,26 @@ sub InitializeBootloader {
     );
 
     return 0 if (0 != $ret);
+
+    if (defined $self->{secure_boot})
+    {
+        my $opt = $self->{secure_boot} ? "--config-file=/boot/grub2/grub.cfg" : "--clean";
+        my $cmd = "/usr/sbin/shim-install";
+
+        if ($self->{secure_boot}) {
+            $ret = $self->RunCommand (
+                "$cmd $opt",
+                Bootloader::Path::BootCommandLogname()
+            );
+        } else {
+            $ret = $self->RunCommand (
+                "test -x $cmd && $cmd $opt || true",
+                Bootloader::Path::BootCommandLogname()
+            );
+		}
+
+        return 0 if (0 != $ret);
+    }
 
     return 0 == $self->RunCommand (
         "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
