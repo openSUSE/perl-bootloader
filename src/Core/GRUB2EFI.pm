@@ -480,7 +480,8 @@ sub Info2Global {
     # my $root = delete $globinfo{"root"} || "";
     my $vga = delete $globinfo{"vgamode"} || "";
     my $append = delete $globinfo{"append"} || "";
-    my $timeout = delete $globinfo{"timeout"} || "";
+    # YaST doesn't save bootloader settings when 'Timeout in seconds' is set to 0 (bnc#804176)
+    my $timeout = delete $globinfo{"timeout"} || 0;
     my $hiddenmenu = delete $globinfo{"hiddenmenu"} || "";
     my $terminal = delete $globinfo{"terminal"} || "";
     my $serial = delete $globinfo{"serial"} || "";
