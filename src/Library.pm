@@ -67,6 +67,8 @@ C<< $result = Bootloader::Library::DetectThinkpadMBR ($disk); >>
 
 C<< $result = Bootloader::Library::WriteThinkpadMBR ($disk); >>
 
+C<< $status = Bootloader::Library->SetSecureBoot ($enable); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -425,6 +427,33 @@ sub DefineUdevMapping($)
   return 1;
 }
 
+=item
+C<< $status = Bootloader::Library->SetSecureBoot ($enable); >>
+
+Set the SecureBoot Setting
+
+=cut
+
+sub SetSecureBoot
+{
+    my $self = shift;
+    my $sb = shift;
+
+    my $loader = $self->{"loader"};
+    return undef unless defined $loader;
+
+    delete $loader->{cache};
+
+    if (defined $sb)
+    {
+        $loader->{"secure_boot"} = $sb;
+        $self->milestone("secure_boot =", $sb);
+    }
+
+    $self->milestone(" TRACE ");
+
+    return 1;
+}
 
 =item
 C<< $status = Bootloader::Library->ReadSettings (); >>
