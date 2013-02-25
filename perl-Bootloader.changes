@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Mon Feb 25 16:22:22 CET 2013 - snwint@suse.de
+
+- support uefi secureboot
+- fix timeout 0 not work
+- default to entry 0 if no saved_entry is present in grub2 env
+- mention grub2 in /boot/boot.readme
+- 0.708
+
+-------------------------------------------------------------------
 Mon Feb  4 14:50:59 CET 2013 - snwint@suse.de
 
 - fix undefined value warning (#799644)
