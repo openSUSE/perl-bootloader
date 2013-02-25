@@ -82,7 +82,7 @@ use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
 		 RemoveImageSections GetDefaultImage
-		 GetDefaultInitrd GetBootloader UpdateBootloader GetFittingSection
+		 GetDefaultInitrd GetBootloader GetSecureBoot UpdateBootloader GetFittingSection
 		 GetGlobals SetGlobals 
 		 GetSectionList GetSection 
 		 AddSection RemoveSections
@@ -699,6 +699,25 @@ sub GetBootloader
 }   
 
 =item
+C<< $loader = Bootloader::Tools::GetSecureBoot (); >>
+
+returns the secureboot settings. Reads the value from sysconfig.
+Returns the string - secureboot enabled (yes,no) .
+
+See InitLibrary function for example.
+
+=cut
+
+sub GetSecureBoot
+{
+  my $val = GetSysconfigValue("SECURE_BOOT");
+
+  $lib_ref->milestone("secureboot = $val") if $lib_ref;
+
+  return (($val eq "yes") ? 1 : 0);
+}
+
+=item
 C<< $value = Bootloader::Tools::GetSysconfigValue (); >>
 
 returns specified option from the /etc/sysconfig/bootloader
@@ -749,6 +768,7 @@ sub InitLibrary
   $lib_ref->DefineMDArrays($md);
   $lib_ref->DefineMultipath($mpath);
   $lib_ref->DefineUdevMapping($um);
+  $lib_ref->SetSecureBoot (GetSecureBoot ());
 
   # parse Bootloader configuration files   
   $lib_ref->ReadSettings();
