@@ -667,16 +667,17 @@ sub GetSettings {
     my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
-    if ($saved_entry ne "") {
-        if ($saved_entry =~ m/^\d+$/) {
-            my $sect = $sections->[$saved_entry];
+    if ($saved_entry eq "") {
+	$saved_entry = "0";
+    }
+    if ($saved_entry =~ m/^\d+$/) {
+	my $sect = $sections->[$saved_entry];
 
-            if (defined $sect) {
-                $globals->{"default"} = $sect->{"menuentry"};
-            }
-        } else {
-            $globals->{"default"} = $saved_entry;
-        }
+	if (defined $sect) {
+	    $globals->{"default"} = $sect->{"menuentry"};
+	}
+    } else {
+	$globals->{"default"} = $saved_entry;
     }
 
     return $ret;
