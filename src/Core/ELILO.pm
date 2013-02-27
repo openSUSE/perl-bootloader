@@ -171,7 +171,7 @@ sub GetMetaData() {
 	fX		=> "path:Display the Content of a File by Function Keys:",
 	noedd30		=> "bool:Don't force EDD30 Mode if not set:",
 	fpswa		=> "path:Specify the Filename for a specific FPSWA to load:",
-	# "secure-boot"	=> "bool:Support Secure Boot:",
+	"secure-boot"	=> "string:Support Secure Boot:auto",
 
 	# shadow entries for efi boot manager
 	boot_efilabel	=> "string:EFI Boot Manager Label::",
@@ -448,7 +448,7 @@ sub SecureBootState
   sysread $f, $sb, 1 if $f;
   close $f;
 
-  return $sb eq "\x01" ? "true" : "false";
+  return $sb eq "\x01" ? "on" : "off";
 }
 
 
