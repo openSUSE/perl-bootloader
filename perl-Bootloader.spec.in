@@ -15,6 +15,9 @@ Version:        --autoversion--
 Release:        0
 Requires:       perl-base = %{perl_version}
 Requires:       e2fsprogs
+%ifarch s390 s390x
+Requires:       s390-tools
+%endif
 Recommends:     perl-gettext
 Autoreqprov:    on
 Group:          System/Boot

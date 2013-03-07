@@ -444,9 +444,10 @@ sub SecureBootState
 {
   my $sb;
 
-  open my $f, "/sys/firmware/efi/vars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c/data";
-  sysread $f, $sb, 1 if $f;
-  close $f;
+  if(open my $f, "/sys/firmware/efi/vars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c/data") {
+    sysread $f, $sb, 1;
+    close $f;
+  }
 
   return $sb eq "\x01" ? "on" : "off";
 }
