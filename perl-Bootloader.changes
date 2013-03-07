@@ -3,6 +3,7 @@ Mon Mar  4 11:22:21 CET 2013 - snwint@suse.de
 
 - require s390-tools (bnc #807191)
 - fix warning (bnc #804442)
+- 0.4.89.53
 
 -------------------------------------------------------------------
 Wed Feb 27 14:01:19 CET 2013 - snwint@suse.de
