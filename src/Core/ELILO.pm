@@ -449,7 +449,7 @@ sub SecureBootState
     close $f;
   }
 
-  return $sb eq "\x01" ? "on" : "off";
+  return $sb && $sb eq "\x01" ? "on" : "off";
 }
 
 
