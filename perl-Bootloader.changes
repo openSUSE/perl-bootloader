@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Apr 15 15:55:38 CEST 2013 - snwint@suse.de
+
+- use either on or off but not auto for secure boot setting (bnc #812008)
+- 0.4.89.55
+
+-------------------------------------------------------------------
 Mon Mar 25 16:36:24 CET 2013 - snwint@suse.de
 
 - avoid undef warning (bnc #810821)

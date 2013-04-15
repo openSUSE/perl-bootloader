@@ -475,9 +475,9 @@ sub Global2Info {
 
     my %ret = ();
 
-    # $ret{"secure-boot"} = SecureBootState();
+    $ret{"secure-boot"} = SecureBootState();
 
-    $self->milestone("secureboot (EFI) = " . SecureBootState());
+    $self->milestone("secureboot (EFI) = " . $ret{"secure-boot"});
 
     foreach my $line_ref (@lines) {
 	my $key = $line_ref->{"key"};
