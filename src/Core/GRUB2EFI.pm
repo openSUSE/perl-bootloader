@@ -113,26 +113,26 @@ sub GrubCfgSections {
 
 sub new
 {
-  my $self = shift;
-  my $ref = shift;
-  my $old = shift;
+    my $self = shift;
+    my $ref = shift;
+    my $old = shift;
 
-  my $loader = $self->SUPER::new($ref, $old);
-  bless($loader);
+    my $loader = $self->SUPER::new($ref, $old);
+    bless($loader);
 
-  my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
-  # This exactly mimics grub-install logic and needs to be in sync with it
-  if ($machine =~ /^i.86.*/) {
-    $machine = "i386";
-  } elsif ($machine =~ /^(x86_64|amd64).*/) {
-    $machine = "x86_64";
-  }
-  my $target = "$machine-efi";
-  $loader->{'target'} = $target;
+    my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
+    # This exactly mimics grub-install logic and needs to be in sync with it
+    if ($machine =~ /^i.86.*/) {
+        $machine = "i386";
+    } elsif ($machine =~ /^(x86_64|amd64).*/) {
+        $machine = "x86_64";
+    }
+    my $target = "$machine-efi";
+    $loader->{'target'} = $target;
 
-  $loader->milestone("Created GRUB2EFI instance for target $target");
+    $loader->milestone("Created GRUB2EFI instance for target $target");
 
-  return $loader;
+    return $loader;
 }
 
 
