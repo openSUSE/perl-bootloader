@@ -56,6 +56,82 @@ use Data::Dumper;
 
 #module interface
 
+sub GetDeviceMap {
+
+    my $self = shift;
+    my $ret = 0;
+    my %map_byid = ();
+    my %map_kern = ();
+    my @blacklist = ();
+
+    GETMAP: while ((my $udev_dev, my $kern_dev) = each %{$self->{"udevmap"}}) {
+
+        my $probe = '/usr/sbin/grub2-probe';
+        my $probe_args = "--target=compatibility_hint --device $kern_dev";
+
+        # skip blaklisted device
+        foreach (@blacklist) {
+            if ($kern_dev eq $_) {
+                $self->milestone ("blacklisted drive $kern_dev in device map");
+                next GETMAP;
+            }
+        }
+
+        # skip partitions, assume they were ended with digits
+        if ($kern_dev =~ /\d+$/) {
+            $self->milestone ("skip partition $kern_dev in device map");
+            next GETMAP;
+        }
+
+        # skip device that's known to be invalid if installed to
+        my @ignore = ('/dev/sr', '/dev/dm', '/dev/md');
+        foreach (@ignore) {
+            if ($kern_dev =~ $_) {
+                $self->milestone ("ignore $kern_dev in device map");
+                next GETMAP;
+            }
+        }
+
+        # try to map kernel device to grub device if not mapped yet
+        if (not exists $map_kern{$kern_dev}) {
+            my $gdev = qx($probe $probe_args 2>&1);
+            if ($? == 0) {
+                chomp $gdev;
+                if ($gdev =~ /^[a-z]{1,2}\d+$/) {
+                    $map_kern{$kern_dev} = $gdev;
+                } else {
+                    $self->milestone ("not a grub device: $gdev");
+                }
+            } else {
+                # blacklist the device if grub2-probe fails on them
+                # to save some unnecessary cpu cycles
+                $self->milestone ("run $probe $probe_args failed with $gdev\n");
+                $self->milestone ("blacklist $kern_dev\n");
+                push @blacklist, $kern_dev;
+            }
+        }
+
+        # map by-id device to grub device
+        if ($udev_dev =~ /\/by-id\// and exists $map_kern{$kern_dev}) {
+            $map_byid{$udev_dev} = $map_kern{$kern_dev};
+        }
+    }
+
+    # we prefer by-id device than kernel device
+    if (%map_byid) {
+        $self->{device_map} = \%map_byid;
+    } elsif (%map_kern) {
+        $self->{device_map} = \%map_kern;
+    } else {
+        $self->{device_map} = {};
+        $self->warning ("empty device.map\n");
+    }
+
+    while ((my $unix, my $fw) = each (%{$self->{device_map}})) {
+        $self->milestone ("grub2 device map: $unix <=>  $fw\n");
+    }
+}
+
 sub GetKernelDevice {
     my $self = shift;
     my $orig = shift;
@@ -370,8 +446,7 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = ( Bootloader::Path::Grub2_devicemap(),
-                Bootloader::Path::Grub2_installdevice(),
+    my @ret = ( Bootloader::Path::Grub2_installdevice(),
                 Bootloader::Path::Grub2_defaultconf() );
 
     if (-e Bootloader::Path::Grub2_conf()) {
@@ -400,29 +475,7 @@ sub ParseLines {
     my %files = %{+shift};
     my $avoid_reading_device_map = shift;
 
-    #first set the device map - other parsing uses it
-    my @device_map = @{$files{Bootloader::Path::Grub2_devicemap()} || []};
-    $self->milestone("input from device.map :\n'" . join("'\n' ", @device_map) . "'");
-    my %devmap = ();
-    foreach my $dm_entry (@device_map)
-    {
-        if ($dm_entry =~ /^\s*\(([^\s#]+)\)\s+(\S+)\s*$/)
-        {
-            #multipath handling, multipath need real device, because multipath
-            # device have broken geometry (bnc #448110)
-            if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$self->GetKernelDevice($2)}){
-                $devmap{ $self->{"multipath"}->{$self->GetKernelDevice($2)} } = $1;
-            } else {
-                $devmap{$2} = $1;
-            }
-        }
-    };
-    $self->milestone("avoided_reading device map.") if ($avoid_reading_device_map );
-    $self->{"device_map"} = \%devmap  if (! $avoid_reading_device_map);
-    $self->milestone("device_map: ".$self->{"device_map"});
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->milestone("device_map: $unix <-> $fw.");
-    }
+    $self->GetDeviceMap () if (! $avoid_reading_device_map);
 
     # and now proceed with /etc/default/grub
     my @defaultconf = @{$files{Bootloader::Path::Grub2_defaultconf()} || []};
@@ -486,6 +539,8 @@ sub ParseLines {
 
             if ($dev =~ /^\(${grubdev_pattern}\)$/) {
                 $dev = $self->GrubDev2UnixDev($dev);
+            } else {
+                $dev = $self->GetKernelDevice($dev);
             }
 
             if ($dev eq $mbr_dev) {
@@ -636,7 +691,14 @@ sub CreateGrubInstalldevLines() {
     {
         foreach my $new_dev (keys (%s1_devices))
         {
-            $new_dev = $self->UnixDev2GrubDev ($new_dev);
+            while ((my $udev_dev, my $kern_dev) = each %{$self->{"udevmap"}}) {
+                if ($udev_dev =~ /\/by-id\// and $kern_dev eq $new_dev) {
+                    $self->milestone("Translating install device from $new_dev to $udev_dev");
+                    $new_dev = $udev_dev;
+                    last;
+                }
+            }
+
             if ($new_dev ne "") {
                 push @grub2_installdev, $new_dev;
             }
