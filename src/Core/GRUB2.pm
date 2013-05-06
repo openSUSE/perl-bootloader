@@ -1111,15 +1111,6 @@ sub SetSettings {
     my $self = shift;
     my %settings = %{+shift};
 
-    my $default  = delete $settings{"global"}->{"default"};
-
-    if (defined $default and $default ne "") {
-        $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
-        );
-    }
-
     return $self->SUPER::SetSettings (\%settings);
 }
 
@@ -1137,6 +1128,7 @@ Returns undef on fail, defined nonzero value on success.
 sub UpdateBootloader {
     my $self = shift;
     my $avoid_init = shift;
+    my %glob = %{$self->{"global"}};
 
     # backup the config file
     # it really did nothing for now
@@ -1146,6 +1138,15 @@ sub UpdateBootloader {
     if (! $avoid_init)
     {
         return $self->InitializeBootloader ();
+    }
+
+    my $default  = delete $glob{"default"};
+
+    if (defined $default and $default ne "") {
+        $self->RunCommand (
+            "/usr/sbin/grub2-set-default '$default'",
+            Bootloader::Path::BootCommandLogname()
+        );
     }
 
     return 0 == $self->RunCommand (
@@ -1208,6 +1209,15 @@ sub InitializeBootloader {
         );
 
         return 0 if (0 != $ret);
+    }
+
+    my $default  = delete $glob{"default"};
+
+    if (defined $default and $default ne "") {
+        $self->RunCommand (
+            "/usr/sbin/grub2-set-default '$default'",
+            Bootloader::Path::BootCommandLogname()
+        );
     }
 
     return 0 ==  $self->RunCommand (
