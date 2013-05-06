@@ -665,6 +665,13 @@ sub CreateLines {
     my @device_map = ();
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
+        # this doesn't matters, as floppy device is specified
+        # by os device now
+        if ($fw =~ m/^fd[0-9]+$/) {
+            $self->milestone ("skip floppy device for writing device.map");
+            next;
+        }
+
         my $line = "($fw)\t$unix";
         push @device_map, $line;
     }
