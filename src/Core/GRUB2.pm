@@ -64,10 +64,20 @@ sub GetDeviceMap {
     my %map_kern = ();
     my @blacklist = ();
 
-    GETMAP: while ((my $udev_dev, my $kern_dev) = each %{$self->{"udevmap"}}) {
+    # WARN: It may not report disks without partitions.
+    # TODO: We need a better way to figure out physical drive though
+    # eg, whatever listed by `find /sys/class/block/*/device`
+    GETMAP: foreach (@{$self->{"partitions"}}) {
 
+        my $kern_dev = $_->[1];
         my $probe = '/usr/sbin/grub2-probe';
         my $probe_args = "--target=compatibility_hint --device $kern_dev";
+
+        # skip empty drive which is not likely.
+        if ($kern_dev eq "") {
+            $self->warning ("no drive for a partition\n");
+            next GETMAP;
+        }
 
         # skip blaklisted device
         foreach (@blacklist) {
@@ -84,7 +94,7 @@ sub GetDeviceMap {
         }
 
         # skip device that's known to be invalid if installed to
-        my @ignore = ('/dev/sr', '/dev/dm', '/dev/md');
+        my @ignore = ('/dev/sr', '/dev/dm', '/dev/md', '/dev/tmpfs');
         foreach (@ignore) {
             if ($kern_dev =~ $_) {
                 $self->milestone ("ignore $kern_dev in device map");
@@ -110,7 +120,9 @@ sub GetDeviceMap {
                 push @blacklist, $kern_dev;
             }
         }
+    }
 
+    while ((my $udev_dev, my $kern_dev) = each %{$self->{"udevmap"}}) {
         # map by-id device to grub device
         if ($udev_dev =~ /\/by-id\// and exists $map_kern{$kern_dev}) {
             $map_byid{$udev_dev} = $map_kern{$kern_dev};
