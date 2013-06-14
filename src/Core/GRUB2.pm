@@ -56,6 +56,94 @@ use Data::Dumper;
 
 #module interface
 
+sub GetDeviceMap {
+
+    my $self = shift;
+    my $ret = 0;
+    my %map_byid = ();
+    my %map_kern = ();
+    my @blacklist = ();
+
+    # WARN: It may not report disks without partitions.
+    # TODO: We need a better way to figure out physical drive though
+    # eg, whatever listed by `find /sys/class/block/*/device`
+    GETMAP: foreach (@{$self->{"partitions"}}) {
+
+        my $kern_dev = $_->[1];
+        my $probe = '/usr/sbin/grub2-probe';
+        my $probe_args = "--target=compatibility_hint --device $kern_dev";
+
+        # skip empty drive which is not likely.
+        if ($kern_dev eq "") {
+            $self->warning ("no drive for a partition\n");
+            next GETMAP;
+        }
+
+        # skip blaklisted device
+        foreach (@blacklist) {
+            if ($kern_dev eq $_) {
+                $self->milestone ("blacklisted drive $kern_dev in device map");
+                next GETMAP;
+            }
+        }
+
+        # skip partitions, assume they were ended with digits
+        if ($kern_dev =~ /\d+$/) {
+            $self->milestone ("skip partition $kern_dev in device map");
+            next GETMAP;
+        }
+
+        # skip device that's known to be invalid if installed to
+        my @ignore = ('/dev/sr', '/dev/dm', '/dev/md', '/dev/tmpfs');
+        foreach (@ignore) {
+            if ($kern_dev =~ $_) {
+                $self->milestone ("ignore $kern_dev in device map");
+                next GETMAP;
+            }
+        }
+
+        # try to map kernel device to grub device if not mapped yet
+        if (not exists $map_kern{$kern_dev}) {
+            my $gdev = qx($probe $probe_args 2>&1);
+            if ($? == 0) {
+                chomp $gdev;
+                if ($gdev =~ /^[a-z]{1,2}\d+$/) {
+                    $map_kern{$kern_dev} = $gdev;
+                } else {
+                    $self->milestone ("not a grub device: $gdev");
+                }
+            } else {
+                # blacklist the device if grub2-probe fails on them
+                # to save some unnecessary cpu cycles
+                $self->milestone ("run $probe $probe_args failed with $gdev\n");
+                $self->milestone ("blacklist $kern_dev\n");
+                push @blacklist, $kern_dev;
+            }
+        }
+    }
+
+    while ((my $udev_dev, my $kern_dev) = each %{$self->{"udevmap"}}) {
+        # map by-id device to grub device
+        if ($udev_dev =~ /\/by-id\// and exists $map_kern{$kern_dev}) {
+            $map_byid{$udev_dev} = $map_kern{$kern_dev};
+        }
+    }
+
+    # we prefer by-id device than kernel device
+    if (%map_byid) {
+        $self->{device_map} = \%map_byid;
+    } elsif (%map_kern) {
+        $self->{device_map} = \%map_kern;
+    } else {
+        $self->{device_map} = {};
+        $self->warning ("empty device.map\n");
+    }
+
+    while ((my $unix, my $fw) = each (%{$self->{device_map}})) {
+        $self->milestone ("grub2 device map: $unix <=>  $fw\n");
+    }
+}
+
 sub GetKernelDevice {
     my $self = shift;
     my $orig = shift;
@@ -89,12 +177,12 @@ sub GrubDev2UnixDev {
     my $dev = shift;
 
     unless ($dev) {
-	$self->error("Empty device to translate");
-	return $dev;
+        $self->error("Empty device to translate");
+        return $dev;
     }
     if ($dev !~ /^\(.*\)$/) {
-	$self->warning("Not translating device $dev");
-	return $dev;
+        $self->warning("Not translating device $dev");
+        return $dev;
     }
 
     my $original = $dev;
@@ -103,12 +191,12 @@ sub GrubDev2UnixDev {
     # Check if $dev consists of something like (hd0,1), thus a grub device
     # TODO: warns once detect (hd0,0) as GRUB2 partition is one based
     if ($dev =~ /\(([^,]+),([^,]+)\)/) {
-	$dev = $1;
-    # GRUB2 device partition is now one based (eg, (hd0,1) = /dev/sda1)
-	$partition = $2;
+        $dev = $1;
+        # GRUB2 device partition is now one based (eg, (hd0,1) = /dev/sda1)
+        $partition = $2;
     }
     elsif ($dev =~ /\(([^,]+)\)/) {
-	$dev = $1;
+        $dev = $1;
     }
 
     my $match_found = 0;
@@ -117,10 +205,10 @@ sub GrubDev2UnixDev {
         $self->milestone("device_map: $unix <-> $fw.");
     }
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-	if ($dev eq $fw) {
-	    $dev = $unix;
-	    $match_found = 1;
-	}
+        if ($dev eq $fw) {
+            $dev = $unix;
+            $match_found = 1;
+        }
     }
 
     if ($match_found == 0) {
@@ -134,19 +222,19 @@ sub GrubDev2UnixDev {
 
     if (defined ($partition)) {
         my $finded = undef;
-	foreach my $dev_ref (@{$self->{"partitions"}}) {
-	    if ( $dev_ref->[1] eq $dev
+        foreach my $dev_ref (@{$self->{"partitions"}}) {
+            if ( $dev_ref->[1] eq $dev
               && $dev_ref->[2] == $partition) {
-		$dev = $dev_ref->[0];
-		$self->milestone("Translated $original to $dev");
-		$finded = 1;;
-	    }
-	}
+                $dev = $dev_ref->[0];
+                $self->milestone("Translated $original to $dev");
+                $finded = 1;;
+            }
+        }
         if (defined $finded){
-          return $dev;
+            return $dev;
         }
         #no partition found so return $dev with partition
-	$self->warning("No partition found for $dev with $partition.");
+        $self->warning("No partition found for $dev with $partition.");
         return $dev.$partition;
     }
 
@@ -155,123 +243,10 @@ sub GrubDev2UnixDev {
     return $dev;
 }
 
-=item
-C<< $grub_dev = Bootloader::Core::GRUB2->UnixDev2GrubDev ($unix_dev); >>
-
-Translates the UNIX device (eg. '/dev/hda1') to GRUB2 device (eg. '(hd0,1)').
-As argument takes the UNIX device, returns the GRUB2 device (both strings).
-
-=cut
-
 # Pattern for grub device specification. Please note that this does not work
 # with BSD labeled disks which use things like "hd0,b"
 # The pattern matches disk or floppy or network or cd
 my $grubdev_pattern = "(?:hd\\d+(?:,\\d+)?|fd\\d+|nd|cd)";
-
-
-# string UnixDev2GrubDev (string unix_dev)
-sub UnixDev2GrubDev {
-    my $self = shift;
-    my $dev = shift;
-    my $g_dev;
-    local $_;
-
-    if ($dev eq "") {
-	$self->error("Empty device to translate");
-	return ""; # return an error
-    }
-
-    # TODO: check whether listed grubdev valid for grub2 ?
-    # Seems to be a grub device already
-    if ($dev =~ /^\(${grubdev_pattern}\)$/) {
-	$self->warning("Not translating device $dev");
-	return $dev;
-    }
-
-    $self->milestone("Translating $dev ...");
-
-    # remove parenthesis to be able to handle entries like "(/dev/sda1)" which
-    # might be there by error
-    $dev =~ s/^\((.*)\)$/$1/;
-
-    # This gives me the devicename, whether $dev is the device or a link!
-    # This works for udev (kernel) devices only, devicemapper doesn't
-    # need to be changed here
-
-    my $original = $dev;
-    my $kernel_dev = $self->GetKernelDevice($dev);
-
-    $self->milestone("kernel device: $kernel_dev");
-
-    my $partition = undef;
-
-    if ($kernel_dev =~ m#/dev/md\d+#) {
-	my @members = @{$self->MD2Members ($kernel_dev) || []};
-	# FIXME! This only works for mirroring (Raid1)
-	$kernel_dev = $self->GetKernelDevice($members[0] || $kernel_dev );
-	$self->milestone("First device of MDRaid: $original -> $kernel_dev");
-    }
-
-    # print all entries of device.map - for debugging
-    if ($self->{device_map}) {
-        $self->milestone("device_map:");
-
-	for (sort keys %{$self->{device_map}}) {
-	    $self->milestone("unix device: $_ <==> grub device: $self->{device_map}{$_}");
-	}
-    }
-    else {
-	$self->warning("empty device_map");
-    }
-
-    # fetch the underlying device (sda1 --> sda)
-    for (@{$self->{partitions}}) {
-	if ($_->[0] eq $kernel_dev) {
-	    $kernel_dev = $_->[1];
-    # grub2 device is one based
-	    $partition = $_->[2];
-	    $self->milestone("dev base part: $_->[0] $_->[1] $_->[2]");
-	    last;
-	}
-    }
-
-    for (sort keys %{$self->{device_map}}) {
-        if ($kernel_dev eq $self->GetKernelDevice($_)) {
-            $g_dev = $self->{device_map}{$_};
-            last;
-        }
-    }
-
-    # TODO: Is the fallback work for grub2 ???
-    # fallback if translation has failed - this is good enough for many cases
-    # FIXME: this is nonsense - we should return an error
-    if (!$g_dev) {
-        $self->warning("Unknown device/partition, using fallback");
-
-        $g_dev = "hd0";
-        $partition = undef;
-
-        if (
-            $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
-            $original =~ m#^/dev/\S+\-part(\d+)$# ||
-            $original =~ m#^/dev(?:/[^/]+){1,2}p(\d+)$#
-        ) {
-            $partition = $1 - 1;
-            $partition = 0 if $partition < 0;
-        }
-    }
-
-    if (defined $partition) {
-        $g_dev = "($g_dev,$partition)";
-        $self->milestone("Translated UNIX partition -> GRUB2 device: $original to $g_dev");
-    }
-    else {
-        $g_dev = "($g_dev)";
-        $self->milestone("Translated UNIX device -> GRUB2 device: $original to $g_dev");
-    }
-
-    return $g_dev;
-}
 
 sub GrubCfgSections {
     my ($parent, $cfg, $sect) = @_;
@@ -330,32 +305,32 @@ Creates an instance of the Bootloader::Core::GRUB2 class.
 
 sub new
 {
-  my $self = shift;
-  my $ref = shift;
-  my $old = shift;
+    my $self = shift;
+    my $ref = shift;
+    my $old = shift;
 
-  my $loader = $self->SUPER::new($ref, $old);
-  bless($loader);
+    my $loader = $self->SUPER::new($ref, $old);
+    bless($loader);
 
-  # Do we support any architecture besides x86?
-  my $target = "i386-pc";
-  $loader->{'target'} = $target;
+    # Do we support any architecture besides x86?
+    my $target = "i386-pc";
+    $loader->{'target'} = $target;
 
-  $loader->milestone("Created GRUB2 instance for target $target");
+    $loader->milestone("Created GRUB2 instance for target $target");
 
-  return $loader;
+    return $loader;
 }
 
 
 sub IsDisc {
-  my $self = shift;
-  my $disc = shift;
-  my $ret = undef;
-  foreach my $dev (keys %{$self->{"device_map"}}) {
-    if ( $self->GetKernelDevice($disc) eq $self->GetKernelDevice($dev) ){
-      $ret = 1;
+    my $self = shift;
+    my $disc = shift;
+    my $ret = undef;
+    foreach my $dev (keys %{$self->{"device_map"}}) {
+        if ( $self->GetKernelDevice($disc) eq $self->GetKernelDevice($dev) ){
+            $ret = 1;
+        }
     }
-  }
   return $ret;
 }
 
@@ -370,8 +345,7 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = ( Bootloader::Path::Grub2_devicemap(),
-                Bootloader::Path::Grub2_installdevice(),
+    my @ret = ( Bootloader::Path::Grub2_installdevice(),
                 Bootloader::Path::Grub2_defaultconf() );
 
     if (-e Bootloader::Path::Grub2_conf()) {
@@ -400,34 +374,12 @@ sub ParseLines {
     my %files = %{+shift};
     my $avoid_reading_device_map = shift;
 
-    #first set the device map - other parsing uses it
-    my @device_map = @{$files{Bootloader::Path::Grub2_devicemap()} || []};
-    $self->milestone("input from device.map :\n'" . join("'\n' ", @device_map) . "'");
-    my %devmap = ();
-    foreach my $dm_entry (@device_map)
-    {
-	if ($dm_entry =~ /^\s*\(([^\s#]+)\)\s+(\S+)\s*$/)
-	{
-          #multipath handling, multipath need real device, because multipath
-          # device have broken geometry (bnc #448110)
-          if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$self->GetKernelDevice($2)}){
-            $devmap{ $self->{"multipath"}->{$self->GetKernelDevice($2)} } = $1;
-          } else {
-      	    $devmap{$2} = $1;
-          }
-	}
-    };
-    $self->milestone("avoided_reading device map.") if ($avoid_reading_device_map );
-    $self->{"device_map"} = \%devmap	if (! $avoid_reading_device_map);
-    $self->milestone("device_map: ".$self->{"device_map"});
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->milestone("device_map: $unix <-> $fw.");
-    }
+    $self->GetDeviceMap () if (! $avoid_reading_device_map);
 
     # and now proceed with /etc/default/grub
     my @defaultconf = @{$files{Bootloader::Path::Grub2_defaultconf()} || []};
     $self->milestone("input from default conf :\n'" .
-                        join("'\n' ", @defaultconf) . "'");
+                     join("'\n' ", @defaultconf) . "'");
 
     # prefix commented config with '@' instread of '#'
     # this is to new notation for "commented config" and
@@ -470,27 +422,29 @@ sub ParseLines {
         my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
 
         foreach my $dev (@devices) {
-	    $self->milestone("checking boot device $dev");
+            $self->milestone("checking boot device $dev");
 
-	    #Quick fix for activate and generic_mbr regression ..
-	    # TODO: Need figure out better handling of them
+            #Quick fix for activate and generic_mbr regression ..
+            # TODO: Need figure out better handling of them
             if ($dev eq "activate") {
                 $glob_ref->{"activate"} = "true";
-		next;
-	    }
+                next;
+            }
 
-	    if ($dev eq "generic_mbr") {
+            if ($dev eq "generic_mbr") {
                 $glob_ref->{"generic_mbr"} = "true";
-		next;
-	    }
+                next;
+            }
 
-	    if ($dev =~ /^\(${grubdev_pattern}\)$/) {
-		$dev = $self->GrubDev2UnixDev($dev);
-	    }
+            if ($dev =~ /^\(${grubdev_pattern}\)$/) {
+                $dev = $self->GrubDev2UnixDev($dev);
+            } else {
+                $dev = $self->GetKernelDevice($dev);
+            }
 
-	    if ($dev eq $mbr_dev) {
-	        $glob_ref->{"boot_mbr"} = "true";
-	        $self->milestone("detected boot_mbr");
+            if ($dev eq $mbr_dev) {
+                $glob_ref->{"boot_mbr"} = "true";
+                $self->milestone("detected boot_mbr");
                 if (defined $self->{"md_arrays"}
                     and ((scalar keys %{$self->{"md_arrays"}}) > 0)){
                     if (defined $glob_ref->{"boot_md_mbr"}
@@ -501,19 +455,19 @@ sub ParseLines {
                     }
                     $self->milestone("detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
                 }
-	    }
-	    elsif ($dev eq $root_dev) {
-	        $glob_ref->{"boot_root"} = "true";
-	        $self->milestone("detected boot_root");
-	    }
-	    elsif ($dev eq $boot_dev) {
-	        $glob_ref->{"boot_boot"} = "true";
-	        $self->milestone("detected boot_boot");
-	    }
-	    elsif ($dev eq $extended_dev) {
-	        $glob_ref->{"boot_extended"} = "true";
-	        $self->milestone("detected boot_extended");
-	    }
+            }
+            elsif ($dev eq $root_dev) {
+                $glob_ref->{"boot_root"} = "true";
+                $self->milestone("detected boot_root");
+            }
+            elsif ($dev eq $boot_dev) {
+                $glob_ref->{"boot_boot"} = "true";
+                $self->milestone("detected boot_boot");
+            }
+            elsif ($dev eq $extended_dev) {
+                $glob_ref->{"boot_extended"} = "true";
+                $self->milestone("detected boot_extended");
+            }
             elsif ($self->IsDisc($dev)
                    and defined $self->{"md_arrays"}
                    and ((scalar keys %{$self->{"md_arrays"}}) > 0)){
@@ -524,10 +478,10 @@ sub ParseLines {
                 }
                 $self->milestone("detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
             }
-	    else {
-	        $glob_ref->{"boot_custom"} = $dev;
-	        $self->milestone("set boot_custom");
-	    }
+            else {
+                $glob_ref->{"boot_custom"} = $dev;
+                $self->milestone("set boot_custom");
+            }
         }
     }
 
@@ -554,93 +508,95 @@ sub CreateGrubInstalldevLines() {
     my %glob = %{$self->{"global"}};
     my @grub2_installdev = ();
     my %s1_devices = ();
-    # md_discs stores grub discs which should be synchronized (needed for correct stage2 location)
-    my $md_discs = {};
 
     {
-	my $dev;
-	my $flag;
+        my $dev;
+        my $flag;
 
-	# boot_custom => "selectdevice:Custom Boot Partition::"
-	$dev = delete($glob{"boot_custom"});
-	$s1_devices{$dev} = 1 if (defined $dev and $dev ne "");
+        # boot_custom => "selectdevice:Custom Boot Partition::"
+        $dev = delete($glob{"boot_custom"});
+        $s1_devices{$dev} = 1 if (defined $dev and $dev ne "");
 
-	# boot_mbr    => "bool:Boot from Master Boot Record:false",
-	$flag = delete $glob{"boot_mbr"};
-	if (defined $flag and $flag eq "true") {
-	    # if /boot mountpoint exists add($disk(/boot) else add disk(/)
-	    # mbr_dev is the first bios device
-	    $dev =  $self->GrubDev2UnixDev("(hd0)");
-	    $s1_devices{$dev} = 1 if defined $dev;
-	}
+        # boot_mbr    => "bool:Boot from Master Boot Record:false",
+        $flag = delete $glob{"boot_mbr"};
+        if (defined $flag and $flag eq "true") {
+            # if /boot mountpoint exists add($disk(/boot) else add disk(/)
+            # mbr_dev is the first bios device
+            $dev =  $self->GrubDev2UnixDev("(hd0)");
+            $s1_devices{$dev} = 1 if defined $dev;
+        }
 
-	# boot_md_mbr   synchronize mbr of disc in md raid
-  #(it is little tricky as md raid synchronize only partitions)
-	$flag = delete $glob{"boot_md_mbr"};
-	if (defined $flag and $flag ne "") {
+        # boot_md_mbr   synchronize mbr of disc in md raid
+        #(it is little tricky as md raid synchronize only partitions)
+        $flag = delete $glob{"boot_md_mbr"};
+        if (defined $flag and $flag ne "") {
             my @discs = split(/,/,$flag);
             chomp @discs;
             foreach my $mbr_disc (@discs){
-      	      $s1_devices{$mbr_disc} = 1;
-              my $gdev = $self->UnixDev2GrubDev($mbr_disc);
-              $md_discs->{$gdev} = substr($gdev,1,-1);
-	            $self->milestone("md_mbr device: $gdev ");
+                $s1_devices{$mbr_disc} = 1;
             }
-	}
+        }
 
-	# boot_root   => "bool:Boot from Root Partition:true",
-	$flag = delete $glob{"boot_root"};
-	if (defined $flag and $flag eq "true") {
-	    # add partition(/)
-	    ($dev,) = $self->SplitDevPath ("/");
-	    $s1_devices{$dev} = 1 if defined $dev;
-	}
+        # boot_root   => "bool:Boot from Root Partition:true",
+        $flag = delete $glob{"boot_root"};
+        if (defined $flag and $flag eq "true") {
+            # add partition(/)
+            ($dev,) = $self->SplitDevPath ("/");
+            $s1_devices{$dev} = 1 if defined $dev;
+        }
 
-	# boot_boot   => "bool:Boot from Boot Partition:true",
-	$flag = delete $glob{"boot_boot"};
-	if (defined $flag and $flag eq "true") {
-	    # add partition(/boot)
-	    ($dev,) = $self->SplitDevPath ("/boot");
-	    $s1_devices{$dev} = 1 if defined $dev;
-	}
+        # boot_boot   => "bool:Boot from Boot Partition:true",
+        $flag = delete $glob{"boot_boot"};
+        if (defined $flag and $flag eq "true") {
+            # add partition(/boot)
+            ($dev,) = $self->SplitDevPath ("/boot");
+            $s1_devices{$dev} = 1 if defined $dev;
+        }
 
-	# boot_extended   => "bool:Boot from Extended Partition:true",
-	$flag = delete $glob{"boot_extended"};
-	if (defined $flag and $flag eq "true") {
-	    # add partition(extended)
-	    $dev = $self->GetExtendedPartition($self->SplitDevPath("/boot"));
-	    $s1_devices{$dev} = 1 if defined $dev;
-	}
+        # boot_extended   => "bool:Boot from Extended Partition:true",
+        $flag = delete $glob{"boot_extended"};
+        if (defined $flag and $flag eq "true") {
+            # add partition(extended)
+            $dev = $self->GetExtendedPartition($self->SplitDevPath("/boot"));
+            $s1_devices{$dev} = 1 if defined $dev;
+        }
 
-	# convert any raid1 device entry into multiple member entries
-	foreach my $s1dev (keys %s1_devices)
-	{
-	    if ($s1dev =~ m:/dev/md\d+:) {
-		delete $s1_devices{$s1dev};
-		# Please note all non-mirror raids are silently deleted here
-		my @members = @{$self->MD2Members($s1dev) || []};
-		map { $s1_devices{$_} = 1; } @members;
-	    }
-	}
+        # convert any raid1 device entry into multiple member entries
+        foreach my $s1dev (keys %s1_devices)
+        {
+            if ($s1dev =~ m:/dev/md\d+:) {
+                delete $s1_devices{$s1dev};
+                # Please note all non-mirror raids are silently deleted here
+                my @members = @{$self->MD2Members($s1dev) || []};
+                map { $s1_devices{$_} = 1; } @members;
+            }
+        }
 
-	# FIXME: convert all impossible configurations to some viable
-	# fallback:
-	#     boot from primary xfs -> mbr
-	#     boot from extended -> set generic_mbr
-	# other options ???
+        # FIXME: convert all impossible configurations to some viable
+        # fallback:
+        #     boot from primary xfs -> mbr
+        #     boot from extended -> set generic_mbr
+        # other options ???
     }
 
     $self->milestone("found s1_devices: " . join(",",keys %s1_devices));
 
     if (scalar (keys (%s1_devices)) > 0)
     {
-	foreach my $new_dev (keys (%s1_devices))
-	{
-	    $new_dev = $self->UnixDev2GrubDev ($new_dev);
-	    if ($new_dev ne "") {
-		push @grub2_installdev, $new_dev;
-	    }
-	}
+        foreach my $new_dev (keys (%s1_devices))
+        {
+            while ((my $udev_dev, my $kern_dev) = each %{$self->{"udevmap"}}) {
+                if ($udev_dev =~ /\/by-id\// and $kern_dev eq $new_dev) {
+                    $self->milestone("Translating install device from $new_dev to $udev_dev");
+                    $new_dev = $udev_dev;
+                    last;
+                }
+            }
+
+            if ($new_dev ne "") {
+                push @grub2_installdev, $new_dev;
+            }
+        }
     }
 
     my $activate  = delete $glob{"activate"};
@@ -721,13 +677,20 @@ sub CreateLines {
     my @device_map = ();
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}}))
     {
+        # this doesn't matters, as floppy device is specified
+        # by os device now
+        if ($fw =~ m/^fd[0-9]+$/) {
+            $self->milestone ("skip floppy device for writing device.map");
+            next;
+        }
+
         my $line = "($fw)\t$unix";
         push @device_map, $line;
     }
     return {
-	Bootloader::Path::Grub2_installdevice() => $grub2_installdev,
-   Bootloader::Path::Grub2_defaultconf() => $grub2_defaultconf,
-	Bootloader::Path::Grub2_devicemap() => \@device_map,
+        Bootloader::Path::Grub2_installdevice() => $grub2_installdev,
+        Bootloader::Path::Grub2_defaultconf() => $grub2_defaultconf,
+        Bootloader::Path::Grub2_devicemap() => \@device_map,
     }
 }
 
@@ -1131,16 +1094,16 @@ sub GetSettings {
 
     chomp $saved_entry;
     if ($saved_entry eq "") {
-	$saved_entry = "0";
+        $saved_entry = "0";
     }
     if ($saved_entry =~ m/^\d+$/) {
-	my $sect = $sections->[$saved_entry];
+        my $sect = $sections->[$saved_entry];
 
-	if (defined $sect) {
-	    $globals->{"default"} = $sect->{"menuentry"};
-	}
+        if (defined $sect) {
+            $globals->{"default"} = $sect->{"menuentry"};
+        }
     } else {
-	$globals->{"default"} = $saved_entry;
+        $globals->{"default"} = $saved_entry;
     }
 
     return $ret;
@@ -1160,15 +1123,6 @@ sub SetSettings {
     my $self = shift;
     my %settings = %{+shift};
 
-    my $default  = delete $settings{"global"}->{"default"};
-
-    if (defined $default and $default ne "") {
-        $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
-        );
-    }
-
     return $self->SUPER::SetSettings (\%settings);
 }
 
@@ -1186,6 +1140,7 @@ Returns undef on fail, defined nonzero value on success.
 sub UpdateBootloader {
     my $self = shift;
     my $avoid_init = shift;
+    my %glob = %{$self->{"global"}};
 
     # backup the config file
     # it really did nothing for now
@@ -1195,6 +1150,15 @@ sub UpdateBootloader {
     if (! $avoid_init)
     {
         return $self->InitializeBootloader ();
+    }
+
+    my $default  = delete $glob{"default"};
+
+    if (defined $default and $default ne "") {
+        $self->RunCommand (
+            "/usr/sbin/grub2-set-default '$default'",
+            Bootloader::Path::BootCommandLogname()
+        );
     }
 
     return 0 == $self->RunCommand (
@@ -1257,6 +1221,15 @@ sub InitializeBootloader {
         );
 
         return 0 if (0 != $ret);
+    }
+
+    my $default  = delete $glob{"default"};
+
+    if (defined $default and $default ne "") {
+        $self->RunCommand (
+            "/usr/sbin/grub2-set-default '$default'",
+            Bootloader::Path::BootCommandLogname()
+        );
     }
 
     return 0 ==  $self->RunCommand (

@@ -32,7 +32,7 @@ update-bootloader - update/change bootloader configuration using
 
 update-bootloader [operation] [options]
 
-operation is one of --add, --remove or --refresh.
+operation is one of --add, --remove, --refresh or --reinit.
 
 valid options are --help, --man, --image <file>, --initrd <file>,
 --xen-kernel <file>, --xen, --default, --previous, --name <string>, --force,
@@ -59,7 +59,11 @@ Needs a call to --refresh to take effect.
 
 =item B<--refresh>
 
-activate the new config e.g. write boot loader to disk
+activate the new config and write boot loader to disk if necessary
+
+=item B<--reinit>
+
+reinitize the bootloader by refreshing config and reinstalling it
 
 =back
 
@@ -172,6 +176,7 @@ my $cmdline = join " ", ($0, @ARGV);
 GetOptions (\%oper,
     'add|a'    	 ,
     'refresh'    ,
+    'reinit'     ,
     'remove|r' 	 ,
     'examinembr|e=s', 
     'default|d'  => \$opt_default,
@@ -189,7 +194,7 @@ GetOptions (\%oper,
 pod2usage(1) if $opt_help;
 pod2usage(-exitstatus => 0, -verbose => 2) if $opt_man;
 
-die("Specify exactly one operation, either 'add', 'remove' or 'refresh'\n")
+die("Specify exactly one operation, either 'add', 'remove', 'refresh' or 'reinit'\n")
     unless scalar keys(%oper) == 1;
 
 die("Option 'default' is only allowed for operation 'add'\n")
@@ -253,15 +258,10 @@ if ($opt_previous) {
 }
 
 # grub2 handles input options differently here ..
-# when refresh, it will update both installation and config ($avoid_init=0)
-# when add or remove, only update config ($avoid_init=1)
+# when add or remove, only update config ($avoid_init=1) by calling grub2-mkconfig
 if (Bootloader::Tools::GetBootloader() =~ /^(grub2|grub2-efi)$/)
 {
-	if (defined $oper{refresh}) {
-	    # Always set $avoid_init=0 to guarentee bootloader installed (bnc#759224)
-	    my $ret = UpdateBootloader(0);
-	    exit 1 if ( !$ret );
-	} elsif (defined $oper{add} || defined $oper{remove}) {
+	if (defined $oper{add} || defined $oper{remove}) {
 	    # The add or remove should trigger config update (bnc#780622)
 	    # Set $avoid_init=1 to avoid installing bootloader
 	    my $ret = UpdateBootloader(1);
@@ -271,7 +271,6 @@ if (Bootloader::Tools::GetBootloader() =~ /^(grub2|grub2-efi)$/)
 	# clear handled option
 	delete $oper{add};
 	delete $oper{remove};
-	delete $oper{refresh};
 }
 
 # FIXME: these section names should be unified somehow together with multi
@@ -510,8 +509,25 @@ if (defined $oper{remove}) {
 
 }
 
+# The function refresh will update config and reinstall if necessary
+# Usually used by package when they want bootloader config be written and take effect
 if (defined $oper{refresh}) {
-    # Always set $avoid_init=0 to guarentee bootloader installed (bnc#759224)
+    my $loader = Bootloader::Tools::GetBootloader();
+    my $ret;
+
+    if ($loader eq "lilo") {
+        # set avoid_init=0 because lilo requires reinstall for any config change
+        $ret = UpdateBootloader(0);
+    } else {
+        # set avoid_init=1 to only update config for the rest (ie grub etc)
+        $ret = UpdateBootloader(1);
+    }
+    exit 1 if ( !$ret );
+}
+
+# The function reinit will reinitialize bootloader by reinstalling and updating it's config
+# Usually used when updating bootloader package
+if (defined $oper{reinit}) {
     my $ret = UpdateBootloader(0);
     exit 1 if ( !$ret );
 }
