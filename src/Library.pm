@@ -182,7 +182,7 @@ sub SetLoaderType
   }
   elsif($bootloader eq "grub2") {
     require Bootloader::Core::GRUB2;
-    $loader = Bootloader::Core::GRUB2->new($self, $loader);
+    $loader = Bootloader::Core::GRUB2->new($self, $loader, $arch);
   }
   elsif($bootloader eq "grub2-efi") {
     require Bootloader::Core::GRUB2EFI;
