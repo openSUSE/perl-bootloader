@@ -112,7 +112,10 @@ sub WriteFile
 
   if(open(my $fh, '>', $file)) {
     print $fh $l;
-    close $fh;
+    if(!close($fh)) {
+      $self->error("Failed to close $file: $!");
+      $ok = 0;
+    }
   }
   else {
     $self->error("Failed to open $file: $!");
