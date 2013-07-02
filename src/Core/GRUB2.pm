@@ -333,7 +333,7 @@ sub new
   my $self = shift;
   my $ref = shift;
   my $old = shift;
-  my $arch = shift;
+  my $arch = `uname --hardware-platform`;
   my $target;
 
   my $loader = $self->SUPER::new($ref, $old);
