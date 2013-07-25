@@ -83,7 +83,7 @@ sub GetMetaData() {
 
     # one of iseries, prep, chrp, pmac_old, pmac_new ...
     my $lilo = Bootloader::Path::Lilo_lilo();
-    my $arch = qx{ $lilo --get-arch };
+    my $arch = qx{ $lilo --get-arch 2>/dev/null };
     chomp( $arch );
     $arch = "pmac" if "$arch" =~ /^pmac/;
 

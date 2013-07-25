@@ -1046,47 +1046,44 @@ list of section names as a side effect. Optional parameter orig_name is
 intended for internal use of the loader specific modules
 
 =cut
+
+# FIXME
+#
+# This is essentially wrong. The names must be created correctly, not fixed later.
+# Also, the 'default' value doesn't get auto adjusted.
+# IMO, if there really _is_ a dup entry for whatever reason, the config should be
+# left alone.
  
 # string FixSectionName (string name, list<string> existing, optional orig_name)
-sub FixSectionName {
-    my $self = shift;
-    my $name = shift;
-    my $names_ref = shift;
-    my $orig_name = shift || $name;
+sub FixSectionName
+{
+  my $self = shift;
+  my $name = shift;
+  my $names_ref = shift;
 
-    my $index = 0;	# 0 means not-found, 1 is_unique, else index to be
-    			# appended
-    my $name_ix = -1;
+  $self->milestone("orig = $_[0], name = $name, list = ", $names_ref);
 
-    # make the section name unique, if you find a duplicate then make it
-    # distinguishable by appending an underscore followed by a number 
-    for (my $i = 0; $i <= $#$names_ref; $i++) {
-	$_ = $names_ref->[$i];
-	$name_ix = $i
-	    if $_ eq $orig_name; # remember index of original name
-	# Does the name start with $name? -> cut off and calc $index
-	if (s/^\Q$name\E//) {
-	    if ($_ eq '') {
-		# count one up for every identical entry, should be
-		# maximum one but who knows ...
-		$index++;
-		next;
-	    }
-	    s/^_//;	# cut off an optional leading underscore
-	    if (/^\d*$/) {
-		my $new_index = $_ + 1;	# interprete the remainder string as
-	    				# integer index and try next number
-		# finally take the maximum as index to append to $name
-		$index = $new_index if $index < $new_index;
-	    }
-	}
+  my $orig_name = shift || $name;
+
+  # only if ther's actuall a duplicate
+  if(grep { $_ eq $name } @$names_ref > 1) {
+    my $max_idx = undef;
+    for my $s (@$names_ref) {
+      $max_idx = $2 + 0 if $s =~ /^$name(_(\d+))?$/ && $2 >= $max_idx;
     }
-    
-    # update $name and list of section names if neccessary
-    $name .= "_" . $index if $index>1;
-    $names_ref->[$name_ix] = $name if $name_ix>=0;
 
-    return $name;
+    $name .= "_" . ($max_idx + 1) if defined $max_idx;
+
+    if($name ne $orig_name) {
+      for(my $i = 0; $i < @$names_ref; $i++) {
+        $names_ref->[$i] = $name, last if $names_ref->[$i] eq $orig_name;
+      }
+    }
+  }
+
+  $self->milestone("return $name, list = ", $names_ref);
+
+  return $name;
 }
 
 =item
