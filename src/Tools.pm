@@ -246,35 +246,47 @@ See InitLibrary function for example.
 =cut
 
 # FIXME: this has to be read through yast::storage
-sub ReadPartitions {
-    my $sb = "/sys/block";
-    my $mounted = undef;
-    # cache result from dmsetup call
-    my $cache = {};
+sub ReadPartitions
+{
+  my $self = $lib_ref;
 
-    unless (-e $sb) {
-      $mounted = `mount /sys`;
-      $lib_ref->milestone("Mount /sys");
-    }
-    opendir(BLOCK_DEVICES, "$sb") || 
-	die ("ReadPartitions(): Failed to open dir $sb");
+  my $sb = Bootloader::Path::Prefix("/sys/block");
+  my $mounted;
 
-    # get disk devices
-    my @disks = grep {
-	!m/^\./ && (( -r "$sb/$_/ext_range" and qx{ cat $sb/$_/ext_range } > 1) || ( -r "$sb/$_/range" and qx{ cat $sb/$_/range } > 1))
-    } readdir(BLOCK_DEVICES);
-    closedir BLOCK_DEVICES;
+  # get partition info for all partitions on all @disks
+  my @devices = ();
 
-    $lib_ref->milestone("disks =", \@disks);
+  my @disks;
 
-    # get partition info for all partitions on all @disks
-    my @devices = ();
+  # *** FIXME ***
+  # This is weird stuff, we should not do it. It's hardly our task to fix
+  # the system setup.
+  if (! -e $sb) {
+    $self->error("/sys not mounted");
+    system "mount /sys";
+    $mounted = 1;
+  }
 
-    # Add DM RAID Partitions to @devices
-    if (DMRaidAvailable()){
-        my $dev_ref = ReadDMRaidPartitions();   
-        push (@devices, @{$dev_ref});
-    }
+  # get disk devices
+  if(opendir(my $dh, "$sb")) {
+    @disks = grep {
+      !m/^\./ &&
+      ($self->ReadNumber("$sb/$_/ext_range") > 1 || $self->ReadNumber("$sb/$_/range") > 1)
+    } readdir($dh);
+
+    closedir $dh;
+  }
+  else {
+    $self->error("Failed to open $sb");
+
+    return \@devices;
+  }
+
+  $self->milestone("disks =", \@disks);
+
+  # add DM RAID partitions to @devices
+  my $dm_devs = ReadDMRaidPartitions();   
+  push @devices, @$dm_devs if defined $dm_devs;
 
     foreach my $disk (@disks)
     {
@@ -322,7 +334,7 @@ sub ReadPartitions {
 	    }
 	}
 
-        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk, $cache)){
+        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)) {
 	    # get partitions of $disk
 	    if(!opendir(BLOCK_DEVICES, "$sb/$disk")) {
 	        # md* devices may vanish as a result of the parted call above
@@ -376,11 +388,9 @@ sub ReadPartitions {
 	}
     }
 
-    if (defined $mounted){
-      $mounted = `unmount /sys`;
-    }
+  system "unmount /sys" if $mounted;
 
-    return \@devices;
+  return \@devices;
 }
 
 =item
@@ -488,7 +498,7 @@ sub DMRaidAvailable
   my $r = $self->{cache}{DMRaidAvailable};
 
   if(defined $r) {
-    $self->milestone("DMRaidAvailable (cached) = $r");
+    $self->debug("DMRaidAvailable (cached) = $r");
     return $r;
   }
 
@@ -537,17 +547,24 @@ partX-dmraid-<strange name>
 
 =cut
 
-#FIXME: this has to be done through Storage
-sub ReadDMRaidPartitions {
+# FIXME: this has to be done through Storage
+# FIXME: do such devices really exist?
 
-    my @dmdisks = ();
-    my @dmparts = ();
-    my $dmdev;
+sub ReadDMRaidPartitions
+{
+  my $self = $lib_ref;
 
-    my $logname = Bootloader::Path::Logname();
+  return undef if !DMRaidAvailable();
 
-    open(DMDEV, "$dmsetup info -c --noheadings -o name |") || 
-	die ("ReadDMRaidPartitions(): dmsetup failed.");
+  my @dmdisks = ();
+  my @dmparts = ();
+  my $dmdev;
+
+  if(!open(DMDEV, "$dmsetup info -c --noheadings -o name |")) {
+    $self->error("dmsetup failed");
+
+    return undef;
+  }
 
     while (<DMDEV>) {
 	$dmdev = $_;
@@ -555,18 +572,14 @@ sub ReadDMRaidPartitions {
 
 	#FIXME: I should not need to do this twice
 	if ($dmdev !~ m/part/) {
-            open (LOG, ">>$logname");
-            print LOG ("Find raid partition $dmdev\n");
-            close LOG;
+            $self->milestone("found raid disk $dmdev");
 	    # $dmdev is the base device
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmdisks, $dmdev;
 	}
 	#FIXME: need to check what needs to be removed
 	else {
-            open (LOG, ">>$logname");
-            print LOG ("Find raid disk $dmdev\n");
-            close LOG;
+            $self->milestone("found raid part $dmdev");
 	    $dmdev = "/dev/mapper/" . $dmdev;
 	    push @dmparts, $dmdev;
 	}
@@ -590,25 +603,35 @@ sub ReadDMRaidPartitions {
 	}
     }
 
-    return \@devices;
+  $self->milestone("dmraid partitions = ", \@devices);
+
+  return \@devices;
 }
 
 =item
 C<< $part_ref = Bootloader::Tools::ReadDMRaidDisks (); >>
 
-returns a refenrence to a list of DMRaid devices
+returns a reference to a list of DMRaid devices
 
 =cut
 
-sub ReadDMRaidDisks {
+# FIXME: seems to be unused
 
-    my @dmdisks = ();
-    my @dmparts = ();
-    my $dmdev;
+sub ReadDMRaidDisks
+{
+  my $self = $lib_ref;
 
+  return undef if !DMRaidAvailable();
 
-    open(DMDEV, "$dmsetup info -c --noheadings -oname |") || 
-	die ("ReadDMRaidDisks(): dmsetup failed.");
+  my @dmdisks = ();
+  my @dmparts = ();
+  my $dmdev;
+
+  if(!open(DMDEV, "$dmsetup info -c --noheadings -oname |")) {
+    $self->error("dmsetup failed");
+
+    return undef;
+  }
 
     while(<DMDEV>){
         $dmdev = $_;
@@ -620,7 +643,10 @@ sub ReadDMRaidDisks {
             push @dmdisks, $dmdev;
         }
     }
-    return \@dmdisks;
+
+  $self->milestone("dmraid disks = ", \@dmdisks);
+
+  return \@dmdisks;
 }
 
 =item
@@ -631,41 +657,26 @@ returns 1 if yes, 0 if no
 
 =cut
 
-sub IsDMRaidSlave {
-    my $disk = shift;
-    my $cache = shift;		# cache dmsetup results
+sub IsDMRaidSlave
+{
+  my $self = $lib_ref;
+  my $dev = shift;
 
-    unless (DMRaidAvailable() and -e $dmsetup) {
-        return 0;
-    }
+  my $r = $self->{cache}{IsDMRaidSlave}{$dev};
+  
+  if(defined $r) {
+    $self->debug("IsDMRaidSlave($dev) (cached) = $r");
 
-    my $majmin_disk = Udev2MajMin($disk);
-    chomp($majmin_disk);
-    my @dmparts = ();
+    return $r;
+  }
 
-    if(!$cache->{ok}) {
-      $cache->{ok} = 1;
+  my @d = glob Bootloader::Path::Prefix("/sys/block/$dev/holders/*");
 
-      my @dm_devs = qx{$dmsetup info -c --noheadings -o name | grep -v part};
-      chomp @dm_devs;
+  $r = @d && -d $d[0] ? 1 : 0;
 
-      if($dm_devs[0] !~ /No devices found/) {
-        for my $dmdisk (@dm_devs) {
-          my @tables = qx{$dmsetup table '$dmdisk'};
-          chomp @tables;
+  $self->milestone("IsDMRaidSlave($dev) = $r");
 
-          for my $line (@tables) {
-            my @content = split(/ /, $line);
-
-            for my $majmins (@content) {
-              $cache->{ids}{$majmins} = 1 if $majmins =~ /^\d+:\d+$/;
-            }
-          }
-        }
-      }
-    }
-
-    return $cache->{ids}{$majmin_disk} ? 1 : 0;
+  return $self->{cache}{IsDMRaidSlave}{$dev} = $r;
 }
 
 =item
@@ -674,24 +685,28 @@ C<<  Bootloader::Tools:IsDMDevice ($device); >>
 returns 1 if $device is a Devicemapper device,
 otherwise 0.
 
+$device is the name as it appears in /sys/block (no leading /dev).
+
 =cut
 
-sub IsDMDevice {
-    my $dev = shift;
+sub IsDMDevice
+{
+  my $self = $lib_ref;
+  my $dev = shift;
 
-    unless (-e $dmsetup) {
-        return 0;
-    }
+  my $r = $self->{cache}{IsDMDevice}{$dev};
+  
+  if(defined $r) {
+    $self->debug("IsDMDevice($dev) (cached) = $r");
 
-    my $cmd = "$dmsetup info -c --noheadings -oname '$dev'";
-    if (my $test = qx{$cmd 2>/dev/null}){
-        chomp $test;
+    return $r;
+  }
 
-        if ($dev =~ m/$test/){
-            return 1;
-        }
-    }
-    return 0;
+  $r = -f Bootloader::Path::Prefix("/sys/block/$dev/dm/name") ? 1 : 0;
+
+  $self->milestone("IsDMDevice($dev) = $r");
+
+  return $self->{cache}{IsDMDevice}{$dev} = $r;
 }
 
 =item
@@ -719,6 +734,8 @@ returns a udev device (dm-X)
 
 =cut
 
+# FIXME: seems to be unused
+
 sub Bootloader::Tools::DMDev2Udev {
 
     my $dmdev = shift;
@@ -735,6 +752,8 @@ takes a devicemapper device as reported from dmsetup
 returns a string containing major:minor
 
 =cut
+
+# FIXME: seems to be unused
 
 sub Bootloader::Tools::DMDev2MajMin {
 
@@ -784,6 +803,8 @@ returns a string containing the udev device as reported
 by udevadm info
 
 =cut
+
+# FIXME: seems to be unused
 
 sub Bootloader::Tools::MajMin2Udev {
 

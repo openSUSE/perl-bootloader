@@ -20,6 +20,9 @@ C<< $files_ref = Bootloader::FileIO->ReadFiles(\@file_list); >>
 
 C<< $lines_ref = Bootloader::FileIO->ReadFile($file_name); >>
 
+C<< $number = Bootloader::FileIO->ReadNumber($file_name); >>
+
+C<< $lines_ref = Bootloader::FileIO->WriteFile($file, $lines); >>
 
 =head1 DESCRIPTION
 
@@ -86,6 +89,26 @@ sub ReadFile
   }
 
   return $lines;
+}
+
+
+=item
+C<< $lines_ref = Bootloader::FileIO->ReadNumber($file_name); >>
+
+Reads a file and expects the first line to start with a number.
+
+=cut
+
+sub ReadNumber
+{
+  my $self = shift;
+  my $file = shift;
+
+  open(my $fd, $file);
+  my $num = <$fd> + 0;
+  close $fd;
+
+  return $num;
 }
 
 
