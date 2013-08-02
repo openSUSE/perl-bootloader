@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Aug  2 10:08:27 CEST 2013 - snwint@suse.de
+
+- fix duplicate boot label handling (bnc #828498)
+- speed up device scanning code by avoiding external program calls (bnc #823601)
+- propagate file close error (bnc #820339)
+- 0.4.89.56
+
+-------------------------------------------------------------------
 Mon Apr 15 15:55:38 CEST 2013 - snwint@suse.de
 
 - use either on or off but not auto for secure boot setting (bnc #812008)
