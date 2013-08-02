@@ -1604,9 +1604,13 @@ sub AddSection {
 			     } keys %{$glob_ref}) . "'\n"
 		       );
 
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
+  if($lib_ref->WriteSettings(1)) {
+    # avoid initialization but write config to the right place
+    $lib_ref->UpdateBootloader(1);
+  }
+  else {
+    $lib_ref->error("An error occurred while writing the settings.");
+  }
 }
 
 
