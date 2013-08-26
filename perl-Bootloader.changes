@@ -8,6 +8,11 @@ Mon Feb 25 16:22:22 CET 2013 - snwint@suse.de
 - 0.708
 
 -------------------------------------------------------------------
+Tue Feb 12 09:26:38 UTC 2013 - coolo@suse.com
+
+- require coreutils for %post
+
+-------------------------------------------------------------------
 Mon Feb  4 14:50:59 CET 2013 - snwint@suse.de
 
 - fix undefined value warning (#799644)
