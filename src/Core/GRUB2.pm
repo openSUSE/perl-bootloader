@@ -308,12 +308,15 @@ sub new
     my $self = shift;
     my $ref = shift;
     my $old = shift;
+    my $arch = `uname --hardware-platform`;
+    my $target;
 
     my $loader = $self->SUPER::new($ref, $old);
     bless($loader);
 
-    # Do we support any architecture besides x86?
-    my $target = "i386-pc";
+    # Set target based on architecture (ppc or x86)
+    $target = "i386-pc" if $arch =~ /(i386|x86_64)/;
+    $target = "powerpc-ieee1275" if $arch =~ /(ppc|ppc64)/;
     $loader->{'target'} = $target;
 
     $loader->milestone("Created GRUB2 instance for target $target");
