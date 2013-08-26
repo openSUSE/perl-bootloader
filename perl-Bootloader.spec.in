@@ -58,7 +58,7 @@ sed -i '/ZIPL/D;/PowerLILO/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloade
 %endif
 %endif
 %ifarch ppc ppc64
-rm -f $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*,GRUB*}
+rm -f $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*,GRUB.*}
 %if 0%{?suse_version} == 0 || 0%{?suse_version} <= 1130
 sed -i '/ZIPL/D;/ELILO/D;/\/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloader/.packlist
 %endif
