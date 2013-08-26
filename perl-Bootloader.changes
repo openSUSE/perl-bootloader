@@ -1,4 +1,27 @@
 -------------------------------------------------------------------
+Mon Aug 26 14:29:03 CEST 2013 - snwint@suse.de
+
+- update-bootloader refresh cleanup and introduce reinit
+- better way to know kerenl device of physical drive
+- fix grub2-set-default error during installation
+- remove floppy in device map
+- clean up unused functions and variables
+- use grub2-probe to get device map
+- unify indention
+- require coreutils for %post
+- 0.709
+
+-------------------------------------------------------------------
+Tue Jul  2 08:29:00 UTC 2013 - dvaleev@suse.com
+
+- Enable grub2 installation on PowerPC 
+
+-------------------------------------------------------------------
+Tue Jul  2 08:18:58 UTC 2013 - dvaleev@suse.com
+
+- Package grub2 for PowerPC 
+
+-------------------------------------------------------------------
 Mon Feb 25 16:22:22 CET 2013 - snwint@suse.de
 
 - support uefi secureboot
