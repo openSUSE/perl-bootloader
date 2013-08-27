@@ -308,7 +308,7 @@ sub GrubDev2UnixDev
     }
     if(!$part_ok) {
       # partition not found, making something up...
-      if($dev =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}$#) {
+      if($dev =~ m#^/dev/(?:xv|das|[ehpsvx])d[a-z]{1,2}$#) {
         $u_dev .= "";
       }
       elsif($dev =~ m#^/dev/disk/#) {
@@ -424,7 +424,7 @@ sub UnixDev2GrubDev
     $partition = undef;
 
     if(
-      $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
+      $original =~ m#^/dev/(?:xv|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
       $original =~ m#^/dev/\S+\-part(\d+)$# ||
       $original =~ m#^/dev(?:/[^/]+){1,2}p(\d+)$#
     ) {
