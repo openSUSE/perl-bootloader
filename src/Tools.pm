@@ -985,7 +985,7 @@ C<< Bootloader::Tools::GetGlobals(); >>
 =cut
 
 sub GetGlobals() {
-    return $lib_ref->GetGlobals();
+    return $lib_ref->GetGlobalSettings();
 }
 
 
