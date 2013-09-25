@@ -88,13 +88,22 @@ sub GrubCfgSections {
                 $sect_info{"usage"} = "linux";
             }
 
-            if ($cfg2 =~ /^\s+linux\s+([^\s]+)\s*(.*)$/m) {
-                my $append = $2;
-                $sect_info{"image"} = $1;
+            # bnc#824609 - installation boot parameters not written to GRUB_CMDLINE_LINUX_DEFAULT
+            # we need to match linuxefi command, otherwise the kernel append will lost
+            if ($cfg2 =~ /^\s+(linux|linuxefi)\s+([^\s]+)\s*(.*)$/m) {
+                my $append = $3;
+                $sect_info{"image"} = $2;
+                my $command = $1;
 
                 if ($append =~ /root=/) {
                     $append =~ s/root=([^\s]+)\s*//;
                     $sect_info{"root"} = $1;
+                }
+
+                # the ro is part of linuxefi entries created by grub2 scripts
+                # not part of kernel append by yast
+                if ( $command eq "linuxefi" ) {
+                    $append =~ s/^ro\s*//;
                 }
 
                 if ($append =~ /vga=/) {
