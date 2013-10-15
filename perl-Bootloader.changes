@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 15 13:09:05 CEST 2013 - snwint@suse.de
+
+- more flexible GetProduct() uses /etc/os-release (bnc #845606)
+- 0.711
+
+-------------------------------------------------------------------
 Tue Oct  1 09:10:04 CEST 2013 - snwint@suse.de
 
 - grub2-efi: fix installation boot parameters not written

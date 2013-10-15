@@ -23,6 +23,8 @@ my ($opt_image, $opt_initrd, $opt_name, $opt_xen_name, $opt_failsafe, $opt_xen_k
     = ('','','','','',undef);
 my $add_product = 0;
 
+my $logger;
+
 =head1 NAME
 
 update-bootloader - update/change bootloader configuration using
@@ -122,41 +124,64 @@ allowed together with --add operation
 
 =cut
 
-# Get product name and version
-# If zypper is not available or versions is empty, use /etc/SuSE-release instead
-# linux is last possible fallback
- 
+# Get product name.
+# If zypper is not available use /etc/products.d/baseproduct and /etc/SuSE-release.
 sub GetProduct {
-    my $namever;
-    my $loader = Bootloader::Tools::GetBootloader();
-     
-    # first try: use zypper
-    if ( -f '/usr/bin/zypper' ){
-      my $zypper_out = qx{zypper --terse tos -l};
-      if ($zypper_out =~ m/^labelLong\s*(\S.*\S)\s*\nlabelShort\s*(\S.*\S)[\s\n]*$/){
-        return $1 if ($1 ne "" && ($loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi"));
-        return $2 if ($2 ne "");
-      }
+  my $prod;
+  my $src;
+  my $loader = Bootloader::Tools::GetBootloader();
+  my $long_names_ok = $loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi";
+ 
+  # 1st try: ask zypper
+  # note: may fail as older zypper versions don't support '--label'
+  if(-x '/usr/bin/zypper') {
+    if(`zypper --terse targetos --label 2>/dev/null` =~ /^labelLong\s*(.*?)\s*\nlabelShort\s*(.*?)\s*$/) {
+      $prod = $1 ne "" && $long_names_ok ? $1 : $2;
+      $src = "zypper";
     }
+  }
 
-
-    # Second try: Is there a usable /etc/SuSE-release?
-    # This should really not be used anymore, as the syntax changed
-    # no 'SP1' in the output. 
-    if (open(RELEASE, "</etc/SuSE-release") && ($loader eq "grub" || $loader eq "grub2" || $loader eq "grub2-efi")) {
-	# first line is sufficient
-	$namever = <RELEASE>;
-
-	# delete everything starting with the first parenthesis
-	$namever =~ s/\s*\(.*//; 
-
-	close(RELEASE);
-	chomp $namever;
-	return "$namever";
+  # 2nd try: read /etc/products.d/baseproduct
+  if($prod eq "" && open(my $f, "</etc/products.d/baseproduct")) {
+    my $tag = $long_names_ok ? "summary" : "shortsummary";
+    while(<$f>) {
+      $prod = $1 if /<$tag>\s*(.*?)\s*<\/$tag>/o;
     }
+    close $f;
+    $src = "baseproduct";
+  }
 
-    # the last line of defense ...
-    return "Linux";
+  # 3rd try: read /etc/os-release
+  if($prod eq "" && $long_names_ok && open(my $f, "</etc/os-release")) {
+    while(<$f>) {
+      $prod = $1, last if /^\s*PRETTY_NAME\s*=(.*?)\(/;
+    }
+    close $f;
+    $prod =~ s/^\s*"?\s*//;
+    $prod =~ s/\s*"?\s*$//;
+    $prod = ">$prod<";
+    $src = "os-release";
+  }
+
+  # 4th try: read /etc/SuSE-release
+  if($prod eq "" && $long_names_ok && open(my $f, "</etc/SuSE-release")) {
+    ($prod = <$f>) =~ s/\s*\(.*//s;
+    while(<$f>) {
+      $prod .= " SP$1", last if /^\s*PATCHLEVEL\s*=\s*(\d+)/ && $1 > 0;
+    }
+    close $f;
+    $src = "SuSE-release";
+  }
+
+  # the last line of defense...
+  if($prod eq "") {
+    $prod = "Linux";
+    $src = "fallback";
+  }
+
+  $logger->milestone("update-bootloader::GetProduct($src) = $prod");
+
+  return $prod;
 }
 
 sub test_gettext {
@@ -203,7 +228,7 @@ die("Option 'default' is only allowed for operation 'add'\n")
 die("Option 'force-default' is only allowed for operation 'add'\n")
     if ($opt_force_default and not defined $oper{add});
     
-my $logger = Bootloader::Library->new();
+$logger = Bootloader::Library->new();
 
 $logger->milestone($cmdline);
 
