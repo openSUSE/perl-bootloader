@@ -121,6 +121,9 @@ sub new
   elsif($c1 eq 'update-bootloader') {
     $name = 'pbl';
   }
+  elsif($c1 eq 'pbl-yaml') {
+    $name = 'pbl-yaml';
+  }
   elsif($c0 eq 'Bootloader::Tools') {
     $name = 'libpbl';
   }
