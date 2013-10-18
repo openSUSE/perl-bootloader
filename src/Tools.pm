@@ -750,11 +750,13 @@ C<< Bootloader::Tools::InitLibrary (); >>
 initializes the bootloader configuration library. Fills its internal structures
 needed for it to run properly.
 
+Optionally takes an existing library state as argument.
+
 =cut
 
 sub InitLibrary
 {
-  $lib_ref = Bootloader::Library->new();
+  $lib_ref = shift // Bootloader::Library->new();
 
   my $um = GetDeviceMapping();
   my $mp = ReadMountPoints($um);
@@ -776,6 +778,12 @@ sub InitLibrary
   $lib_ref->milestone("done");
 
   return $lib_ref;
+}
+
+
+sub SetState
+{
+  $lib_ref = shift;
 }
 
 
