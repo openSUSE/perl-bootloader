@@ -57,8 +57,12 @@ sub StartLog
 {
   my $self = shift;
 
+  delete $self->{logger}{log_fh};
+  delete $self->{logger}{log_fh_old};
+  delete $self->{logger}{log_fh_yast};
+  delete $self->{logger}{log_is_stderr};
+
   $self->{logger}{session_id} = $self->{session_id};
-  $self->{logger}{logs} = [];
   $self->{logger}{log_level} = $ENV{Y2DEBUG} ? 0 : 1;
 
   $self->{logger}{yast_prefix} = ((uname())[1] || "unknown") . "($$) [pbl]";
@@ -123,10 +127,7 @@ sub GetLogRecords
 {
   my $self = shift;
 
-  my $ret = $self->{logger}{logs};
-  $self->{logger}{logs} = [];
-
-  return $ret;
+  return [];
 }
 
 
@@ -174,15 +175,6 @@ sub __log
     }
 
     $message .= "\n$x";
-  }
-
-  # don't keep logs if we can log to y2log directly
-  if(!$self->{logger}{log_fh_yast}) {
-    push @{$self->{logger}{logs}}, {
-      message => $message,
-      prefix => $prefix,
-      level => $level_name,
-    };
   }
 
   if($self->{logger}{log_fh}) {
