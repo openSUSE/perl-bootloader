@@ -15,7 +15,7 @@ BUILD_ROOT=/tmp/buildsystem.$(HOST).root
 BUILD_DIR=$(BUILD_ROOT)/usr/src/packages/RPMS
 SVNREP=.
 DISTMAIL=/work/src/bin/distmail
-BRANCH=master
+BRANCH=distribute_pbl_yaml
 
 PM_FILES = $(shell find src -name '*.pm')
 
@@ -43,6 +43,7 @@ install: check
 	make install_vendor
 	@mkdir -p $(DESTDIR)/sbin
 	@install -m 755 update-bootloader $(DESTDIR)/sbin
+	@install -m 755 pbl-yaml $(DESTDIR)/sbin
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
 	@install -m 755 bootloader_entry $(DESTDIR)/usr/lib/bootloader
 	@install -d -m 755 $(DESTDIR)/boot
