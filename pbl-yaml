@@ -69,17 +69,18 @@ $logger = $pbl_state;
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # process all commands
-# command format: 'foo=Func(bar)' (no spaces!)
+# command format: 'foo.yaml=Func(/tmp/bar.yaml,/tmp/bar2.yaml)' (no spaces!)
 # foo and bar are optional
 
 for my $cmd (@ARGV) {
   if($cmd =~ /^(([^=]+)=)?([\w]+)\(([^()]*)\)$/) {
     my $res_file = $2;
     my $func = $3;
-    my $arg_file = $4;
+    my @arg_file = split(',', $4);
 
-    my @args;
-    @args = (ReadYAML($arg_file)) if $arg_file ne "";
+    my @arg1, my @arg2;
+    @arg1 = (ReadYAML(@arg_file[0])) if @arg_file[0] ne "";
+    @arg2 = (ReadYAML(@arg_file[1])) if scalar(@arg_file) > 1;
 
     my $res;
 
@@ -90,11 +91,11 @@ for my $cmd (@ARGV) {
       }
       else {
         Bootloader::Tools::SetState($pbl_state);
-        eval "\$res = Bootloader::Tools::$func(\@args)";
+        eval "\$res = Bootloader::Tools::$func(\@arg1,\@arg2)";
       }
     }
     elsif(exists $Bootloader::Library::{$func}) {
-      $res = $pbl_state->$func(@args);
+      $res = $pbl_state->$func(@arg1,@arg2);
     }
     else {
       $logger->error("$func: no such function");
