@@ -147,7 +147,7 @@ Options:
 
 Commands:
 
-  COMMANDS have the form 'RESULT=FUNCTION(ARGUMENT) or RESULT=FUNCTION(@ARGUMENTS)'.
+  COMMANDS have the form 'RESULT=FUNCTION(ARGUMENT) or RESULT=FUNCTION(\@ARGUMENTS)'.
   
   ARGUMENT is a YAML file containing a single argument. ARGUMENTS is a YAML
   file containing an array of arguments. The return value of FUNCTION will

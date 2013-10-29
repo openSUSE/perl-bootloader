@@ -41,8 +41,9 @@ install: check
 	touch Makefile.PL ; \
 	perl -Ilib -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader", VERSION_FROM => "lib/Bootloader/Library.pm" )' ; \
 	make install_vendor
-	@mkdir -p $(DESTDIR)/sbin
+	@mkdir -p $(DESTDIR)/sbin $(DESTDIR)/usr/sbin
 	@install -m 755 update-bootloader $(DESTDIR)/sbin
+	@install -m 755 pbl-yaml $(DESTDIR)/usr/sbin
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
 	@install -m 755 bootloader_entry $(DESTDIR)/usr/lib/bootloader
 	@install -d -m 755 $(DESTDIR)/boot
