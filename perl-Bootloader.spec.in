@@ -90,6 +90,7 @@ chmod 600 /var/log/pbl.log
 /var/adm/perl-modules/perl-Bootloader
 %endif
 /sbin/update-bootloader
+/sbin/pbl-yaml
 /usr/lib/bootloader
 /boot/boot.readme
 %dir %attr(0700,root,root) /var/log/YaST2
