@@ -43,6 +43,7 @@ GetOptions(
   'state-in=s'   => \$opt_state_in,
   'state-out=s'  => \$opt_state_out,
   'state=s'      => sub { $opt_state_out = $opt_state_in = $_[1] },
+  'version'      => sub { print "$Bootloader::Library::VERSION\n"; exit 0 },
   'help'         => sub { Usage 0 },
 ) || Usage 1;
 
@@ -142,7 +143,8 @@ Options:
   --state-in FILE    Read perl-Bootloader state from FILE.
                      If it can't be read, a new state is created.
   --state-out FILE   Store final perl-Bootloader state in FILE.
-  --state FILE       Use FILE for reading and storing the state
+  --state FILE       Use FILE for reading and storing the state.
+  --version          Print perl-Bootloader version.
   --help             Write this help text.
 
 Commands:
