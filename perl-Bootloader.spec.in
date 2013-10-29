@@ -39,6 +39,15 @@ Authors:
     Alexander Osthof <aosthof@suse.de>
     Josef Reidinger <jreidinger@suse.cz>
 
+%package YAML
+Requires:       perl-YAML-LibYAML
+Requires:       %{name} = %{version}
+Summary:        YAML interface for perl-Bootloader
+
+%description YAML
+A command line interface to perl-Bootloader using YAML files for input and output.
+
+
 %prep
 %setup -q
 
@@ -95,4 +104,8 @@ chmod 600 /var/log/pbl.log
 %dir %attr(0700,root,root) /var/log/YaST2
 %ghost %attr(0600,root,root) /var/log/pbl.log
 
-%changelog -n perl-Bootloader
+%files YAML
+%defattr(-, root, root)
+%{_sbindir}/pbl-yaml
+
+%changelog
