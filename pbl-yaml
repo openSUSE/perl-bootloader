@@ -138,11 +138,11 @@ Options:
 
 Commands:
 
-  COMMANDS have the form 'RESULT=FUNCTION(ARGUMENT)'.
+  COMMANDS have the form 'RESULT=FUNCTION(ARGUMENTS)'.
   
-  ARGUMENT is a YAML file containing and array for arguments. The return
-  value of FUNCTION will be stored in RESULT. RESULT and ARGUMENT are
-  optional.
+  ARGUMENTS is a YAML file containing an array of arguments or a single
+  argument. The return value of FUNCTION will be stored in RESULT. RESULT
+  and ARGUMENTS are optional.
 
   FUNCTION is a function from either Bootloader::Tools or Bootloader::Library.
 
