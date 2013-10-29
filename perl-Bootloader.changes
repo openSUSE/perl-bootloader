@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Oct 29 15:13:22 CET 2013 - snwint@suse.de
+
+- add pbl-yaml: a command line interface to perl-Bootloader using YAML files
+  for input and output
+- 0.800
+
+-------------------------------------------------------------------
 Tue Oct 15 13:09:05 CEST 2013 - snwint@suse.de
 
 - more flexible GetProduct() uses /etc/os-release (bnc #845606)
