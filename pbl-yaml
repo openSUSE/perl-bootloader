@@ -7,10 +7,10 @@ use Data::Dumper;
 # There are various YAML implementations for perl. These are the main
 # options:
 #
-# YAML::Tiny:	has huge problems parsing it's own data
-# YAML:		has problems parsing it's own data
-# YAML::Syck:	works, but doesn't make a difference between '1' and 1
-# YAML:XS:	works, makes strings utf8 when reading data
+# YAML:		has problems parsing its own data
+# YAML::Tiny:	has huge problems parsing its own data
+# YAML::Syck:	works, doesn't make a difference between '1' and 1
+# YAML::XS:	works, makes strings utf8 when reading data
 use YAML::XS;
 
 use Bootloader::Tools;
