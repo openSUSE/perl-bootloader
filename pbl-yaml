@@ -77,9 +77,18 @@ for my $cmd (@ARGV) {
     my $res_file = $2;
     my $func = $3;
     my $arg_file = $4;
+    my $multi = $arg_file =~ s/^@//;
 
     my @args;
-    @args = (ReadYAML($arg_file)) if $arg_file ne "";
+    if($arg_file ne "") {
+      my $args = ReadYAML($arg_file);
+      if($multi && ref($args) eq 'ARRAY') {
+        @args = @$args;
+      }
+      else {
+        @args = ($args);
+      }
+    }
 
     my $res;
 
@@ -138,11 +147,11 @@ Options:
 
 Commands:
 
-  COMMANDS have the form 'RESULT=FUNCTION(ARGUMENTS)'.
+  COMMANDS have the form 'RESULT=FUNCTION(ARGUMENT) or RESULT=FUNCTION(@ARGUMENTS)'.
   
-  ARGUMENTS is a YAML file containing an array of arguments or a single
-  argument. The return value of FUNCTION will be stored in RESULT. RESULT
-  and ARGUMENTS are optional.
+  ARGUMENT is a YAML file containing a single argument. ARGUMENTS is a YAML
+  file containing an array of arguments. The return value of FUNCTION will
+  be stored in RESULT. RESULT and ARGUMENT are optional.
 
   FUNCTION is a function from either Bootloader::Tools or Bootloader::Library.
 
