@@ -196,45 +196,6 @@ sub __old_ReadMountPoints {
     return \%mountpoints;
 }
 
-sub Udev2Dev {
-    my $udev = shift;
-
-    my $mounted = undef;
-    unless (-e "/sys/block/") {
-      $mounted = `mount /sys`;
-    }
-    # FIXME: maybe useless code  
-    my $cmd = "udevadm info -q name -p '/block/$udev'";
-    my $dev = qx{ $cmd 2>/dev/null };
-    chomp ($dev);
-
-    if ($dev ne "") {
-        $dev = "/dev/$dev";
-    }
-
-    # Fallback in case udevadm info fails
-    else {
-
-	#If $udev consists of both device and partition - e.g. "sda/sda1" -
-	#then only assign the partition.
-    	if ($udev =~ m#/([^/]+)#) {
-	    $dev = "/dev/$1";
-	}
-
-	#Else, just assign the content of $udev, e.g. "sda".
-	else {
-	    $dev = "/dev/$udev";
-	}
-    }
-
-    # CCISS maps slashes to bangs so we have to reverse that.
-    $dev =~ s:!:/:g;
-
-    `umount /sys` if (defined $mounted);
-
-    return $dev;
-}
-
 =item
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
@@ -249,28 +210,25 @@ See InitLibrary function for example.
 sub ReadPartitions
 {
   my $self = $lib_ref;
+  my $udevmap = shift;
 
   my $sb = Bootloader::Path::Prefix("/sys/block");
-  my $mounted;
 
   # get partition info for all partitions on all @disks
   my @devices = ();
 
   my @disks;
 
-  # *** FIXME ***
-  # This is weird stuff, we should not do it. It's hardly our task to fix
-  # the system setup.
   if (! -e $sb) {
     $self->error("/sys not mounted");
-    system "mount /sys";
-    $mounted = 1;
+
+    return \@devices;
   }
 
   # get disk devices
-  if(opendir(my $dh, "$sb")) {
+  if(opendir(my $dh, $sb)) {
     @disks = grep {
-      !m/^\./ &&
+      !/^\./ &&
       ($self->ReadNumber("$sb/$_/ext_range") > 1 || $self->ReadNumber("$sb/$_/range") > 1)
     } readdir($dh);
 
@@ -288,107 +246,58 @@ sub ReadPartitions
   my $dm_devs = ReadDMRaidPartitions();   
   push @devices, @$dm_devs if defined $dm_devs;
 
-    foreach my $disk (@disks)
-    {
-	# get kernel device name for this device
-	my $dev_disk = Udev2Dev ($disk);
+  for my $disk (@disks) {
+    next if IsDMDevice($disk) || IsDMRaidSlave($disk);
 
-	# get additional info from parted for the partitions on this $disk
-	#
-	# Disk geometry for /dev/sdb: 0cyl - 14593cyl
-	# BIOS cylinder,head,sector geometry: 14593,255,63.  Each cylinder is 8225kB.
-	# Disk label type: msdos
-	# Number  Start   End     Size    Type      File system  Flags
-	# 1       0cyl    63cyl   63cyl   primary   reiserfs     raid, type=fd
-	# 2       64cyl   2022cyl 1959cyl primary   ext3         boot, raid, type=fd
-	# 3       2023cyl 3067cyl 1045cyl primary   linux-swap   raid, type=fd
-	# 4       3068cyl 14592cyl 11525cyl extended               lba, type=0f
-	# 5       3068cyl 3198cyl 130cyl  logical   reiserfs     type=83
-	#
-	my @parted_info_list = ();
-	my $parted_info = `parted -s $dev_disk unit cyl print`;
-        chomp $parted_info;
-	if ( $? == 0 ) {
-	    my @parted_info_split = split(/\n/, $parted_info);
-	    # skip header lines
+    my $dev_disk = "/dev/$disk";
+    # raids have ! in names for /dev/raid/name (bnc #607852)
+    $dev_disk =~ s#!#/#;
 
+    my @parts;
 
-	    while ($#parted_info_split >=0 and $parted_info_split[0] !~ /^\s*\d/) {
-		shift @parted_info_split;
-	    }
+    # get partitions of $disk
+    if(opendir(my $dh, "$sb/$disk")) {
+      @parts = grep {
+        !/^\./ &&
+        -f "$sb/$disk/$_/dev"
+      } readdir($dh);
 
-	    foreach $parted_info (@parted_info_split) {
-		# FIXME: parse the rest of the lines
-		chomp($parted_info);
-		my ($p_nr, $p_startcyl, $p_endcyl, $p_sizecyl, $p_type, $rest) =
-		    split(' ', $parted_info);
+      closedir $dh;
+    }
+    else {
+      $self->error("Failed to open $sb/$disk");
 
-		$p_startcyl =~ s/cyl$//;
-		$p_endcyl   =~ s/cyl$//;
-		$p_sizecyl  =~ s/cyl$//;
-		$p_type	    =~ s/^/`/;
-
-		# array: part_nr -> (startcyl, endcyl, sizecyl, type)
-		$parted_info_list[$p_nr] =
-		    [$p_startcyl, $p_endcyl, $p_sizecyl, $p_type];
-	    }
-	}
-
-        if (!IsDMDevice($disk) && !IsDMRaidSlave($disk)) {
-	    # get partitions of $disk
-	    if(!opendir(BLOCK_DEVICES, "$sb/$disk")) {
-	        # md* devices may vanish as a result of the parted call above
-	        # so, don't act too surprised...
-                $lib_ref->warning("ReadPartitions(): Failed to open dir $sb/$disk");
-
-                next;
-            }
-
-	    my @parts = grep {
-	        !m/^\./ and -d "$sb/$disk/$_" and -f "$sb/$disk/$_/dev"
-	    } readdir (BLOCK_DEVICES);
-	    closedir BLOCK_DEVICES;
-
-            $lib_ref->milestone("partitions =", \@parts);
-
-	    # generate proper device names and other info for all @part[ition]s
-	    foreach my $part (@parts)
-	    {
-	        chomp ($part);
-	        $part = Udev2Dev ("$disk/$part");
-
-                $lib_ref->milestone("Processing part: $part");
-
-	        my $index = substr ($part, length ($dev_disk));
-	        while (length ($index) > 0 && substr ($index, 0, 1) !~ /[0-9]/)
-	        {
-		    $index = substr ($index, 1);
-	        }
-		# The @devices array will contain the following members:
-		#
-		# index type	    value (example)
-		#
-		#  0    device	    /dev/sda9
-		#  1    disk	    /dev/sda
-		#  2    nr		    9
-		#  3    fsid	    258
-		#  4    fstype	    Apple_HFS
-		#  5    part_type	    `primary
-		#  6    start_cyl	    0
-		#  7    size_cyl	    18237
-
-		push @devices, [$part, $dev_disk, $index, 0, "",
-		    defined( $parted_info_list[$index]->[3] ) ?
-			$parted_info_list[$index]->[3] : "",
-		    defined( $parted_info_list[$index]->[0] ) ?
-			$parted_info_list[$index]->[0] : 0,
-		    defined( $parted_info_list[$index]->[1] ) ?
-			$parted_info_list[$index]->[1] : 0];
-            }
-	}
+      next;
     }
 
-  system "unmount /sys" if $mounted;
+    $lib_ref->milestone("partitions =", \@parts);
+
+    # generate proper device names and other info for all @part[ition]s
+    for my $part (@parts) {
+      $part = "/dev/$part";
+      # raids have ! in names for /dev/raid/name (bnc #607852)
+      $part =~ s#!#/#;
+
+      $part = $udevmap->{$part} if defined $udevmap->{$part};
+
+      my $index = $part =~ /(\d+)$/ ? $1 : 0;
+
+      # The @devices array will contain the following members:
+      #
+      # index type	    value (example)
+      #
+      #  0    device	    /dev/sda9
+      #  1    disk	    /dev/sda
+      #  2    nr	    9
+      #  3    fsid	    258 (obsolete)
+      #  4    fstype	    Apple_HFS (obsolete)
+      #  5    part_type	    `primary (obsolete)
+      #  6    start_cyl	    0 (obsolete)
+      #  7    size_cyl	    18237 (obsolete)
+
+      push @devices, [ $part, $dev_disk, $index, 0, "", "", "", "" ];
+    }
+  }
 
   return \@devices;
 }
@@ -1004,7 +913,7 @@ sub InitLibrary
 
   my $um = GetDeviceMapping();
   my $mp = ReadMountPoints();
-  my $part = ReadPartitions();
+  my $part = ReadPartitions($um);
   my $md = ReadRAID1Arrays();
   my $mpath = GetMultipath();
 

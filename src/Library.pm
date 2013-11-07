@@ -400,14 +400,30 @@ EXAMPLE:
 sub DefineUdevMapping($)
 {
   my $self = shift;
-  my $map_ref = shift;
+  my $map = shift;
 
   my $loader = $self->{loader};
   return undef unless defined $loader;
 
   delete $loader->{cache};
 
-  $loader->{udevmap} = $map_ref;
+  $self->milestone("udevmap (raw) =", $map);
+
+  # manipulate udev map a bit so we do't map to /dev/dm-N but /dev/mapper/NAME
+  for (sort keys %$map) {
+    if(m#^/dev/mapper/# && $map->{$_} =~ m#^/dev/dm-#) {
+      $map->{$map->{$_}} = $_;
+      delete $map->{$_};
+    }
+  }
+
+  for (sort keys %$map) {
+    if($map->{$_} =~ m#^/dev/dm-# && defined $map->{$map->{$_}}) {
+      $map->{$_} = $map->{$map->{$_}};
+    }
+  }
+
+  $loader->{udevmap} = $map;
 
   $self->milestone("udevmap =", $loader->{udevmap});
 

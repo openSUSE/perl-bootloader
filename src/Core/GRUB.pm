@@ -400,43 +400,28 @@ sub AllowCommentAfterText {
   return 0;
 }
 
-sub GetKernelDevice {
-    my $self = shift;
-    my $device = shift;
-    # resolve symlinks.....
-    my $cmd = "udevadm info -q name -n $device";
-    my $dev = "";
 
-    chomp ($dev = qx{$cmd 2> /dev/null});
+sub GetKernelDevice
+{
+  my $self = shift;
+  my $orig = shift;
 
-    if($? || $dev eq "") {
-      $self->milestone("udevadm failed, using readlink");
-      $dev = realpath $device;
-    }
-    else {
-      $dev = "/dev/$dev";
-    }
+  my $dev;
 
-    $self->milestone("$device -> $dev");
+  if(defined $self->{udevmap}) {
+    $dev = $self->{udevmap}{$orig};
+  }
+  else {
+    $self->warning("udev mapping is not set");
+  }
 
-    if ($dev =~ m:^/dev/dm-\d+:){
-      my $name = qx{udevadm info  -q env -n $device | grep DM_NAME};
-      chomp $name;
-      if ($name !~ m/^DM_NAME=(.*)/){
-        $self->error("no DM_NAME for dm device: $dev");
-        return $dev;
-      }
-      $dev = "/dev/mapper/$1";
-      my $part = qx{udevadm info  -q env -n $device | grep DM_PART};
-      chomp $part;
-      #DM_NAME could contain in some cases partition number (bnc#590637)
-      if ($part =~ m/^DM_PART=(\d+)$/ and $dev !~ /_part[0-9]+$/){
-        $dev = $dev."_part$1";
-      }
-      $self->milestone("dm device translated: $dev");
-    }
-    return $dev;
+  $dev = $orig if !defined $dev;
+
+  $self->milestone("$orig => $dev");
+
+  return $dev;
 }
+
 
 =item
 C<< $unix_dev = Bootloader::Core::GRUB->GrubDev2UnixDev ($grub_dev); >>
