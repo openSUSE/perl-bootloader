@@ -4,7 +4,7 @@ Thu Nov  7 12:47:41 CET 2013 - snwint@suse.de
 - speed up device scanning even more (drop remaining parted calls, bnc #823601)
 - import device mapping from yast (bnc #826632, bnc #823601); note that this
   requires an updated yast2-bootloader
--  0.4.89.57
+- 0.4.89.57
 
 -------------------------------------------------------------------
 Fri Aug  2 10:08:27 CEST 2013 - snwint@suse.de
