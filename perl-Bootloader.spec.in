@@ -27,6 +27,7 @@ Source:         perl-Bootloader-%{version}.tar.xz
 BuildRequires:  xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Conflicts:      multipath-tools < 0.4.8-40.25.1
+Conflicts:      yast2-bootloader < 2.17.97
 #!BuildIgnore: mdadm e2fsprogs limal-bootloader
 
 %description
