@@ -156,10 +156,18 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = (Bootloader::Path::Grub2_defaultconf());
+    my @ret = ();
+
+    if (-e Bootloader::Path::Grub2_defaultconf()) {
+        push @ret, Bootloader::Path::Grub2_defaultconf();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_defaultconf());
+    }
 
     if (-e Bootloader::Path::Grub2_conf()) {
         push @ret, Bootloader::Path::Grub2_conf();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_conf());
     }
 
     return \@ret;
@@ -691,6 +699,12 @@ sub GetSettings {
 
     my $sections = $ret->{"sections"};
     my $globals = $ret->{"global"};
+
+    if (! -e "/usr/sbin/grub2-editenv") {
+        $self->warning ("file not exist /usr/sbin/grub2-editenv");
+        return $ret;
+    }
+
     my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
