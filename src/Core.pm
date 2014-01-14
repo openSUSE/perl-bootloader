@@ -1692,34 +1692,21 @@ from the system, but returns internal structures.
 =cut
 
 # map<string,any> GetSettings ()
-sub GetSettings {
-    my $self = shift;
+sub GetSettings
+{
+  my $self = shift;
 
-    my %ret = ();
-    foreach my $key ("global", "exports", "sections", "device_map")
-    {
-	if (defined ($self->{$key}))
-	{
-	    $ret{$key} = $self->{$key};
-            if ($key eq "sections")
-            {
-              foreach my $section (@{$ret{$key}})
-              {
-                $self->milestone("store: $key:" . join( " - ", %{$section}));
-              }
-            }
-            elsif ($key eq "global" or $key eq "device_map")
-            {
-              $self->milestone("store: $key:" . join( ",", %{$ret{$key}}));
-            }
-            else
-            {
-              $self->milestone("store: $key:" . join( ",", $ret{$key}));
-            }
-	}
-    }
-    return \%ret;
+  my $ret = {};
+
+  for ("global", "exports", "sections", "device_map") {
+    $ret->{$_} = $self->{$_} if defined $self->{$_};
+  }
+
+  $self->milestone("ret =", $ret);
+
+  return $ret;
 }
+
 
 =item
 C<< $status = Bootloader::Core->SetSettings (\%settings); >>

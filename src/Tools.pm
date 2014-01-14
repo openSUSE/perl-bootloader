@@ -311,17 +311,16 @@ sub GetMultipath {
 }
 
 =item
-C<< Bootloader::Tools::GetDeviceMapping (); >>
+C<< Bootloader::Tools::GetUdevMapping (); >>
 
 Return reference to hash with symlinks to block devices.
 
 =cut
 
 # Notes:
-#   - replaces GetUdevMapping()
 #   - no logging as map is passed to DefineUdevMapping() and logged there
 #   - if issues with device mapper arise, check bnc #590637
-sub GetDeviceMapping
+sub GetUdevMapping
 {
   my $list;
 
@@ -338,71 +337,6 @@ sub GetDeviceMapping
   }, no_chdir => 1 } , "/dev");
 
   return $list;
-}
-
-
-sub GetUdevMapping {
-  my %mapping= ();
-  local $_;
-
-  my @output = `find -P /dev -type b`;
-  chomp @output;
-  for my $dev (@output) {
-    next if ($dev =~ m:^/dev/mapper/:);
-
-    my @output2 = `udevadm info -q all -n $dev 2>/dev/null`;
-    chomp @output2;
-
-    if ($dev =~ m:^/dev/dm:) #workaround for incosistency of device mapper and udev
-    {
-      my $dmdev = undef;
-      my $dmpart = undef;
-      for my $line (@output2)
-      {
-        if ($line =~ m/DM_NAME=(.*)$/)
-        {
-          $dmdev = $1;
-        }
-        elsif ($line =~ m/DM_PART=(.*)$/)
-        {
-          $dmpart = $1;
-        }
-      }
-
-      $lib_ref->error("UDEVMAPPING: dmdev $dev doesn't have defined DM_NAME in udev") unless defined $dmdev;
-      my $prevdev = $dev;
-      $dev = "/dev/mapper/$dmdev";
-      # DM_NAME could contain also part in some case (bnc#590637)
-      $dev = $dev."_part$dmpart" if (defined $dmpart and $dev !~ /_part[0-9]+$/);
-      $mapping{$prevdev} = $dev; #maps also dm dev to device mapper
-    } #end of workaround
-
-    for (@output2) {
-      $mapping{"/dev/$1"} = $dev if /S:\s(.*)$/;
-    }
-  }
-
-#  while (my ($k,$v) = each (%mapping)){
-#    $lib_ref->milestone("UDEV MAPPING: ".($k||"")." -> ".($v||""));
-#  }
-
-  if(!(keys %mapping)) {
-    $lib_ref->milestone("*** WARNING: No UDEV mapping! ***");
-    $lib_ref->milestone("device tree:");
-    for (`find -P /dev -type b -ls 2>/dev/null`) {
-      chomp;
-      $lib_ref->milestone("  $_");
-    }
-    $lib_ref->milestone("udevinfo:");
-    for (`udevadm info -e 2>&1`) {
-      chomp;
-      $lib_ref->milestone("  $_");
-    }
-  }
-
-  # $lib_ref->milestone("\%mapping =", \%mapping);
-
-  return \%mapping;
 }
 
 
@@ -758,7 +692,7 @@ sub InitLibrary
 {
   $lib_ref = shift // Bootloader::Library->new();
 
-  my $um = GetDeviceMapping();
+  my $um = GetUdevMapping();
   my $mp = ReadMountPoints($um);
   my $part = ReadPartitions($um);
   my $md = ReadRAID1Arrays($um);
