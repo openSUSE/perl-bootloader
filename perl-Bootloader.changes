@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jan 14 14:12:44 CET 2014 - snwint@suse.de
+
+- fix confusion between Tools::GetDeviceMapping() and Core::GetDeviceMapping()
+  (bnc #858268)
+- 0.801
+
+-------------------------------------------------------------------
 Tue Oct 29 15:13:22 CET 2013 - snwint@suse.de
 
 - add pbl-yaml: a command line interface to perl-Bootloader using YAML files
