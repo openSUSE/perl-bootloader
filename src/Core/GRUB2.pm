@@ -937,6 +937,9 @@ sub Info2Global {
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
 
+    $self->milestone("XXX append = $append");
+    $append =~ s/rootflags=subvol\S*\s*//;
+
     my $hidden_timeout = "$timeout";
     if ("$hiddenmenu" eq "true") {
         $timeout = "0" if "$timeout" ne "";

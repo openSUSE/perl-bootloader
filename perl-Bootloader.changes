@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan 16 16:41:54 CET 2014 - snwint@suse.de
+
+- workaround to avoid double rootflags entries
+- 0.802
+
+-------------------------------------------------------------------
 Tue Jan 14 14:12:44 CET 2014 - snwint@suse.de
 
 - fix confusion between Tools::GetDeviceMapping() and Core::GetDeviceMapping()
