@@ -348,11 +348,24 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = ( Bootloader::Path::Grub2_installdevice(),
-                Bootloader::Path::Grub2_defaultconf() );
+    my @ret = ();
+
+    if (-e Bootloader::Path::Grub2_installdevice()) {
+        push @ret, Bootloader::Path::Grub2_installdevice();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_installdevice());
+    }
+
+    if (-e Bootloader::Path::Grub2_defaultconf()) {
+        push @ret, Bootloader::Path::Grub2_defaultconf();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_defaultconf());
+    }
 
     if (-e Bootloader::Path::Grub2_conf()) {
         push @ret, Bootloader::Path::Grub2_conf();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_conf());
     }
 
     return \@ret;
@@ -399,15 +412,16 @@ sub ParseLines {
         \@defaultconf
     );
 
+    my @devices = @{$files{Bootloader::Path::Grub2_installdevice()} || []};
+
     if (not exists $self->{"mountpoints"}{'/'})
     {
         $self->milestone("Mount points doesn't have '/', skipped parsing grub2 config");
+    }
+    elsif (scalar (@devices) == 0)
+    {
+        $self->warning("No device configured, skip parsing boot device");
     } else {
-        # FIXME: Need to figure our a better way to get the
-        # device, otherwise user may break setup if they
-        # call install script directly
-        my @devices = @{$files{Bootloader::Path::Grub2_installdevice()} || []};
-
         # FIXME: still incomplete for MD and dmraid devs
         # translate device array to the various boot_* flags else set boot_custom
         # in glob_ref accordingly
@@ -1093,6 +1107,12 @@ sub GetSettings {
 
     my $sections = $ret->{"sections"};
     my $globals = $ret->{"global"};
+
+    if (! -e "/usr/sbin/grub2-editenv") {
+        $self->warning ("file not exist /usr/sbin/grub2-editenv");
+        return $ret;
+    }
+
     my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
