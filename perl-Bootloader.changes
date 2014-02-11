@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Feb 11 13:14:12 CET 2014 - snwint@suse.de
+
+- fix grub2-editenv path: failed to determine default menu entry (bnc #861469)
+- 0.803
+
+-------------------------------------------------------------------
 Thu Jan 16 16:41:54 CET 2014 - snwint@suse.de
 
 - workaround to avoid double rootflags entries
