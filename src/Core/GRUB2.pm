@@ -1111,8 +1111,8 @@ sub GetSettings {
     my $sections = $ret->{"sections"};
     my $globals = $ret->{"global"};
 
-    if (! -e "/usr/sbin/grub2-editenv") {
-        $self->warning ("file not exist /usr/sbin/grub2-editenv");
+    if (! -e "/usr/bin/grub2-editenv") {
+        $self->warning ("file not exist /usr/bin/grub2-editenv");
         return $ret;
     }
 
