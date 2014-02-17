@@ -289,6 +289,11 @@ sub GrubCfgSections {
 
                 $sect_info{"append"} = $append;
             }
+
+            if ($cfg2 =~ /^\s+initrd\s+([^\s]+)/m) {
+                $sect_info{"initrd"} = $1;
+            }
+
             push @{$sect}, \%sect_info;
         } elsif ($type eq "submenu") {
             &GrubCfgSections ($name, $cfg2, $sect);
