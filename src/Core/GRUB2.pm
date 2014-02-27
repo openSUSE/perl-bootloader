@@ -265,7 +265,6 @@ sub GrubCfgSections {
 
             $sect_info{"name"} = $name;
             $sect_info{"menuentry"} = $name;
-            $sect_info{"type"} = "image";
 
             if ($args =~ m/'gnulinux-[^\s]+-recovery-[^\s]+'/) {
                 $sect_info{"usage"} = "linux_failsafe";
@@ -273,25 +272,59 @@ sub GrubCfgSections {
                 $sect_info{"usage"} = "linux";
             }
 
-            if ($cfg2 =~ /^\s+linux\s+([^\s]+)\s*(.*)$/m) {
-                my $append = $2;
-                $sect_info{"image"} = $1;
+            if ($args =~ m/--class xen/) {
 
-                if ($append =~ /root=/) {
-                    $append =~ s/root=([^\s]+)\s*//;
-                    $sect_info{"root"} = $1;
+                $sect_info{"type"} = "xen";
+
+                if ($cfg2 =~ /^\s+multiboot\s+(\S+)\s+\S+\s*(.*)$/m) {
+                    $sect_info{"xen"} = $1;
+                    $sect_info{"xen_append"} = $2;
+                } 
+
+                while ($cfg2 =~ /^\s+module\s+(\S+)\s+\S+\s*(.*)$/gm) {
+
+                    if (!exists $sect_info{"image"}) {
+
+                        my $append = $2;
+                        $sect_info{"image"} = $1;
+
+                        if ($append =~ /root=/) {
+                            $append =~ s/root=(\S+)\s*//;
+                            $sect_info{"root"} = $1;
+                        }
+
+                        if ($append =~ /vga=/) {
+                            $append =~ s/vga=(\S+)\s*//;
+                            $sect_info{"vgamode"} = $1;
+                        }
+
+                        $sect_info{"append"} = $append;
+
+                    } elsif (!exists $sect_info{"initrd"}) {
+                        $sect_info{"initrd"} = $1;
+                    }
                 }
 
-                if ($append =~ /vga=/) {
-                    $append =~ s/vga=([^\s]+)\s*//;
-                    $sect_info{"vgamode"} = $1;
+            } else {
+
+                $sect_info{"type"} = "image";
+
+                if ($cfg2 =~ /^\s+linux\s+(\S+)\s*(.*)$/m) {
+                    my $append = $2;
+                    $sect_info{"image"} = $1;
+
+                    if ($append =~ /root=/) {
+                        $append =~ s/root=(\S+)\s*//;
+                        $sect_info{"root"} = $1;
+                    }
+
+                    if ($append =~ /vga=/) {
+                        $append =~ s/vga=(\S+)\s*//;
+                        $sect_info{"vgamode"} = $1;
+                    }
+
+                    $sect_info{"append"} = $append;
                 }
-
-                $sect_info{"append"} = $append;
-            }
-
-            if ($cfg2 =~ /^\s+initrd\s+([^\s]+)/m) {
-                $sect_info{"initrd"} = $1;
             }
 
             push @{$sect}, \%sect_info;
@@ -777,6 +810,10 @@ sub Global2Info {
             $ret{"gfxbackground"} = $val;
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $ret{"os_prober"} = ($val eq "true") ? "false" : "true";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
+            $ret{"xen_append"} = $val; 
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
+            $ret{"xen_kernel_append"} = $val; 
         }
     }
 
@@ -927,6 +964,8 @@ sub Info2Global {
     # my $root = delete $globinfo{"root"} || "";
     my $vga = delete $globinfo{"vgamode"} || "";
     my $append = delete $globinfo{"append"} || "";
+    my $xen_append = delete $globinfo{"xen_append"} || "";
+    my $xen_kernel_append = delete $globinfo{"xen_kernel_append"} || "";
     # YaST doesn't save bootloader settings when 'Timeout in seconds' is set to 0 (bnc#804176)
     my $timeout = delete $globinfo{"timeout"} || 0;
     my $hiddenmenu = delete $globinfo{"hiddenmenu"} || "";
@@ -950,6 +989,27 @@ sub Info2Global {
         $timeout = "0" if "$timeout" ne "";
     } else {
         $hidden_timeout = "0" if "$hidden_timeout" ne "";
+    }
+
+    # bnc#862614 - serial console settings not propagated into xen entry
+    if ($append =~ /console=ttyS(\d+),(\w+)/)
+    {
+        # merge console and speed into xen_append
+        my $console = sprintf("com%d", $1+1);
+        my $speed   = sprintf("%s=%s", $console, $2);
+
+        if ($xen_append  ne "") {
+            while ($xen_append =~ s/(.*)console=(\S+)\s*(.*)$/$1$3/) {
+                my $del_console = $2;
+                $xen_append =~ s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
+            }
+            $xen_append = "console=$console $speed $xen_append";
+        } else {
+            $xen_append = "console=$console $speed";
+	    }
+
+        $xen_kernel_append = $append if ($xen_kernel_append eq "");
+        $xen_kernel_append =~ s/console=ttyS(\S+)\s*//g;
     }
 
     @lines = map {
@@ -1017,6 +1077,12 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $line_ref->{"value"} = ($os_prober eq "false") ? "true" : "false";
             $os_prober = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
+            $line_ref->{"value"} = $xen_append if $xen_append ne "";
+            $xen_append = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
+            $line_ref->{"value"} = $xen_kernel_append if $xen_kernel_append ne "";
+            $xen_kernel_append = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1095,6 +1161,20 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_DISABLE_OS_PROBER",
             "value" => ($os_prober eq "false") ? "true" : "false",
+        }
+    }
+
+    if ($xen_append ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_XEN_DEFAULT",
+            "value" => $xen_append,
+        }
+    }
+
+    if ($xen_kernel_append ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT",
+            "value" => $xen_kernel_append,
         }
     }
     return \@lines;
