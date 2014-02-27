@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Feb 27 11:52:10 CET 2014 - snwint@suse.de
+
+- propagate serial console setting to xen (bnc #862614)
+- fix reading xen sections
+- 0.805
+
+-------------------------------------------------------------------
 Mon Feb 17 13:15:12 CET 2014 - snwint@suse.de
 
 - fix section info not returning initrd (bnc #863909)
