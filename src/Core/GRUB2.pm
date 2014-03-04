@@ -347,6 +347,7 @@ sub new
     my $ref = shift;
     my $old = shift;
     my $arch = `uname --hardware-platform`;
+    chomp $arch;
     my $target;
 
     my $loader = $self->SUPER::new($ref, $old);
@@ -355,9 +356,10 @@ sub new
     # Set target based on architecture (ppc or x86)
     $target = "i386-pc" if $arch =~ /(i386|x86_64)/;
     $target = "powerpc-ieee1275" if $arch =~ /(ppc|ppc64)/;
-    $loader->{'target'} = $target;
+    $target = "s390x-emu" if $arch eq 's390x';
+    $loader->{target} = $target;
 
-    $loader->milestone("Created GRUB2 instance for target $target");
+    $loader->milestone("Created GRUB2 instance for target \"$target\" (arch = $arch)");
 
     return $loader;
 }
@@ -1291,47 +1293,62 @@ sub InitializeBootloader {
     my $self = shift;
     my %glob = %{$self->{"global"}};
     my $file = Bootloader::Path::Grub2_installdevice();
-    my $files_ref = $self->ReadFiles ([$file,]);
+    my $files_ref;
 
-    if (! defined ($files_ref))
-    {
-        return undef;
+    # some targets might need an install device list
+    if($self->{target} !~ /(-emu|-efi)$/) {
+      $files_ref = $self->ReadFiles([$file,]);
     }
 
-    # Since Bootloader::Tools::ReadPartitions didn't assign
-    # correct part_type, the skip-fs-probe check based
-    # on `extended may not work.
+    $self->milestone("files_ref", $files_ref);
 
-    #my $skip_fs_probe = delete $glob{"boot_extended"};
+    if ($files_ref->{$file})
+    {
+        # Since Bootloader::Tools::ReadPartitions didn't assign
+        # correct part_type, the skip-fs-probe check based
+        # on `extended may not work.
 
-    #if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
-    #    $install_opts .= " --skip-fs-probe ";
-    #}
+        #my $skip_fs_probe = delete $glob{"boot_extended"};
 
-    # Do skip-fs-probe to avoid error when embedding stage1
-    # to extended partition
-    my $install_opts = "--force --skip-fs-probe";
-    my @devices = @{$files_ref->{$file} || []};
+        #if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
+        #    $install_opts .= " --skip-fs-probe ";
+        #}
 
-    # Hmm .. grub2-install must has been run before
-    # any grub2-mkconfig ...
-    # TODO: foreach .. looks awkward .. need clearify
-    foreach my $dev (@devices) {
+        # Do skip-fs-probe to avoid error when embedding stage1
+        # to extended partition
+        my $install_opts = "--force --skip-fs-probe";
+        my @devices = @{$files_ref->{$file} || []};
 
-        if ($dev eq "activate" or $dev eq "generic_mbr") {
-            next;
+        $self->milestone("devices =", \@devices);
+
+        # Hmm .. grub2-install must has been run before
+        # any grub2-mkconfig ...
+        # TODO: foreach .. looks awkward .. need clearify
+        foreach my $dev (@devices) {
+
+            if ($dev eq "activate" or $dev eq "generic_mbr") {
+                next;
+            }
+
+            my $ret = $self->RunCommand (
+                # TODO: Use --force is for installing on BS
+                # the tradeoff is we can't capture errors
+                # only patch grub2 package is possible way
+                # to get around this problem
+                "/usr/sbin/grub2-install --target=$self->{'target'} $install_opts \"$dev\"",
+                Bootloader::Path::BootCommandLogname()
+            );
+
+            return 0 if (0 != $ret);
         }
-
+    }
+    else {
         my $ret = $self->RunCommand (
-            # TODO: Use --force is for installing on BS
-            # the tradeoff is we can't capture errors
-            # only patch grub2 package is possible way
-            # to get around this problem
-            "/usr/sbin/grub2-install --target=$self->{'target'} $install_opts \"$dev\"",
+            "/usr/sbin/grub2-install --target=$self->{'target'}",
             Bootloader::Path::BootCommandLogname()
         );
 
-        return 0 if (0 != $ret);
+        return 0 if $ret;
     }
 
     my $default  = delete $glob{"default"};
