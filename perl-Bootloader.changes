@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar  4 17:48:03 CET 2014 - snwint@suse.de
+
+- support grub2 on s390x
+- 0.806
+
+-------------------------------------------------------------------
 Thu Feb 27 11:52:10 CET 2014 - snwint@suse.de
 
 - propagate serial console setting to xen (bnc #862614)
