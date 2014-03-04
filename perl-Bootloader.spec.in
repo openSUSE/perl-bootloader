@@ -73,7 +73,7 @@ sed -i '/ZIPL/D;/ELILO/D;/\/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/
 %endif
 %endif
 %ifarch s390 s390x
-rm -f $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB*}
+rm -f $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB.*,GRUB2EFI.*}
 %if 0%{?suse_version} == 0 || 0%{?suse_version} <= 1130
 sed -i '/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloader/.packlist
 %endif
