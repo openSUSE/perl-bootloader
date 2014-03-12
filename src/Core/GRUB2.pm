@@ -477,6 +477,8 @@ sub ParseLines {
         my $extended_dev = $self->GetExtendedPartition($boot_dev) || "";
         # mbr_dev is the first bios device
         my $mbr_dev =  $self->GrubDev2UnixDev("(hd0)");
+	#FIXME: is there a better way?
+        my $prep_dev =  $self->GrubDev2UnixDev("(hd0,1)");
 
         foreach my $dev (@devices) {
             $self->milestone("checking boot device $dev");
@@ -513,6 +515,10 @@ sub ParseLines {
                     $self->milestone("detected boot_md_mbr ".$glob_ref->{"boot_md_mbr"});
                 }
             }
+	    elsif ($dev eq $prep_dev) {
+		$glob_ref->{"boot_prep"} = "true";
+                $self->milestone("detected boot_prep");
+	    }
             elsif ($dev eq $root_dev) {
                 $glob_ref->{"boot_root"} = "true";
                 $self->milestone("detected boot_root");
@@ -580,6 +586,15 @@ sub CreateGrubInstalldevLines() {
             # if /boot mountpoint exists add($disk(/boot) else add disk(/)
             # mbr_dev is the first bios device
             $dev =  $self->GrubDev2UnixDev("(hd0)");
+            $s1_devices{$dev} = 1 if defined $dev;
+        }
+
+        # boot_prep    => "bool:Boot from PReP device:false",
+        $flag = delete $glob{"boot_prep"};
+        if (defined $flag and $flag eq "true") {
+            # prep_dev is the first first partition on first device
+	    # FIXME: Find a better way
+            $dev =  $self->GrubDev2UnixDev("(hd0,1)");
             $s1_devices{$dev} = 1 if defined $dev;
         }
 
