@@ -1582,6 +1582,8 @@ sub UpdateBootloader
   my @files = @{$files_ref};
   my $ok = 1;
 
+  $self->milestone("Files to update:", $files_ref);
+
   foreach my $file (@files) {
     next unless -f "$file.new";
 
