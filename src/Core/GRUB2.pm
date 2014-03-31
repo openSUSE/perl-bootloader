@@ -816,6 +816,8 @@ sub Global2Info {
             $ret{"xen_append"} = $val; 
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
             $ret{"xen_kernel_append"} = $val; 
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $ret{"suse_btrfs"} = $val;
         }
     }
 
@@ -957,6 +959,10 @@ sub Info2Global {
                   '# WARNING foregin OS menu entries will be lost if set true here'
                 ],
             },
+            {
+                'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
+                'value' => 'true',
+            },
         );
 
     }
@@ -979,6 +985,7 @@ sub Info2Global {
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
+    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -1085,6 +1092,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
             $line_ref->{"value"} = $xen_kernel_append if $xen_kernel_append ne "";
             $xen_kernel_append = "";
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
+            $suse_btrfs = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1177,6 +1187,13 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT",
             "value" => $xen_kernel_append,
+        }
+    }
+
+    if ($suse_btrfs ne "") {
+        push @lines, {
+            "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
+            "value" => $suse_btrfs,
         }
     }
     return \@lines;
@@ -1321,21 +1338,29 @@ sub InitializeBootloader {
 
         $self->milestone("devices =", \@devices);
 
-        # Hmm .. grub2-install must has been run before
-        # any grub2-mkconfig ...
-        # TODO: foreach .. looks awkward .. need clearify
         foreach my $dev (@devices) {
+
+            my $cmd = "/usr/sbin/grub2-install";
+            my $opt = "--target=$self->{'target'} $install_opts \"$dev\"";
 
             if ($dev eq "activate" or $dev eq "generic_mbr") {
                 next;
             }
 
+            if ($glob{suse_btrfs} eq "true" and -e "/usr/sbin/suse_btrfs_grub2_install.sh") {
+                if ($self->{'target'} eq "i386-pc") {
+                    my $rootfs = qx(/usr/sbin/grub2-probe -t fs /);
+                    my $bootfs = qx(/usr/sbin/grub2-probe -t fs /boot);
+                    chomp $rootfs;
+                    chomp $bootfs;
+                    if ($rootfs eq "btrfs" and $bootfs eq "btrfs") {
+                        $cmd = "/usr/sbin/suse_btrfs_grub2_install.sh";
+                    }
+                }
+            }
+
             my $ret = $self->RunCommand (
-                # TODO: Use --force is for installing on BS
-                # the tradeoff is we can't capture errors
-                # only patch grub2 package is possible way
-                # to get around this problem
-                "/usr/sbin/grub2-install --target=$self->{'target'} $install_opts \"$dev\"",
+                "$cmd $opt",
                 Bootloader::Path::BootCommandLogname()
             );
 
