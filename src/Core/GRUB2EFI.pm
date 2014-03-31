@@ -394,6 +394,8 @@ sub Global2Info {
             $ret{"xen_append"} = $val; 
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
             $ret{"xen_kernel_append"} = $val; 
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $ret{"suse_btrfs"} = $val;
         }
     }
 
@@ -534,6 +536,10 @@ sub Info2Global {
                   '# WARNING foregin OS menu entries will be lost if set true here'
                 ],
             },
+            {
+                'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
+                'value' => 'true',
+            },
         );
 
     }
@@ -556,6 +562,7 @@ sub Info2Global {
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
+    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -671,6 +678,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
             $line_ref->{"value"} = $xen_kernel_append if $xen_kernel_append ne "";
             $xen_kernel_append = "";
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
+            $suse_btrfs = "";
         }
 
         defined $line_ref ? $line_ref : ();
@@ -773,6 +783,13 @@ sub Info2Global {
             "value" => $xen_kernel_append,
         }
     }
+
+    if ($suse_btrfs ne "") {
+        push @lines, {
+            "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
+            "value" => $suse_btrfs,
+        }
+    }
     return \@lines;
 }
 
@@ -861,26 +878,6 @@ sub UpdateBootloader {
         return $self->InitializeBootloader ();
     }
 
-    if (defined $self->{secure_boot})
-    {
-        my $opt = $self->{secure_boot} ? "--config-file=/boot/grub2/grub.cfg" : "--clean";
-        my $cmd = "/usr/sbin/shim-install";
-
-        if ($self->{secure_boot}) {
-            $ret = $self->RunCommand (
-                "$cmd $opt",
-                Bootloader::Path::BootCommandLogname()
-            );
-        } else {
-            $ret = $self->RunCommand (
-                "test -x $cmd && $cmd $opt || true",
-                Bootloader::Path::BootCommandLogname()
-            );
-		}
-
-        return 0 if (0 != $ret);
-    }
-
     my $default  = delete $glob{"default"};
 
     if (defined $default and $default ne "") {
@@ -909,33 +906,29 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
     my %glob = %{$self->{"global"}};
+    my $ret = 1;
+    my $opt = "--target=$self->{'target'}";
+    my $cmd = "/usr/sbin/grub2-install";
 
-    my $ret = $self->RunCommand (
-        "/usr/sbin/grub2-install --target=$self->{'target'}",
+    if ($self->{secure_boot}) {
+        $opt = "--config-file=/boot/grub2/grub.cfg";
+        $cmd = "/usr/sbin/shim-install";
+    } elsif ($glob{suse_btrfs} eq "true" and -e "/usr/sbin/suse_btrfs_grub2_install.sh") {
+        my $rootfs = qx(/usr/sbin/grub2-probe -t fs /);
+        my $bootfs = qx(/usr/sbin/grub2-probe -t fs /boot);
+        chomp $rootfs;
+        chomp $bootfs;
+        if ($rootfs eq "btrfs" and $bootfs eq "btrfs") {
+            $cmd = "/usr/sbin/suse_btrfs_grub2_install.sh";
+        }
+    }
+
+    $ret = $self->RunCommand (
+        "$cmd $opt",
         Bootloader::Path::BootCommandLogname()
     );
 
     return 0 if (0 != $ret);
-
-    if (defined $self->{secure_boot})
-    {
-        my $opt = $self->{secure_boot} ? "--config-file=/boot/grub2/grub.cfg" : "--clean";
-        my $cmd = "/usr/sbin/shim-install";
-
-        if ($self->{secure_boot}) {
-            $ret = $self->RunCommand (
-                "$cmd $opt",
-                Bootloader::Path::BootCommandLogname()
-            );
-        } else {
-            $ret = $self->RunCommand (
-                "test -x $cmd && $cmd $opt || true",
-                Bootloader::Path::BootCommandLogname()
-            );
-		}
-
-        return 0 if (0 != $ret);
-    }
 
     my $default  = delete $glob{"default"};
 
