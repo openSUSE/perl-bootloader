@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Apr  1 09:43:57 UTC 2014 - mchang@suse.com
+
+- enable SUSE_BTRFS_SNAPSHOT_BOOTING on x86 as other architectures
+  are working in progress.
+- 0.808  
+
+-------------------------------------------------------------------
 Mon Mar 31 12:18:44 UTC 2014 - mchang@suse.com
 
 - support snapper rollback (fate##317062)
