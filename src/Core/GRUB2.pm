@@ -985,7 +985,12 @@ sub Info2Global {
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
-    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
+    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "";
+    # enable btrfs snapshot boot configs only on i386-pc
+    # other architectures (s390, ppc) are planned but not ready 
+    if ($self->{'target'} eq "i386-pc") {
+        $suse_btrfs = "true";
+    }
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -1348,6 +1353,8 @@ sub InitializeBootloader {
             }
 
             if ($glob{suse_btrfs} eq "true" and -e "/usr/sbin/suse_btrfs_grub2_install.sh") {
+                # enable btrfs snapshot boot configs only on i386-pc
+                # other architectures (s390, ppc) are planned but not ready
                 if ($self->{'target'} eq "i386-pc") {
                     my $rootfs = qx(/usr/sbin/grub2-probe -t fs /);
                     my $bootfs = qx(/usr/sbin/grub2-probe -t fs /boot);
