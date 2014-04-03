@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Apr  3 09:09:37 CEST 2014 - snwint@suse.de
+
+- don't forget to update device.map (bnc #869083)
+- 0.809
+
+-------------------------------------------------------------------
 Tue Apr  1 09:43:57 UTC 2014 - mchang@suse.com
 
 - enable SUSE_BTRFS_SNAPSHOT_BOOTING on x86 as other architectures
