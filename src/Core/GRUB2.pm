@@ -954,10 +954,6 @@ sub Info2Global {
                   '# WARNING foregin OS menu entries will be lost if set true here'
                 ],
             },
-            {
-                'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
-                'value' => 'true',
-            },
         );
 
     }
@@ -981,9 +977,9 @@ sub Info2Global {
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
     my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "";
-    # enable btrfs snapshot boot configs only on i386-pc
+    # per default enable btrfs snapshot boot configs only on i386-pc
     # other architectures (s390, ppc) are planned but not ready 
-    if ($self->{'target'} eq "i386-pc") {
+    if ($suse_btrfs eq "" and $self->{'target'} eq "i386-pc") {
         $suse_btrfs = "true";
     }
     # $root = " root=$root" if $root ne "";
