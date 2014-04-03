@@ -390,22 +390,17 @@ sub ListFiles {
     my $self = shift;
     my @ret = ();
 
-    if (-e Bootloader::Path::Grub2_installdevice()) {
-        push @ret, Bootloader::Path::Grub2_installdevice();
-    } else {
-        $self->warning ("file not exist ".Bootloader::Path::Grub2_installdevice());
-    }
-
-    if (-e Bootloader::Path::Grub2_defaultconf()) {
-        push @ret, Bootloader::Path::Grub2_defaultconf();
-    } else {
-        $self->warning ("file not exist ".Bootloader::Path::Grub2_defaultconf());
-    }
-
-    if (-e Bootloader::Path::Grub2_conf()) {
-        push @ret, Bootloader::Path::Grub2_conf();
-    } else {
-        $self->warning ("file not exist ".Bootloader::Path::Grub2_conf());
+    for my $i (
+        Bootloader::Path::Grub2_installdevice(),
+        Bootloader::Path::Grub2_defaultconf(),
+        Bootloader::Path::Grub2_conf(),
+        Bootloader::Path::Grub2_devicemap(),
+    ) {
+        if (-e $i) {
+            push @ret, $i;
+        } else {
+            $self->warning ("$i: config file does not exist");
+        }
     }
 
     return \@ret;
