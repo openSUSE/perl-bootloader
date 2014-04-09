@@ -58,7 +58,6 @@ sub StartLog
   my $self = shift;
 
   delete $self->{logger}{log_fh};
-  delete $self->{logger}{log_fh_old};
   delete $self->{logger}{log_fh_yast};
   delete $self->{logger}{log_is_stderr};
 
@@ -74,14 +73,6 @@ sub StartLog
     $| = 1;
     select $tmp;
     $self->{logger}{log_fh} = $f;
-  }
-
-  # old logfile for compatibility
-  if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::LognameOld()) {
-    my $tmp = select $f;
-    $| = 1;
-    select $tmp;
-    $self->{logger}{log_fh_old} = $f;
   }
 
   # also log to yast log if called from yast
@@ -179,10 +170,6 @@ sub __log
 
   if($self->{logger}{log_fh}) {
     print { $self->{logger}{log_fh} } "$prefix $message\n";
-  }
-
-  if($self->{logger}{log_fh_old}) {
-    print { $self->{logger}{log_fh_old} } "$prefix $message\n";
   }
 
   if($self->{logger}{log_fh_yast}) {
