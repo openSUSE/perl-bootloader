@@ -967,31 +967,26 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSectionList {
-    my %option = @_;
-    my $loader = GetBootloader ();
+sub GetSectionList
+{
+  my $self = $lib_ref;
 
-    normalize_options(\%option);
-    my @sections = @{$lib_ref->GetSections ()};
+  my %option = @_;
+  my $loader = GetBootloader();
 
-    # Print sections from file to logfile
-    $lib_ref->milestone("sections from file:\n' " .
-			join("'\n' ",
-			     map {
-				 $_->{"name"};
-			     } @sections) . "'\n"
-		       );
+  $self->milestone("search options:", \%option);
 
-    my @section_names = map {
-	match_section($_, \%option) ? $_->{"name"} : ();
-    } @sections;
+  normalize_options(\%option);
 
-    # Print found sections to logfile
-    $lib_ref->milestone("Found sections:\n' " .
-			join("'\n' ", @section_names) . "'\n"
-		       );
+  my @sections = @{$self->GetSections()};
 
-    return @section_names;
+  my @section_names = map {
+    match_section($_, \%option) ? $_->{name} : ();
+  } @sections;
+
+  $self->milestone("sections matched:", \@section_names);
+
+  return @section_names;
 }
 
 
@@ -1001,13 +996,17 @@ C<< Bootloader::Tools::GetSection($name); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSection {
-    my $name = shift or return undef;
+sub GetSection
+{
+  my $self = $lib_ref;
 
-    foreach (@{$lib_ref->GetSections ()}) {
-	return $_ if $_->{"name"} eq $name;
-    }
-    return undef;
+  my $name = shift or return undef;
+
+  for (@{$self->GetSections()}) {
+    return $_ if $_->{name} eq $name;
+  }
+
+  return undef;
 }
 
 =item
