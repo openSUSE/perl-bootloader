@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Wed Apr  9 15:06:33 CEST 2014 - snwint@suse.de
+
+- drop old log /var/log/YaST2/perl-BL-standalone-log
+- remove /var/log/YaST2/y2log_bootloader
+- add MaxDepth parameter to logging function
+- clean up logging in some functions
+- use logrotate file (bnc #822774)
+- 0.811
+
+-------------------------------------------------------------------
 Thu Apr  3 14:16:07 CEST 2014 - snwint@suse.de
 
 - fix ppc install (bnc #871691)
