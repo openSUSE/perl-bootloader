@@ -84,7 +84,7 @@ C<< $lines_ref = Bootloader::Core->PrepareMenuFileLines (\@sectinos, \%global, $
 
 C<< $status = Bootloader::Core->UpdateBootloader (); >>
 
-C<< $status = Bootloader::Core->RunCommand ($command, $log_file); >>
+C<< $status = Bootloader::Core->RunCommand ($command, $log_file, $try); >>
 
 C<< $mapping_ref = Bootloader::Core->GetDeviceMapping (); >>
 
@@ -1445,7 +1445,7 @@ sub ParseMenuFileLines
 
   @lines = $self->ProcessMenuFileLines (\@lines, $separator);
   my @sects = @{$self->SplitLinesToSections (\@lines, $section_starts_ref)};
-  my @global = @{+shift @sects};
+  my @global = @{+shift @sects // []};
 
   @sects = map {
     $self->milestone(
@@ -1566,39 +1566,56 @@ sub UpdateBootloader {
 #     return undef;
 # }
 
-=item
-C<< $status = Bootloader::Core->RunCommand ($command, $log_file); >>
 
-Runs specified command. If log file is defined, its stdout and stderr
-are appended to the log file.
-As arguments, takes the command end the log file name. Returns
-exit code of the command.
+=item
+C<< $status = Bootloader::Core->RunCommand ($command, $log_file, $try); >>
+
+Runs specified command.
+If $log_file is set, stdout and stderr are written to the log file.
+If $try is set, ignores command errors and returns 0.
+Otherwise it returns the exit code of the command.
+command, exit code, and output are stored internally in $self->{last_command}.
 
 =cut
 
-# integer RunCommand (string command, string log_file)
-sub RunCommand {
-    my $self = shift;
-    my $command = shift;
-    my $log = shift;
+# integer RunCommand (string command, string log_file, integer try)
+sub RunCommand
+{
+  my $self = shift;
+  my $command = shift;
+  my $log = shift;
+  my $try = shift;
 
-    if (defined ($log))
-    {
-	unlink "$log" if -f $log;
-	$command = "$command >>$log 2>&1";
-    }
-    else
-    {
-	$command = "$command >/dev/null 2>/dev/null";
-    }
-    my $ret = system ($command);
+  if(defined $log) {
+    unlink $log if -f $log;
+  }
+  else {
+    $log = "/dev/null";
+  }
 
-    my $output = `cat $log`;
-    $self->milestone("run $command - ret $ret + output: $output");
-    $self->error("Command '$command' failed with code $ret and output: $output") unless $ret == 0;
+  my $ret = system "$command >$log 2>&1";
+  $ret >>= 8 if $ret;
 
-    return $ret;
+  my $output;
+  if(open my $fh, "<", $log) {
+    local $/;
+    $output = <$fh>;
+    close $fh;
+  }
+
+  $self->{last_command} = { cmd => $command, exit => $ret, out => $output};
+
+  if(!$ret || $try) {
+    $self->milestone("'$command' = $ret, output:", $output);
+    $ret = 0;
+  }
+  else {
+    $self->error("'$command' failed with exit code $ret, output:", $output);
+  }
+
+  return $ret;
 }
+
 
 =item
 C<< $mapping_ref = Bootloader::Core->GetDeviceMapping (); >>
@@ -1648,33 +1665,19 @@ from the system, but returns internal structures.
 =cut
 
 # map<string,any> GetSettings ()
-sub GetSettings {
-    my $self = shift;
+sub GetSettings
+{
+  my $self = shift;
 
-    my %ret = ();
-    foreach my $key ("global", "exports", "sections", "device_map")
-    {
-	if (defined ($self->{$key}))
-	{
-	    $ret{$key} = $self->{$key};
-            if ($key eq "sections")
-            {
-              foreach my $section (@{$ret{$key}})
-              {
-                $self->milestone("store: $key:" . join( " - ", %{$section}));
-              }
-            }
-            elsif ($key eq "global" or $key eq "device_map")
-            {
-              $self->milestone("store: $key:" . join( ",", %{$ret{$key}}));
-            }
-            else
-            {
-              $self->milestone("store: $key:" . join( ",", $ret{$key}));
-            }
-	}
-    }
-    return \%ret;
+  my $ret = {};
+
+  for ("global", "exports", "sections", "device_map") {
+    $ret->{$_} = $self->{$_} if defined $self->{$_};
+  }
+
+  $self->debug("ret =", $ret);
+
+  return $ret;
 }
 
 =item
@@ -1687,9 +1690,10 @@ Returns undef on fail, defined nonzero value on success.
 =cut
 
 # void SetSettings (map<string,any> settings)
-sub SetSettings {
-    my $self = shift;
-    my %settings = %{+shift};
+sub SetSettings
+{
+  my $self = shift;
+  my %settings = %{+shift};
 
     foreach my $key ("global", "imports", "sections", "device_map")
     {
@@ -1713,7 +1717,8 @@ sub SetSettings {
             }
         }
     }
-    return 1;
+
+  return 1;
 }
 
 =item

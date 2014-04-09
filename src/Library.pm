@@ -82,6 +82,11 @@ package Bootloader::Library;
 
 use strict;
 
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 1;
+
 use Bootloader::Core;
 use Bootloader::MBRTools;
 use Bootloader::Path;
@@ -485,25 +490,29 @@ EXAMPLE:
 
 =cut
 
-sub WriteSettings {
-    my $self = shift;
-    my $menu_only = shift || 0;
+sub WriteSettings
+{
+  my $self = shift;
+  my $menu_only = shift || 0;
 
-    my $loader = $self->{loader};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone("menu_only = $menu_only");
+  $self->milestone("creating config files");
 
-    $loader->{resolve_symlinks} = 1;
-    my $new_lines_ref = $loader->CreateLines ();
-    if (!defined $new_lines_ref)
-    {
-        $self->warning("no config - nothing written");
-	return undef;
-    }
+  $loader->{resolve_symlinks} = 1;
+  my $new_lines_ref = $loader->CreateLines();
 
-    return $loader->WriteFiles ($new_lines_ref, ".new", $menu_only);
+  if(!defined $new_lines_ref) {
+    $self->warning("no config created - nothing written");
+    return undef;
+  }
+
+  $self->milestone("writing config files (menu_only = $menu_only)");
+
+  return $loader->WriteFiles($new_lines_ref, ".new", $menu_only);
 }
+
 
 =item
 C<< $status = Bootloader::Library->ReadSettingsTmp ($tmp_dir); >>
@@ -592,6 +601,44 @@ sub WriteSettingsTmp {
     }
     return $loader->WriteFiles (\%new_lines);
 }
+
+
+# store zombie list 
+sub StoreZombies
+{
+  my $self = shift;
+
+  if($self->{zombies} && @{$self->{zombies}} > 0) {
+    $self->WriteFileRaw(Bootloader::Path::Zombies(), Dumper($self->{zombies}));
+  }
+  else { 
+    unlink Bootloader::Path::Zombies();
+  }
+}
+
+
+# read zombie list 
+sub ReadZombies
+{
+  my $self = shift;
+
+  delete $self->{zombies};
+
+  if(open(my $fh, "<", Bootloader::Path::Zombies())) {
+    local $/;
+    $_ = <$fh>;
+    close $fh;
+
+    $self->milestone("zombie list (unparsed) =", $_);
+
+    my $xxx = eval $_;
+    $self->warning("error parsing zombie list") unless defined $xxx;
+    $self->{zombies} = $xxx if ref($xxx) eq 'ARRAY';
+  }
+
+  $self->milestone("zombie list (read) =", $self->{zombies});
+}
+
 
 =item
 C<< $files_contents_ref = Bootloader::Library->GetFilesContents (); >>
@@ -755,6 +802,7 @@ sub ListConfigurationFiles {
     return $loader->ListFiles ();
 }
 
+
 =item
 C<< $sections_ref = Bootloader::Library->GetSettings (); >>
 
@@ -767,15 +815,16 @@ EXAMPLE:
 
 =cut
 
-sub GetSettings {
-    my $self = shift;
+sub GetSettings
+{
+  my $self = shift;
 
-    my $loader = $self->{loader};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone("TRACE");
-    return $loader->GetSettings ();
+  return $loader->GetSettings();
 }
+
 
 =item
 C<< $status = Bootloader::Library->SetSettings (); >>
@@ -789,17 +838,17 @@ EXAMPLE:
 
 =cut
 
-sub SetSettings {
-    my $self = shift;
-    my $settings_ref = shift;
+sub SetSettings
+{
+  my $self = shift;
+  my $settings_ref = shift;
 
-    my $loader = $self->{loader};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone("TRACE");
-
-    return $loader->SetSettings ($settings_ref);
+  return $loader->SetSettings($settings_ref);
 }
+
 
 # wrappers for easier use
 
@@ -940,16 +989,16 @@ EXAMPLE:
 
 =cut
 
-sub SetSections {
-    my $self = shift;
-    my $sections_ref = shift;
+sub SetSections
+{
+  my $self = shift;
+  my $sections_ref = shift;
 
-    my %settings = (
-	"sections" => $sections_ref
-    );
-    return $self->SetSettings (\%settings)
+  $self->milestone("updating sections");
 
+  return $self->SetSettings({sections => $sections_ref});
 }
+
 
 =item
 C<< $status = Bootloader::Library->SetGlobalSettings (); >>
@@ -973,14 +1022,14 @@ EXAMPLE:
   }
 
 =cut
-sub SetGlobalSettings {
-    my $self = shift;
-    my $global_ref = shift;
+sub SetGlobalSettings
+{
+  my $self = shift;
+  my $global_ref = shift;
 
-    my %settings = (
-	"global" => $global_ref
-    );
-    return $self->SetSettings (\%settings)
+  $self->milestone("updating global settings");
+
+  return $self->SetSettings({global => $global_ref});
 }
 
 =item

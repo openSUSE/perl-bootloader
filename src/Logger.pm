@@ -165,8 +165,11 @@ sub __log
 
   if($_[0]) {
     my $x = $_[0];
+    my $m = $_[1];
     if(ref $x) {
+      $Data::Dumper::Maxdepth = $m if $m;
       chomp($x = Dumper $x);
+      $Data::Dumper::Maxdepth = 0 if $m;
     }
     else {
       chomp $x;

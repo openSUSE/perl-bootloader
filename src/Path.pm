@@ -51,6 +51,8 @@ C<< $path = Bootloader::Path::Zipl_conf(); >>
 
 C<< $path = Bootloader::Path::Zipl_zipl(); >>
 
+C<< $path = Bootloader::Path::Zombies(); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -289,6 +291,18 @@ Gets path to zipl binary.
 
 sub Zipl_zipl {
   my $value = "/sbin/zipl";
+  return Prefix($value);
+}
+
+=item
+C<< $path = Bootloader::Path::Zombies(); >>
+
+Gets path to zombie list.
+
+=cut
+
+sub Zombies {
+  my $value = "/var/lib/pbl/zombies";
   return Prefix($value);
 }
 

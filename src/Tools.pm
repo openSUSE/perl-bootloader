@@ -92,6 +92,8 @@ C<< Bootloader::Tools::DeviceMapperActive (); >>
 package Bootloader::Tools;
 
 use strict;
+use POSIX qw ( strftime );
+
 use base 'Exporter';
 
 our @EXPORT = qw(InitLibrary CountImageSections CountSections
@@ -934,53 +936,50 @@ sub InitLibrary
 
 
 # internal: does section match with set of tags
-sub match_section {
-    my ($sect_ref, $opt_ref,) = @_;
-    my $match = 1;
+sub match_section
+{
+  my $self = $lib_ref;
 
-    $lib_ref->milestone("matching section name: " . $sect_ref->{name});
+  my ($sect_ref, $opt_ref) = @_;
+  my $match = 1;
 
-    foreach my $opt (keys %{$opt_ref}) {
-	next unless exists $sect_ref->{"$opt"};
-	# FIXME: avoid "kernel"
-	# FIXME: if opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
-        # FIXME: to compare !!
-	$lib_ref->milestone("matching key: $opt");
-	if ($opt eq "image" or $opt eq "kernel" or $opt eq "initrd") {
-	    $match = (ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) eq
-		      ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}));
-	    # Print info for this match
-	    $lib_ref->milestone("key: $opt, matched: " .
-		ResolveCrossDeviceSymlinks($sect_ref->{"$opt"}) .
-		", with: " . ResolveCrossDeviceSymlinks($opt_ref->{"$opt"}) . ", result: $match");
-	}
-	else {
-	    $match = ($sect_ref->{"$opt"} eq $opt_ref->{"$opt"});
-	    # Print info for this match
-	    $lib_ref->milestone("key: $opt, matched: " .
-		$sect_ref->{"$opt"} . ", with: " . $opt_ref->{"$opt"} . ", result: $match");
-	}
-	last unless $match;
+  $self->milestone("section name: \"$sect_ref->{name}\"");
+
+  for my $opt (keys %{$opt_ref}) {
+    next unless exists $sect_ref->{$opt};
+
+    # FIXME: avoid "kernel"
+    # FIXME: if $opt_ref doesn't have (hdX,Y), there is a mountpoint, thus remove it from sect_ref
+    # FIXME: to compare !!
+
+    my $key1 = $sect_ref->{$opt};
+    my $key2 = $opt_ref->{$opt};
+
+    if($opt eq "image" || $opt eq "kernel" || $opt eq "initrd") {
+      $key1 = ResolveCrossDeviceSymlinks($key1);
+      $key2 = ResolveCrossDeviceSymlinks($key2);
     }
-    $lib_ref->milestone("end result: $match");
-    return $match;
+
+    $match = $key1 eq $key2 ? 1 : 0;
+    $self->milestone("  $opt($key1 " . ($match ? "=" : "!") . "= $key2)");
+
+    last unless $match;
+  }
+
+  $self->milestone("match result: $match");
+
+  return $match;
 }
 
 
 # internal: normalize options in a way needed for 'match_section'
-sub normalize_options {
-    my $opt_ref = shift;
+sub normalize_options
+{
+  my $self = $lib_ref;
+  my $opt_ref = shift;
 
-    foreach ("image", "initrd" ) {
-        next unless exists $opt_ref->{$_};
-	# Print found sections to logfile
-        $lib_ref->milestone("before: '$_' => '$opt_ref->{$_}'");
-	$opt_ref->{$_} = ResolveCrossDeviceSymlinks($opt_ref->{$_});
-	$lib_ref->milestone("after: '$_' => '$opt_ref->{$_}'");
-    }
-
-    # FIXME: some have "kernel" some have "image" tag, latter makes more sense
-    $opt_ref->{"kernel"} = $opt_ref->{"image"} if exists $opt_ref->{"image"};
+  # FIXME: some have "kernel" some have "image" tag, latter makes more sense
+  $opt_ref->{kernel} = $opt_ref->{image} if exists $opt_ref->{image};
 }
 
 
@@ -1177,31 +1176,26 @@ C<< Bootloader::Tools::GetSectionList(@selectors); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSectionList {
-    my %option = @_;
-    my $loader = GetBootloader ();
+sub GetSectionList
+{
+  my $self = $lib_ref;
 
-    normalize_options(\%option);
-    my @sections = @{$lib_ref->GetSections ()};
+  my %option = @_;
+  my $loader = GetBootloader();
 
-    # Print sections from file to logfile
-    $lib_ref->milestone("sections from file:\n' " .
-			join("'\n' ",
-			     map {
-				 $_->{"name"};
-			     } @sections) . "'\n"
-		       );
+  $self->milestone("search options:", \%option);
 
-    my @section_names = map {
-	match_section($_, \%option) ? $_->{"name"} : ();
-    } @sections;
+  normalize_options(\%option);
 
-    # Print found sections to logfile
-    $lib_ref->milestone("Found sections:\n' " .
-			join("'\n' ", @section_names) . "'\n"
-		       );
+  my @sections = @{$self->GetSections()};
 
-    return @section_names;
+  my @section_names = map {
+    match_section($_, \%option) ? $_->{name} : ();
+  } @sections;
+
+  $self->milestone("sections matched:", \@section_names);
+
+  return @section_names;
 }
 
 
@@ -1211,63 +1205,95 @@ C<< Bootloader::Tools::GetSection($name); >>
 # FIXME: Add documentation
 =cut
 
-sub GetSection {
-    my $name = shift or return undef;
+sub GetSection
+{
+  my $self = $lib_ref;
 
-    foreach (@{$lib_ref->GetSections ()}) {
-	return $_ if $_->{"name"} eq $name;
-    }
-    return undef;
+  my $name = shift or return undef;
+
+  for (@{$self->GetSections()}) {
+    return $_ if $_->{name} eq $name;
+  }
+
+  return undef;
 }
+
+
+sub get_flavor
+{
+  my $flavor;
+
+  $flavor = $1 if $_[0] =~ /^.*-([a-zA-Z0-9]+)/;
+
+  return $flavor;
+}
+
+
+sub get_fallback
+{
+  my $fallback;
+
+  $fallback = $_[0] =~ /failsafe/i || $_[1] eq "failsafe" ? 1 : 0;
+
+  return $fallback;
+}
+
 
 =item
 C<< Bootloader::Tools::GetFittingSection($name, $image, $type, \@sections); >>
 
-Fing fitting section for given name and image type.
-If not find return undef.
+Find fitting section for given name and image type.
+If not found return undef.
 
 =cut
 
-sub GetFittingSection {
+sub GetFittingSection
+{
+  my $self = $lib_ref;
+
   my $name = shift;
   my $image = shift;
   my $type = shift;
   my $sections = shift;
-  my $ret = undef;
+  my $ret;
 
+  $self->milestone("name = $name, image = $image, type = $type");
+  $self->milestone("sections =", $sections, 2);
 
-  if ($image !~ m/^.*-([a-zA-Z0-9]+)(\..*)?$/) {
-    return undef;
-  }
-  my $flavor = $1;
-  my $fallback = ($name =~ m/failsafe/i);
+  my $flavor = get_flavor $image;
+  my $fallback = get_fallback $name;
+
+  return undef unless defined $flavor;
+
+  $self->milestone("flavor = $flavor, fallback = $fallback");
  
-  # Heuristic one - try find same flavor
-  foreach my $s (@{$sections}) {
-    next unless $s->{"type"} eq $type;
-    if (defined ($s->{"image"}) && $s->{"image"} =~ m/$flavor/) {
-      my $sec_fallback = (defined $s->{"original_name"} && $s->{"original_name"} =~ m/failsafe/i) ||
-                         (defined $s->{"name"} && $s->{"name"} =~ m/failsafe/i);
-      next if ($sec_fallback xor $fallback); #skip if they are not same failsafe or non-failsafe
-      $ret = $s;
+  # heuristic one - try to find same flavor
+  for (@$sections) {
+    if(
+      $_->{type} eq $type &&
+      get_flavor($_->{image}) eq $flavor &&
+      get_fallback($_->{name}, $_->{original_name}) == $fallback
+    ) {
+      $ret = $_;
       last;
     }
   }
 
-  return $ret if $ret;
+  if(!$ret) {
+    # heuristic two - see if we deleted a matching entry lately
+    $ret = get_zombie($type, $flavor, $fallback);
 
-  # Heuristic two - first fitting section with same type
-  foreach my $s (@{$sections}) {
-    next unless $s->{"type"} eq $type;
-    my $sec_fallback = (defined $s->{"original_name"} && $s->{"original_name"} =~ m/failsafe/i) ||
-                       (defined $s->{"name"} && $s->{"name"} =~ m/failsafe/i);
-    next if ($sec_fallback xor $fallback); #skip if they are not same failsafe or non-failsafe
-    $ret = $s;
-    last;
+    if($ret) {
+      delete $ret->{fallback};
+      delete $ret->{flavor};
+    }
   }
+
+  $self->milestone("fitting section =", $ret, 1);
 
   return $ret;
 }
+
 
 =item
 C<< Bootloader::Tools::AddSection($name, @params); >>
@@ -1286,145 +1312,139 @@ EXAMPLE:
 
 =cut
 
-sub AddSection {
-    my $name = shift;
-    my %option = @_;
+sub AddSection
+{
+  my $self = $lib_ref;
 
-    return unless defined $name;
-    return unless exists $option{"type"};
+  my $name = shift;
+  my %option = @_;
 
-    $lib_ref->milestone("option = ", \%option);
+  return unless defined $name;
+  return unless exists $option{type};
 
-    my $default = delete $option{"default"} || 0;
-    my %new = ();
-    my %def = ();
+  $self->milestone("name = $name, option = ", \%option);
 
-    my @sections = @{$lib_ref->GetSections ()};
+  $self->ReadZombies();
 
-    my $fitting_section = GetFittingSection($name,$option{"image"},$option{"type"},\@sections);
+  my $default = delete $option{default} || 0;
+  my %new = ();
 
-    if ($fitting_section) {
-      %def = %{$fitting_section};
-      $lib_ref->milestone("Fitting section found so use it");
-      while ((my $k, my $v) = each (%def)) {
-        if (substr ($k, 0, 2) ne "__" && $k ne "original_name"
-        		&& $k ne "initrd") {
-          $new{$k} = $v;
-      	}
+  my @sections = @{$self->GetSections()};
+
+  my $fitting_section = GetFittingSection($name, $option{image}, $option{type}, \@sections);
+
+  if($fitting_section) {
+    $lib_ref->milestone("Fitting section found so use it");
+
+    ###### FIXME strip 'initial'?
+    for (keys %$fitting_section) {
+      $new{$_} = $fitting_section->{$_} unless /^(__.*|initial|original_name|initrd)$/
+    }
+
+    $new{exists $new{kernel} ? "kernel" : "image"} = delete $option{image} if exists $option{image};
+  }
+  else {
+    $self->milestone("Fitting section not found. Use sysconfig values as fallback.");
+    my $sysconf;
+    if($name =~ /^Failsafe/ || $option{original_name} eq "failsafe") {
+      $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
+      $new{append} = $sysconf if defined $sysconf;
+      $sysconf = GetSysconfigValue("FAILSAFE_VGA");
+      $new{vgamode} = $sysconf if defined $sysconf;
+      $sysconf = GetSysconfigValue("IMAGEPCR");
+      $new{imagepcr} = $sysconf if defined $sysconf;
+      $sysconf = GetSysconfigValue("INITRDPCR");
+      $new{initrdpcr} = $sysconf if defined $sysconf;
+      my %measures = split(/:/, GetSysconfigValue("FAILSAFE_MEASURES"));
+      $new{measure} = \%measures if keys %measures != 0;
+    }
+    elsif($option{type} eq "xen") {
+      $sysconf = GetSysconfigValue("XEN_KERNEL_APPEND");
+      $new{append} = $sysconf if defined $sysconf;
+      $sysconf =  GetSysconfigValue("XEN_VGA");
+      $new{vgamode} = $sysconf if defined $sysconf;
+      $sysconf =  GetSysconfigValue("XEN_APPEND");
+      $new{xen_append} =  $sysconf if defined $sysconf;
+      $sysconf = GetSysconfigValue("XEN_IMAGEPCR");
+      $new{imagepcr} = $sysconf if defined $sysconf;
+      $sysconf = GetSysconfigValue("XEN_INITRDPCR");
+      $new{initrdpcr} = $sysconf if defined $sysconf;
+      $sysconf = GetSysconfigValue("XEN_PCR");
+      $new{xenpcr} = $sysconf if defined $sysconf;
+      my %measures = split(/:/, GetSysconfigValue("XEN_MEASURES"));
+      $new{measure} = \%measures if keys %measures != 0;
+    }
+    else {
+      # RT kernels have special args bnc #450153
+      if($new{image} =~ /-rt$/ && defined GetSysconfigValue("RT_APPEND")) {
+        $sysconf = GetSysconfigValue("RT_APPEND");
+        $new{append} = $sysconf if defined $sysconf;
+        $sysconf = GetSysconfigValue("RT_VGA");
+        $new{vgamode} = $sysconf if defined $sysconf;
       }
-
-      if (exists $option{"image"}) {
-        if (exists $new{"kernel"}) { 
-    	    $new{"kernel"} = delete $option{"image"};
-        }	else {	
-    	    $new{"image"} = delete $option{"image"};
-      	}
+      else {
+        $sysconf = GetSysconfigValue("DEFAULT_APPEND");
+        $new{append} = $sysconf if defined $sysconf;
+        $sysconf = GetSysconfigValue("DEFAULT_VGA");
+        $new{vgamode} = $sysconf if defined $sysconf;
+        $sysconf = GetSysconfigValue("IMAGEPCR");
+        $new{imagepcr} = $sysconf if defined $sysconf;
+        $sysconf = GetSysconfigValue("INITRDPCR");
+        $new{initrdpcr} = $sysconf if defined $sysconf;
+        my %measures = split(/:/, GetSysconfigValue("DEFAULT_MEASURES"));
+        $new{measure} = \%measures if keys %measures != 0;
       }
-      } else {
-        $lib_ref->milestone("Fitting section not found. Use sysconfig values as fallback.");
-        my $sysconf;
-        if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
-          $sysconf =  GetSysconfigValue("FAILSAFE_APPEND");
-          $new{"append"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("FAILSAFE_VGA");
-          $new{"vgamode"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("IMAGEPCR");
-          $new{"imagepcr"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("INITRDPCR");
-          $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-          my %measures = split(/:/, GetSysconfigValue("FAILSAFE_MEASURES"));
-          $new{"measure"} = \%measures if ((keys %measures)!= 0);
-        }
-        elsif ($option{"type"} eq "xen") 
-        {
-          $sysconf = GetSysconfigValue("XEN_KERNEL_APPEND");
-          $new{"append"} = $sysconf if (defined $sysconf);
-          $sysconf =  GetSysconfigValue("XEN_VGA");
-          $new{"vgamode"} = $sysconf if (defined $sysconf);
-          $sysconf =  GetSysconfigValue("XEN_APPEND");
-          $new{"xen_append"} =  $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("XEN_IMAGEPCR");
-          $new{"imagepcr"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("XEN_INITRDPCR");
-          $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-          $sysconf = GetSysconfigValue("XEN_PCR");
-          $new{"xenpcr"} = $sysconf if (defined $sysconf);
-          my %measures = split(/:/, GetSysconfigValue("XEN_MEASURES"));
-          $new{"measure"} = \%measures if ((keys %measures)!= 0);
-        }
-        else 
-        {
-          #RT kernel have special args bnc #450153
-          if ($new{"image"} =~ m/-rt$/ && defined (GetSysconfigValue("RT_APPEND"))){
-            $sysconf = GetSysconfigValue("RT_APPEND");
-            $new{"append"} = $sysconf if (defined $sysconf);
-            $sysconf = GetSysconfigValue("RT_VGA");
-            $new{"vgamode"} = $sysconf if (defined $sysconf);
-          } else {
-            $sysconf = GetSysconfigValue("DEFAULT_APPEND");
-            $new{"append"} = $sysconf if (defined $sysconf);
-            $sysconf = GetSysconfigValue("DEFAULT_VGA");
-            $new{"vgamode"} = $sysconf if (defined $sysconf);
-            $sysconf = GetSysconfigValue("IMAGEPCR");
-            $new{"imagepcr"} = $sysconf if (defined $sysconf);
-            $sysconf = GetSysconfigValue("INITRDPCR");
-            $new{"initrdpcr"} = $sysconf if (defined $sysconf);
-            my %measures = split(/:/, GetSysconfigValue("DEFAULT_MEASURES"));
-            $new{"measure"} = \%measures if ((keys %measures)!= 0);
-          }
-      }
-
-      my $root_dev = ReadMountPoints()->{'/'};
-      $new{root} = $root_dev if $root_dev;
-
-      $sysconf = GetSysconfigValue("CONSOLE");
-      $new{"console"} = $sysconf if (defined $sysconf);
     }
 
-    foreach (keys %option) {
-      $new{"$_"} = $option{"$_"};
+    my $root_dev = ReadMountPoints()->{'/'};
+    $new{root} = $root_dev if $root_dev;
+
+    $sysconf = GetSysconfigValue("CONSOLE");
+    $new{console} = $sysconf if defined $sysconf;
+  }
+
+  $new{$_} = $option{$_} for keys %option;
+  $new{name} = $name;
+
+  # Append flavor appendix to section label if necessary
+  AdjustSectionNameAppendix("add", \%new);
+
+  my $failsafe_modified = 0;
+  if($name =~ /^Failsafe/ || $option{original_name} eq "failsafe") {
+    $failsafe_modified = 1;
+    $default = 0;
+  }
+
+  $new{__modified} = 1;
+
+  my $match = '';
+  my $new_name = '';
+
+  my $loader = Bootloader::Tools::GetBootloader();
+
+  # If we have a bootloader that uses label names to specify the default
+  # entry we need unique labels: so, append '_NUMBER', if necessary.
+  #
+  # cf. Core::FixSectionName()
+
+  if($loader ne "grub" && $loader ne "grub2") {
+    my $max_idx = undef;
+    for my $s (@sections) {
+      $max_idx = $2 + 0 if $s->{name} =~ /^$new{name}(_(\d+))?$/ && $2 >= $max_idx;
     }
-    $new{"name"} = $name;
 
-    # Append flavor appendix to section label if necessary
-    AdjustSectionNameAppendix ("add", \%new);
+    $new{name} .= "_" . ($max_idx + 1) if defined $max_idx;
+  }
 
-    my $failsafe_modified = 0;
-    if ($name =~ m/^Failsafe.*$/ or $option{"original_name"} eq "failsafe") {
-      $failsafe_modified = 1;
-	    $default = 0;
-    }
+  # Print new section to be added to logfile
+  $self->milestone("New section to be added:", \%new);
 
-    $new{"__modified"} = 1;
+  # Put new entries on top
+  unshift @sections, \%new;
 
-    my $match = '';
-    my $new_name = '';
-
-    my $loader = Bootloader::Tools::GetBootloader ();
-
-    # If we have a bootloader that uses label names to specify the default
-    # entry we need unique labels: so, append '_NUMBER', if necessary.
-    #
-    # cf. Core::FixSectionName()
-
-    if ($loader ne "grub" && $loader ne "grub2") {
-        my $max_idx = undef;
-        for my $s (@sections) {
-            $max_idx = $2 + 0 if $s->{name} =~ /^$new{name}(_(\d+))?$/ && $2 >= $max_idx;
-        }
-
-        $new{name} .= "_" . ($max_idx + 1) if defined $max_idx;
-    }
-
-    # Print new section to be added to logfile
-    $lib_ref->milestone("New section to be added:", \%new);
-
-    # Put new entries on top
-    unshift @sections, \%new;
-
-    # Switch the first 2 entries in @sections array to put the normal entry on
-    # top of corresponding failsafe entry
-    if (($failsafe_modified == 1) && scalar (@sections) >= 2) {
+  # Switch the first 2 entries in @sections array to put the normal entry on
+  # top of corresponding failsafe entry
+  if(($failsafe_modified == 1) && @sections >= 2) {
 	my $failsafe_entry = shift (@sections);
 	my $normal_entry = shift (@sections);
 
@@ -1458,68 +1478,113 @@ sub AddSection {
 
 	unshift @sections, $failsafe_entry;
 	unshift @sections, $normal_entry;
-    }
+  }
 
-    # Print all available sections to logfile
-    $lib_ref->milestone("All available sections (including new ones):");
+  # Print all available sections to logfile
+  $self->milestone("All available sections (including new ones):", \@sections, 2);
 
-    my $section_count = 1;
-    foreach my $s (@sections) {
-	$lib_ref->milestone("$section_count. section:\n' " .
-			    join("'\n' ",
-				 map {
-				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
-				 } keys %{$s}) . "'\n"
-			   );
-	$section_count++;
-    }
+  $self->SetSections(\@sections);
 
-    $lib_ref->SetSections (\@sections);
+  # If the former default boot entry is updated, the new one will become now
+  # the new default entry.
+  my $glob_ref = $self->GetGlobalSettings();
 
-    # If the former default boot entry is updated, the new one will become now
-    # the new default entry.
-    my $glob_ref = $lib_ref->GetGlobalSettings ();
-    $default = 1 if (delete($glob_ref->{"removed_default"}) == 1);
-    $default = 1 unless (defined ($glob_ref->{"default"}) && $glob_ref->{"default"} ne ""); #avoid non-exist default
-    if ($default) {
-	$glob_ref->{"default"} = $new{"name"};
-        if ($loader eq "lilo") #remove read-only flag bnc #381669
-        {
-          delete $glob_ref->{"read-only"};
-        }
-	$glob_ref->{"__modified"} = 1;
-	$lib_ref->SetGlobalSettings ($glob_ref);
-    }
+  $default = 1 if delete $glob_ref->{removed_default} == 1;
+  # avoid non-exist default
+  $default = 1 unless defined $glob_ref->{default} && $glob_ref->{default} ne "";
 
+  if($default) {
+    $glob_ref->{default} = $new{name};
+
+    # remove read-only flag bnc #381669
+    delete $glob_ref->{'read-only'} if $loader eq "lilo";
+
+    $glob_ref->{__modified} = 1;
+
+    $self->SetGlobalSettings($glob_ref);
+  }
+  elsif($loader eq "grub") {
     # If a non default entry is updated, the index of the current
     # default entry has to be increased, because it is shifted down in the
     # array of sections. Only do this for grub.
-    elsif ($loader eq "grub") {
-        my $array_ref = $glob_ref->{"__lines"};
 
-        foreach my $line (@$array_ref) {
-            if ($line->{"key"} eq "default") {
-                $line->{"value"} += 1;
-            }
-        }
-        $lib_ref->SetGlobalSettings ($glob_ref);
+    for (@{$glob_ref->{__lines}}) {
+      $_->{value} += 1 if $_->{key} eq "default";
     }
 
-    # Print globals to logfile
-    $lib_ref->milestone("Global section of config:\n\n' " .
-			join("'\n' ",
-			     map {
-				 m/^__/ ? () : $_ . " => '" . $glob_ref->{$_} . "'";
-			     } keys %{$glob_ref}) . "'\n"
-		       );
+    $self->SetGlobalSettings($glob_ref);
+  }
 
-  if($lib_ref->WriteSettings(1)) {
+  # Print globals to logfile
+  $self->milestone("Global section of config:", $glob_ref, 1);
+
+  $self->StoreZombies();
+
+  if($self->WriteSettings(1)) {
     # avoid initialization but write config to the right place
-    $lib_ref->UpdateBootloader(1);
+    $self->UpdateBootloader(1);
   }
   else {
-    $lib_ref->error("An error occurred while writing the settings.");
+    $self->error("An error occurred while writing the settings.");
   }
+}
+
+
+sub add_zombie
+{
+  my $self = $lib_ref;
+  my $section = shift;
+
+  $self->milestone("section =", $section, 1);
+
+  my $flavor = get_flavor $section->{image};
+  my $fallback = get_fallback $section->{name};
+  return unless defined $flavor;
+
+  my $stored = {
+    flavor => $flavor,
+    fallback => $fallback,
+    date => strftime("%Y-%m-%d %H:%M:%S", localtime)
+  };
+
+  for (keys %$section) {
+    $stored->{$_} = $section->{$_} unless /^(__.*|initial|original_name|initrd|image|kernel)$/
+  }
+
+  $self->{zombies} = [ grep {
+    $_->{flavor} ne $stored->{flavor} ||
+    $_->{fallback} != $stored->{fallback} ||
+    $_->{type} ne $stored->{type};
+  } @{$self->{zombies}} ];
+
+  push @{$self->{zombies}}, $stored;
+
+  $self->milestone("zombie list (new) =", $self->{zombies});
+}
+
+
+sub get_zombie
+{
+  my $self = $lib_ref;
+  my $type = shift;
+  my $flavor = shift;
+  my $fallback = shift;
+  my $found;
+
+  $self->{zombies} = [ grep {
+    my $ok =
+      $_->{flavor} eq $flavor &&
+      $_->{fallback} == $fallback &&
+      $_->{type} eq $type;
+    $found = $_ if $ok;
+    !$ok
+  } @{$self->{zombies}} ];
+
+  $self->milestone("zombie found =", $found);
+
+  $self->milestone("zombie list (new) =", $self->{zombies});
+
+  return $found;
 }
 
 
@@ -1550,121 +1615,109 @@ C<< Bootloader::Tools::RemoveSections($name); >>
 
 =cut
 
-sub RemoveSections {
-    my %option = @_;
-    my @sections = @{$lib_ref->GetSections()};
-    my $glob_ref = $lib_ref->GetGlobalSettings();
-    my $default_section = $glob_ref->{"default"} || "";
-    my $default_removed = 0;
+sub RemoveSections
+{
+  my $self = $lib_ref;
 
-    my $loader = GetBootloader ();
+  my %option = @_;
+  my @sections = @{$self->GetSections()};
+  my $glob_ref = $self->GetGlobalSettings();
+  my $default_section = $glob_ref->{"default"} || "";
+  my $default_removed = 0;
+  my @removed_sections;
 
-    # Print section to be removed to logfile
-    $lib_ref->milestone("Old section to be removed:\n\n' " .
-			join("'\n' ",
-			     map {
-				 $_ . " => '" . $option{$_} . "'";
-			     } keys %option) . "'\n"
-		       );
+  my $loader = GetBootloader();
 
-    # Print all available sections (before removal) to logfile
-    $lib_ref->milestone("All available sections (before removal):\n");
+  $self->ReadZombies();
 
-    my $section_count = 1;
-    foreach my $s (@sections) {
-	$lib_ref->milestone("$section_count. section:\n' " .
-			    join("'\n' ",
-				 map {
-				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
-				 } keys %{$s}) . "'\n"
-			   );
-	$section_count++;
-    }
+  $self->milestone("search options:", \%option);
 
-    my @section_names_before_removal = ();
+  normalize_options(\%option);
 
-    # Extract section names (before removal) out of @sections array
-    foreach my $s (@sections) {
-	push (@section_names_before_removal, $s->{"name"});
-    }
+  $self->milestone("All available sections (before removal):", \@sections, 2);
 
-    normalize_options(\%option);
+  my @section_names_before_removal = ();
+
+  # Extract section names (before removal) out of @sections array
+  for (@sections) {
+    push @section_names_before_removal, $_->{name};
+  }
+
+  @sections = grep {
+    my $match = match_section($_, \%option);
+    $default_removed = 1 if $match and $default_section eq $_->{name};
+    push @removed_sections, $_ if $match;
+    !$match;
+  } @sections;
+
+  add_zombie $_ for @removed_sections;
+
+  $self->milestone("removed sections:", \@removed_sections, 2);
+
+  # Detect wether we have an entry with an initrd line referring to a non
+  # existing initrd file and remove this section respectively.
+  if($loader eq "grub") {
     @sections = grep {
-	my $match = match_section($_, \%option);
-	$default_removed = 1
-	    if $match and $default_section eq $_->{"name"};
-	!$match;
+      my $match = 1;
+
+      # Check if there is a member called "initrd". If this is not the
+      # case, do not throw out the corresponding section because boot
+      # entries without an initrd are allowed, too.
+      if(exists $_->{initrd}) {
+        my $initrd_name = $_->{initrd};
+        my $other_part = 0;
+
+        $other_part = 1 if $initrd_name =~ m/\(hd.+\)/;
+        $initrd_name =~ s/^.*(initrd-.+)$/$1/;
+        $initrd_name = "/boot/" . $initrd_name;
+
+        if(
+          !$other_part &&
+          !-f $initrd_name &&
+          ($_->{type} eq "image" || $_->{type} eq "xen")
+        ) {
+          $match = 0;
+          $self->milestone("removed non-existing initrd \"$initrd_name\" in \"$_->{name}\"");
+          $default_removed = 1 if $default_section eq $_->{name};
+        }
+      }
+      $match;
     } @sections;
-    $lib_ref->milestone("default is removed by grep") if $default_removed;
+  }
 
-    # Detect wether we have an entry with an initrd line referring to a non
-    # existing initrd file and remove this section respectively.
-    if ($loader eq "grub") {
-	@sections = grep {
-	    my $match = 1;
+  $self->milestone("default section has been removed") if $default_removed;
 
-	    # Check if there is a member called "initrd". If this is not the
-	    # case, do not throw out the corresponding section because boot
-	    # entries without an initrd are allowed, too.
-	    if (exists $_->{"initrd"}) {
-		my $initrd_name = $_->{"initrd"};
-		my $other_part = 0;
+  my @section_names_after_removal = ();
 
-		$other_part = 1 if $initrd_name =~ m/\(hd.+\)/;
-		$initrd_name =~ s/^.*(initrd-.+)$/$1/;
-		$initrd_name = "/boot/" . $initrd_name;
+  # Extract section names (after removal) out of @sections array
+  for (@sections) {
+    push @section_names_after_removal, $_->{name};
+  }
 
-		if (!$other_part and !-f $initrd_name and
-		    ($_->{"type"} eq "image" or $_->{"type"} eq "xen")) {
-		    $match = 0;
-                    $lib_ref->milestone("Remove non-existing initrd :".$_->{"name"}." -- $initrd_name \n");
-		}
+  # Remove flavor appendix from section labels if necessary
+  AdjustSectionNameAppendix("remove", \@section_names_before_removal, \@section_names_after_removal);
 
-		$default_removed = 1
-		    if !$match and $default_section eq $_->{"name"};
-	    }
-	    $match;
-	} @sections;
-    }
+  $self->milestone("All available sections (after removal):", \@sections, 2);
 
-    my @section_names_after_removal = ();
+  $self->SetSections(\@sections);
 
-    # Extract section names (after removal) out of @sections array
-    foreach my $s (@sections) {
-	push (@section_names_after_removal, $s->{"name"});
-    }
+  if($default_removed) {
+    $glob_ref->{default} = $sections[0]{name};
+    $self->milestone("removed default, new default = \"$glob_ref->{default}\"");
+    $glob_ref->{removed_default} = 1;
+  }
 
-    # Remove flavor appendix from section labels if necessary
-    AdjustSectionNameAppendix ("remove",
-	\@section_names_before_removal,
-	\@section_names_after_removal);
+  # needed because of GRUB - index of default may change even if not deleted
+  $glob_ref->{"__modified"} = 1;
 
-    # Print all available sections (after removal) to logfile
-    $lib_ref->milestone("All available sections (after removal):\n");
+  $self->SetGlobalSettings($glob_ref);
+  $self->WriteSettings(1);
 
-    $section_count = 1;
-    foreach my $s (@sections) {
-	$lib_ref->milestone("$section_count. section :\n' " .
-			    join("'\n' ",
-				 map {
-				     m/^__/ ? () : $_ . " => '" . $s->{$_} . "'";
-				 } keys %{$s}) . "'\n"
-			   );
-	$section_count++;
-    }
+  # store zombie list
+  $self->StoreZombies();
 
-    $lib_ref->SetSections (\@sections);
-    if ($default_removed) {
-	$glob_ref->{"default"} = $sections[0]{"name"};
-        $lib_ref->milestone("removed default");
-	$glob_ref->{"removed_default"} = 1;
-    }
-    $glob_ref->{"__modified"} = 1; # needed because of GRUB - index of default
-				   # may change even if not deleted
-    $lib_ref->SetGlobalSettings ($glob_ref);
-    $lib_ref->WriteSettings (1);
-    $lib_ref->UpdateBootloader (1); # avoid initialization but write config to
-                                    # the right place
+  # avoid initialization but write config to the right place
+  $self->UpdateBootloader(1);
 }
 
 
@@ -1700,12 +1753,21 @@ EXAMPLE:
 
 =cut
 
-sub AdjustSectionNameAppendix {
-    my ($mode, $sect_ref_new, $sect_ref_old) = @_;
+sub AdjustSectionNameAppendix
+{
+  my $self = $lib_ref;
 
-    my @sections = @{$lib_ref->GetSections()};
+  my ($mode, $sect_ref_new, $sect_ref_old) = @_;
 
-    if ($mode eq "add" and %$sect_ref_new) {
+  $self->milestone("more = $mode");
+
+  $self->milestone("new =", $sect_ref_new);
+
+  $self->milestone("old =", $sect_ref_old);
+
+  my @sections = @{$lib_ref->GetSections()};
+
+    if ($mode eq "add" && %$sect_ref_new) {
 	my $loader = Bootloader::Tools::GetBootloader ();
 
 	if ($loader eq "grub") {
@@ -1728,7 +1790,7 @@ sub AdjustSectionNameAppendix {
 	}
     }
 
-    elsif ($mode eq "remove" and @$sect_ref_old and @$sect_ref_new) {
+    elsif ($mode eq "remove" && $sect_ref_old && $sect_ref_new) {
 	my @section_names_removed = ();
 
 	# Determine removed section names
@@ -1770,9 +1832,8 @@ sub AdjustSectionNameAppendix {
 	    }
 	}
     }
-
     else {
-	print "Bootloader::Tools::AdjustSectionNameAppendix(): Invalid parameters.\n";
+	$self->warning("Invalid parameters.");
     }
 }
 

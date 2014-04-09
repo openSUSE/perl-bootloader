@@ -24,6 +24,8 @@ C<< $number = Bootloader::FileIO->ReadNumber($file_name); >>
 
 C<< $lines_ref = Bootloader::FileIO->WriteFile($file, $lines); >>
 
+C<< $lines_ref = Bootloader::FileIO->WriteFileRaw($file, $data); >>
+
 =head1 DESCRIPTION
 
 =over 2
@@ -135,6 +137,41 @@ sub WriteFile
 
   if(open(my $fh, '>', $file)) {
     print $fh $l;
+    if(!close($fh)) {
+      $self->error("Failed to close $file: $!");
+      $ok = 0;
+    }
+  }
+  else {
+    $self->error("Failed to open $file: $!");
+    $ok = 0;
+  }
+
+  umask $saved_umask;
+
+  return $ok;
+}
+
+
+=item
+C<< $lines_ref = Bootloader::FileIO->WriteFileRaw($file, $data); >>
+
+Writes file to disk.
+Returns 1 on success, 0 otherwise.
+
+=cut
+
+sub WriteFileRaw
+{
+  my $self = shift;
+  my $file = shift;
+  my $data = shift;
+  my $ok = 1;
+
+  my $saved_umask = umask 0066;
+
+  if(open(my $fh, '>', $file)) {
+    print $fh $data;
     if(!close($fh)) {
       $self->error("Failed to close $file: $!");
       $ok = 0;

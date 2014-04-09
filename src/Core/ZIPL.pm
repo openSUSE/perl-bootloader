@@ -329,18 +329,25 @@ lines. The first section is the global section of the bootloader (without
 
 # list<list<map<string,any>>> SplitLinesToSection
 #   (list<map<string,any>> lines, list<string>, section_starts)
-sub SplitLinesToSections {
-    my $self = shift;
-    my @sections = @{$self->SUPER::SplitLinesToSections(@_)};
-    my @globals = @{+shift @sections};
-    # merge defaultboot section into (propably empty) global section
-    my %lines = ( @{$sections[0]} );
-    if (exists $lines{"label"} && $lines{"label"} eq "defaultboot") {
-	push @globals, @{+shift @sections};
-	unshift @sections, \@globals;
-    }
+sub SplitLinesToSections
+{
+  my $self = shift;
+  my @sections = @{$self->SUPER::SplitLinesToSections(@_)};
+  my @globals = @{+shift @sections};
 
-    return \@sections;
+  # merge defaultboot section into (propably empty) global section
+  $self->milestone("sections =", \@sections);
+  if(@sections > 0) {
+    my $l;
+    $l->{$_->{key}} = $_->{value} for @{$sections[0]};
+    $self->milestone("first section =", $l);  
+    if($l->{label} eq "defaultboot") {
+      push @globals, @{+shift @sections};
+      unshift @sections, \@globals;
+    }
+  }
+
+  return \@sections;
 }
 
 
@@ -409,13 +416,38 @@ Returns undef on fail, defined nonzero value otherwise
 =cut
 
 # boolean InitializeBootloader ()
-sub InitializeBootloader {
-    my $self = shift;
+sub InitializeBootloader
+{
+  my $self = shift;
 
-    return 0 == $self->RunCommand (
-	Bootloader::Path::Zipl_zipl(),
-	Bootloader::Path::BootCommandLogname()
-    );
+  $self->RunCommand(
+    Bootloader::Path::Zipl_zipl(),
+    Bootloader::Path::BootCommandLogname(),
+    1
+  );
+
+  my $ret = $self->{last_command}{exit};
+
+
+  if($ret) {
+    my @l = split /\n/, $self->{last_command}{out};
+    my $err;
+    for (@l) {
+      $err = 1 if /Error:/ && !/in section 'ipl'/;
+    }
+
+    if($err) {
+      $self->warning("last zipl run reported real error");
+      print STDERR "Perl-Bootloader: '$self->{last_command}{cmd}' failed with exit code $self->{last_command}{exit}, output:\n";
+      print STDERR $self->{last_command}{out};
+    }
+    else {
+      $self->warning("ignoring zipl error in 'ipl' section");
+      $ret = 0;
+    }
+  }
+
+  return $ret == 0;
 }
 
 =item

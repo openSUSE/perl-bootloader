@@ -51,6 +51,7 @@ Authors:
 make DESTDIR=$RPM_BUILD_ROOT install
 install -d -m 700 $RPM_BUILD_ROOT/var/log/YaST2
 touch $RPM_BUILD_ROOT/var/log/pbl.log
+touch $RPM_BUILD_ROOT/var/lib/pbl/zombies
 %perl_process_packlist
 
 %post
@@ -79,5 +80,7 @@ fi
 /boot/boot.readme
 %dir %attr(0700,root,root) /var/log/YaST2
 %ghost %attr(0600,root,root) /var/log/pbl.log
+%dir %attr(0755,root,root) /var/lib/pbl
+%ghost %attr(0600,root,root) /var/lib/pbl/zombies
 
 %changelog -n perl-Bootloader

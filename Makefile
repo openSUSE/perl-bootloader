@@ -49,6 +49,7 @@ install: check
 	@install -m 755 bootloader_fix_xen $(DESTDIR)/usr/lib/bootloader
 	@install -d -m 755 $(DESTDIR)/boot
 	@install -m 644 boot.readme $(DESTDIR)/boot/
+	@install -d -m 755 $(DESTDIR)/var/lib/pbl
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8/
 	@pod2man update-bootloader >$(DESTDIR)/usr/share/man/man8/update-bootloader.8
 	@chmod 644 $(DESTDIR)/usr/share/man/man8/update-bootloader.8
@@ -59,6 +60,7 @@ package-local:
 	read lv < version ; \
 	mkdir .package/${PKG}-$${lv} ; \
 	cp -a * .package/${PKG}-$${lv} ; \
+	rm -f .package/${PKG}-$${lv}/{tst*,todo} ; \
 	mkdir package ; \
 	tar -C .package -Jcf package/${PKG}-$${lv}.tar.xz ${PKG}-$${lv} ; \
 	sed "s/--autoversion--/$$lv/" < $(PKG).spec.in > package/$(PKG).spec ; \
