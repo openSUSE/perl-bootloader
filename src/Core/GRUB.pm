@@ -1985,25 +1985,14 @@ sub InitializeBootloader {
     # FIXME: generic_mbr
     # write generic_mbr in case
 
-    my $log = Bootloader::Path::BootCommandLogname();
     my $grub = Bootloader::Path::Grub_grub();
     my $grubconf = Bootloader::Path::Grub_grubconf();
     my $devicemap = Bootloader::Path::Grub_devicemap();
     my $ret = $self->RunCommand (
-	"cat $grubconf | $grub --device-map=$devicemap --batch",
-	$log
+	"cat $grubconf | $grub --device-map=$devicemap --batch"
     );
-    if ($ret == 0)
-    {
-	open (LOG, $log) || return $ret;
-	while (my $line = <LOG>)
-	{
-	    if ($line =~ /Error [0-9]*:/)
-	    {
-		return undef;
-	    }
-	}
-	close (LOG);
+    if ($self->{last_command}{out} =~ /Error [0-9]*:/) {
+        return undef;
     }
     return $ret == 0;
 }

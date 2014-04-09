@@ -381,8 +381,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	Bootloader::Path::Zipl_zipl(),
-	Bootloader::Path::BootCommandLogname()
+	Bootloader::Path::Zipl_zipl()
     );
 }
 

@@ -102,18 +102,6 @@ sub LognameYaST {
 }
 
 =item
-C<< $path = Bootloader::Path::BootCommandLogname(); >>
-
-Gets logname path.
-
-=cut
-
-sub BootCommandLogname {
-  my $value = "/var/log/YaST2/y2log_bootloader";
-  return Prefix($value);
-}
-
-=item
 C<< $path = Bootloader::Path::Fstab(); >>
 
 Gets fstab path.

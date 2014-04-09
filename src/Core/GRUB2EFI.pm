@@ -882,14 +882,12 @@ sub UpdateBootloader {
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-set-default '$default'"
         );
     }
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
-        Bootloader::Path::BootCommandLogname()
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
     );
 }
 
@@ -923,10 +921,7 @@ sub InitializeBootloader {
         }
     }
 
-    $ret = $self->RunCommand (
-        "$cmd $opt",
-        Bootloader::Path::BootCommandLogname()
-    );
+    $ret = $self->RunCommand ("$cmd $opt");
 
     return 0 if (0 != $ret);
 
@@ -934,14 +929,12 @@ sub InitializeBootloader {
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-set-default '$default'"
         );
     }
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
-        Bootloader::Path::BootCommandLogname()
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
     );
 }
 

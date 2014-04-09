@@ -675,8 +675,7 @@ sub UpdateBootloader {
     system ("mkdir -p $efi") unless -d "$efi";
  
     return 0 == $self->RunCommand (
-	Bootloader::Path::Elilo_elilo() . " -v",
-	Bootloader::Path::BootCommandLogname()
+	Bootloader::Path::Elilo_elilo() . " -v"
     );
 }
 
