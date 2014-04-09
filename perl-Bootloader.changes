@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Wed Apr  9 10:30:14 CEST 2014 - snwint@suse.de
+
+- adjust perl-Bootloader to work even if no kernel is installed; in
+  particular: allow empty boot config, remember kernel options of last
+  removed kernel, tolerate temporarily invalid boot entry on s390x
+  (bnc #821465)
+- 0.4.89.58
+
+-------------------------------------------------------------------
 Thu Nov  7 12:47:41 CET 2013 - snwint@suse.de
 
 - speed up device scanning even more (drop remaining parted calls, bnc #823601)
