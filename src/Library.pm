@@ -86,7 +86,7 @@ use Bootloader::Path;
 
 use base qw ( Bootloader::MBRTools Bootloader::FileIO Bootloader::Logger );
 
-our $VERSION = 0.000;
+our $VERSION = "0.000";
 
 my $instances = 0;
 my $global_id;
