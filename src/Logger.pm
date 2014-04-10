@@ -131,6 +131,16 @@ sub DumpLog
 }
 
 
+# __log(level, message, var, depth)
+#
+# level: 0 .. 3 (debug, milestone, warning, error)
+# message: log message (single line string)
+# var (optional): either a SCALAR or a REF
+#   - SCALAR (may be multiline) will be logged in a block delimited
+#     by '<<<<<<<<<<<<<<<<' and '>>>>>>>>>>>>>>>>'
+#   - REF will be logged using Data::Dumper
+# depth (optional): maximum depth when logging a REF
+#
 sub __log
 {
   my $self = shift;
