@@ -80,7 +80,7 @@ C<< $lines_ref = Bootloader::Core->PrepareMenuFileLines (\@sectinos, \%global, $
 
 C<< $status = Bootloader::Core->UpdateBootloader (); >>
 
-C<< $status = Bootloader::Core->RunCommand ($command, $log_file); >>
+C<< $status = Bootloader::Core->RunCommand ($command, $try); >>
 
 C<< $mapping_ref = Bootloader::Core->GetDeviceMapping (); >>
 
@@ -1614,36 +1614,49 @@ sub UpdateBootloader
 }
 
 =item
-C<< $status = Bootloader::Core->RunCommand ($command, $log_file); >>
+C<< $status = Bootloader::Core->RunCommand ($command, $try); >>
 
-Runs specified command. If log file is defined, its stdout and stderr
-are appended to the log file.
-As arguments, takes the command end the log file name. Returns
-exit code of the command.
+Runs specified command.
+If $try is set, ignores command errors and returns 0.
+Otherwise it returns the exit code of the command.
+command, exit code, and output are stored internally in $self->{last_command}.
 
 =cut
 
-# integer RunCommand (string command, string log_file)
-sub RunCommand {
-    my $self = shift;
-    my $command = shift;
-    my $log = shift;
+# integer RunCommand (string command, integer try)
+sub RunCommand
+{
+  my $self = shift;
+  my $command = shift;
+  my $try = shift;
 
-    if (defined ($log))
-    {
-	$command = "$command >$log 2>&1";
-    }
-    else
-    {
-	$command = "$command >/dev/null 2>/dev/null";
-    }
-    my $ret = system ($command);
+  my $ret;
+  my $output;
 
-    my $output = `cat $log`;
-    $self->milestone("run $command - ret $ret + output: $output");
-    $self->error("Command '$command' failed with code $ret and output: $output") unless $ret == 0;
+  if(open my $f, "($command) 2>&1 |") {
+    local $/;
+    $output = <$f>;
+    close $f;
+    $ret = $? >> 8;
+    chomp $output;
+    $output .= "\n";
+  }
+  else {
+    $ret = 127;
+    $output = "$command: " . ($! == 13 ? $! : "command not found") . " \n";
+  }
 
-    return $ret;
+  $self->{last_command} = { cmd => $command, exit => $ret, out => $output};
+
+  if(!$ret || $try) {
+    $self->milestone("'$command' = $ret, output:", $output);
+    $ret = 0;
+  }
+  else {
+    $self->error("'$command' failed with exit code $ret, output:", $output);
+  }
+
+  return $ret;
 }
 
 =item

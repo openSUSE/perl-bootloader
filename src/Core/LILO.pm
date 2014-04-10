@@ -286,8 +286,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	Bootloader::Path::Lilo_lilo() . " -P ignore -v -v",
-	Bootloader::Path::BootCommandLogname()
+	Bootloader::Path::Lilo_lilo() . " -P ignore -v -v"
     );
 }
 

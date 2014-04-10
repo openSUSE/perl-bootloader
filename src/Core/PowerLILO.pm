@@ -678,8 +678,7 @@ sub InitializeBootloader {
     my $self = shift;
 
     return 0 == $self->RunCommand (
-	Bootloader::Path::Lilo_lilo(),
-	Bootloader::Path::BootCommandLogname()
+	Bootloader::Path::Lilo_lilo()
     );
 }
 

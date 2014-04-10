@@ -49,6 +49,7 @@ install: check
 	@install -d -m 755 $(DESTDIR)/boot
 	@install -m 644 boot.readme $(DESTDIR)/boot/
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8/
+	@install -D -m 644 pbl.logrotate $(DESTDIR)/etc/logrotate.d/pbl
 	@pod2man update-bootloader >$(DESTDIR)/usr/share/man/man8/update-bootloader.8
 	@chmod 644 $(DESTDIR)/usr/share/man/man8/update-bootloader.8
 

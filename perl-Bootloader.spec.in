@@ -101,6 +101,7 @@ chmod 600 /var/log/pbl.log
 /sbin/update-bootloader
 /usr/lib/bootloader
 /boot/boot.readme
+/etc/logrotate.d/pbl
 %dir %attr(0700,root,root) /var/log/YaST2
 %ghost %attr(0600,root,root) /var/log/pbl.log
 

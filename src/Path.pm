@@ -90,18 +90,6 @@ sub Logname {
 }
 
 =item
-C<< $path = Bootloader::Path::LognameOld(); >>
-
-our old logfile: /var/log/YaST2/perl-BL-standalone-log
-
-=cut
-
-sub LognameOld {
-  my $value = "/var/log/YaST2/perl-BL-standalone-log";
-  return Prefix($value);
-}
-
-=item
 C<< $path = Bootloader::Path::LognameYaST(); >>
 
 yast logfile: /var/log/YaST2/y2log
@@ -110,18 +98,6 @@ yast logfile: /var/log/YaST2/y2log
 
 sub LognameYaST {
   my $value = "/var/log/YaST2/y2log";
-  return Prefix($value);
-}
-
-=item
-C<< $path = Bootloader::Path::BootCommandLogname(); >>
-
-Gets logname path.
-
-=cut
-
-sub BootCommandLogname {
-  my $value = "/var/log/YaST2/y2log_bootloader";
   return Prefix($value);
 }
 
