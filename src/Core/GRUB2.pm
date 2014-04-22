@@ -979,7 +979,7 @@ sub Info2Global {
     my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "";
     # per default enable btrfs snapshot boot configs only on i386-pc
     # other architectures (s390, ppc) are planned but not ready 
-    if ($suse_btrfs eq "" and $self->{'target'} eq "i386-pc") {
+    if ($suse_btrfs eq "" and $self->{'target'} =~ /(i386-pc|powerpc-ieee1275)/) {
         $suse_btrfs = "true";
     }
     # $root = " root=$root" if $root ne "";
@@ -1339,20 +1339,6 @@ sub InitializeBootloader {
 
             if ($dev eq "activate" or $dev eq "generic_mbr") {
                 next;
-            }
-
-            if ($glob{suse_btrfs} eq "true" and -e "/usr/sbin/suse_btrfs_grub2_install.sh") {
-                # enable btrfs snapshot boot configs only on i386-pc
-                # other architectures (s390, ppc) are planned but not ready
-                if ($self->{'target'} eq "i386-pc") {
-                    my $rootfs = qx(/usr/sbin/grub2-probe -t fs /);
-                    my $bootfs = qx(/usr/sbin/grub2-probe -t fs /boot);
-                    chomp $rootfs;
-                    chomp $bootfs;
-                    if ($rootfs eq "btrfs" and $bootfs eq "btrfs") {
-                        $cmd = "/usr/sbin/suse_btrfs_grub2_install.sh";
-                    }
-                }
             }
 
             my $ret = $self->RunCommand ("$cmd $opt");

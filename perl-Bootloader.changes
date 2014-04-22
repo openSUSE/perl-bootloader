@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Apr 22 07:33:01 UTC 2014 - mchang@suse.com
+
+- enable btrfs snapshot booting on ppc
+- remove suse_btrfs_grub2_install.sh as it's no longer used
+- 0.812
+
+-------------------------------------------------------------------
 Wed Apr  9 15:06:33 CEST 2014 - snwint@suse.de
 
 - drop old log /var/log/YaST2/perl-BL-standalone-log
