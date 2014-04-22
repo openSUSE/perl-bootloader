@@ -911,14 +911,6 @@ sub InitializeBootloader {
     if ($self->{secure_boot}) {
         $opt = "--config-file=/boot/grub2/grub.cfg";
         $cmd = "/usr/sbin/shim-install";
-    } elsif ($glob{suse_btrfs} eq "true" and -e "/usr/sbin/suse_btrfs_grub2_install.sh") {
-        my $rootfs = qx(/usr/sbin/grub2-probe -t fs /);
-        my $bootfs = qx(/usr/sbin/grub2-probe -t fs /boot);
-        chomp $rootfs;
-        chomp $bootfs;
-        if ($rootfs eq "btrfs" and $bootfs eq "btrfs") {
-            $cmd = "/usr/sbin/suse_btrfs_grub2_install.sh";
-        }
     }
 
     $ret = $self->RunCommand ("$cmd $opt");
