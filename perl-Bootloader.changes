@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr 25 09:58:45 UTC 2014 - mchang@suse.com
+
+- fix bios raid error because device is ignored (bnc#865553) 
+- 0.813
+
+-------------------------------------------------------------------
 Tue Apr 22 07:33:01 UTC 2014 - mchang@suse.com
 
 - enable btrfs snapshot booting on ppc
