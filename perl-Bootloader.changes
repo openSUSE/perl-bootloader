@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Apr 29 10:00:40 CEST 2014 - snwint@suse.de
+
+- fix regexp to not backtrack endlessly if parentheses don't match (bnc #875369)
+- 0.712
+
+-------------------------------------------------------------------
 Tue Oct 15 13:09:05 CEST 2013 - snwint@suse.de
 
 - more flexible GetProduct() uses /etc/os-release (bnc #845606)
