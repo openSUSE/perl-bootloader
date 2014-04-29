@@ -86,7 +86,7 @@ use Bootloader::Path;
 
 use base qw ( Bootloader::MBRTools Bootloader::FileIO Bootloader::Logger );
 
-our $VERSION = 0.000;
+our $VERSION = "0.000";
 
 my $instances = 0;
 my $global_id;
@@ -120,6 +120,9 @@ sub new
   }
   elsif($c1 eq 'update-bootloader') {
     $name = 'pbl';
+  }
+  elsif($c1 eq 'pbl-yaml') {
+    $name = 'pbl-yaml';
   }
   elsif($c0 eq 'Bootloader::Tools') {
     $name = 'libpbl';
@@ -514,14 +517,17 @@ sub WriteSettings
   my $loader = $self->{loader};
   return undef unless defined $loader;
 
-  $self->milestone("menu_only = $menu_only");
+  $self->milestone("creating config files");
 
   $loader->{resolve_symlinks} = 1;
   my $new_lines_ref = $loader->CreateLines();
-  if (!defined $new_lines_ref) {
-    $self->warning("no config - nothing written");
+
+  if(!defined $new_lines_ref) {
+    $self->warning("no config created - nothing written");
     return undef;
   }
+
+  $self->milestone("writing config files (menu_only = $menu_only)");
 
   return $loader->WriteFiles($new_lines_ref, ".new", $menu_only);
 }
@@ -791,15 +797,16 @@ EXAMPLE:
 
 =cut
 
-sub GetSettings {
-    my $self = shift;
+sub GetSettings
+{
+  my $self = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone( "TRACE");
-    return $loader->GetSettings ();
+  return $loader->GetSettings();
 }
+
 
 =item
 C<< $status = Bootloader::Library->SetSettings (); >>
@@ -813,16 +820,15 @@ EXAMPLE:
 
 =cut
 
-sub SetSettings {
-    my $self = shift;
-    my $settings_ref = shift;
+sub SetSettings
+{
+  my $self = shift;
+  my $settings_ref = shift;
 
-    my $loader = $self->{"loader"};
-    return undef unless defined $loader;
+  my $loader = $self->{loader};
+  return undef unless defined $loader;
 
-    $self->milestone("TRACE");
-
-    return $loader->SetSettings ($settings_ref);
+  return $loader->SetSettings($settings_ref);
 }
 
 # wrappers for easier use
@@ -946,15 +952,14 @@ EXAMPLE:
 
 =cut
 
-sub SetSections {
-    my $self = shift;
-    my $sections_ref = shift;
+sub SetSections
+{
+  my $self = shift;
+  my $sections_ref = shift;
 
-    my %settings = (
-	"sections" => $sections_ref
-    );
-    return $self->SetSettings (\%settings)
+  $self->milestone("updating sections");
 
+  return $self->SetSettings({sections => $sections_ref});
 }
 
 =item
@@ -979,14 +984,14 @@ EXAMPLE:
   }
 
 =cut
-sub SetGlobalSettings {
-    my $self = shift;
-    my $global_ref = shift;
+sub SetGlobalSettings
+{
+  my $self = shift;
+  my $global_ref = shift;
 
-    my %settings = (
-	"global" => $global_ref
-    );
-    return $self->SetSettings (\%settings)
+  $self->milestone("updating global settings");
+
+  return $self->SetSettings({global => $global_ref});
 }
 
 =item

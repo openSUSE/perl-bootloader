@@ -1,8 +1,95 @@
 -------------------------------------------------------------------
-Tue Apr 29 10:00:40 CEST 2014 - snwint@suse.de
+Tue Apr 29 10:15:16 CEST 2014 - snwint@suse.de
 
 - fix regexp to not backtrack endlessly if parentheses don't match (bnc #875369)
-- 0.712
+- 0.813
+
+-------------------------------------------------------------------
+Tue Apr 22 07:33:01 UTC 2014 - mchang@suse.com
+
+- enable btrfs snapshot booting on ppc
+- remove suse_btrfs_grub2_install.sh as it's no longer used
+- 0.812
+
+-------------------------------------------------------------------
+Wed Apr  9 15:06:33 CEST 2014 - snwint@suse.de
+
+- drop old log /var/log/YaST2/perl-BL-standalone-log
+- remove /var/log/YaST2/y2log_bootloader
+- add MaxDepth parameter to logging function
+- clean up logging in some functions
+- use logrotate file (bnc #822774)
+- 0.811
+
+-------------------------------------------------------------------
+Thu Apr  3 14:16:07 CEST 2014 - snwint@suse.de
+
+- fix ppc install (bnc #871691)
+- 0.810
+
+-------------------------------------------------------------------
+Thu Apr  3 09:09:37 CEST 2014 - snwint@suse.de
+
+- don't forget to update device.map (bnc #869083)
+- 0.809
+
+-------------------------------------------------------------------
+Tue Apr  1 09:43:57 UTC 2014 - mchang@suse.com
+
+- enable SUSE_BTRFS_SNAPSHOT_BOOTING on x86 as other architectures
+  are working in progress.
+- 0.808  
+
+-------------------------------------------------------------------
+Mon Mar 31 12:18:44 UTC 2014 - mchang@suse.com
+
+- support snapper rollback (fate##317062)
+- 0.807 
+
+-------------------------------------------------------------------
+Tue Mar  4 17:48:03 CET 2014 - snwint@suse.de
+
+- support grub2 on s390x
+- 0.806
+
+-------------------------------------------------------------------
+Thu Feb 27 11:52:10 CET 2014 - snwint@suse.de
+
+- propagate serial console setting to xen (bnc #862614)
+- fix reading xen sections
+- 0.805
+
+-------------------------------------------------------------------
+Mon Feb 17 13:15:12 CET 2014 - snwint@suse.de
+
+- fix section info not returning initrd (bnc #863909)
+- 0.804
+
+-------------------------------------------------------------------
+Tue Feb 11 13:14:12 CET 2014 - snwint@suse.de
+
+- fix grub2-editenv path: failed to determine default menu entry (bnc #861469)
+- 0.803
+
+-------------------------------------------------------------------
+Thu Jan 16 16:41:54 CET 2014 - snwint@suse.de
+
+- workaround to avoid double rootflags entries
+- 0.802
+
+-------------------------------------------------------------------
+Tue Jan 14 14:12:44 CET 2014 - snwint@suse.de
+
+- fix confusion between Tools::GetDeviceMapping() and Core::GetDeviceMapping()
+  (bnc #858268)
+- 0.801
+
+-------------------------------------------------------------------
+Tue Oct 29 15:13:22 CET 2013 - snwint@suse.de
+
+- add pbl-yaml: a command line interface to perl-Bootloader using YAML files
+  for input and output
+- 0.800
 
 -------------------------------------------------------------------
 Tue Oct 15 13:09:05 CEST 2013 - snwint@suse.de

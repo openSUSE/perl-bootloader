@@ -57,8 +57,11 @@ sub StartLog
 {
   my $self = shift;
 
+  delete $self->{logger}{log_fh};
+  delete $self->{logger}{log_fh_yast};
+  delete $self->{logger}{log_is_stderr};
+
   $self->{logger}{session_id} = $self->{session_id};
-  $self->{logger}{logs} = [];
   $self->{logger}{log_level} = $ENV{Y2DEBUG} ? 0 : 1;
 
   $self->{logger}{yast_prefix} = ((uname())[1] || "unknown") . "($$) [pbl]";
@@ -70,14 +73,6 @@ sub StartLog
     $| = 1;
     select $tmp;
     $self->{logger}{log_fh} = $f;
-  }
-
-  # old logfile for compatibility
-  if(!$ENV{PBL_DEBUG} && open my $f, ">>", Bootloader::Path::LognameOld()) {
-    my $tmp = select $f;
-    $| = 1;
-    select $tmp;
-    $self->{logger}{log_fh_old} = $f;
   }
 
   # also log to yast log if called from yast
@@ -123,10 +118,7 @@ sub GetLogRecords
 {
   my $self = shift;
 
-  my $ret = $self->{logger}{logs};
-  $self->{logger}{logs} = [];
-
-  return $ret;
+  return [];
 }
 
 
@@ -139,6 +131,16 @@ sub DumpLog
 }
 
 
+# __log(level, message, var, depth)
+#
+# level: 0 .. 3 (debug, milestone, warning, error)
+# message: log message (single line string)
+# var (optional): either a SCALAR or a REF
+#   - SCALAR (may be multiline) will be logged in a block delimited
+#     by '<<<<<<<<<<<<<<<<' and '>>>>>>>>>>>>>>>>'
+#   - REF will be logged using Data::Dumper
+# depth (optional): maximum depth when logging a REF
+#
 sub __log
 {
   my $self = shift;
@@ -165,8 +167,11 @@ sub __log
 
   if($_[0]) {
     my $x = $_[0];
+    my $m = $_[1];
     if(ref $x) {
+      $Data::Dumper::Maxdepth = $m if $m;
       chomp($x = Dumper $x);
+      $Data::Dumper::Maxdepth = 0 if $m;
     }
     else {
       chomp $x;
@@ -176,21 +181,8 @@ sub __log
     $message .= "\n$x";
   }
 
-  # don't keep logs if we can log to y2log directly
-  if(!$self->{logger}{log_fh_yast}) {
-    push @{$self->{logger}{logs}}, {
-      message => $message,
-      prefix => $prefix,
-      level => $level_name,
-    };
-  }
-
   if($self->{logger}{log_fh}) {
     print { $self->{logger}{log_fh} } "$prefix $message\n";
-  }
-
-  if($self->{logger}{log_fh_old}) {
-    print { $self->{logger}{log_fh_old} } "$prefix $message\n";
   }
 
   if($self->{logger}{log_fh_yast}) {

@@ -80,7 +80,6 @@ sub GrubCfgSections {
 
             $sect_info{"name"} = $name;
             $sect_info{"menuentry"} = $name;
-            $sect_info{"type"} = "image";
 
             if ($args =~ m/'gnulinux-[^\s]+-recovery-[^\s]+'/) {
                 $sect_info{"usage"} = "linux_failsafe";
@@ -88,31 +87,74 @@ sub GrubCfgSections {
                 $sect_info{"usage"} = "linux";
             }
 
-            # bnc#824609 - installation boot parameters not written to GRUB_CMDLINE_LINUX_DEFAULT
-            # we need to match linuxefi command, otherwise the kernel append will lost
-            if ($cfg2 =~ /^\s+(linux|linuxefi)\s+([^\s]+)\s*(.*)$/m) {
-                my $append = $3;
-                $sect_info{"image"} = $2;
-                my $command = $1;
+            if ($args =~ m/--class xen/) {
 
-                if ($append =~ /root=/) {
-                    $append =~ s/root=([^\s]+)\s*//;
-                    $sect_info{"root"} = $1;
+                $sect_info{"type"} = "xen";
+
+                if ($cfg2 =~ /^\s+multiboot\s+(\S+)\s+\S+\s*(.*)$/m) {
+                    $sect_info{"xen"} = $1;
+                    $sect_info{"xen_append"} = $2;
+                } 
+
+                while ($cfg2 =~ /^\s+module\s+(\S+)\s+\S+\s*(.*)$/gm) {
+
+                    if (!exists $sect_info{"image"}) {
+
+                        my $append = $2;
+                        $sect_info{"image"} = $1;
+
+                        if ($append =~ /root=/) {
+                            $append =~ s/root=(\S+)\s*//;
+                            $sect_info{"root"} = $1;
+                        }
+
+                        if ($append =~ /vga=/) {
+                            $append =~ s/vga=(\S+)\s*//;
+                            $sect_info{"vgamode"} = $1;
+                        }
+
+                        $sect_info{"append"} = $append;
+
+                    } elsif (!exists $sect_info{"initrd"}) {
+                        $sect_info{"initrd"} = $1;
+                    }
                 }
 
-                # the ro is part of linuxefi entries created by grub2 scripts
-                # not part of kernel append by yast
-                if ( $command eq "linuxefi" ) {
-                    $append =~ s/^ro\s*//;
-                }
+            } else {
+                
+                $sect_info{"type"} = "image";
 
-                if ($append =~ /vga=/) {
-                    $append =~ s/vga=([^\s]+)\s*//;
-                    $sect_info{"vgamode"} = $1;
-                }
+                 # bnc#824609 - installation boot parameters not written to GRUB_CMDLINE_LINUX_DEFAULT
+                 # we need to match linuxefi command, otherwise the kernel append will lost
+                 if ($cfg2 =~ /^\s+(linux|linuxefi)\s+([^\s]+)\s*(.*)$/m) {
+                     my $append = $3;
+                     $sect_info{"image"} = $2;
+                     my $command = $1;
 
-                $sect_info{"append"} = $append;
+                     if ($append =~ /root=/) {
+                         $append =~ s/root=([^\s]+)\s*//;
+                         $sect_info{"root"} = $1;
+                     }
+
+                     # the ro is part of linuxefi entries created by grub2 scripts
+                     # not part of kernel append by yast
+                     if ( $command eq "linuxefi" ) {
+                         $append =~ s/^ro\s*//;
+                     }
+
+                     if ($append =~ /vga=/) {
+                         $append =~ s/vga=([^\s]+)\s*//;
+                         $sect_info{"vgamode"} = $1;
+                     }
+
+                     $sect_info{"append"} = $append;
+                 }
+
+                 if ($cfg2 =~ /^\s+(initrd|initrdefi)\s+([^\s]+)/m) {
+                     $sect_info{"initrd"} = $2;
+                 }
             }
+
             push @{$sect}, \%sect_info;
         } elsif ($type eq "submenu") {
             &GrubCfgSections ($name, $cfg2, $sect);
@@ -156,10 +198,18 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = (Bootloader::Path::Grub2_defaultconf());
+    my @ret = ();
+
+    if (-e Bootloader::Path::Grub2_defaultconf()) {
+        push @ret, Bootloader::Path::Grub2_defaultconf();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_defaultconf());
+    }
 
     if (-e Bootloader::Path::Grub2_conf()) {
         push @ret, Bootloader::Path::Grub2_conf();
+    } else {
+        $self->warning ("file not exist ".Bootloader::Path::Grub2_conf());
     }
 
     return \@ret;
@@ -340,6 +390,12 @@ sub Global2Info {
             $ret{"gfxbackground"} = $val;
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $ret{"os_prober"} = ($val eq "true") ? "false" : "true";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
+            $ret{"xen_append"} = $val; 
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
+            $ret{"xen_kernel_append"} = $val; 
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $ret{"suse_btrfs"} = $val;
         }
     }
 
@@ -480,6 +536,10 @@ sub Info2Global {
                   '# WARNING foregin OS menu entries will be lost if set true here'
                 ],
             },
+            {
+                'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
+                'value' => 'true',
+            },
         );
 
     }
@@ -489,6 +549,8 @@ sub Info2Global {
     # my $root = delete $globinfo{"root"} || "";
     my $vga = delete $globinfo{"vgamode"} || "";
     my $append = delete $globinfo{"append"} || "";
+    my $xen_append = delete $globinfo{"xen_append"} || "";
+    my $xen_kernel_append = delete $globinfo{"xen_kernel_append"} || "";
     # YaST doesn't save bootloader settings when 'Timeout in seconds' is set to 0 (bnc#804176)
     my $timeout = delete $globinfo{"timeout"} || 0;
     my $hiddenmenu = delete $globinfo{"hiddenmenu"} || "";
@@ -500,9 +562,13 @@ sub Info2Global {
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
+    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
+
+    $self->milestone("XXX append = $append");
+    $append =~ s/rootflags=subvol\S*\s*//;
 
     my $hidden_timeout = "$timeout";
     if ("$hiddenmenu" eq "true") {
@@ -515,6 +581,27 @@ sub Info2Global {
 
     if (defined $self->{secure_boot}) {
         $use_linuxefi = $self->{secure_boot} ? "true" : "false";
+    }
+
+    # bnc#862614 - serial console settings not propagated into xen entry
+    if ($append =~ /console=ttyS(\d+),(\w+)/)
+    {
+        # merge console and speed into xen_append
+        my $console = sprintf("com%d", $1+1);
+        my $speed   = sprintf("%s=%s", $console, $2);
+
+        if ($xen_append  ne "") {
+            while ($xen_append =~ s/(.*)console=(\S+)\s*(.*)$/$1$3/) {
+                my $del_console = $2;
+                $xen_append =~ s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
+            }
+            $xen_append = "console=$console $speed $xen_append";
+        } else {
+            $xen_append = "console=$console $speed";
+	    }
+
+        $xen_kernel_append = $append if ($xen_kernel_append eq "");
+        $xen_kernel_append =~ s/console=ttyS(\S+)\s*//g;
     }
 
     @lines = map {
@@ -585,7 +672,17 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_USE_LINUXEFI$/) {
             $line_ref->{"value"} = "$use_linuxefi" if "$use_linuxefi" ne "";
             $use_linuxefi = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
+            $line_ref->{"value"} = $xen_append if $xen_append ne "";
+            $xen_append = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
+            $line_ref->{"value"} = $xen_kernel_append if $xen_kernel_append ne "";
+            $xen_kernel_append = "";
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
+            $suse_btrfs = "";
         }
+
         defined $line_ref ? $line_ref : ();
     } @lines;
 
@@ -673,6 +770,26 @@ sub Info2Global {
         }
     }
 
+    if ($xen_append ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_XEN_DEFAULT",
+            "value" => $xen_append,
+        }
+    }
+
+    if ($xen_kernel_append ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT",
+            "value" => $xen_kernel_append,
+        }
+    }
+
+    if ($suse_btrfs ne "") {
+        push @lines, {
+            "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
+            "value" => $suse_btrfs,
+        }
+    }
     return \@lines;
 }
 
@@ -691,6 +808,12 @@ sub GetSettings {
 
     my $sections = $ret->{"sections"};
     my $globals = $ret->{"global"};
+
+    if (! -e "/usr/bin/grub2-editenv") {
+        $self->warning ("file not exist /usr/bin/grub2-editenv");
+        return $ret;
+    }
+
     my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
@@ -755,38 +878,16 @@ sub UpdateBootloader {
         return $self->InitializeBootloader ();
     }
 
-    if (defined $self->{secure_boot})
-    {
-        my $opt = $self->{secure_boot} ? "--config-file=/boot/grub2/grub.cfg" : "--clean";
-        my $cmd = "/usr/sbin/shim-install";
-
-        if ($self->{secure_boot}) {
-            $ret = $self->RunCommand (
-                "$cmd $opt",
-                Bootloader::Path::BootCommandLogname()
-            );
-        } else {
-            $ret = $self->RunCommand (
-                "test -x $cmd && $cmd $opt || true",
-                Bootloader::Path::BootCommandLogname()
-            );
-		}
-
-        return 0 if (0 != $ret);
-    }
-
     my $default  = delete $glob{"default"};
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-set-default '$default'"
         );
     }
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
-        Bootloader::Path::BootCommandLogname()
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
     );
 }
 
@@ -803,46 +904,29 @@ Returns undef on fail, defined nonzero value otherwise
 sub InitializeBootloader {
     my $self = shift;
     my %glob = %{$self->{"global"}};
+    my $ret = 1;
+    my $opt = "--target=$self->{'target'}";
+    my $cmd = "/usr/sbin/grub2-install";
 
-    my $ret = $self->RunCommand (
-        "/usr/sbin/grub2-install --target=$self->{'target'}",
-        Bootloader::Path::BootCommandLogname()
-    );
+    if ($self->{secure_boot}) {
+        $opt = "--config-file=/boot/grub2/grub.cfg";
+        $cmd = "/usr/sbin/shim-install";
+    }
+
+    $ret = $self->RunCommand ("$cmd $opt");
 
     return 0 if (0 != $ret);
-
-    if (defined $self->{secure_boot})
-    {
-        my $opt = $self->{secure_boot} ? "--config-file=/boot/grub2/grub.cfg" : "--clean";
-        my $cmd = "/usr/sbin/shim-install";
-
-        if ($self->{secure_boot}) {
-            $ret = $self->RunCommand (
-                "$cmd $opt",
-                Bootloader::Path::BootCommandLogname()
-            );
-        } else {
-            $ret = $self->RunCommand (
-                "test -x $cmd && $cmd $opt || true",
-                Bootloader::Path::BootCommandLogname()
-            );
-		}
-
-        return 0 if (0 != $ret);
-    }
 
     my $default  = delete $glob{"default"};
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-set-default '$default'"
         );
     }
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
-        Bootloader::Path::BootCommandLogname()
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
     );
 }
 

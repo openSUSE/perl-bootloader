@@ -265,7 +265,6 @@ sub GrubCfgSections {
 
             $sect_info{"name"} = $name;
             $sect_info{"menuentry"} = $name;
-            $sect_info{"type"} = "image";
 
             if ($args =~ m/'gnulinux-[^\s]+-recovery-[^\s]+'/) {
                 $sect_info{"usage"} = "linux_failsafe";
@@ -273,22 +272,61 @@ sub GrubCfgSections {
                 $sect_info{"usage"} = "linux";
             }
 
-            if ($cfg2 =~ /^\s+linux\s+([^\s]+)\s*(.*)$/m) {
-                my $append = $2;
-                $sect_info{"image"} = $1;
+            if ($args =~ m/--class xen/) {
 
-                if ($append =~ /root=/) {
-                    $append =~ s/root=([^\s]+)\s*//;
-                    $sect_info{"root"} = $1;
+                $sect_info{"type"} = "xen";
+
+                if ($cfg2 =~ /^\s+multiboot\s+(\S+)\s+\S+\s*(.*)$/m) {
+                    $sect_info{"xen"} = $1;
+                    $sect_info{"xen_append"} = $2;
+                } 
+
+                while ($cfg2 =~ /^\s+module\s+(\S+)\s+\S+\s*(.*)$/gm) {
+
+                    if (!exists $sect_info{"image"}) {
+
+                        my $append = $2;
+                        $sect_info{"image"} = $1;
+
+                        if ($append =~ /root=/) {
+                            $append =~ s/root=(\S+)\s*//;
+                            $sect_info{"root"} = $1;
+                        }
+
+                        if ($append =~ /vga=/) {
+                            $append =~ s/vga=(\S+)\s*//;
+                            $sect_info{"vgamode"} = $1;
+                        }
+
+                        $sect_info{"append"} = $append;
+
+                    } elsif (!exists $sect_info{"initrd"}) {
+                        $sect_info{"initrd"} = $1;
+                    }
                 }
 
-                if ($append =~ /vga=/) {
-                    $append =~ s/vga=([^\s]+)\s*//;
-                    $sect_info{"vgamode"} = $1;
-                }
+            } else {
 
-                $sect_info{"append"} = $append;
+                $sect_info{"type"} = "image";
+
+                if ($cfg2 =~ /^\s+linux\s+(\S+)\s*(.*)$/m) {
+                    my $append = $2;
+                    $sect_info{"image"} = $1;
+
+                    if ($append =~ /root=/) {
+                        $append =~ s/root=(\S+)\s*//;
+                        $sect_info{"root"} = $1;
+                    }
+
+                    if ($append =~ /vga=/) {
+                        $append =~ s/vga=(\S+)\s*//;
+                        $sect_info{"vgamode"} = $1;
+                    }
+
+                    $sect_info{"append"} = $append;
+                }
             }
+
             push @{$sect}, \%sect_info;
         } elsif ($type eq "submenu") {
             &GrubCfgSections ($name, $cfg2, $sect);
@@ -309,6 +347,7 @@ sub new
     my $ref = shift;
     my $old = shift;
     my $arch = `uname --hardware-platform`;
+    chomp $arch;
     my $target;
 
     my $loader = $self->SUPER::new($ref, $old);
@@ -317,9 +356,10 @@ sub new
     # Set target based on architecture (ppc or x86)
     $target = "i386-pc" if $arch =~ /(i386|x86_64)/;
     $target = "powerpc-ieee1275" if $arch =~ /(ppc|ppc64)/;
-    $loader->{'target'} = $target;
+    $target = "s390x-emu" if $arch eq 's390x';
+    $loader->{target} = $target;
 
-    $loader->milestone("Created GRUB2 instance for target $target");
+    $loader->milestone("Created GRUB2 instance for target \"$target\" (arch = $arch)");
 
     return $loader;
 }
@@ -348,11 +388,19 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = ( Bootloader::Path::Grub2_installdevice(),
-                Bootloader::Path::Grub2_defaultconf() );
+    my @ret = ();
 
-    if (-e Bootloader::Path::Grub2_conf()) {
-        push @ret, Bootloader::Path::Grub2_conf();
+    for my $i (
+        Bootloader::Path::Grub2_installdevice(),
+        Bootloader::Path::Grub2_defaultconf(),
+        Bootloader::Path::Grub2_conf(),
+        Bootloader::Path::Grub2_devicemap(),
+    ) {
+        if (-e $i) {
+            push @ret, $i;
+        } else {
+            $self->warning ("$i: config file does not exist");
+        }
     }
 
     return \@ret;
@@ -399,15 +447,16 @@ sub ParseLines {
         \@defaultconf
     );
 
+    my @devices = @{$files{Bootloader::Path::Grub2_installdevice()} || []};
+
     if (not exists $self->{"mountpoints"}{'/'})
     {
         $self->milestone("Mount points doesn't have '/', skipped parsing grub2 config");
+    }
+    elsif (scalar (@devices) == 0)
+    {
+        $self->warning("No device configured, skip parsing boot device");
     } else {
-        # FIXME: Need to figure our a better way to get the
-        # device, otherwise user may break setup if they
-        # call install script directly
-        my @devices = @{$files{Bootloader::Path::Grub2_installdevice()} || []};
-
         # FIXME: still incomplete for MD and dmraid devs
         # translate device array to the various boot_* flags else set boot_custom
         # in glob_ref accordingly
@@ -758,6 +807,12 @@ sub Global2Info {
             $ret{"gfxbackground"} = $val;
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $ret{"os_prober"} = ($val eq "true") ? "false" : "true";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
+            $ret{"xen_append"} = $val; 
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
+            $ret{"xen_kernel_append"} = $val; 
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $ret{"suse_btrfs"} = $val;
         }
     }
 
@@ -908,6 +963,8 @@ sub Info2Global {
     # my $root = delete $globinfo{"root"} || "";
     my $vga = delete $globinfo{"vgamode"} || "";
     my $append = delete $globinfo{"append"} || "";
+    my $xen_append = delete $globinfo{"xen_append"} || "";
+    my $xen_kernel_append = delete $globinfo{"xen_kernel_append"} || "";
     # YaST doesn't save bootloader settings when 'Timeout in seconds' is set to 0 (bnc#804176)
     my $timeout = delete $globinfo{"timeout"} || 0;
     my $hiddenmenu = delete $globinfo{"hiddenmenu"} || "";
@@ -919,15 +976,45 @@ sub Info2Global {
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
+    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "";
+    # per default enable btrfs snapshot boot configs only on i386-pc
+    # other architectures (s390, ppc) are planned but not ready 
+    if ($suse_btrfs eq "" and $self->{'target'} =~ /(i386-pc|powerpc-ieee1275)/) {
+        $suse_btrfs = "true";
+    }
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
+
+    $self->milestone("XXX append = $append");
+    $append =~ s/rootflags=subvol\S*\s*//;
 
     my $hidden_timeout = "$timeout";
     if ("$hiddenmenu" eq "true") {
         $timeout = "0" if "$timeout" ne "";
     } else {
         $hidden_timeout = "0" if "$hidden_timeout" ne "";
+    }
+
+    # bnc#862614 - serial console settings not propagated into xen entry
+    if ($append =~ /console=ttyS(\d+),(\w+)/)
+    {
+        # merge console and speed into xen_append
+        my $console = sprintf("com%d", $1+1);
+        my $speed   = sprintf("%s=%s", $console, $2);
+
+        if ($xen_append  ne "") {
+            while ($xen_append =~ s/(.*)console=(\S+)\s*(.*)$/$1$3/) {
+                my $del_console = $2;
+                $xen_append =~ s/(.*)${del_console}=\w+\s*(.*)$/$1$2/g;
+            }
+            $xen_append = "console=$console $speed $xen_append";
+        } else {
+            $xen_append = "console=$console $speed";
+	    }
+
+        $xen_kernel_append = $append if ($xen_kernel_append eq "");
+        $xen_kernel_append =~ s/console=ttyS(\S+)\s*//g;
     }
 
     @lines = map {
@@ -995,6 +1082,15 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $line_ref->{"value"} = ($os_prober eq "false") ? "true" : "false";
             $os_prober = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
+            $line_ref->{"value"} = $xen_append if $xen_append ne "";
+            $xen_append = "";
+        } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
+            $line_ref->{"value"} = $xen_kernel_append if $xen_kernel_append ne "";
+            $xen_kernel_append = "";
+        } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
+            $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
+            $suse_btrfs = "";
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1075,6 +1171,27 @@ sub Info2Global {
             "value" => ($os_prober eq "false") ? "true" : "false",
         }
     }
+
+    if ($xen_append ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_XEN_DEFAULT",
+            "value" => $xen_append,
+        }
+    }
+
+    if ($xen_kernel_append ne "") {
+        push @lines, {
+            "key" => "GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT",
+            "value" => $xen_kernel_append,
+        }
+    }
+
+    if ($suse_btrfs ne "") {
+        push @lines, {
+            "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
+            "value" => $suse_btrfs,
+        }
+    }
     return \@lines;
 }
 
@@ -1093,6 +1210,12 @@ sub GetSettings {
 
     my $sections = $ret->{"sections"};
     my $globals = $ret->{"global"};
+
+    if (! -e "/usr/bin/grub2-editenv") {
+        $self->warning ("file not exist /usr/bin/grub2-editenv");
+        return $ret;
+    }
+
     my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
@@ -1159,14 +1282,12 @@ sub UpdateBootloader {
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-set-default '$default'"
         );
     }
 
     return 0 == $self->RunCommand (
-        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
-        Bootloader::Path::BootCommandLogname()
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
     );
 }
 
@@ -1183,61 +1304,66 @@ sub InitializeBootloader {
     my $self = shift;
     my %glob = %{$self->{"global"}};
     my $file = Bootloader::Path::Grub2_installdevice();
-    my $files_ref = $self->ReadFiles ([$file,]);
+    my $files_ref;
 
-    if (! defined ($files_ref))
-    {
-        return undef;
+    # some targets might need an install device list
+    if($self->{target} !~ /(-emu|-efi)$/) {
+      $files_ref = $self->ReadFiles([$file,]);
     }
 
-    # Since Bootloader::Tools::ReadPartitions didn't assign
-    # correct part_type, the skip-fs-probe check based
-    # on `extended may not work.
+    $self->milestone("files_ref", $files_ref);
 
-    #my $skip_fs_probe = delete $glob{"boot_extended"};
+    if ($files_ref->{$file})
+    {
+        # Since Bootloader::Tools::ReadPartitions didn't assign
+        # correct part_type, the skip-fs-probe check based
+        # on `extended may not work.
 
-    #if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
-    #    $install_opts .= " --skip-fs-probe ";
-    #}
+        #my $skip_fs_probe = delete $glob{"boot_extended"};
 
-    # Do skip-fs-probe to avoid error when embedding stage1
-    # to extended partition
-    my $install_opts = "--force --skip-fs-probe";
-    my @devices = @{$files_ref->{$file} || []};
+        #if (defined $skip_fs_probe and $skip_fs_probe eq "true") {
+        #    $install_opts .= " --skip-fs-probe ";
+        #}
 
-    # Hmm .. grub2-install must has been run before
-    # any grub2-mkconfig ...
-    # TODO: foreach .. looks awkward .. need clearify
-    foreach my $dev (@devices) {
+        # Do skip-fs-probe to avoid error when embedding stage1
+        # to extended partition
+        my $install_opts = "--force --skip-fs-probe";
+        my @devices = @{$files_ref->{$file} || []};
 
-        if ($dev eq "activate" or $dev eq "generic_mbr") {
-            next;
+        $self->milestone("devices =", \@devices);
+
+        foreach my $dev (@devices) {
+
+            my $cmd = "/usr/sbin/grub2-install";
+            my $opt = "--target=$self->{'target'} $install_opts \"$dev\"";
+
+            if ($dev eq "activate" or $dev eq "generic_mbr") {
+                next;
+            }
+
+            my $ret = $self->RunCommand ("$cmd $opt");
+
+            return 0 if (0 != $ret);
         }
-
+    }
+    else {
         my $ret = $self->RunCommand (
-            # TODO: Use --force is for installing on BS
-            # the tradeoff is we can't capture errors
-            # only patch grub2 package is possible way
-            # to get around this problem
-            "/usr/sbin/grub2-install --target=$self->{'target'} $install_opts \"$dev\"",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-install --target=$self->{'target'}"
         );
 
-        return 0 if (0 != $ret);
+        return 0 if $ret;
     }
 
     my $default  = delete $glob{"default"};
 
     if (defined $default and $default ne "") {
         $self->RunCommand (
-            "/usr/sbin/grub2-set-default '$default'",
-            Bootloader::Path::BootCommandLogname()
+            "/usr/sbin/grub2-set-default '$default'"
         );
     }
 
     return 0 ==  $self->RunCommand (
-        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg",
-        Bootloader::Path::BootCommandLogname()
+        "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
     );
 }
 

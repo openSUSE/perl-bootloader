@@ -39,6 +39,15 @@ Authors:
     Alexander Osthof <aosthof@suse.de>
     Josef Reidinger <jreidinger@suse.cz>
 
+%package YAML
+Requires:       perl-YAML-LibYAML
+Requires:       %{name} = %{version}
+Summary:        YAML interface for perl-Bootloader
+
+%description YAML
+A command line interface to perl-Bootloader using YAML files for input and output.
+
+
 %prep
 %setup -q
 
@@ -64,7 +73,7 @@ sed -i '/ZIPL/D;/ELILO/D;/\/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/
 %endif
 %endif
 %ifarch s390 s390x
-rm -f $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB*}
+rm -f $RPM_BUILD_ROOT/%{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB.*,GRUB2EFI.*}
 %if 0%{?suse_version} == 0 || 0%{?suse_version} <= 1130
 sed -i '/LILO/D;/GRUB/D;' $RPM_BUILD_ROOT/%{perl_vendorarch}/auto/Bootloader/.packlist
 %endif
@@ -92,7 +101,12 @@ chmod 600 /var/log/pbl.log
 /sbin/update-bootloader
 /usr/lib/bootloader
 /boot/boot.readme
+/etc/logrotate.d/pbl
 %dir %attr(0700,root,root) /var/log/YaST2
 %ghost %attr(0600,root,root) /var/log/pbl.log
 
-%changelog -n perl-Bootloader
+%files YAML
+%defattr(-, root, root)
+%{_sbindir}/pbl-yaml
+
+%changelog

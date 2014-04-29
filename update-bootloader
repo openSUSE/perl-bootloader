@@ -249,6 +249,13 @@ if (Bootloader::Tools::GetBootloader() eq "none")
   exit 0;
 }
 
+if (Bootloader::Tools::GetBootloader() =~ /^(grub2|grub2-efi)$/ and
+    !-x "/usr/sbin/grub2-mkconfig")
+{
+  $logger->milestone("grub2 utilties not in place, skipped updating");
+  exit 0;
+}
+
 if ($opt_image and $opt_image !~ m;^/;) {
     $opt_image = getcwd . '/' . $opt_image
 }
