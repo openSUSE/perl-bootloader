@@ -65,7 +65,7 @@ Creates an instance of the Bootloader::Core::GRUB2EFI class.
 
 sub GrubCfgSections {
     my ($parent, $cfg, $sect) = @_;
-    my @m = $cfg =~ /(submenu|menuentry) \s+ '([^']*)' (.*?) ( \{ (?: [^{}]* | (?4))* \} )/sxg;
+    my @m = $cfg =~ /(submenu|menuentry) \s+ '([^']*)' (.*?) ( \{ (?: [^{}]++ | (?-1))*+ \} )/sxg;
 
     for (my $i = 0; $i <= $#m; $i += 4) {
 
