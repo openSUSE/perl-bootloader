@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Apr 29 10:21:07 CEST 2014 - snwint@suse.de
+
+- fix regexp to not backtrack endlessly if parentheses don't match (bnc #875369)
+- 0.813
+
+-------------------------------------------------------------------
 Tue Apr 22 07:33:01 UTC 2014 - mchang@suse.com
 
 - enable btrfs snapshot booting on ppc

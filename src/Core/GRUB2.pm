@@ -250,7 +250,7 @@ my $grubdev_pattern = "(?:hd\\d+(?:,\\d+)?|fd\\d+|nd|cd)";
 
 sub GrubCfgSections {
     my ($parent, $cfg, $sect) = @_;
-    my @m = $cfg =~ /(submenu|menuentry) \s+ '([^']*)' (.*?) ( \{ (?: [^{}]* | (?4))* \} )/sxg;
+    my @m = $cfg =~ /(submenu|menuentry) \s+ '([^']*)' (.*?) ( \{ (?: [^{}]++ | (?-1))*+ \} )/sxg;
 
     for (my $i = 0; $i <= $#m; $i += 4) {
 
