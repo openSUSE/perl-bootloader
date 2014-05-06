@@ -198,21 +198,9 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = ();
-
-    if (-e Bootloader::Path::Grub2_defaultconf()) {
-        push @ret, Bootloader::Path::Grub2_defaultconf();
-    } else {
-        $self->warning ("file not exist ".Bootloader::Path::Grub2_defaultconf());
-    }
-
-    if (-e Bootloader::Path::Grub2_conf()) {
-        push @ret, Bootloader::Path::Grub2_conf();
-    } else {
-        $self->warning ("file not exist ".Bootloader::Path::Grub2_conf());
-    }
-
-    return \@ret;
+    return [ Bootloader::Path::Grub2_defaultconf(),
+      Bootloader::Path::Grub2_conf()
+    ];
 }
 
 
