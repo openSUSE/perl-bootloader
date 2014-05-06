@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue May  6 11:15:41 UTC 2014 - jreidinger@suse.com
+
+- fix upgrade when converting from grub1 to grub2 (bnc#876359)
+- 0.814
+
+-------------------------------------------------------------------
 Tue Apr 29 10:21:07 CEST 2014 - snwint@suse.de
 
 - fix regexp to not backtrack endlessly if parentheses don't match (bnc #875369)
