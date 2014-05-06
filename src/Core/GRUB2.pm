@@ -388,22 +388,11 @@ Returns undef on fail
 # list<string> ListFiles ()
 sub ListFiles {
     my $self = shift;
-    my @ret = ();
-
-    for my $i (
-        Bootloader::Path::Grub2_installdevice(),
+    return [ Bootloader::Path::Grub2_installdevice(),
         Bootloader::Path::Grub2_defaultconf(),
         Bootloader::Path::Grub2_conf(),
-        Bootloader::Path::Grub2_devicemap(),
-    ) {
-        if (-e $i) {
-            push @ret, $i;
-        } else {
-            $self->warning ("$i: config file does not exist");
-        }
-    }
-
-    return \@ret;
+        Bootloader::Path::Grub2_devicemap()
+    ];
 }
 
 =item
