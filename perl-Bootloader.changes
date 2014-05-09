@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri May  9 09:40:59 CEST 2014 - snwint@suse.de
+
+- fix superfluous error message (bnc #873231)
+- 0.4.89.59
+
+-------------------------------------------------------------------
 Wed Apr  9 10:30:14 CEST 2014 - snwint@suse.de
 
 - adjust perl-Bootloader to work even if no kernel is installed; in
