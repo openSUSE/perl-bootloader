@@ -1715,9 +1715,7 @@ sub Info2Section {
 	# "root" parameter in sections for other installations does not make
 	# sense to me -- are there cases where this does make sense?
 	my ($boot_dev,) = $self->SplitDevPath ("/boot");
-	$grub_root = $self->UnixDev2GrubDev (
-	    exists $sectinfo{"root"} ? delete($sectinfo{"root"}) : $boot_dev
-        );
+	$grub_root = $self->UnixDev2GrubDev(delete $sectinfo{root} || $boot_dev);
 	$self->milestone("Set GRUB's root to $grub_root");
 	# FIXES the above - maybe: To make makeactive without parameter work,
 	# one needs to pass the chainloader device
