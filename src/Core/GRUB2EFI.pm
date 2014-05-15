@@ -271,33 +271,12 @@ ParseLines on success, or undef on fail.
 sub CreateLines {
     my $self = shift;
     my $global = $self->{"global"};
-    my $sections = $self->{"sections"};
 
     if (defined $global->{"__lines"}) {
         foreach my $line (@{$global->{"__lines"}}) {
              if (defined $line->{"value"} && $line->{"value"} eq "" ) {
                  $line->{"value"} = '""';
              }
-        }
-    }
-
-    foreach my $sect (@{$sections}) {
-
-        my $append = undef;
-
-        next unless $sect->{"__modified"} || 0;
-
-        if (exists $sect->{"usage"}) {
-            if ($sect->{"usage"} eq "linux") {
-                $append = \$global->{"append"};
-            } elsif ($sect->{"usage"} eq "linux_failsafe") {
-                $append = \$global->{"append_failsafe"};
-            }
-        }
-
-        if (defined $append && $sect->{"append"} ne ${$append}) {
-            ${$append} = $sect->{"append"};
-            last;
         }
     }
 
