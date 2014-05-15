@@ -295,7 +295,7 @@ sub SplitDevPath {
 
     my $dev = $self->{"mountpoints"}{$mp};
     $path =~ s#^$mp/?#/#;
-    $self->debug("$orig was split to $dev + $path");
+    $self->milestone("$orig was split to $dev + $path");
     return ($dev, $path);
 }
 
