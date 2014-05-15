@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May 15 11:48:38 CEST 2014 - snwint@suse.de
+
+- remove grub2 sections workaround
+- 0.816
+
+-------------------------------------------------------------------
 Thu May 15 06:28:56 UTC 2014 - mchang@suse.com
 
 - enable btrfs snapshot booting on all architectures
