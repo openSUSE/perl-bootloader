@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May 15 06:28:56 UTC 2014 - mchang@suse.com
+
+- enable btrfs snapshot booting on all architectures
+- 0.815 
+
+-------------------------------------------------------------------
 Tue May  6 11:15:41 UTC 2014 - jreidinger@suse.com
 
 - fix upgrade when converting from grub1 to grub2 (bnc#876359)

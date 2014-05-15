@@ -965,12 +965,7 @@ sub Info2Global {
     my $distributor = delete $globinfo{"distributor"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
-    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "";
-    # per default enable btrfs snapshot boot configs only on i386-pc
-    # other architectures (s390, ppc) are planned but not ready 
-    if ($suse_btrfs eq "" and $self->{'target'} =~ /(i386-pc|powerpc-ieee1275)/) {
-        $suse_btrfs = "true";
-    }
+    my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
