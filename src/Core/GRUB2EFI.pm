@@ -504,6 +504,10 @@ sub Info2Global {
                 ],
             },
             {
+                'key' => 'GRUB_USE_LINUXEFI',
+                'value' => 'true',
+            },
+            {
                 'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
                 'value' => 'true',
             },
@@ -542,12 +546,6 @@ sub Info2Global {
         $timeout = "0" if "$timeout" ne "";
     } else {
         $hidden_timeout = "0" if "$hidden_timeout" ne "";
-    }
-
-    my $use_linuxefi = "";
-
-    if (defined $self->{secure_boot}) {
-        $use_linuxefi = $self->{secure_boot} ? "true" : "false";
     }
 
     # bnc#862614 - serial console settings not propagated into xen entry
@@ -636,9 +634,6 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $line_ref->{"value"} = ($os_prober eq "false") ? "true" : "false";
             $os_prober = "";
-        } elsif ($key =~ m/@?GRUB_USE_LINUXEFI$/) {
-            $line_ref->{"value"} = "$use_linuxefi" if "$use_linuxefi" ne "";
-            $use_linuxefi = "";
         } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
             $line_ref->{"value"} = $xen_append if $xen_append ne "";
             $xen_append = "";
@@ -727,13 +722,6 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_DISABLE_OS_PROBER",
             "value" => ($os_prober eq "false") ? "true" : "false",
-        }
-    }
-
-    if ("$use_linuxefi" ne "") {
-        push @lines, {
-            "key" => "GRUB_USE_LINUXEFI",
-            "value" => "$use_linuxefi",
         }
     }
 
