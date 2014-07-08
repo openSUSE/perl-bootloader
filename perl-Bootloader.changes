@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jul  8 03:41:07 UTC 2014 - mchang@suse.com
+
+- fix error on firmware raid install (bnc#865553)
+- 0.818
+
+-------------------------------------------------------------------
 Fri Jun  6 09:18:10 UTC 2014 - mchang@suse.com
 
 - use linuxefi as default (bnc#880819)
