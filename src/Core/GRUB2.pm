@@ -94,7 +94,7 @@ sub GetDeviceMap {
         }
 
         # skip device that's known to be invalid if installed to
-        my @ignore = ('/dev/sr', '/dev/dm', '/dev/md', '/dev/tmpfs');
+        my @ignore = ('/dev/sr', '/dev/tmpfs');
         foreach (@ignore) {
             if ($kern_dev =~ $_) {
                 $self->milestone ("ignore $kern_dev in device map");
