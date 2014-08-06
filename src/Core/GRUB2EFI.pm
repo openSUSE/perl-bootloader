@@ -243,7 +243,7 @@ sub ParseLines {
     );
 
     my @entries;
-    if (open (GRUBCFG, "<", Bootloader::Path::Grub2_conf())) {
+    if (open (GRUBCFG, "<:encoding(utf8)", Bootloader::Path::Grub2_conf())) {
         local $/;
         undef $/;
         my $cfg = <GRUBCFG>;
