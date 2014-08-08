@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Aug  8 11:59:42 CEST 2014 - snwint@suse.de
+
+- remove dependency on e2fsprogs (bnc #890795)
+- 0.820
+
+-------------------------------------------------------------------
 Wed Aug  6 15:21:15 UTC 2014 - jreidinger@suse.com
 
 - fix encoding when reading grub2.conf (bnc#890362)
