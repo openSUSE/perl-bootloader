@@ -15,7 +15,6 @@ Version:        --autoversion--
 Release:        0
 Requires:       perl-base = %{perl_version}
 Requires:       coreutils
-Requires:       e2fsprogs
 Recommends:     perl-gettext
 AutoReqProv:    on
 Group:          System/Boot
