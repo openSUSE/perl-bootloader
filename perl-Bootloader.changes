@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Aug 11 14:31:52 CEST 2014 - snwint@suse.de
+
+- remove ancient workaround-script bootloader_fix_xen (bnc #817168)
+- 0.4.89.60
+
+-------------------------------------------------------------------
 Fri May  9 09:40:59 CEST 2014 - snwint@suse.de
 
 - fix superfluous error message (bnc #873231)
