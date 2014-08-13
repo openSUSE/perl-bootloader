@@ -15,6 +15,7 @@ Version:        --autoversion--
 Release:        0
 Requires:       perl-base = %{perl_version}
 Requires:       e2fsprogs
+Requires:       coreutils
 %ifarch s390 s390x
 Requires:       s390-tools
 %endif

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Aug 13 13:56:52 CEST 2014 - snwint@suse.de
+
+- require coreutils for %post
+- 0.4.89.61
+
+-------------------------------------------------------------------
 Mon Aug 11 14:31:52 CEST 2014 - snwint@suse.de
 
 - remove ancient workaround-script bootloader_fix_xen (bnc #817168)
