@@ -364,7 +364,7 @@ sub Global2Info {
         } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
             $ret{"suse_btrfs"} = $val;
         } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
-            $ret{"cryptodisk"} = $val;
+            $ret{"cryptodisk"} = $val eq 'y' ? 1 : 0;
         }
     }
 
@@ -515,9 +515,9 @@ sub Info2Global {
             },
             {
                 'key' => 'GRUB_ENABLE_CRYPTODISK',
-                'value' => '0',
+                'value' => 'n',
                 'comment_before' => [
-                  '# Enable if grub may be on an encrypted filesystem'
+                  "# Set to 'y' for grub to be installed on an encrypted filesystems"
                 ],
             },
         );
@@ -654,7 +654,7 @@ sub Info2Global {
             $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
             $suse_btrfs = "";
         } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
-            $line_ref->{value} = $cryptodisk if defined $cryptodisk;
+            $line_ref->{value} = $cryptodisk ? 'y' : 'n' if defined $cryptodisk;
             undef $cryptodisk;
         }
 
@@ -762,7 +762,7 @@ sub Info2Global {
     if (defined $cryptodisk) {
         push @lines, {
             "key" => "GRUB_ENABLE_CRYPTODISK",
-            "value" => $cryptodisk,
+            "value" => $cryptodisk ? 'y' : 'n',
         }
     }
     return \@lines;
