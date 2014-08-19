@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug 19 15:04:27 CEST 2014 - snwint@suse.de
+
+- support GRUB_ENABLE_CRYPTODISK config option (bnc #887888)
+- 0.821
+
+-------------------------------------------------------------------
 Fri Aug  8 11:59:42 CEST 2014 - snwint@suse.de
 
 - remove dependency on e2fsprogs (bnc #890795)
