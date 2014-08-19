@@ -781,6 +781,8 @@ sub Global2Info {
             $ret{"xen_kernel_append"} = $val; 
         } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
             $ret{"suse_btrfs"} = $val;
+        } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
+            $ret{"cryptodisk"} = $val;
         }
     }
 
@@ -922,6 +924,13 @@ sub Info2Global {
                   '# WARNING foregin OS menu entries will be lost if set true here'
                 ],
             },
+            {
+                'key' => 'GRUB_ENABLE_CRYPTODISK',
+                'value' => '0',
+                'comment_before' => [
+                  '# Enable if grub may be on an encrypted filesystem'
+                ],
+            },
         );
 
     }
@@ -945,6 +954,7 @@ sub Info2Global {
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
     my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
+    my $cryptodisk = delete $globinfo{"cryptodisk"} || 0;
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
@@ -1054,6 +1064,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
             $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
             $suse_btrfs = "";
+        } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
+            $line_ref->{value} = $cryptodisk if defined $cryptodisk;
+            undef $cryptodisk;
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1153,6 +1166,13 @@ sub Info2Global {
         push @lines, {
             "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
             "value" => $suse_btrfs,
+        }
+    }
+
+    if (defined $cryptodisk) {
+        push @lines, {
+            "key" => "GRUB_ENABLE_CRYPTODISK",
+            "value" => $cryptodisk,
         }
     }
     return \@lines;
