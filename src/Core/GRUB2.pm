@@ -56,6 +56,45 @@ use Data::Dumper;
 
 #module interface
 
+
+=item
+Determines whether grub2 files are installed on an encrypted partition.
+=cut
+
+sub CryptoNeeded()
+{
+  my $self = shift;
+  my $crypto = 0;
+
+  my ($dev) = $self->SplitDevPath("/boot/grub2");
+
+  $dev = Cwd::realpath($dev);
+
+  $self->milestone("/boot/grub2 is on $dev");
+
+  $dev =~ s#/dev#/sys/block#;
+
+  do {
+    $self->milestone("checking $dev");
+
+    my $uuid;
+    if(open my $f, "$dev/dm/uuid") {
+      $uuid = <$f>;
+      close $f;
+    }
+
+    $crypto = 1 if $uuid =~ /^CRYPT/;
+
+    $dev = (glob "$dev/slaves/*")[0];
+  }
+  while($dev && !$crypto);
+
+  $self->milestone("crypto = $crypto");
+
+  return $crypto;
+}
+
+
 sub GetDeviceMap {
 
     my $self = shift;
@@ -961,6 +1000,8 @@ sub Info2Global {
 
     $self->milestone("XXX append = $append");
     $append =~ s/rootflags=subvol\S*\s*//;
+
+    $cryptodisk = $self->CryptoNeeded() unless $cryptodisk;
 
     my $hidden_timeout = "$timeout";
     if ("$hiddenmenu" eq "true") {
