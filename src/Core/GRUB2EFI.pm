@@ -56,6 +56,45 @@ use Data::Dumper;
 
 #module interface
 
+
+=item
+Determines whether grub2 files are installed on an encrypted partition.
+=cut
+
+sub CryptoNeeded()
+{
+  my $self = shift;
+  my $crypto = 0;
+
+  my ($dev) = $self->SplitDevPath("/boot/grub2");
+
+  $dev = Cwd::realpath($dev);
+
+  $self->milestone("/boot/grub2 is on $dev");
+
+  $dev =~ s#/dev#/sys/block#;
+
+  do {
+    $self->milestone("checking $dev");
+
+    my $uuid;
+    if(open my $f, "$dev/dm/uuid") {
+      $uuid = <$f>;
+      close $f;
+    }
+
+    $crypto = 1 if $uuid =~ /^CRYPT/;
+
+    $dev = (glob "$dev/slaves/*")[0];
+  }
+  while($dev && !$crypto);
+
+  $self->milestone("crypto = $crypto");
+
+  return $crypto;
+}
+
+
 =item
 C<< $obj_ref = Bootloader::Core::GRUB2EFI->new (); >>
 
@@ -363,6 +402,8 @@ sub Global2Info {
             $ret{"xen_kernel_append"} = $val; 
         } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
             $ret{"suse_btrfs"} = $val;
+        } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
+            $ret{"cryptodisk"} = $val eq 'y' ? 1 : 0;
         }
     }
 
@@ -511,6 +552,13 @@ sub Info2Global {
                 'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
                 'value' => 'true',
             },
+            {
+                'key' => 'GRUB_ENABLE_CRYPTODISK',
+                'value' => 'n',
+                'comment_before' => [
+                  "# Set to 'y' for grub to be installed on an encrypted partition"
+                ],
+            },
         );
 
     }
@@ -534,12 +582,15 @@ sub Info2Global {
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
     my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
+    my $cryptodisk = delete $globinfo{"cryptodisk"} || 0;
     # $root = " root=$root" if $root ne "";
     $vga = " vga=$vga" if $vga ne "";
     $append = " $append" if $append ne "";
 
     $self->milestone("XXX append = $append");
     $append =~ s/rootflags=subvol\S*\s*//;
+
+    $cryptodisk = $self->CryptoNeeded() unless $cryptodisk;
 
     my $hidden_timeout = "$timeout";
     if ("$hiddenmenu" eq "true") {
@@ -643,6 +694,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
             $line_ref->{"value"} = $suse_btrfs if $suse_btrfs ne "";
             $suse_btrfs = "";
+        } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
+            $line_ref->{value} = $cryptodisk ? 'y' : 'n' if defined $cryptodisk;
+            undef $cryptodisk;
         }
 
         defined $line_ref ? $line_ref : ();
@@ -743,6 +797,13 @@ sub Info2Global {
         push @lines, {
             "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
             "value" => $suse_btrfs,
+        }
+    }
+
+    if (defined $cryptodisk) {
+        push @lines, {
+            "key" => "GRUB_ENABLE_CRYPTODISK",
+            "value" => $cryptodisk ? 'y' : 'n',
         }
     }
     return \@lines;
