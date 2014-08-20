@@ -556,7 +556,7 @@ sub Info2Global {
                 'key' => 'GRUB_ENABLE_CRYPTODISK',
                 'value' => 'n',
                 'comment_before' => [
-                  "# Set to 'y' for grub to be installed on an encrypted filesystems"
+                  "# Set to 'y' for grub to be installed on an encrypted partition"
                 ],
             },
         );
