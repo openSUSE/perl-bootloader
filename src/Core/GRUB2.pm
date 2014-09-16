@@ -169,18 +169,18 @@ sub GetDeviceMap {
     }
 
     # we prefer by-id device than kernel device
-    if (%map_byid) {
-        $self->{device_map} = \%map_byid;
-    } elsif (%map_kern) {
-        $self->{device_map} = \%map_kern;
+    if (%map_kern || %map_byid) {
+        # ensure that hash values (hd0, hd1...) are unique
+        my %x;
+        $x{$map_kern{$_}} = $_ for reverse sort keys %map_kern;
+        $x{$map_byid{$_}} = $_ for reverse sort keys %map_byid;
+        $self->{device_map}{$x{$_}} = $_ for sort keys %x;
     } else {
         $self->{device_map} = {};
         $self->warning ("empty device.map\n");
     }
 
-    while ((my $unix, my $fw) = each (%{$self->{device_map}})) {
-        $self->milestone ("grub2 device map: $unix <=>  $fw\n");
-    }
+    $self->milestone("grub2 device map =", $self->{device_map});
 }
 
 sub GetKernelDevice {
@@ -238,11 +238,9 @@ sub GrubDev2UnixDev {
         $dev = $1;
     }
 
+    $self->milestone("device_map =", $self->{device_map});
+
     my $match_found = 0;
-    $self->milestone("device_map: ".$self->{"device_map"});
-    while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
-        $self->milestone("device_map: $unix <-> $fw.");
-    }
     while ((my $unix, my $fw) = each (%{$self->{"device_map"}})) {
         if ($dev eq $fw) {
             $dev = $unix;
