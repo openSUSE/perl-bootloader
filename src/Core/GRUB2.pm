@@ -180,9 +180,7 @@ sub GetDeviceMap {
         $self->warning ("empty device.map\n");
     }
 
-    while ((my $unix, my $fw) = each (%{$self->{device_map}})) {
-        $self->milestone ("grub2 device map: $unix <=>  $fw\n");
-    }
+    $self->milestone("grub2 device map =", $self->{device_map});
 }
 
 sub GetKernelDevice {
