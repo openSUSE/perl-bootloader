@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Sep 16 10:36:10 CEST 2014 - snwint@suse.de
+
+- join byid and kern maps instead of picking one (bnc #896665)
+- 0.822
+
+-------------------------------------------------------------------
 Tue Aug 19 15:04:27 CEST 2014 - snwint@suse.de
 
 - support GRUB_ENABLE_CRYPTODISK config option (bnc #887888)
