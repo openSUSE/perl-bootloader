@@ -170,7 +170,11 @@ sub GetDeviceMap {
 
     # we prefer by-id device than kernel device
     if (%map_kern || %map_byid) {
-        $self->{device_map} = { %map_kern, %map_byid };
+        # ensure that hash values (hd0, hd1...) are unique
+        my %x;
+        $x{$map_kern{$_}} = $_ for reverse sort keys %map_kern;
+        $x{$map_byid{$_}} = $_ for reverse sort keys %map_byid;
+        $self->{device_map}{$x{$_}} = $_ for sort keys %x;
     } else {
         $self->{device_map} = {};
         $self->warning ("empty device.map\n");
