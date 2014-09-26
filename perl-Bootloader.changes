@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep 26 10:56:10 CEST 2014 - snwint@suse.de
+
+- write only files we have data for (bsc #898429)
+- 0.823
+
+-------------------------------------------------------------------
 Tue Sep 16 10:36:10 CEST 2014 - snwint@suse.de
 
 - join byid and kern maps instead of picking one (bnc #896665)
