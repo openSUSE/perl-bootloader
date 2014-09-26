@@ -795,6 +795,7 @@ sub Global2Info {
         } elsif ($key =~ m/@?GRUB_HIDDEN_TIMEOUT$/) {
             $hidden_timeout = $val;
         } elsif ($key =~ m/@?GRUB_TERMINAL/) {
+            # GRUB_TERMINAL is a space separated list of terminal devices to use
             if ($val =~ m/^(\b(serial|console|gfxterm)\b|\s+)*$/) {
                 $ret{"terminal"} = $val;
             }
