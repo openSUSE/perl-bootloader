@@ -379,7 +379,7 @@ sub Global2Info {
         } elsif ($key =~ m/@?GRUB_HIDDEN_TIMEOUT$/) {
             $hidden_timeout = $val;
         } elsif ($key =~ m/@?GRUB_TERMINAL/) {
-            if ($val =~ m/^(serial|console|gfxterm)$/) {
+            if ($val =~ m/^(\b(serial|console|gfxterm)\b|\s+)*$/) {
                 $ret{"terminal"} = $val;
             }
         } elsif ($key =~ m/@?GRUB_SERIAL_COMMAND/) {
