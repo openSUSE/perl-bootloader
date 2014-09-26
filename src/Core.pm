@@ -839,7 +839,9 @@ sub WriteFiles
 
   my $files2write = $menu_only ? $self->ListMenuFiles() : [ sort keys %$files ];
 
-  $ok &= $self->WriteFile($_ . $suffix, $files->{$_}) for @$files2write;
+  for (@$files2write) {
+    $ok &= $self->WriteFile($_ . $suffix, $files->{$_}) if exists $files->{$_};
+  }
 
   return $ok;
 }
