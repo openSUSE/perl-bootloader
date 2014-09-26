@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep 26 13:14:57 CEST 2014 - snwint@suse.de
+
+- fix GRUB_TERMINAL check to accept multiple terminal devices (bsc #898609)
+- 0.824
+
+-------------------------------------------------------------------
 Fri Sep 26 10:56:10 CEST 2014 - snwint@suse.de
 
 - write only files we have data for (bsc #898429)
