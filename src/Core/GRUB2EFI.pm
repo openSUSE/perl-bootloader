@@ -216,6 +216,8 @@ sub new
         $machine = "i386";
     } elsif ($machine =~ /^(x86_64|amd64).*/) {
         $machine = "x86_64";
+    } elsif ($machine eq "aarch64") {
+        $machine = "arm64";
     }
     my $target = "$machine-efi";
     $loader->{'target'} = $target;
