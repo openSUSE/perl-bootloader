@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Oct 15 12:52:10 CEST 2014 - snwint@suse.de
+
+- handle aarch64 in GRUB2EFI
+- 0.825
+
+-------------------------------------------------------------------
 Fri Sep 26 13:14:57 CEST 2014 - snwint@suse.de
 
 - fix GRUB_TERMINAL check to accept multiple terminal devices (bsc #898609)
