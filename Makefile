@@ -1,7 +1,7 @@
 GIT2LOG := $(shell if [ -x ./git2log ] ; then echo ./git2log --update ; else echo true ; fi)
 GITDEPS := $(shell [ -d .git ] && echo .git/HEAD .git/refs/heads .git/refs/tags)
 VERSION := $(shell $(GIT2LOG) --version VERSION ; cat VERSION)
-BRANCH  := $(shell git branch | perl -ne 'print $$_ if s/^\*\s*//')
+BRANCH  := $(shell [ -d .git ] && git branch | perl -ne 'print $$_ if s/^\*\s*//')
 PREFIX  := perl-Bootloader-$(VERSION)
 
 PM_FILES = $(shell find src -name '*.pm')
