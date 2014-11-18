@@ -1,0 +1,11 @@
+/var/log/pbl.log {
+    compress
+    dateext
+    missingok
+    notifempty
+    create 600 root root
+    extension .log
+    maxage 365
+    rotate 10
+    size +4096k
+}
