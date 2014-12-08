@@ -218,6 +218,8 @@ sub new
         $machine = "x86_64";
     } elsif ($machine eq "aarch64") {
         $machine = "arm64";
+    } elsif ($machine eq "armv7l") {
+        $machine = "arm";
     }
     my $target = "$machine-efi";
     $loader->{'target'} = $target;
