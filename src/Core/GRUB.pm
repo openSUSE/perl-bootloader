@@ -834,11 +834,15 @@ sub ParseLines {
     {
 	if ($dm_entry =~ /^\s*\(([^\s#]+)\)\s+(\S+)\s*$/)
 	{
-          #multipath handling, multipath need real device, because multipath
-          # device have broken geometry (bnc #448110)
-          if (defined $self->{"multipath"} && defined $self->{"multipath"}->{$self->GetKernelDevice($2)}){
-            $devmap{ $self->{"multipath"}->{$self->GetKernelDevice($2)} } = $1;
-          } else {
+          # - multipath needs real devices because multipath devices
+          #   have broken geometry (bnc #448110)
+          # - but this also means we loose the mapping for some hdX entries
+          #   (bnc #908413) -> prefer lower hdX and hope for the best
+          if ($self->{multipath}{$self->GetKernelDevice($2)}) {
+            my $x = $self->{multipath}{$self->GetKernelDevice($2)};
+            $devmap{$x} = $1 if !$devmap{$x} || $devmap{$x} lt $1;
+          }
+          else {
       	    $devmap{$2} = $1;
           }
 	}
