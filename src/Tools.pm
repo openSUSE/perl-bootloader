@@ -1324,6 +1324,8 @@ sub AddSection
 
   $self->milestone("name = $name, option = ", \%option);
 
+  my $loader = Bootloader::Tools::GetBootloader();
+
   $self->ReadZombies();
 
   my $default = delete $option{default} || 0;
@@ -1401,6 +1403,10 @@ sub AddSection
 
     $sysconf = GetSysconfigValue("CONSOLE");
     $new{console} = $sysconf if defined $sysconf;
+
+    if($loader eq "zipl") {
+      $new{target} = "/boot/zipl";
+    }
   }
 
   $new{$_} = $option{$_} for keys %option;
@@ -1419,8 +1425,6 @@ sub AddSection
 
   my $match = '';
   my $new_name = '';
-
-  my $loader = Bootloader::Tools::GetBootloader();
 
   # If we have a bootloader that uses label names to specify the default
   # entry we need unique labels: so, append '_NUMBER', if necessary.
