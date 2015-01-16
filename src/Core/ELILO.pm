@@ -172,6 +172,7 @@ sub GetMetaData() {
 	noedd30		=> "bool:Don't force EDD30 Mode if not set:",
 	fpswa		=> "path:Specify the Filename for a specific FPSWA to load:",
 	"secure-boot"	=> "string:Support Secure Boot:auto",
+	multipath	=> "int:Number of additional multipath entries:0",
 
 	# shadow entries for efi boot manager
 	boot_efilabel	=> "string:EFI Boot Manager Label::",
