@@ -1589,8 +1589,17 @@ sub UpdateBootloader
   foreach my $file (@files) {
     next unless -f "$file.new";
 
-    # backup file only if is exists and previos backup is older than 6 hours
+    # backup file (".old") but don't overwrite backup newer than 6 hours
     if(-f $file) {
+      # preserve file permissions (bnc #908664)
+      my $p = (stat $file)[2];
+
+      if(defined $p) {
+        $p &= 07777;
+        chmod $p, "$file.new";
+        $self->milestone("adjusting permissions of $file.new to " . sprintf("0%o", $p));
+      }
+
       if(-f "$file.old") {
         my $mtime = time - (stat "$file.old")[9];
         if($mtime > 6 * 3600) {
