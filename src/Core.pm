@@ -316,7 +316,7 @@ sub GetExtendedPartition {
 
     # Check for valid devices
     unless (defined $part_dev and $part_dev =~ m/^\/dev\/[shv]d[a-z](\d+)?$/) {
-	$self->l_milestone ("Core::GetExtendedPartition: Specified device ".
+	$self->milestone ("Core::GetExtendedPartition: Specified device ".
 	    $part_dev||"undefined partdev".
             " is not valid and cannot be used as base for detecting an
             extended partition on the same disk.");
