@@ -941,7 +941,7 @@ sub match_section
   my $self = $lib_ref;
 
   my ($sect_ref, $opt_ref) = @_;
-  my $match = 1;
+  my $match = 0;
 
   $self->milestone("section name: \"$sect_ref->{name}\"");
 
