@@ -126,8 +126,11 @@ sub GetDeviceMap {
             }
         }
 
-        # skip partitions, assume they were ended with digits
-        if ($kern_dev =~ /\d+$/) {
+        my $sys_dev = $kern_dev;
+        $sys_dev =~ s#^/dev/##;
+        $sys_dev =~ s#/#!#g;
+        $sys_dev = "/sys/block/$sys_dev";
+        if ( ! -d $sys_dev ) {
             $self->milestone ("skip partition $kern_dev in device map");
             next GETMAP;
         }
