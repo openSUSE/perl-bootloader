@@ -563,7 +563,7 @@ sub Info2Section {
 		}
 	    }
         }
-	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "target" || $key eq "parmfile") {
+	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "mvdump" || $key eq "target" || $key eq "parmfile") {
 	    $key = "ramdisk" if ($key eq "initrd");
 	    push @lines, {
 		"key" => $key,
@@ -638,7 +638,7 @@ sub Section2Info {
 	{
 	    $ret{$key} = $line_ref->{"value"} eq "1" ? "true" : "false";
 	}
-	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "default" ||
+	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "mvdump" || $key eq "default" ||
 	       $key eq "timeout" || $key eq "target" || $key eq "parmfile")
 	{
 	    if($key eq "ramdisk")
@@ -648,7 +648,7 @@ sub Section2Info {
             }
             else
 	    {
-	      $ret{"type"} = "dump" if $key eq "dumpto";
+	      $ret{"type"} = "dump" if $key eq "dumpto" || $key eq "mvdump";
 	      $ret{$key} = $line_ref->{"value"};
             }
 	}
@@ -867,8 +867,7 @@ sub PrepareMenuFileLines {
                $found = 1;
            }
        }
-       my $is_dump = (($sect->{"type"} eq "dump") and
-         (defined $sect->{"dumpto"}) and ($sect->{"dumpto"} ne ""));
+       my $is_dump = $sect->{type} eq "dump";
        if (!$found and $sect->{"name"} ne "menu" and !$is_dump) {
 	 if ($sect->{"original_name"} =~ /failsafe/i || $sect->{"name"} =~ /failsafe/i)
 	 {
