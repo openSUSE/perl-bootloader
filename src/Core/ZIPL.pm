@@ -563,7 +563,7 @@ sub Info2Section {
 		}
 	    }
         }
-	elsif ($key eq "initrd" || $key eq "dumpto" || $key eq "mvdump" || $key eq "target" || $key eq "parmfile") {
+	elsif ($key =~ /^(initrd|target|parmfile|dumpto|dumptofs|mvdump)$/) {
 	    $key = "ramdisk" if ($key eq "initrd");
 	    push @lines, {
 		"key" => $key,
@@ -638,8 +638,7 @@ sub Section2Info {
 	{
 	    $ret{$key} = $line_ref->{"value"} eq "1" ? "true" : "false";
 	}
-	elsif ($key eq "ramdisk" || $key eq "dumpto" || $key eq "mvdump" || $key eq "default" ||
-	       $key eq "timeout" || $key eq "target" || $key eq "parmfile")
+	elsif ($key =~ /^(default|ramdisk|target|parmfile|timeout|dumpto|dumptofs|mvdump)$/)
 	{
 	    if($key eq "ramdisk")
 	    {
@@ -648,7 +647,7 @@ sub Section2Info {
             }
             else
 	    {
-	      $ret{"type"} = "dump" if $key eq "dumpto" || $key eq "mvdump";
+	      $ret{"type"} = "dump" if $key =~ /^(dumpto|dumptofs|mvdump)$/;
 	      $ret{$key} = $line_ref->{"value"};
             }
 	}
