@@ -551,7 +551,7 @@ sub Info2Global {
             },
             {
                 'key' => 'GRUB_USE_LINUXEFI',
-                'value' => 'true',
+                'value' => ($self->{'target'} =~ /i386|x86_64/ ? 'true' : 'false'),
             },
             {
                 'key' => 'SUSE_BTRFS_SNAPSHOT_BOOTING',
