@@ -414,7 +414,6 @@ DMRaid Partitions look like:
 
 =cut
 
-# FIXME: this has to be done through Storage
 # FIXME: do such devices really exist?
 
 sub ReadDMRaidPartitions
