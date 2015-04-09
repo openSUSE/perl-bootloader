@@ -567,13 +567,10 @@ sub ParseLines {
     }
 
     my @entries;
-    if (open (GRUBCFG, "<:encoding(utf8)", Bootloader::Path::Grub2_conf())) {
-        local $/;
-        undef $/;
-        my $cfg = <GRUBCFG>;
 
+    my $cfg = $self->ReadFileRaw(Bootloader::Path::Grub2_conf());
+    if ($cfg) {
         &GrubCfgSections ("", $cfg, \@entries);
-        close (GRUBCFG);
     }
 
     $self->{"global"} = $glob_ref;
