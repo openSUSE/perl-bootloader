@@ -20,6 +20,8 @@ C<< $files_ref = Bootloader::FileIO->ReadFiles(\@file_list); >>
 
 C<< $lines_ref = Bootloader::FileIO->ReadFile($file_name); >>
 
+C<< $lines_ref = Bootloader::FileIO->ReadFileRaw($file_name); >>
+
 C<< $number = Bootloader::FileIO->ReadNumber($file_name); >>
 
 C<< $lines_ref = Bootloader::FileIO->WriteFile($file, $lines); >>
@@ -68,7 +70,8 @@ sub ReadFiles
 C<< $lines_ref = Bootloader::FileIO->ReadFile($file_name); >>
 
 Reads a file from disk and returns a reference to an array of lines (with
-newline stripped). If the file could not be read, returns undef.
+newline stripped).
+If the file could not be read, returns undef.
 
 =cut
 
@@ -79,18 +82,53 @@ sub ReadFile
 
   my $lines;
 
+  my $f = $self->ReadFileRaw($file);
+
+  if($f) {
+    chomp $f;
+    $lines = [ split /\n/, $f, -1 ];
+  }
+
+  $self->debug("lines =", $lines);
+
+  return $lines;
+}
+
+
+=item
+C<< $lines_ref = Bootloader::FileIO->ReadFileRaw($file_name); >>
+
+Reads a file from disk and returns its content.
+If the file could not be read, returns undef.
+
+=cut
+
+sub ReadFileRaw
+{
+  my $self = shift;
+  my $file = shift;
+
+  my $res;
+
   if(open(my $fh, $file)) {
-    @$lines = (<$fh>);
+    {
+      local $/;
+      undef $/;
+      $res = <$fh>;
+    }
     close $fh;
-    my $l = join '', @$lines;
-    chomp @$lines;
-    $self->milestone("$file =", $l);
+
+    if(!utf8::decode($res)) {
+      $self->warning("$file: contains non-utf8 chars");
+    }
+
+    $self->milestone("$file =", $res);
   }
   else {
     $self->error("Failed to open $file: $!");
   }
 
-  return $lines;
+  return $res;
 }
 
 
