@@ -165,29 +165,8 @@ sub WriteFile
   my $self = shift;
   my $file = shift;
   my $lines = shift;
-  my $ok = 1;
 
-  my $l = join("\n", @$lines) . "\n";
-
-  $self->milestone("$file =", $l);
-
-  my $saved_umask = umask 0066;
-
-  if(open(my $fh, '>', $file)) {
-    print $fh $l;
-    if(!close($fh)) {
-      $self->error("Failed to close $file: $!");
-      $ok = 0;
-    }
-  }
-  else {
-    $self->error("Failed to open $file: $!");
-    $ok = 0;
-  }
-
-  umask $saved_umask;
-
-  return $ok;
+  return $self->WriteFileRaw($file, join("\n", @$lines) . "\n");
 }
 
 
@@ -205,6 +184,8 @@ sub WriteFileRaw
   my $file = shift;
   my $data = shift;
   my $ok = 1;
+
+  $self->milestone("$file =", $data);
 
   my $saved_umask = umask 0066;
 
