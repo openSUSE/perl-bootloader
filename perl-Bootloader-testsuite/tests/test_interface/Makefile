@@ -1,4 +1,6 @@
-main: prepare test clean
+all: test yaml clean
+
+.PHONY: prepare test yaml clean
 
 prepare: clean
 	mkdir -p Bootloader
@@ -7,7 +9,7 @@ prepare: clean
 	cp -rf backup/fake_root2 .
 	@mkdir -p fake_root{1,2}/var/log/YaST2
 
-test:
+test: prepare
 	perl -w grub1-test.pl
 	perl -w lilo1-test.pl
 	perl -w elilo1-test.pl
@@ -20,9 +22,11 @@ test:
 	rm -rf Bootloader
 	rm -rf fake_root[12]
 
+yaml:
+	cd yaml; ./yaml_test
+
 #usefull target after failed test
 clean: 
 	@rm -rf Bootloader
 	rm -rf fake_root*
-	cp -rf backup/fake_root1 .
-	cp -rf backup/fake_root2 .
+	rm -rf yaml/{arg*,res*,var}

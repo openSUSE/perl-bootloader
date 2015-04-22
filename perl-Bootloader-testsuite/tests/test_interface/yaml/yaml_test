@@ -1,0 +1,45 @@
+#! /bin/bash
+
+test_failed=0
+
+function yaml_scalar {
+  echo "--- \"$2\"" > "$1"
+}
+
+function yaml_array {
+  file="$1"
+  shift
+  echo "---" > "$file"
+  while [ -n "$1" ] ; do
+    echo "- \"$1\"" > "$file"
+    shift
+  done
+}
+
+function check {
+  if cmp -s "$1" "$2" ; then
+    echo $1: ok
+  else
+    echo $1: failed
+    test_failed=1
+  fi
+}
+
+
+# pbl log goes to var/log/pbl.log
+export PERL_BOOTLOADER_TESTSUITE_PATH=.
+mkdir -p var/log
+
+
+test_dir=test1
+sub_tests=9
+
+for i in `seq $sub_tests` ; do
+  yaml_scalar arg$i "$test_dir/file$i"
+  pbl-yaml "res00$i=ReadFileUnicode(arg$i)"
+  pbl-yaml "res20$i=WriteFileUnicode(@$test_dir/input$i)"
+  check "$test_dir/file$i" "res10$i"
+done
+
+
+exit $test_failed
