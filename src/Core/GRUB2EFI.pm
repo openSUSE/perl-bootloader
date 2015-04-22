@@ -287,7 +287,7 @@ sub ParseLines {
 
     my @entries;
 
-    my $cfg = $self->ReadFileRaw(Bootloader::Path::Grub2_conf());
+    my $cfg = $self->ReadFileUnicode(Bootloader::Path::Grub2_conf());
     if ($cfg) {
         &GrubCfgSections ("", $cfg, \@entries);
     }
