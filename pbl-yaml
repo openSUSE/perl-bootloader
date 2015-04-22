@@ -106,6 +106,12 @@ for my $cmd (@ARGV) {
     elsif(exists $Bootloader::Library::{$func}) {
       $res = $pbl_state->$func(@args);
     }
+    elsif(exists $Bootloader::FileIO::{$func}) {
+      $res = $pbl_state->$func(@args);
+    }
+    elsif(exists $Bootloader::Path::{$func}) {
+      eval "\$res = Bootloader::Path::$func(\@args)";
+    }
     else {
       $logger->error("$func: no such function");
     }

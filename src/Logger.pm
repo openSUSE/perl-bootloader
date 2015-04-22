@@ -72,6 +72,7 @@ sub StartLog
     my $tmp = select $f;
     $| = 1;
     select $tmp;
+    binmode $f, ':utf8';
     $self->{logger}{log_fh} = $f;
   }
 
@@ -80,10 +81,12 @@ sub StartLog
     my $tmp = select $f;
     $| = 1;
     select $tmp;
+    binmode $f, ':utf8';
     $self->{logger}{log_fh_yast} = $f;
   }
 
   if(!$self->{logger}{log_fh} && open my $f, ">&STDERR") {
+    binmode $f, ':utf8';
     $self->{logger}{log_fh} = $f;
     $self->{logger}{log_is_stderr} = 1;
   }
