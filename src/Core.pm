@@ -325,7 +325,12 @@ contains at least one blank character. Returns the text put into the quotes
 sub Quote {
     my $self = shift;
     my $text = shift;
-    my $when = shift;
+    my $when = shift || '';
+
+    $text = $self->trim($text);
+    return $text if ($text =~ /^`.*`$/); #leave full strings in backticks untouched
+
+    $text =~ s/([\\"`])/\\$1/g; #escape backslashes, backticks and quotes
 
     if ($when eq "always"
 	|| ($when eq "blanks" && index ($text, " ") >= 0)
@@ -333,9 +338,9 @@ sub Quote {
 	|| index ($text, "=") >= 0)
     {
         $text =~ s: +: :; #remove duplicated spaces
-	$text = "\"$text\"";
+        $text = "\"$text\"";
     }
-    
+
     return $text;
 }
 
@@ -358,6 +363,9 @@ sub Unquote {
     {
 	$text = $1;
     }
+
+    $text =~ s/\\([\\"`])/$1/g; #unescape backslashes, backticks and quotes
+
     return $text;
 }
 
