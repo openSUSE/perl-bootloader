@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 6;
+use Test::More tests => 14;
 
 use lib "./";
 use Bootloader::Library;
@@ -14,6 +14,20 @@ my $core = Bootloader::Core->new();
 #FIXME broken
 #is(getcwd()."/fake_root1/boot", $core->ResolveCrossDeviceSymlinks(getcwd()."/fake_root1/boot/boot"));
 
+my @test_strings = (
+    ['acpi_osi="!Windows 2012"', '"acpi_osi=\"!Windows 2012\""'],
+    ['acpi_osi=\"!Windows 2012\"', '"acpi_osi=\\\\\"!Windows 2012\\\\\""'],
+    ['`echo Hello`', '`echo Hello`'],
+    ['Hello `pwd`', '"Hello \`pwd\`"']
+    );
+
+foreach(  @test_strings ) {
+    is( $core->Quote($_->[0], "always"), $_->[1] );
+}
+
+foreach( @test_strings ) {
+    is( $core->Unquote($_->[1]), $_->[0] );
+}
 
 #test heuristic for fitting sections
 my %debug_section = (
