@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 use lib "./";
 use Bootloader::Library;
@@ -18,7 +18,8 @@ my @test_strings = (
     ['acpi_osi="!Windows 2012"', '"acpi_osi=\"!Windows 2012\""'],
     ['acpi_osi=\"!Windows 2012\"', '"acpi_osi=\\\\\"!Windows 2012\\\\\""'],
     ['`echo Hello`', '`echo Hello`'],
-    ['Hello `pwd`', '"Hello \`pwd\`"']
+    ['Hello `pwd`', '"Hello \`pwd\`"'],
+    ['Hello $PWD', '"Hello \$PWD"']
     );
 
 foreach(  @test_strings ) {

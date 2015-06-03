@@ -330,7 +330,7 @@ sub Quote {
     $text = $self->trim($text);
     return $text if ($text =~ /^`.*`$/); #leave full strings in backticks untouched
 
-    $text =~ s/([\\"`])/\\$1/g; #escape backslashes, backticks and quotes
+    $text =~ s/([\\"`\$])/\\$1/g; #escape backslashes, backticks, dollars and quotes
 
     if ($when eq "always"
 	|| ($when eq "blanks" && index ($text, " ") >= 0)
@@ -364,7 +364,7 @@ sub Unquote {
 	$text = $1;
     }
 
-    $text =~ s/\\([\\"`])/$1/g; #unescape backslashes, backticks and quotes
+    $text =~ s/\\([\\"`\$])/$1/g; #unescape backslashes, backticks, dollars and quotes
 
     return $text;
 }
