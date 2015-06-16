@@ -392,6 +392,8 @@ sub Global2Info {
             $ret{"gfxtheme"} = $val;
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
             $ret{"distributor"} = $val;
+        } elsif ($key =~ m/@?GRUB_DISABLE_LINUX_RECOVERY/) {
+            $ret{"failsafe_disabled"} = $val;
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
             $ret{"append_failsafe"} = $val;
         } elsif ($key =~ m/@?GRUB_BACKGROUND/) {
@@ -581,6 +583,7 @@ sub Info2Global {
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
     my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
     my $distributor = delete $globinfo{"distributor"} || "";
+    my $failsafe_disabled = delete $globinfo{"failsafe_disabled"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
     my $suse_btrfs = delete $globinfo{"suse_btrfs"} || "true";
@@ -672,6 +675,9 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
             $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
             $distributor = "";
+        } elsif ($key =~ m/@?GRUB_DISABLE_LINUX_RECOVERY$/) {
+            $line_ref->{"value"} = "$failsafe_disabled" if "$failsafe_disabled" ne "";
+            $failsafe_disabled = "";
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
             $line_ref->{"value"} = "$append_failsafe" if "$append_failsafe" ne "";
             $append_failsafe = "";
@@ -757,6 +763,13 @@ sub Info2Global {
         push @lines, {
             "key" => "GRUB_DISTRIBUTOR",
             "value" => "$distributor",
+        }
+    }
+
+    if ("$failsafe_disabled" ne "") {
+        push @lines, {
+            "key" => "GRUB_DISABLE_LINUX_RECOVERY",
+            "value" => "$failsafe_disabled",
         }
     }
 
