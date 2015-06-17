@@ -676,8 +676,12 @@ sub Info2Global {
             $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
             $distributor = "";
         } elsif ($key =~ m/@?GRUB_DISABLE_LINUX_RECOVERY$/) {
-            $line_ref->{"value"} = "$failsafe_disabled" if "$failsafe_disabled" ne "";
-            $failsafe_disabled = "";
+            if ("$failsafe_disabled" ne "") {
+                # uncomment option
+                $line_ref->{"key"} = "GRUB_DISABLE_LINUX_RECOVERY";
+                $line_ref->{"value"} = "$failsafe_disabled";
+                $failsafe_disabled = "";
+            }
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
             $line_ref->{"value"} = "$append_failsafe" if "$append_failsafe" ne "";
             $append_failsafe = "";
