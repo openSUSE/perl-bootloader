@@ -392,7 +392,7 @@ sub Global2Info {
             $ret{"gfxtheme"} = $val;
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
             $ret{"distributor"} = $val;
-        } elsif ($key =~ m/@?GRUB_DISABLE_LINUX_RECOVERY/) {
+        } elsif ($key =~ m/@?GRUB_DISABLE_RECOVERY/) {
             $ret{"failsafe_disabled"} = $val;
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_RECOVERY$/) {
             $ret{"append_failsafe"} = $val;
@@ -527,7 +527,7 @@ sub Info2Global {
                 ],
             },
             {
-                'key' => '@GRUB_DISABLE_LINUX_RECOVERY',
+                'key' => '@GRUB_DISABLE_RECOVERY',
                 'value' => 'true',
                 'comment_before' => [
                   '# Uncomment to disable generation of recovery mode menu entries'
@@ -675,10 +675,10 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
             $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
             $distributor = "";
-        } elsif ($key =~ m/@?GRUB_DISABLE_LINUX_RECOVERY$/) {
+        } elsif ($key =~ m/@?GRUB_DISABLE_RECOVERY$/) {
             if ("$failsafe_disabled" ne "") {
                 # uncomment option
-                $line_ref->{"key"} = "GRUB_DISABLE_LINUX_RECOVERY";
+                $line_ref->{"key"} = "GRUB_DISABLE_RECOVERY";
                 $line_ref->{"value"} = "$failsafe_disabled";
                 $failsafe_disabled = "";
             }
@@ -772,7 +772,7 @@ sub Info2Global {
 
     if ("$failsafe_disabled" ne "") {
         push @lines, {
-            "key" => "GRUB_DISABLE_LINUX_RECOVERY",
+            "key" => "GRUB_DISABLE_RECOVERY",
             "value" => "$failsafe_disabled",
         }
     }
