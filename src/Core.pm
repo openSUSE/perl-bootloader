@@ -329,6 +329,8 @@ sub Quote {
 
     $text = $self->trim($text);
     return $text if ($text =~ /^`.*`$/); #leave full strings in backticks untouched
+    #leave empty string as it is as there is no other way to express it (bnc#937806)
+    return $text if ($text =~ /^""$/);
 
     $text =~ s/([\\"`\$])/\\$1/g; #escape backslashes, backticks, dollars and quotes
 
