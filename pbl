@@ -1,0 +1,219 @@
+#! /usr/bin/perl
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# This is a (wrapper) script to update the bootloader config.
+#
+# It checks /etc/sysconfig/bootloader for the bootloader type.
+#
+# If there's no bootloader configured, it does nothing.
+#
+# If the bootloader is grub2, it runs grub2-mkconfig.
+#
+# For any other bootloader it runs the old bootloader_entry and
+# update-bootloader scripts (renamed to *.old).
+#
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+use strict;
+use POSIX qw ( strftime uname );
+
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 1;
+
+my $VERSION = "0.0";
+
+sub new;
+sub info;
+
+my $program;
+my $log;
+my $loader;
+my $exit_code = 0;
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+sub new
+{
+  $log->{session_id} = $program . sprintf("-%04d", int rand 10000);
+
+  # log to logfile if we can, else to STDERR
+
+  if(open my $f, ">>/var/log/pbl.log") {
+    my $tmp = select $f;
+    $| = 1;
+    select $tmp;
+    binmode $f, ':utf8';
+    $log->{log_fh} = $f;
+  }
+  elsif(open my $f, ">&STDERR") {
+    binmode $f, ':utf8';
+    $log->{log_fh} = $f;
+    $log->{log_is_stderr} = 1;
+  }
+
+  # find root device & detect if we are chroot-ed
+  my $r = "?";
+  my @r0 = stat "/";
+  my @r1 = stat "/proc/1/root";
+  if(@r0 && @r1) {
+    my $r0 = ($r0[0] >> 8) . ":" . ($r0[0] & 0xff);
+    $r = readlink "/dev/block/$r0";
+    $r =~ s#^..#/dev# if defined $r;
+    $r = $r0 unless defined $r;
+    if($r0[0] != $r1[0] || $r0[1] != $r1[1]) {
+      $r .= " (chroot)";
+    }
+  }
+
+  info(1, "$log->{session_id} = $0, version = $VERSION, root = $r");
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# info(level, message, var, depth)
+#
+# level: 0 .. 3 (debug, info, warning, error)
+# message: log message (single line string)
+# var (optional): either a SCALAR or a REF
+#   - SCALAR (may be multiline) will be logged in a block delimited
+#     by '<<<<<<<<<<<<<<<<' and '>>>>>>>>>>>>>>>>'
+#   - REF will be logged using Data::Dumper
+# depth (optional): maximum depth when logging a REF
+#
+sub info
+{
+  my $level = shift;
+  my $message = shift;
+
+  new if !$log;
+
+  my $line = (caller(1))[2];
+  my $func = (caller(1))[3];
+  $func =~ s/^main:://;
+
+  $func = 'main', $line = (caller(0))[2] if $func eq '';
+
+  my $id = $log->{session_id} || "???-0000.0";
+
+  # we split the log line a bit into prefix & message
+
+  my $prefix = strftime("%Y-%m-%d %H:%M:%S", localtime) . " <$level>";
+
+  $message = "$id $func.$line: $message";
+
+  if($_[0]) {
+    my $x = $_[0];
+    my $m = $_[1];
+    if(ref $x) {
+      $Data::Dumper::Maxdepth = $m if $m;
+      chomp($x = Dumper $x);
+      $Data::Dumper::Maxdepth = 0 if $m;
+    }
+    else {
+      chomp $x;
+      $x = "<<<<<<<<<<<<<<<<\n$x\n>>>>>>>>>>>>>>>>";
+    }
+
+    $message .= "\n$x";
+  }
+
+  if($log->{log_fh}) {
+    print { $log->{log_fh} } "$prefix $message\n";
+  }
+
+  # log error messages to STDERR unless we already did
+
+  if(!$log->{log_is_stderr} && $level > 2) {
+    print STDERR "pbl: $prefix $message\n";
+  }
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+sub get_bootloader
+{
+  my $bl;
+
+  if(open my $f, "/etc/sysconfig/bootloader") {
+    while(<$f>) {
+      $bl = $1, last if /^LOADER_TYPE=(\S*)/;
+    }
+    close $f;
+  }
+
+  $bl =~ s/^["']|["']$//g;
+
+  return $bl;
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+sub run_command
+{
+  my $command = shift;
+  my $try = shift;
+
+  my $ret;
+  my $output;
+
+  if(open my $f, "($command) 2>&1 |") {
+    local $/;
+    $output = <$f>;
+    close $f;
+    $ret = $? >> 8;
+    chomp $output;
+    $output .= "\n";
+  }
+  else {
+    $ret = 127;
+    $output = "$command: " . ($! == 13 ? $! : "command not found") . " \n";
+  }
+
+  if(!$ret || $try) {
+    info(1, "'$command' = $ret, output:", $output);
+    $ret = 0;
+  }
+  else {
+    info(3, "'$command' failed with exit code $ret, output:", $output);
+  }
+
+  return $ret;
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+($program = $0) =~ s#^.*/##;
+
+info(1, join(' ', ($0, @ARGV)));
+
+$loader = get_bootloader;
+
+info(1, "boot loader = $loader");
+
+exit 0 if !$loader;
+
+if($loader =~ /^grub2/) {
+  if(-x "/usr/sbin/grub2-mkconfig") {
+    if(-d "/boot/grub2") {
+      $exit_code = run_command "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg";
+    }
+    else {
+      info(3, "/boot/grub2: no such directory");
+      $exit_code = 1;
+    }
+  }
+  else {
+    info(3, "grub2-mkconfig: command not found");
+    $exit_code = 1;
+  }
+}
+else {
+  exec "/usr/lib/bootloader/$program.old", @ARGV if $loader !~ /^grub2/;
+  info(3, "/usr/lib/bootloader/$program.old: command not found");
+  $exit_code = 1;
+}
+
+exit $exit_code;
+
