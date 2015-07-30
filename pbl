@@ -133,7 +133,7 @@ sub info
   # log error messages to STDERR unless we already did
 
   if(!$log->{log_is_stderr} && $level > 2) {
-    print STDERR "pbl: $prefix $message\n";
+    print STDERR "$program: $prefix $message\n";
   }
 }
 
@@ -242,7 +242,7 @@ sub get_grub2_efi_target
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# update new config file
+# update grub2 config file
 #
 sub refresh_grub2
 {
@@ -341,7 +341,7 @@ if($loader =~ /^grub2/) {
   $exit_code = refresh_grub2 || $exit_code;
 }
 else {
-  exec "/usr/lib/bootloader/$program.old", @ARGV if $loader !~ /^grub2/;
+  exec "/usr/lib/bootloader/$program.old", @ARGV;
   info(3, "/usr/lib/bootloader/$program.old: command not found");
   $exit_code = 1;
 }
