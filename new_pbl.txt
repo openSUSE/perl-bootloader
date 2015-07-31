@@ -1,0 +1,50 @@
+===  perl-Bootloader - redone  ===
+
+The script we are talking about is here:
+
+https://github.com/openSUSE/perl-bootloader/blob/test_10/pbl
+
+It replaces both 'bootloader_entry' and 'update-bootloader'.
+
+It currently checks /etc/sysconfig/bootloader::LOADER_TYPE and
+  - if "" -> does nothing
+  - if grub2 || grub2-efi -> does grub2 setup
+  - else -> calls old 'bootloader_entry' resp. 'update-bootloader' scripts (for compat)
+
+For the grub2 setup, there are 2 cases:
+
+(1) if the script is called with '--reinit', then run grub2-install
+
+(2) else run grub2-mkconfig
+
+Apart from this, the script arguments are ignored.
+
+This basically mirrors what we currently (sle12/factory) do.
+
+ibs home:snwint:sle12test/perl-Bootloader has a test package that can be
+used as a drop-in replacement for testing.
+
+
+== What next? ==
+
+Going forward I've had a short discussion with Raymund about how to improve
+the current situation.
+
+Issues atm:
+
+- grub2-install: you have to find out and specify --target; that should ideally not
+  be necessary
+- grub2-install: you have to add an install device or even repeat the call for several
+  devices for i386-pc (and only there)
+- grub2-install: i386-pc needs some extra options (like --force --skip-fs-probe)
+- sometimes you have to call shim
+
+Ideas so far:
+
+- put the exact setup command into /etc/install_grub or so (like grub1)
+- put the grub2 platform into /etc/sysconfig/bootloader (say, TARGET=[grub2-]x86_64-efi)
+- introduce some directory structure where we look up and call scripts according
+  to LOADER_TYPE; this would provide an easy way to continue to support
+  any loader and anticipate future trends in bootloader fashion (just someone has to
+  write the scripts)
+
