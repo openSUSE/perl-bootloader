@@ -1,0 +1,29 @@
+#! /bin/bash
+
+target=$(uname --hardware-platform)
+
+if [ -z "$target" ] ; then
+  echo "no target platform"
+  exit 1
+fi
+
+case "$target" in
+  i?86 ) target=i386 ;;
+  x86_64 | amd64 ) target=x86_64 ;;
+  aarch64 ) target=arm64 ;;
+  armv7l ) target=arm ;;
+esac
+
+target="$target-efi"
+
+echo "target = $target"
+
+if [ -x /usr/sbin/shim-install ] ; then
+  ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg )
+elif [ -x /usr/sbin/grub2-install ] ; then
+  ( set -x ; /usr/sbin/grub2-install --target="$target" )
+else
+  echo "grub2-install: command not found"
+  exit 1
+fi
+

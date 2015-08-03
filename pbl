@@ -24,20 +24,18 @@ $Data::Dumper::Indent = 1;
 
 my $VERSION = "0.0";
 
+my $pbl_dir = "/usr/lib/bootloader";
+
 sub new;
 sub info;
 sub get_bootloader;
 sub run_command;
-sub get_grub2_target;
-sub get_grub2_efi_target;
-sub refresh_grub2;
-sub init_grub2;
 
 my $program;
 my $log;
 my $loader;
 my $exit_code = 0;
-my $todo;
+my @todo;
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -191,137 +189,6 @@ sub run_command
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-sub get_grub2_target
-{
-  my $target = (uname)[4];
-
-  info(1, "uname = $target");
-
-  if($target =~ /(i386|x86_64)/) {
-    $target = "i386-pc";
-  }
-  elsif($target =~ /(ppc|ppc64)/) {
-    $target = "powerpc-ieee1275";
-  }
-  elsif($target eq "s390x") {
-    $target = "s390x-emu";
-  }
-
-  info(1, "target = $target");
-
-  return $target;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-sub get_grub2_efi_target
-{
-  my $target = (uname)[4];
-
-  info(1, "uname = $target");
-
-  if($target =~ /i.86/) {
-    $target = "i386";
-  }
-  elsif($target =~ /(x86_64|amd64)/) {
-    $target = "x86_64";
-  }
-  elsif($target eq "aarch64") {
-    $target = "arm64";
-  }
-  elsif($target eq "armv7l") {
-    $target = "arm";
-  }
-
-  $target .= "-efi";
-
-  info(1, "target = $target");
-
-  return $target;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# update grub2 config file
-#
-sub refresh_grub2
-{
-  my $ret = 0;
-
-  if(-x "/usr/sbin/grub2-mkconfig") {
-    if(-d "/boot/grub2") {
-      $ret = run_command "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg";
-    }
-    else {
-      info(3, "/boot/grub2: no such directory");
-      $ret = 1;
-    }
-  }
-  else {
-    info(3, "grub2-mkconfig: command not found");
-    $ret = 1;
-  }
-
-  return $ret;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# install grub2
-#
-sub init_grub2
-{
-  my $ret = 0;
-  my @cmds;
-
-  if($loader eq 'grub2-efi')  {
-    if(-x "/usr/sbin/shim-install") {
-      push @cmds, "/usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg";
-    }
-    elsif(-x "/usr/sbin/grub2-install") {
-      my $target = get_grub2_efi_target;
-      push @cmds, "/usr/sbin/grub2-install --target='$target'" if $target;
-    }
-    else {
-      info(3, "grub2-install: command not found");
-    }
-  }
-  else {
-    if(-x "/usr/sbin/grub2-install") {
-      my $target = get_grub2_target;
-      if($target) {
-        if(open my $f, "/etc/default/grub_installdevice") {
-          while(<$f>) {
-            chomp;
-            next if /^(activate|generic_mbr)$/;
-            if(-b $_) {
-              push @cmds, "/usr/sbin/grub2-install --target='$target' --force --skip-fs-probe '$_'";
-            }
-            else {
-              info(3, "$_: not a block device");
-            }
-          }
-          close $f;
-        }
-      }
-    }
-    else {
-      info(3, "grub2-install: command not found");
-    }
-  }
-
-  if (@cmds) {
-    $ret = run_command($_) || $ret for @cmds;
-  }
-  else {
-    $ret = 1;
-  }
-
-  return $ret;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ($program = $0) =~ s#^.*/##;
 
 info(1, join(' ', ($0, @ARGV)));
@@ -332,13 +199,14 @@ info(1, "bootloader = $loader");
 
 exit 0 if !$loader;
 
-$todo = 'refresh';
+push @todo, 'refresh';
 
-$todo = 'init' if grep { /^--reinit$/ } @ARGV;
+unshift @todo, 'reinit' if grep { /^--reinit$/ } @ARGV;
 
-if($loader =~ /^grub2/) {
-  $exit_code = init_grub2 if $todo eq 'init';
-  $exit_code = refresh_grub2 || $exit_code;
+if(-x "$pbl_dir/$loader.refresh") {
+  for (@todo) {
+    $exit_code = run_command("$pbl_dir/$loader.$_") || $exit_code;
+  }
 }
 else {
   exec "/usr/lib/bootloader/$program.old", @ARGV;
