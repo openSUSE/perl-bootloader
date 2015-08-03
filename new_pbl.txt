@@ -8,18 +8,22 @@ It replaces both 'bootloader_entry' and 'update-bootloader'.
 
 It currently checks /etc/sysconfig/bootloader::LOADER_TYPE and
   - if "" -> does nothing
-  - if grub2 || grub2-efi -> does grub2 setup
+  - if /usr/lib/bootloader/$LOADER_TYPE.* exists, runs these scripts
   - else -> calls old 'bootloader_entry' resp. 'update-bootloader' scripts (for compat)
 
-For the grub2 setup, there are 2 cases:
+There are 2 cases:
 
-(1) if the script is called with '--reinit', then run grub2-install
+(1) if the script is called with '--reinit', then run $LOADER_TYPE.reinit,
+  followed by $LOADER_TYPE.refresh
 
-(2) else run grub2-mkconfig
+(2) else run $LOADER_TYPE.refresh
 
 Apart from this, the script arguments are ignored.
 
-This basically mirrors what we currently (sle12/factory) do.
+This basically mirrors what we currently (sle12/factory) do for grub2.
+
+The scripts in /usr/lib/bootloader/ should exit with 0 if ok, else a failure is assumed.
+Any output (stdout or stderr) is logged to /var/log/pbl.log.
 
 ibs home:snwint:sle12test/perl-Bootloader has a test package that can be
 used as a drop-in replacement for testing.
@@ -27,7 +31,7 @@ used as a drop-in replacement for testing.
 
 == What next? ==
 
-Going forward I've had a short discussion with Raymund about how to improve
+Going forward I've had some discussion with Raymund and Michael about how to improve
 the current situation.
 
 Issues atm:
@@ -43,8 +47,4 @@ Ideas so far:
 
 - put the exact setup command into /etc/install_grub or so (like grub1)
 - put the grub2 platform into /etc/sysconfig/bootloader (say, TARGET=[grub2-]x86_64-efi)
-- introduce some directory structure where we look up and call scripts according
-  to LOADER_TYPE; this would provide an easy way to continue to support
-  any loader and anticipate future trends in bootloader fashion (just someone has to
-  write the scripts)
 
