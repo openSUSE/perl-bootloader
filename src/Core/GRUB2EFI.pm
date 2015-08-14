@@ -457,7 +457,7 @@ sub Info2Global {
         @lines = (
             {
                 'key' => 'GRUB_DISTRIBUTOR',
-                'value' => '"openSUSE"',
+                'value' => 'openSUSE',
                 'comment_before' => [
                   '# If you change this file, run \'grub2-mkconfig -o /boot/grub2/grub.cfg\' afterwards to update',
                   '# /boot/grub2/grub.cfg.'
@@ -496,7 +496,7 @@ sub Info2Global {
             },
             {
                 'key' => '@GRUB_BADRAM',
-                'value' => '"0x01234567,0xfefefefe,0x89abcdef,0xefefefef"',
+                'value' => '0x01234567,0xfefefefe,0x89abcdef,0xefefefef',
                 'comment_before' => [
                   '# Uncomment to enable BadRAM filtering, modify to suit your needs',
                   '# This works with Linux (no patch required) and with any kernel that obtains',
