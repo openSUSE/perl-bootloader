@@ -8,15 +8,23 @@ It replaces both 'bootloader_entry' and 'update-bootloader'.
 
 It currently checks /etc/sysconfig/bootloader::LOADER_TYPE and
   - if "" -> does nothing
-  - if /usr/lib/bootloader/$LOADER_TYPE.* exists, runs these scripts
+  - if /usr/lib/bootloader/$LOADER_TYPE exists, runs scripts from this directry
   - else -> calls old 'bootloader_entry' resp. 'update-bootloader' scripts (for compat)
+
+There are two functions (scripts in $LOADER_TYPE dir) defined:
+  - install: install the bootloader (to the disk)
+  - config:  update the boot loader config file (e.g. /boot/grub2/grub.cfg)
+
+If a script is missing, it is assumed that it is not necessary to do
+anything (that is, it's not considered an error).
+
 
 There are 2 cases:
 
-(1) if the script is called with '--reinit', then run $LOADER_TYPE.reinit,
-  followed by $LOADER_TYPE.refresh
+(1) if the script is called with '--reinit', then run $LOADER_TYPE/install,
+  followed by $LOADER_TYPE/config
 
-(2) else run $LOADER_TYPE.refresh
+(2) else run $LOADER_TYPE/config
 
 Apart from this, the script arguments are ignored.
 

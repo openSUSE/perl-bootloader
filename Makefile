@@ -36,10 +36,12 @@ install: check
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
 	@install -m 755 bootloader_entry $(DESTDIR)/usr/lib/bootloader/bootloader_entry.old
 	@install -m 755 update-bootloader $(DESTDIR)/usr/lib/bootloader/update-bootloader.old
-	@install -m 755 grub2.reinit $(DESTDIR)/usr/lib/bootloader
-	@install -m 755 grub2.refresh $(DESTDIR)/usr/lib/bootloader
-	@install -m 755 grub2-efi.reinit $(DESTDIR)/usr/lib/bootloader
-	@install -m 755 grub2.refresh $(DESTDIR)/usr/lib/bootloader/grub2-efi.refresh
+	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/install $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2-efi
+	@install -m 755 grub2-efi/install $(DESTDIR)/usr/lib/bootloader/grub2-efi
+	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 pbl $(DESTDIR)/usr/lib/bootloader/pbl
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)/usr/lib/bootloader/pbl
 	@ln -snf ../usr/lib/bootloader/pbl $(DESTDIR)/sbin/update-bootloader

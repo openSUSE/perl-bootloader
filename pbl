@@ -7,7 +7,8 @@
 #
 # If there's no bootloader configured, it does nothing.
 #
-# If the bootloader is grub2, it runs grub2-mkconfig.
+# If the directory /usr/lib/bootloader/$LOADER exists, runs the scripts from
+# that directory.
 #
 # For any other bootloader it runs the old bootloader_entry and
 # update-bootloader scripts (renamed to *.old).
@@ -199,13 +200,18 @@ info(1, "bootloader = $loader");
 
 exit 0 if !$loader;
 
-push @todo, 'refresh';
+push @todo, 'config';
 
-unshift @todo, 'reinit' if grep { /^--reinit$/ } @ARGV;
+unshift @todo, 'install' if grep { /^--reinit$/ } @ARGV;
 
-if(-x "$pbl_dir/$loader.refresh") {
+if(-d "$pbl_dir/$loader") {
   for (@todo) {
-    $exit_code = run_command("$pbl_dir/$loader.$_") || $exit_code;
+    if(-x "$pbl_dir/$loader/$_") {
+      $exit_code = run_command("$pbl_dir/$loader/$_") || $exit_code;
+    }
+    else {
+      info(1, "$loader::$_ skipped");
+    }
   }
 }
 else {
