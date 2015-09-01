@@ -15,23 +15,27 @@ esac
 
 echo "target = $target"
 
+err=0
+
 if [ -x /usr/sbin/grub2-install ] ; then
   if [ -f /etc/default/grub_installdevice ] ; then
     while read foo ; do
       [ -z "$foo" -o "$foo" = activate -o "$foo" = generic_mbr ] && continue
       if [ -b "$foo" ] ; then
-        ( set -x ; /usr/sbin/grub2-install --target="$target" --force --skip-fs-probe "$foo" ) || exit
+        ( set -x ; /usr/sbin/grub2-install --target="$target" --force --skip-fs-probe "$foo" ) || err=1
       else
         echo "$foo: not a block device"
-        exit 1
+        err=1
       fi
     done </etc/default/grub_installdevice
   else
     echo "/etc/default/grub_installdevice: no such file"
-    exit 1
+    err=1
   fi
 else
   echo "grub2-install: command not found"
-  exit 1
+  err=1
 fi
+
+exit $err
 
