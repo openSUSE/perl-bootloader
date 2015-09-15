@@ -873,7 +873,7 @@ sub Info2Global {
         @lines = (
             {
                 'key' => 'GRUB_DISTRIBUTOR',
-                'value' => 'openSUSE',
+                'value' => '""',
                 'comment_before' => [
                   '# If you change this file, run \'grub2-mkconfig -o /boot/grub2/grub.cfg\' afterwards to update',
                   '# /boot/grub2/grub.cfg.'
@@ -990,7 +990,9 @@ sub Info2Global {
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
     my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
-    my $distributor = delete $globinfo{"distributor"} || "";
+    my $distributor = delete $globinfo{"distributor"};
+    # handle empty default distributor
+    $distributor = '""' if $distributor eq "";
     my $failsafe_disabled = delete $globinfo{"failsafe_disabled"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
@@ -1080,8 +1082,8 @@ sub Info2Global {
                 $terminal = "";
             }
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
-            $line_ref->{"value"} = "$distributor" if "$distributor" ne "";
-            $distributor = "";
+            $line_ref->{"value"} = "$distributor" if defined("$distributor");
+            $distributor = undef;
         } elsif ($key =~ m/@?GRUB_DISABLE_RECOVERY$/) {
             if ("$failsafe_disabled" ne "") {
               # uncomment option
@@ -1169,7 +1171,7 @@ sub Info2Global {
         }
     }
 
-    if ("$distributor" ne "") {
+    if (defined($distributor)) {
         push @lines, {
             "key" => "GRUB_DISTRIBUTOR",
             "value" => "$distributor",
