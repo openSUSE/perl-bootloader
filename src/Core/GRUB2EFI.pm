@@ -764,7 +764,7 @@ sub Info2Global {
         }
     }
 
-    if (defined("$distributor")) {
+    if (defined($distributor)) {
         push @lines, {
             "key" => "GRUB_DISTRIBUTOR",
             "value" => $distributor,
