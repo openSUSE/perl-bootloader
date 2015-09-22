@@ -457,7 +457,7 @@ sub Info2Global {
         @lines = (
             {
                 'key' => 'GRUB_DISTRIBUTOR',
-                'value' => '',
+                'value' => '""',
                 'comment_before' => [
                   '# If you change this file, run \'grub2-mkconfig -o /boot/grub2/grub.cfg\' afterwards to update',
                   '# /boot/grub2/grub.cfg.'
@@ -583,6 +583,8 @@ sub Info2Global {
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
     my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
     my $distributor = delete $globinfo{"distributor"};
+    # handle empty default distributor
+    $distributor = '""' if $distributor eq "";
     my $failsafe_disabled = delete $globinfo{"failsafe_disabled"} || "";
     my $append_failsafe = delete $globinfo{"append_failsafe"} || "";
     my $os_prober = delete $globinfo{"os_prober"} || "";
@@ -672,7 +674,7 @@ sub Info2Global {
                 $terminal = "";
             }
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
-            $line_ref->{"value"} = "$distributor" if defined("$distributor");
+            $line_ref->{"value"} = $distributor;
             $distributor = undef;
         } elsif ($key =~ m/@?GRUB_DISABLE_RECOVERY$/) {
             if ("$failsafe_disabled" ne "") {
@@ -762,10 +764,10 @@ sub Info2Global {
         }
     }
 
-    if (defined("$distributor")) {
+    if (defined($distributor)) {
         push @lines, {
             "key" => "GRUB_DISTRIBUTOR",
-            "value" => "$distributor",
+            "value" => $distributor,
         }
     }
 

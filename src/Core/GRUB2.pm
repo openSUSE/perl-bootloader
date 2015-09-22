@@ -1082,7 +1082,7 @@ sub Info2Global {
                 $terminal = "";
             }
         } elsif ($key =~ m/@?GRUB_DISTRIBUTOR/) {
-            $line_ref->{"value"} = "$distributor" if defined("$distributor");
+            $line_ref->{"value"} = $distributor;
             $distributor = undef;
         } elsif ($key =~ m/@?GRUB_DISABLE_RECOVERY$/) {
             if ("$failsafe_disabled" ne "") {
@@ -1174,7 +1174,7 @@ sub Info2Global {
     if (defined($distributor)) {
         push @lines, {
             "key" => "GRUB_DISTRIBUTOR",
-            "value" => "$distributor",
+            "value" => $distributor,
         }
     }
 
