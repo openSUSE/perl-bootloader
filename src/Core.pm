@@ -302,7 +302,7 @@ sub GetExtendedPartition {
 
     foreach my $part_ref (@{$self->{"partitions"}}) {
 	if ($part_ref->[1] eq $disk_dev and
-	    $part_ref->[5] eq "`extended") {
+	    ($part_ref->[5] eq "`extended" || $part_ref->[5] eq ":extended")) {
 	    $extended_part_dev = $part_ref->[0];
 	}
     }
