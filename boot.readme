@@ -7,9 +7,9 @@ Q: A Kernel upgrade broke my tuned bootloader settings.
 
 A: See below for an overview of bootloader related config files.
    You can also set LOADER_TYPE="none" in /etc/sysconfig/bootloader to keep
-   the system from touching you individual boot config at all.
+   the system from touching your individual boot config at all.
    *** WARNING *** after a kernel upgrade you may need to update your boot
-   config manually (e.g. with lilo)..
+   config manually (e.g. with lilo).
 
 
 ===  bootloader configuration files  ===
@@ -20,7 +20,7 @@ A: See below for an overview of bootloader related config files.
 
 = grub2 =
   /etc/default/grub_installdevice (x86 only)
-	- contains list of devices grub2 in installed to (one per line)
+	- contains list of devices that grub2 is installed to (one per line)
   /etc/default/grub
 	- settings to control creation of grub.cfg; used by grub2-mkconfig
   /boot/grub2/grub.cfg
