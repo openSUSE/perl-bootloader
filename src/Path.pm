@@ -126,6 +126,18 @@ sub Sysconfig {
 }
 
 =item
+C<< $path = Bootloader::Path::Extlinux_conf(); >>
+
+Gets path to lilo(or powerlilo) configuration file.
+
+=cut
+
+sub Extlinux_conf {
+  my $value = "/boot/extlinux/extlinux.conf";
+  return Prefix($value);
+}
+
+=item
 C<< $path = Bootloader::Path::Grub_menulst(); >>
 
 Gets path for grub configuration file menu.lst.

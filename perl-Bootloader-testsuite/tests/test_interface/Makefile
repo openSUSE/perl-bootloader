@@ -13,6 +13,7 @@ test: prepare
 	perl -w grub1-test.pl
 	perl -w lilo1-test.pl
 	perl -w elilo1-test.pl
+	perl -w extlinux1-test.pl
 	perl -w plilo1-test.pl
 	perl -w zipl1-test.pl
 	perl -w none-test.pl
