@@ -1,0 +1,14 @@
+#! /bin/bash
+
+if [ -x /usr/sbin/grub2-mkconfig ] ; then
+  if [ -d /boot/grub2 ] ; then
+    ( set -x ; /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg )
+  else
+    echo "/boot/grub2: no such directory"
+    exit 1
+  fi
+else
+  echo "grub2-mkconfig: command not found"
+  exit 1
+fi
+
