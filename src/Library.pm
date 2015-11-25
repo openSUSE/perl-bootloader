@@ -203,6 +203,10 @@ sub SetLoaderType
     }
     $loader = Bootloader::Core::ELILO->new($self, $loader, $arch);
   }
+  elsif($bootloader eq "extlinux") {
+    require Bootloader::Core::EXTLINUX;
+    $loader = Bootloader::Core::EXTLINUX->new($self, $loader);
+  }
   elsif($bootloader eq "zipl") {
     require Bootloader::Core::ZIPL;
     $loader = Bootloader::Core::ZIPL->new($self, $loader);
