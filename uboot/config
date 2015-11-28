@@ -1,0 +1,96 @@
+#!/bin/bash
+
+function print_entry {
+	local label=$1
+	local zimage=$2
+	local initrd=$3
+	local append=$4
+	local dtb=$5
+
+	echo "LABEL $label"
+	echo -e "\tLINUX $(readlink -m $zimage)"
+	echo -e "\tINITRD $(readlink -m $initrd)"
+	if [ -d $dtb ] ; then
+		echo -e "\tFDTDIR $(readlink -m $dtb)"
+	else
+		echo -e "\tFDT $(readlink -m $dtb)"
+	fi
+	echo -e "\tAPPEND $append"
+}
+
+function print_header {
+	echo "# THIS FILE WILL BE OVERWRITTEN by perl-Bootloader"
+	echo -n "# Last modification on "
+	date
+	echo "# Please, use /boot/extlinux.d and /etc/default/uboot for configuration"
+	echo
+}
+
+if [ ! -r /etc/default/u-boot ] ; then
+	echo "/etc/default/u-boot: no such file"
+	exit 1
+fi
+
+source /etc/default/u-boot
+
+# Find zImages
+machine=`uname -m`
+case "x$machine" in
+	xi?86 | xx86_64)
+		zimage=(`find /boot -maxdepth 1 -name vmlinuz-\*`) ;;
+	xaarch64)
+		zimage=(`find /boot -maxdepth 1 -name Image-\*`) ;;
+	*) 
+		zimage=(`find /boot -maxdepth 1 -name zImage-\*`) ;;
+esac
+version=(${zimage[@]#*-})
+
+# Generate filenames for initrd and dtbdir
+initrd=(${version[@]/#/\/boot\/initrd-})
+dtb=(${version[@]/#/\/boot\/dtb-})
+dtb=(${dtb[@]%-*})
+
+if [ ! -d /boot/extlinux.d ] ; then
+	echo "/boot/extlinux.d: no such directory"
+	exit 1
+fi
+entry_file=/boot/extlinux.d/50_generated.conf
+print_header > $entry_file
+
+echo "DEFAULT linux_0" >> $entry_file
+echo "" >> $entry_file
+
+entry_id=0
+for ((i=0;i<${#zimage[@]};i++)) ; do
+	if [ -r ${initrd[$i]} -a -r ${zimage[$i]} -a -d ${dtb[$i]} ] ; then
+		for dtbfile in / $U_BOOT_DTB_LINUX_DEFAULT ; do
+			print_entry linux_$((entry_id++)) ${zimage[$i]} ${initrd[$i]} "$U_BOOT_CMDLINE_LINUX_DEFAULT" ${dtb[$i]}'/'${dtbfile} >> $entry_file
+		done
+
+		if [ "x$U_BOOT_DISABLE_RECOVERY" == "x" ] ; then
+			for dtbfile in / $U_BOOT_DTB_LINUX_RECOVERY ; do
+				print_entry linux_$((entry_id++)) ${zimage[$i]} ${initrd[$i]} "$U_BOOT_CMDLINE_LINUX_RECOVERY" ${dtb[$i]}'/'${dtbfile} >> $entry_file
+			done
+		fi
+	fi
+done
+
+tmp_file=$(mkdir -p /boot/extlinux && mktemp -p /boot/extlinux)
+print_header > $tmp_file
+configs=(`find /boot/extlinux.d -maxdepth 1 -name \*.conf | sort`)
+
+for ((i=0;i<${#configs[@]};i++)) ; do
+	echo "### ${configs[$i]}" >> $tmp_file
+	cat ${configs[$i]} >> $tmp_file
+done
+
+sync
+
+if [ -e /boot/extlinux/extlinux.conf ] ; then
+	cp /boot/extlinux/extlinux.conf /boot/extlinux/extlinux.conf.old
+	sync
+fi
+
+mv $tmp_file /boot/extlinux/extlinux.conf
+sync
+exit 0
