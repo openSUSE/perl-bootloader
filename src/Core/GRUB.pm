@@ -675,9 +675,14 @@ sub GrubPath2UnixPath {
 	return $orig_path;
     }
 
+    # strip superfluous "/boot" parts of path if there's a boot -> '.' compat link
+    if(-d($mountpoint) && readlink("$mountpoint/boot") eq '.') {
+      $path =~ s#^(/boot)+/#/#;
+    }
+
     $path = $mountpoint . $path;
     $path = $self->CanonicalPath ($path);
-    $self->debug("Translated GRUB->UNIX dev: $dev, path: $orig_path to: $path");
+    $self->milestone("Translated GRUB->UNIX dev: $dev, path: $orig_path to: $path");
     return $path;
 }
 
