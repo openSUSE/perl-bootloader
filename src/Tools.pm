@@ -165,39 +165,6 @@ sub ReadMountPoints
   return \%mountpoints;
 }
 
-
-sub __old_ReadMountPoints {
-    open (FILE, Bootloader::Path::Fstab()) || 
-	die ("ReadMountPoints(): Failed to open /etc/fstab");
-
-    my %mountpoints = ();
-    while (my $line = <FILE>)
-    {
-	if ($line =~ /^[ \t]*([^ \t]+)[ \t]+([^ \t]+).*/)
-	{
-	    my $dev = $1;
-	    my $mp = $2;
-	    if (substr ($dev, 0, 1) ne "#")
-	    {
-		if ($dev =~ m/^LABEL=/ || $dev =~ m/UUID=/)
-		{
-                    my $command = Bootloader::Path::Blkid() . " -l -o device -t $dev |";
-		    open (BLKID, $command) || 
-			die ("ReadMountPoints(): Failed to run blkid");
-
-		    my $line = <BLKID>;
-		    close (BLKID);
-		    chomp $line;
-		    $dev = $line if $line ne "";
-		}
-		$mountpoints{$mp} = $dev;
-	    }
-	}
-    }
-    close (FILE);
-    return \%mountpoints;
-}
-
 =item
 C<< $part_ref = Bootloader::Tools::ReadPartitions (); >>
 
