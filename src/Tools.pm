@@ -152,10 +152,10 @@ sub ReadMountPoints
   for my $line (@{$self->ReadFile(Bootloader::Path::Fstab())}) {
     (my $dev, my $mp) = split ' ', $line;
     next if $dev =~ /^#/;
-    if($dev =~ m/^LABEL=(.*)/) {
+    if($dev =~ m/^LABEL="?([^"]*)"?/) {
       $dev = "/dev/disk/by-label/$1";	# do not translate otherwise it changes root always bnc#575362
     }
-    elsif($dev =~ m/^UUID=(.*)/) {
+    elsif($dev =~ m/^UUID="?([^"]*)"?/) {
       $dev = "/dev/disk/by-uuid/$1";
     }
     $mp =~ s/\\040/ /g;			# handle spaces in fstab
