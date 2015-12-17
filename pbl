@@ -18,6 +18,7 @@
 use strict;
 use POSIX qw ( strftime uname );
 
+use Getopt::Long;
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Terse = 1;
@@ -27,8 +28,9 @@ my $VERSION = "0.0";
 
 my $pbl_dir = "/usr/lib/bootloader";
 
+sub pbl_usage;
 sub new;
-sub info;
+sub log_msg;
 sub get_bootloader;
 sub run_command;
 
@@ -38,25 +40,51 @@ my $loader;
 my $exit_code = 0;
 my @todo;
 
+my $opt_logfile = "/var/log/pbl.log";
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# pbl_usage($exit_code)
+#
+# Print help text and exit.
+#
+sub pbl_usage
+{
+  print <<"= = = = = = = =";
+Usage: pbl [OPTIONS]
+Configure/install boot loader.
+
+Options:
+    --install               Install boot loader.
+    --config                Create boot loader config.
+    --show                  Print current boot loader name.
+    --default ENTRY         Set default boot entry to ENTRY.
+    --add-option OPTION     Add OPTION to default boot options.
+    --del-option OPTION     Delete OPTION from default boot options.
+    --log LOGFILE           Log messages to LOGFILE (default: /var/log/pbl.log)
+    --version               Show pbl version.
+    --help                  Write this help text.
+
+= = = = = = = =
+
+  exit shift;
+}
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 sub new
 {
   $log->{session_id} = $program . sprintf("-%04d", int rand 10000);
 
-  # log to logfile if we can, else to STDERR
+  # log to logfile if we can
 
-  if(open my $f, ">>/var/log/pbl.log") {
+  if(open my $f, ">>$opt_logfile") {
     my $tmp = select $f;
     $| = 1;
     select $tmp;
     binmode $f, ':utf8';
     $log->{log_fh} = $f;
-  }
-  elsif(open my $f, ">&STDERR") {
-    binmode $f, ':utf8';
-    $log->{log_fh} = $f;
-    $log->{log_is_stderr} = 1;
+    $log->{log_is_tty} = 1 if $opt_logfile eq '-';
   }
 
   # find root device & detect if we are chroot-ed
@@ -73,14 +101,14 @@ sub new
     }
   }
 
-  info(1, "$log->{session_id} = $0, version = $VERSION, root = $r");
+  log_msg(1, "$log->{session_id} = $0, version = $VERSION, root = $r");
 }
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# info(level, message, var, depth)
+# log_msg(level, message, var, depth)
 #
-# level: 0 .. 3 (debug, info, warning, error)
+# level: 0 .. 3 (debug, log_msg, warning, error)
 # message: log message (single line string)
 # var (optional): either a SCALAR or a REF
 #   - SCALAR (may be multiline) will be logged in a block delimited
@@ -88,7 +116,7 @@ sub new
 #   - REF will be logged using Data::Dumper
 # depth (optional): maximum depth when logging a REF
 #
-sub info
+sub log_msg
 {
   my $level = shift;
   my $message = shift;
@@ -129,9 +157,9 @@ sub info
     print { $log->{log_fh} } "$prefix $message\n";
   }
 
-  # log error messages to STDERR unless we already did
+  # log error messages to console unless we already did
 
-  if(!$log->{log_is_stderr} && $level > 2) {
+  if(!$log->{log_is_tty} && $level > 2) {
     print STDERR "$program: $prefix $message\n";
   }
 }
@@ -158,31 +186,30 @@ sub get_bootloader
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 sub run_command
 {
-  my $command = shift;
-  my $try = shift;
-
   my $ret;
   my $output;
 
-  if(open my $f, "($command) 2>&1 |") {
+  my $command = join " ", @_;
+
+  if(open my $f, "-|") {
     local $/;
     $output = <$f>;
     close $f;
     $ret = $? >> 8;
-    chomp $output;
-    $output .= "\n";
   }
   else {
-    $ret = 127;
-    $output = "$command: " . ($! == 13 ? $! : "command not found") . " \n";
+    open STDERR, ">&STDOUT";
+    exec @_;
+    exit 127;
   }
 
-  if(!$ret || $try) {
-    info(1, "'$command' = $ret, output:", $output);
-    $ret = 0;
+  $output = "$command: " . ($! == 13 ? $! : "command not found") . " \n" if $ret == 127;
+
+  if(!$ret) {
+    log_msg(1, "'$command' = $ret, output:", $output);
   }
   else {
-    info(3, "'$command' failed with exit code $ret, output:", $output);
+    log_msg(3, "'$command' failed with exit code $ret, output:", $output);
   }
 
   return $ret;
@@ -192,31 +219,49 @@ sub run_command
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ($program = $0) =~ s#^.*/##;
 
-info(1, join(' ', ($0, @ARGV)));
-
 $loader = get_bootloader;
 
-info(1, "bootloader = $loader");
+if($program eq 'pbl') {
+  GetOptions(
+    'log=s'        => \$opt_logfile,
+    'install'      => sub { push @todo, [ 'install' ] },
+    'config'       => sub { push @todo, [ 'config' ] },
+    'show'         => sub { print "$loader\n"; exit 0 },
+    'default=s'    => sub { push @todo, [ 'default', $_[1] ] },
+    'add-option=s' => sub { push @todo, [ 'add-option', $_[1] ] },
+    'del-option=s' => sub { push @todo, [ 'del-option', $_[1] ] },
+    'version'      => sub { print "$VERSION\n"; exit 0 },
+    'help'         => sub { pbl_usage 0 },
+  ) || pbl_usage 1;
+}
+
+log_msg(1, join(' ', ($0, @ARGV)));
+
+log_msg(1, "bootloader = $loader");
 
 exit 0 if !$loader;
 
-push @todo, 'config';
-
-unshift @todo, 'install' if grep { /^--reinit$/ } @ARGV;
+if($program ne 'pbl') {
+  # compat: update-bootloader or bootloader_entry
+  push @todo, [ 'config' ];
+  unshift @todo, [ 'install' ] if grep { /^--reinit$/ } @ARGV;
+}
 
 if(-d "$pbl_dir/$loader") {
   for (@todo) {
-    if(-x "$pbl_dir/$loader/$_") {
-      $exit_code = run_command("$pbl_dir/$loader/$_") || $exit_code;
+    my @cmd = @{$_};
+    $cmd[0] = "$pbl_dir/$loader/$cmd[0]";
+    if(-x $cmd[0]) {
+      $exit_code = run_command(@cmd) || $exit_code;
     }
     else {
-      info(1, "$loader::$_ skipped");
+      log_msg(1, "$cmd[0] skipped");
     }
   }
 }
 else {
   exec "/usr/lib/bootloader/$program.old", @ARGV;
-  info(3, "/usr/lib/bootloader/$program.old: command not found");
+  log_msg(3, "/usr/lib/bootloader/$program.old: command not found");
   $exit_code = 1;
 }
 

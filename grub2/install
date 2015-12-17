@@ -18,7 +18,7 @@ echo "target = $target"
 err=0
 
 if [ -x /usr/sbin/grub2-install ] ; then
-  if [ -f /etc/default/grub_installdevice ] ; then
+  if [ -r /etc/default/grub_installdevice ] ; then
     while read foo ; do
       # ignore everything that doesn't look like a path
       [ "${foo::1}" != "/" ] && continue
@@ -30,7 +30,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
       fi
     done </etc/default/grub_installdevice
   else
-    echo "/etc/default/grub_installdevice: no such file"
+    echo "/etc/default/grub_installdevice: permission denied"
     err=1
   fi
 else

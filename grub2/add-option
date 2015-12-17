@@ -1,0 +1,52 @@
+#! /usr/bin/perl
+
+# usage: add-option OPTION
+#
+# Modify default boot option (resp. add it).
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+
+use strict;
+
+my $file = "/etc/default/grub";
+
+my $opt = shift;
+
+my $opt_name = $opt;
+
+if($opt_name =~ s/=("?).*//) {
+  $opt =~ s/"/\\"/g;
+}
+
+exit 1 if $opt_name eq "";
+
+open my $f, $file or die "$file: $!\n";
+my @lines = (<$f>);
+close $f;
+
+my $changed = 0;
+
+for (@lines) {
+  if(/^(GRUB_CMDLINE_LINUX_DEFAULT)=(.*)/) {
+    $changed = 1;
+    my $key = $1;
+    my $val = $2;
+
+    $val =~ s/(^"\s*|\s*"\s*$)//g;
+
+    $val =~ s/(^|\s)$opt_name=(\\"[^"]*\\"\s*)/ $opt / or
+    $val =~ s/(^|\s)$opt_name((\s|$)|(=\S*\s*))/ $opt / or
+    $val .= " $opt";
+
+    $_ = "$key=\"$val\"\n";
+  }
+}
+
+exit 0 unless $changed;
+
+open my $f, ">$file.pblnew" or die "$file.pblnew: $!\n";
+print $f @lines;
+close $f;
+
+rename "$file.pblnew", $file;
+
