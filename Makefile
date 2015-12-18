@@ -36,16 +36,26 @@ install: check
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
 	@install -m 755 bootloader_entry $(DESTDIR)/usr/lib/bootloader/bootloader_entry.old
 	@install -m 755 update-bootloader $(DESTDIR)/usr/lib/bootloader/update-bootloader.old
+
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/install $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/add-option $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2
+
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2-efi/install $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2-efi
-	@install -m 755 pbl $(DESTDIR)/usr/lib/bootloader/pbl
-	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)/usr/lib/bootloader/pbl
-	@ln -snf ../usr/lib/bootloader/pbl $(DESTDIR)/sbin/update-bootloader
-	@ln -snf pbl $(DESTDIR)/usr/lib/bootloader/bootloader_entry
+	@install -m 755 grub2/add-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
+	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2
+
+	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/uboot
+	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/uboot
+
+	@install -m 755 pbl $(DESTDIR)/sbin/pbl
+	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)/sbin/pbl
+	@ln -snf pbl $(DESTDIR)/sbin/update-bootloader
+	@ln -snf ../../../sbin/pbl $(DESTDIR)/usr/lib/bootloader/bootloader_entry
 	@install -d -m 755 $(DESTDIR)/boot
 	@install -m 644 boot.readme $(DESTDIR)/boot/
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8/
