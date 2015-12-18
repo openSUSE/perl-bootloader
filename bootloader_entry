@@ -196,6 +196,7 @@ function add_entry()
 			esac
 		elif [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/sysconfig/bootloader ] &&
 		     [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2/grub.cfg -o \
+		       -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/default/u-boot -o \
 		       -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2-efi/grub.cfg ]; then
 			update_bootloader --refresh || exit 1
 		fi
@@ -272,6 +273,7 @@ function remove_entry()
 		update_bootloader --refresh || exit 1
 		elif [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/sysconfig/bootloader ] &&
 		     [ -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2/grub.cfg -o \
+		       -f $PERL_BOOTLOADER_TESTSUITE_PATH/etc/default/u-boot -o \
 		       -f $PERL_BOOTLOADER_TESTSUITE_PATH/boot/grub2-efi/grub.cfg ]; then
 		update_bootloader --refresh || exit 1
                 fi
