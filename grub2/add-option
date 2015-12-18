@@ -38,6 +38,8 @@ for (@lines) {
     $val =~ s/(^|\s)$opt_name((\s|$)|(=\S*\s*))/ $opt / or
     $val .= " $opt";
 
+    $val =~ s/^\s+|\s+$//g;
+
     $_ = "$key=\"$val\"\n";
   }
 }
