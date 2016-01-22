@@ -22,7 +22,7 @@ function print_header {
 	echo "# THIS FILE WILL BE OVERWRITTEN by perl-Bootloader"
 	echo -n "# Last modification on "
 	date
-	echo "# Please, use /boot/extlinux.d and /etc/default/uboot for configuration"
+	echo "# Please, use /boot/extlinux.d and /etc/default/u-boot for configuration"
 	echo
 }
 
