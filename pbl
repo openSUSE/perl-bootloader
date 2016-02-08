@@ -200,10 +200,9 @@ sub run_command
   else {
     open STDERR, ">&STDOUT";
     exec @_;
+    print "$command: " . ($! == 13 ? $! : "command not found") . " \n";
     exit 127;
   }
-
-  $output = "$command: " . ($! == 13 ? $! : "command not found") . " \n" if $ret == 127;
 
   if(!$ret) {
     log_msg(1, "'$command' = $ret, output:", $output);
