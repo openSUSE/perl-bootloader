@@ -466,7 +466,7 @@ sub ParseLines {
     # need to process saparately
     foreach my $conf (@defaultconf) {
         if ($conf =~ m/^\s*#\s*GRUB_/) {
-            $conf =~ s/^\s*#/@/;
+            $conf =~ s/^\s*#\s*/@/;
         }
     }
 
