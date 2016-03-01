@@ -11,7 +11,7 @@ case "$target" in
   i?86 ) target=i386 ;;
   x86_64 | amd64 ) target=x86_64 ;;
   aarch64 ) target=arm64 ;;
-  armv7l ) target=arm ;;
+  arm* ) target=arm ;;
 esac
 
 target="$target-efi"
