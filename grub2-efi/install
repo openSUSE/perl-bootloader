@@ -18,10 +18,16 @@ target="$target-efi"
 
 echo "target = $target"
 
+# Systems without efivars should just fall back to install grub as removable
+append=
+if [ ! -d /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ]; then
+	append="--no-nvram --removable"
+fi
+
 if [ -x /usr/sbin/shim-install ] ; then
-  ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg )
+  ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
 elif [ -x /usr/sbin/grub2-install ] ; then
-  ( set -x ; /usr/sbin/grub2-install --target="$target" )
+  ( set -x ; /usr/sbin/grub2-install --target="$target" $append )
 else
   echo "grub2-install: command not found"
   exit 1
