@@ -9,12 +9,15 @@ fi
 
 case "$target" in
   i?86 | x86_64 ) target=i386-pc ;;
-  ppc | ppc64 ) target=powerpc-ieee1275 ;;
+  ppc | ppc64* ) target=powerpc-ieee1275 ;;
   s390x ) target=s390x-emu ;;
 esac
 
 echo "target = $target"
 
+if [ "$target" = "powerpc-ieee1275" ];
+  grep -q PowerNV /proc/cpuinfo && exit 0
+fi
 err=0
 
 if [ -x /usr/sbin/grub2-install ] ; then
