@@ -816,13 +816,15 @@ sub Global2Info {
         } elsif ($key =~ m/@?GRUB_DISABLE_OS_PROBER$/) {
             $ret{"os_prober"} = ($val eq "true") ? "false" : "true";
         } elsif ($key =~ m/@?GRUB_CMDLINE_XEN_DEFAULT$/) {
-            $ret{"xen_append"} = $val; 
+            $ret{"xen_append"} = $val;
         } elsif ($key =~ m/@?GRUB_CMDLINE_LINUX_XEN_REPLACE_DEFAULT$/) {
             $ret{"xen_kernel_append"} = $val; 
         } elsif ($key =~ m/@?SUSE_BTRFS_SNAPSHOT_BOOTING$/) {
             $ret{"suse_btrfs"} = $val;
         } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
             $ret{"cryptodisk"} = $val eq 'y' ? 1 : 0;
+        } elsif ($key =~ m/@?GRUB_GFXPAYLOAD_LINUX$/) {
+            $ret{"gfxterm"} = ($val eq "console") ? "text" : "keep"
         }
     }
 
@@ -1118,6 +1120,8 @@ sub Info2Global {
         } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
             $line_ref->{value} = $cryptodisk ? 'y' : 'n' if defined $cryptodisk;
             undef $cryptodisk;
+        } elsif ($key =~ m/@?GRUB_GFXPAYLOAD_LINUX$/) {
+            $line_ref->{value} = ($gfxterm eq "serial") ? "text" : "keep"
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1224,6 +1228,13 @@ sub Info2Global {
         push @lines, {
             "key" => "SUSE_BTRFS_SNAPSHOT_BOOTING",
             "value" => $suse_btrfs,
+        }
+    }
+
+    if ($gfxterm eq "console") {
+        push @lines, {
+            "key" => "GRUB_GFXPAYLOAD_LINUX",
+            "value" => "text",
         }
     }
 
