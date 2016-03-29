@@ -15,7 +15,7 @@ esac
 
 echo "target = $target"
 
-if [ "$target" = "powerpc-ieee1275" ];
+if [ "$target" = "powerpc-ieee1275" ] ; then
   grep -q PowerNV /proc/cpuinfo && exit 0
 fi
 err=0
