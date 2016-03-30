@@ -824,7 +824,7 @@ sub Global2Info {
         } elsif ($key =~ m/@?GRUB_ENABLE_CRYPTODISK$/) {
             $ret{"cryptodisk"} = $val eq 'y' ? 1 : 0;
         } elsif ($key =~ m/@?GRUB_GFXPAYLOAD_LINUX$/) {
-            $ret{"gfxterm"} = ($val eq "console") ? "text" : "keep"
+            $ret{"payload"} = ($val eq "console") ? "text" : "keep"
         }
     }
 
@@ -971,6 +971,13 @@ sub Info2Global {
                 'value' => 'n',
                 'comment_before' => [
                   "# Set to 'y' for grub to be installed on an encrypted partition"
+                ],
+            },
+            {
+                'key' => 'GFX_PAYLOAD_LINUX',
+                'value' => 'keep',
+                'comment_before' => [
+                  "# Set to 'text' to avoid loading graphical modules"
                 ],
             },
         );
@@ -1121,7 +1128,7 @@ sub Info2Global {
             $line_ref->{value} = $cryptodisk ? 'y' : 'n' if defined $cryptodisk;
             undef $cryptodisk;
         } elsif ($key =~ m/@?GRUB_GFXPAYLOAD_LINUX$/) {
-            $line_ref->{value} = ($gfxterm eq "serial") ? "text" : "keep"
+            $line_ref->{value} = ($terminal eq "serial") ? "text" : "keep"
         }
         defined $line_ref ? $line_ref : ();
     } @lines;
@@ -1231,7 +1238,7 @@ sub Info2Global {
         }
     }
 
-    if ($gfxterm eq "console") {
+    if ($terminal =~ m/(console|serial)$/) {
         push @lines, {
             "key" => "GRUB_GFXPAYLOAD_LINUX",
             "value" => "text",
