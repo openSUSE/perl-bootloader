@@ -992,6 +992,7 @@ sub Info2Global {
     my $gfxmode = delete $globinfo{"gfxmode"} || "";
     my $gfxtheme = delete $globinfo{"gfxtheme"} || "";
     my $gfxbackground = delete $globinfo{"gfxbackground"} || "";
+    my $gfxterm = delete $globinfo{"gfxterm"} || "";
     my $distributor = delete $globinfo{"distributor"};
     # handle empty default distributor
     $distributor = '""' if $distributor eq "";
