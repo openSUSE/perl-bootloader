@@ -15,6 +15,12 @@ esac
 
 echo "target = $target"
 
+# We install grub2 at the end of the installation, not within (bsc#979145)
+if [ "$YAST_IS_RUNNING" = instsys ]; then
+	echo "Skipping grub2 during installation. Will be done at the end"
+	exit 0
+fi
+
 if [ "$target" = "powerpc-ieee1275" ] ; then
   grep -q PowerNV /proc/cpuinfo && exit 0
 fi
