@@ -18,6 +18,12 @@ target="$target-efi"
 
 echo "target = $target"
 
+# We install grub2 at the end of the installation, not within (bsc#979145)
+if [ "$YAST_IS_RUNNING" = instsys ]; then
+	echo "Skipping grub2-efi during installation. Will be done at the end"
+	exit 0
+fi
+
 # EFI has 2 boot paths. The default is that there is a target file listed in
 # the boot list. The boot list is stored in NVRAM and exposed as efivars.
 #
