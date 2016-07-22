@@ -252,6 +252,14 @@ log_msg(1, "bootloader = $loader");
 
 exit 0 if !$loader;
 
+my $lang = $ENV{SYS__LANGUAGE__RC_LANG};
+if(defined $lang) {
+  log_msg(1, "locale = $lang");
+  delete $ENV{LC_MESSAGES};
+  delete $ENV{LC_ALL};
+  $ENV{LANG} = $lang;
+}
+
 if($program ne 'pbl') {
   # compat: update-bootloader or bootloader_entry
   push @todo, [ 'config' ];
