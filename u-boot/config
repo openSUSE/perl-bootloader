@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Settings from /etc/sysconfig/filename are available as environment vars
+# with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
+#
+# Not all files are parsed, current list is:
+#   bootloader, language
+#
+
 function print_entry {
 	local label=$1
 	local zimage=$2
