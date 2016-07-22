@@ -256,6 +256,7 @@ my $lang = $ENV{SYS__LANGUAGE__RC_LANG};
 if(defined $lang) {
   log_msg(1, "locale = $lang");
   delete $ENV{LC_MESSAGES};
+  delete $ENV{LC_ALL};
   $ENV{LANG} = $lang;
 }
 
