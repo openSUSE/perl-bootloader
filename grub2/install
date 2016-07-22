@@ -1,5 +1,12 @@
 #! /bin/bash
 
+# Settings from /etc/sysconfig/filename are available as environment vars
+# with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
+#
+# Not all files are parsed, current list is:
+#   bootloader, language
+#
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -24,8 +31,12 @@ fi
 if [ "$target" = "powerpc-ieee1275" ] ; then
   grep -q PowerNV /proc/cpuinfo && exit 0
 fi
-err=0
 
+if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -d "/usr/lib/trustedgrub2/$target" ] ; then
+  trusted="--directory=/usr/lib/trustedgrub2/$target"
+fi
+
+err=0
 if [ -x /usr/sbin/grub2-install ] ; then
   if [ "$needs_installdevice" = 1 ] ; then
     if [ -r /etc/default/grub_installdevice ] ; then
@@ -33,7 +44,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
         # ignore everything that doesn't look like a path
         [ "${device::1}" != "/" ] && continue
         if [ -b "$device" -o -f "$device" ] ; then
-          ( set -x ; /usr/sbin/grub2-install --target="$target" --force --skip-fs-probe "$device" ) || err=1
+          ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
         else
           echo "$device: not a block device"
           err=1
@@ -44,7 +55,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
       err=1
     fi
   else
-    ( set -x ; /usr/sbin/grub2-install --target="$target" )
+    ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" )
   fi
 else
   echo "grub2-install: command not found"

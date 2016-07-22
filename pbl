@@ -31,8 +31,8 @@ my $pbl_dir = "/usr/lib/bootloader";
 sub pbl_usage;
 sub new;
 sub log_msg;
-sub get_bootloader;
 sub run_command;
+sub read_sysconfig;
 
 my $program;
 my $log;
@@ -166,24 +166,6 @@ sub log_msg
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-sub get_bootloader
-{
-  my $bl;
-
-  if(open my $f, "/etc/sysconfig/bootloader") {
-    while(<$f>) {
-      $bl = $1, last if /^LOADER_TYPE=(\S*)/;
-    }
-    close $f;
-  }
-
-  $bl =~ s/^["']|["']$//g;
-
-  return $bl;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 sub run_command
 {
   my $ret;
@@ -192,6 +174,7 @@ sub run_command
   my $command = join " ", @_;
 
   if(open my $f, "-|") {
+    binmode $f, ':utf8';
     local $/;
     $output = <$f>;
     close $f;
@@ -216,9 +199,38 @@ sub run_command
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# read_sysconfig(FILENAME)
+#
+# Read sysconfig settings and convert them into environment vars of the form:
+#
+# SYS__FILENAME__KEY=value
+#
+sub read_sysconfig
+{
+  my $file = $_[0];
+
+  if(open my $f, "/etc/sysconfig/$file") {
+    while(<$f>) {
+      if(/^([A-Z_]+)=(.*?)\s*$/) {
+        my $key = $1;
+        my $val = $2;
+        $val =~ s/^(["'])(.*)\1$/$2/g;
+        $ENV{"SYS__\U$file\E__$key"} = $val;
+      }
+    }
+    close $f;
+  }
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ($program = $0) =~ s#^.*/##;
 
-$loader = get_bootloader;
+# get settings relevant for us
+read_sysconfig "bootloader";
+read_sysconfig "language";
+
+$loader = $ENV{SYS__BOOTLOADER__LOADER_TYPE};
 
 if($program eq 'pbl') {
   GetOptions(
