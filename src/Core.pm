@@ -1635,6 +1635,33 @@ sub UpdateBootloader
 }
 
 =item
+C<< Bootloader::Core->GetSysconfigVar ($file, $var); >>
+
+Read sysconfig settings from /etc/sysconfig/$file::$var.
+
+=cut
+
+sub GetSysconfigVar
+{
+  my $self = shift;
+  my $file = shift;
+  my $var = shift;
+  my $val;
+
+  if(open my $f, "/etc/sysconfig/$file") {
+    while(<$f>) {
+      if(/^\Q$var\E=(.*?)\s*$/) {
+        $val = $1;
+        $val =~ s/^(["'])(.*)\1$/$2/;
+      }
+    }
+    close $f;
+  }
+
+  return $val;
+}
+
+=item
 C<< $status = Bootloader::Core->RunCommand ($command, $try); >>
 
 Runs specified command.
@@ -1651,20 +1678,31 @@ sub RunCommand
   my $command = shift;
   my $try = shift;
 
+  my $lang = $self->GetSysconfigVar('language', 'RC_LANG');
+
+  $self->milestone("locale = $lang");
+
   my $ret;
   my $output;
 
-  if(open my $f, "($command) 2>&1 |") {
+  # take care to adjust locale only in sub-process
+  if(open my $f, "-|") {
+    binmode $f, ':utf8';
     local $/;
     $output = <$f>;
     close $f;
     $ret = $? >> 8;
-    chomp $output;
-    $output .= "\n";
   }
   else {
-    $ret = 127;
-    $output = "$command: " . ($! == 13 ? $! : "command not found") . " \n";
+    open STDERR, ">&STDOUT";
+    if(defined $lang) {
+      delete $ENV{LC_MESSAGES};
+      delete $ENV{LC_ALL};
+      $ENV{LANG} = $lang;
+    }
+    { exec $command }
+    print "$command: " . ($! == 13 ? $! : "command not found") . " \n";
+    exit 127;
   }
 
   $self->{last_command} = { cmd => $command, exit => $ret, out => $output};
