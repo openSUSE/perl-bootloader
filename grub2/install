@@ -7,6 +7,36 @@
 #   bootloader, language
 #
 
+shopt -s extglob
+
+function default_installdevice {
+  default_device=
+
+  while read x ; do
+    # go for the device name
+    [ "${x::5}" != "/dev/" ] && continue
+    default_device=$x
+    break
+  done < <(df --local --output=source /boot/grub2/$target)
+
+  [ -z "$default_device" ] && return
+  x=${default_device%%*([0-9])}
+  [ -b "$x" ] && default_device=$x
+  [ -b "$default_device" ] || default_device=
+
+  echo "default install device: $default_device"
+}
+
+function install {
+  dev="$1"
+  if [ -b "$dev" -o -f "$dev" ] ; then
+    installed=1
+    ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$dev" ) || err=1
+  else
+    echo "$dev: not a block device"
+  fi
+}
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -24,8 +54,8 @@ echo "target = $target"
 
 # We install grub2 at the end of the installation, not within (bsc#979145)
 if [ "$YAST_IS_RUNNING" = instsys ]; then
-	echo "Skipping grub2 during installation. Will be done at the end"
-	exit 0
+  echo "Skipping grub2 during installation. Will be done at the end"
+  exit 0
 fi
 
 if [ "$target" = "powerpc-ieee1275" ] ; then
@@ -36,6 +66,7 @@ if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -d "/usr/lib/trustedgrub2/$target
   trusted="--directory=/usr/lib/trustedgrub2/$target"
 fi
 
+installed=0
 err=0
 if [ -x /usr/sbin/grub2-install ] ; then
   if [ "$needs_installdevice" = 1 ] ; then
@@ -43,16 +74,15 @@ if [ -x /usr/sbin/grub2-install ] ; then
       while read device ; do
         # ignore everything that doesn't look like a path
         [ "${device::1}" != "/" ] && continue
-        if [ -b "$device" -o -f "$device" ] ; then
-          ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
-        else
-          echo "$device: not a block device"
-          err=1
-        fi
+        install "$device"
       done </etc/default/grub_installdevice
     else
       echo "/etc/default/grub_installdevice: permission denied"
-      err=1
+    fi
+    if [ "$installed" = 0 ] ; then
+      default_installdevice
+      install $default_device
+      [ "$installed" = 1 ] || err=1
     fi
   else
     ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" )
@@ -63,4 +93,3 @@ else
 fi
 
 exit $err
-
