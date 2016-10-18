@@ -52,12 +52,16 @@ if [ ! -d /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ];
 	append="--no-nvram --removable"
 fi
 
-if [ -x /usr/sbin/shim-install ] ; then
-  ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
+if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
+  if [ -x /usr/sbin/shim-install ] ; then
+    ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
+  else
+    echo "shim-install: command not found"
+    exit 1
+  fi
 elif [ -x /usr/sbin/grub2-install ] ; then
   ( set -x ; /usr/sbin/grub2-install --target="$target" $append )
 else
   echo "grub2-install: command not found"
   exit 1
 fi
-
