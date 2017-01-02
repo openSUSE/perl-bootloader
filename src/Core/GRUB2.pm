@@ -365,6 +365,9 @@ sub GrubCfgSections {
 
                     $sect_info{"append"} = $append;
                 }
+                if ($cfg2 =~ /^\s+initrd\s+(\S+)\s*$/m) {
+                    $sect_info{"initrd"} = $1;
+                }
             }
 
             push @{$sect}, \%sect_info;
