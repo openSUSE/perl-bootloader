@@ -1263,6 +1263,7 @@ sub GetSettings {
     my $saved_entry = `/usr/bin/grub2-editenv list|sed -n '/^saved_entry=/s/.*=//p'`;
 
     chomp $saved_entry;
+    $saved_entry =~ s/\s+$//;
     if ($saved_entry eq "") {
         $saved_entry = "0";
     }
