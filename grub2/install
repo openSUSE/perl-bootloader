@@ -44,6 +44,24 @@ function partition_to_disk
 }
 
 
+# Usage: first_slave(disk)
+#
+# Find first slave device for disk.
+#
+# Return empty string if there are no slaves.
+#
+function first_slave
+{
+  local dev=$(echo /sys/block/$1/slaves/*)
+  dev=${dev%% *}
+  dev=${dev##*/}
+
+  [ "$dev" = "*" ] && dev=
+
+  echo $dev
+}
+
+
 # Usage: disk_device(arg)
 #
 # Find disk device name for arg.
@@ -56,6 +74,7 @@ function disk_device
 {
   local part
   local dev
+  local dev1
 
   if [ "${1#/dev/}" = "$1" ] ; then
     while read part ; do
@@ -69,22 +88,31 @@ function disk_device
   [ -n "$part" ] && part=${part#/dev/}
   [ -z "$part" ] && exit
 
-  echo "partition = $part" >&2
+  echo "kernel device = $part" >&2
 
-  dev=$(partition_to_disk $part)
+  dev=$part
 
-  if [ -z "$dev" ] ; then
-    dev=$(echo /sys/block/$part/slaves/*)
-    # use only the first device atm
-    dev=${dev%% *}
-    dev=${dev##*/}
-
-    if [ -z "$(is_disk $dev)" ] ; then
-      dev=$(partition_to_disk $dev)
+  while true ; do
+    dev1=$(partition_to_disk $dev)
+    if [ -n "$dev1" ] ; then
+      echo "disk($dev) = $dev1" >&2
+      dev=$dev1
     fi
-  fi
 
-  echo "device = $dev" >&2
+    # $dev is a disk but not a partition
+
+    dev1=$(first_slave $dev)
+
+    if [ -n "$dev1" ] ; then
+      echo "slave($dev) = $dev1" >&2
+      dev=$dev1
+      continue
+    fi
+
+    break
+  done
+
+  echo "disk = $dev" >&2
 
   echo $dev
 }
