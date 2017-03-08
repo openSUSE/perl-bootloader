@@ -7,6 +7,89 @@
 #   bootloader, language
 #
 
+# Usage: is_disk(disk)
+#
+# Return disk if disk is a disk device (not a partition), else "".
+# Disk name is without leading '/dev/'.
+#
+function is_disk
+{
+  local dev=$1
+
+  if [ -d "/sys/block/$dev" -a -b "/dev/$dev" ] ; then
+    echo $dev
+  fi
+}
+
+
+# Usage: partition_to_disk(partition)
+#
+# Find disk device name for a partition.
+# Partition and disk name are without leading '/dev/'.
+#
+# Return empty string if there is no parent disk device for a partition.
+#
+function partition_to_disk
+{
+  local part=$1
+  local dev=$(echo /sys/block/*/$part)
+  # there should normally be just one entry - but better make sure
+  dev=${dev%% *}
+
+  if [ -d "$dev" ] ; then
+    dev=${dev#/sys/block/}
+    dev=${dev%/$part}
+    [ -b "/dev/$dev" ] && echo $dev
+  fi
+}
+
+
+# Usage: disk_device(arg)
+#
+# Find disk device name for arg.
+# arg may be a partition name or a directory
+# Disk name is without leading '/dev/'.
+#
+# Return empty string if a disk device could not be found.
+#
+function disk_device
+{
+  local part
+  local dev
+
+  if [ "${1#/dev/}" = "$1" ] ; then
+    while read part ; do
+      [ "${part::1}" = "/" ] && break
+    done < <(df --local --sync --output=source $1)
+  else
+    part=$1
+  fi
+
+  [ -n "$part" ] && part=$(readlink -e $part)
+  [ -n "$part" ] && part=${part#/dev/}
+  [ -z "$part" ] && exit
+
+  echo "partition = $part" >&2
+
+  dev=$(partition_to_disk $part)
+
+  if [ -z "$dev" ] ; then
+    dev=$(echo /sys/block/$part/slaves/*)
+    # use only the first device atm
+    dev=${dev%% *}
+    dev=${dev##*/}
+
+    if [ -z "$(is_disk $dev)" ] ; then
+      dev=$(partition_to_disk $dev)
+    fi
+  fi
+
+  echo "device = $dev" >&2
+
+  echo $dev
+}
+
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -39,19 +122,30 @@ fi
 err=0
 if [ -x /usr/sbin/grub2-install ] ; then
   if [ "$needs_installdevice" = 1 ] ; then
+    has_device=
     if [ -r /etc/default/grub_installdevice ] ; then
       while read device ; do
         # ignore everything that doesn't look like a path
         [ "${device::1}" != "/" ] && continue
         if [ -b "$device" -o -f "$device" ] ; then
+          has_device=1
           ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
         else
           echo "$device: not a block device"
           err=1
         fi
       done </etc/default/grub_installdevice
-    else
-      echo "/etc/default/grub_installdevice: permission denied"
+    fi
+    if [ -z "$has_device" ] ; then
+      device=$(disk_device)
+      if [ "$device" ] ; then
+        device="/dev/$device"
+        has_device=1
+        ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
+      fi
+    fi
+    if [ -z "$has_device" ] ; then
+      echo "no grub2 install device found"
       err=1
     fi
   else
