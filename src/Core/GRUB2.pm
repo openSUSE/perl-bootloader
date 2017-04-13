@@ -126,7 +126,8 @@ sub GetDeviceMap {
             }
         }
 
-        my $sys_dev = $kern_dev;
+        # the following check will not work unless plain kernel device names are used
+        my $sys_dev = $self->GetKernelDevice($kern_dev);
         $sys_dev =~ s#^/dev/##;
         $sys_dev =~ s#/#!#g;
         $sys_dev = "/sys/block/$sys_dev";
