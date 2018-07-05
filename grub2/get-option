@@ -1,0 +1,53 @@
+#! /usr/bin/perl
+
+# usage: get-option OPTION
+#
+# Read boot option.
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+#
+# The option value is written into the file passed via 'PBL_RESULT' environment var.
+# Either 'option=value', or 'option', or nothing is returned.
+
+use strict;
+
+my $file = "/etc/default/grub";
+
+my $opt = shift;
+
+my $opt_name = $opt;
+
+if($opt_name =~ s/=("?).*//) {
+  $opt =~ s/"/\\"/g;
+}
+
+exit 1 if $opt_name eq "";
+
+open my $f, $file or die "$file: $!\n";
+my @lines = (<$f>);
+close $f;
+
+my $option;
+
+for (@lines) {
+  if(/^(GRUB_CMDLINE_LINUX_DEFAULT)=(.*)/) {
+    my $val = $2;
+
+    $val =~ s/(^"\s*|\s*"\s*$)//g;
+
+    if(
+      $val =~ /(^|\s)($opt=(\\"[^"]*\\"\s*))/ ||
+      $val =~ /(^|\s)($opt((\s|$)|(=\S*\s*)))/
+    ) {
+      $option = $2;
+      $option =~ s/^\s+|\s+$//g;
+    }
+  }
+}
+
+if($option && open my $f, ">", $ENV{PBL_RESULT}) {
+  print $f $option;
+  close $f;
+}
+
+exit 0;

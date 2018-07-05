@@ -42,12 +42,14 @@ install: check
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/add-option $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/get-option $(DESTDIR)/usr/lib/bootloader/grub2
 
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2-efi/install $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2/add-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
-	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
+	@install -m 755 grub2/get-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
 
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/u-boot
 	@install -m 755 u-boot/config $(DESTDIR)/usr/lib/bootloader/u-boot
