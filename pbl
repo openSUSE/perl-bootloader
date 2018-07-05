@@ -18,6 +18,7 @@
 use strict;
 use POSIX qw ( strftime uname );
 
+use File::Temp;
 use Getopt::Long;
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
@@ -61,6 +62,7 @@ Options:
     --default ENTRY         Set default boot entry to ENTRY.
     --add-option OPTION     Add OPTION to default boot options.
     --del-option OPTION     Delete OPTION from default boot options.
+    --get-option OPTION     Get OPTION from default boot options.
     --log LOGFILE           Log messages to LOGFILE (default: /var/log/pbl.log)
     --version               Show pbl version.
     --help                  Write this help text.
@@ -166,12 +168,23 @@ sub log_msg
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# exit_code = run_command(args)
+#
+# Run external command. All output is logged.
+#
+# The external command may put anything into the (temporary) file passed via
+# 'PBL_RESULT' environment variable. The content of that file is read and
+# printed to STDOUT.
+#
 sub run_command
 {
   my $ret;
   my $output;
 
   my $command = join " ", @_;
+
+  my $result_fh = File::Temp->new(TEMPLATE => 'pbl.XXXXXX');
+  $ENV{PBL_RESULT} = $result_fh->filename;
 
   if(open my $f, "-|") {
     binmode $f, ':utf8';
@@ -189,6 +202,12 @@ sub run_command
 
   if(!$ret) {
     log_msg(1, "'$command' = $ret, output:", $output);
+    local $/;
+    my $result = <$result_fh>;
+    if($result ne "") {
+      print "$result\n";
+      log_msg(1, "result: $result");
+    }
   }
   else {
     log_msg(3, "'$command' failed with exit code $ret, output:", $output);
@@ -241,6 +260,7 @@ if($program eq 'pbl') {
     'default=s'    => sub { push @todo, [ 'default', $_[1] ] },
     'add-option=s' => sub { push @todo, [ 'add-option', $_[1] ] },
     'del-option=s' => sub { push @todo, [ 'del-option', $_[1] ] },
+    'get-option=s' => sub { push @todo, [ 'get-option', $_[1] ] },
     'version'      => sub { print "$VERSION\n"; exit 0 },
     'help'         => sub { pbl_usage 0 },
   ) || pbl_usage 1;
