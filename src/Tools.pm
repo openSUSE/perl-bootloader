@@ -596,7 +596,7 @@ sub ReadRAID1Arrays {
 
     $lib_ref->{tools}{mdadm} = $mdadm = AddPathToExecutable("mdadm");
 
-    if (-e $mdadm) {
+    if ($mdadm && -e $mdadm) {
       open (MD, "$mdadm --detail --verbose --scan 2>/dev/null |");
     }
     else {
