@@ -42,6 +42,7 @@ my $exit_code = 0;
 my @todo;
 
 my $opt_logfile = "/var/log/pbl.log";
+my $opt_force = 0;
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -59,6 +60,7 @@ Options:
     --install               Install boot loader.
     --config                Create boot loader config.
     --show                  Print current boot loader name.
+    --force                 Work even while YaST is doing an installation.
     --default ENTRY         Set default boot entry to ENTRY.
     --add-option OPTION     Add OPTION to default boot options.
     --del-option OPTION     Delete OPTION from default boot options.
@@ -257,6 +259,7 @@ if($program eq 'pbl') {
     'install'      => sub { push @todo, [ 'install' ] },
     'config'       => sub { push @todo, [ 'config' ] },
     'show'         => sub { print "$loader\n"; exit 0 },
+    'force'        => \$opt_force,
     'default=s'    => sub { push @todo, [ 'default', $_[1] ] },
     'add-option=s' => sub { push @todo, [ 'add-option', $_[1] ] },
     'del-option=s' => sub { push @todo, [ 'del-option', $_[1] ] },
@@ -271,6 +274,8 @@ log_msg(1, join(' ', ($0, @ARGV)));
 log_msg(1, "bootloader = $loader");
 
 exit 0 if !$loader;
+
+delete $ENV{YAST_IS_RUNNING} if $opt_force;
 
 my $lang = $ENV{SYS__LANGUAGE__RC_LANG};
 if(defined $lang) {
