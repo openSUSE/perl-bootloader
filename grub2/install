@@ -15,20 +15,6 @@
 # physical disks then grub is installed only on one (the 'first') of them.
 #
 
-# Usage: is_disk(disk)
-#
-# Return disk if disk is a disk device (not a partition), else "".
-# Disk name is without leading '/dev/'.
-#
-function is_disk
-{
-  local dev=$1
-
-  if [ -d "/sys/block/$dev" -a -b "/dev/$dev" ] ; then
-    echo $dev
-  fi
-}
-
 
 # Usage: partition_to_disk(partition)
 #
