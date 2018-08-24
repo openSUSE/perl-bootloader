@@ -7,6 +7,112 @@
 #   bootloader, language
 #
 
+# Note: if target is "i386-pc" and /etc/default/grub_installdevice is
+# missing or does not contain any valid device entry grub will be installed
+# on the disk that contains the /boot directory.
+#
+# If /boot happens to be on a RAID or similar which is composed of several
+# physical disks then grub is installed only on one (the 'first') of them.
+#
+
+
+# Usage: partition_to_disk(partition)
+#
+# Find disk device name for a partition.
+# Partition and disk name are without leading '/dev/'.
+#
+# Return empty string if there is no parent disk device for a partition.
+#
+function partition_to_disk
+{
+  local part=$1
+  local dev=$(echo /sys/block/*/$part)
+  # there should normally be just one entry - but better make sure
+  dev=${dev%% *}
+
+  if [ -d "$dev" ] ; then
+    dev=${dev#/sys/block/}
+    dev=${dev%/$part}
+    [ -b "/dev/$dev" ] && echo $dev
+  fi
+}
+
+
+# Usage: first_slave(disk)
+#
+# Find first slave device for disk.
+#
+# Return empty string if there are no slaves.
+#
+function first_slave
+{
+  local dev=$(echo /sys/block/$1/slaves/*)
+  dev=${dev%% *}
+  dev=${dev##*/}
+
+  [ "$dev" = "*" ] && dev=
+
+  echo $dev
+}
+
+
+# Usage: disk_device(arg)
+#
+# Find disk device name for arg.
+# arg may be a partition name or a directory
+# Disk name is without leading '/dev/'.
+#
+# Return empty string if a disk device could not be found.
+#
+function disk_device
+{
+  local part
+  local dev
+  local dev1
+
+  echo "disk device($1)" >&2
+
+  if [ "${1#/dev/}" = "$1" ] ; then
+    while read part ; do
+      [ "${part::1}" = "/" ] && break
+    done < <(df --local --sync --output=source $1)
+  else
+    part=$1
+  fi
+
+  [ -n "$part" ] && part=$(readlink -e $part)
+  [ -n "$part" ] && part=${part#/dev/}
+  [ -z "$part" ] && exit
+
+  echo "kernel device = $part" >&2
+
+  dev=$part
+
+  while true ; do
+    dev1=$(partition_to_disk $dev)
+    if [ -n "$dev1" ] ; then
+      echo "disk($dev) = $dev1" >&2
+      dev=$dev1
+    fi
+
+    # $dev is a disk but not a partition
+
+    dev1=$(first_slave $dev)
+
+    if [ -n "$dev1" ] ; then
+      echo "slave($dev) = $dev1" >&2
+      dev=$dev1
+      continue
+    fi
+
+    break
+  done
+
+  echo "disk = $dev" >&2
+
+  echo $dev
+}
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -39,19 +145,34 @@ fi
 err=0
 if [ -x /usr/sbin/grub2-install ] ; then
   if [ "$needs_installdevice" = 1 ] ; then
+    has_device=
     if [ -r /etc/default/grub_installdevice ] ; then
       while read device ; do
         # ignore everything that doesn't look like a path
         [ "${device::1}" != "/" ] && continue
         if [ -b "$device" -o -f "$device" ] ; then
+          has_device=1
           ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
         else
           echo "$device: not a block device"
           err=1
         fi
       done </etc/default/grub_installdevice
-    else
-      echo "/etc/default/grub_installdevice: permission denied"
+    fi
+    if [ -z "$has_device" ] ; then
+      echo "grub_installdevice missing or invalid"
+      if [ "$target" = "i386-pc" ] ; then
+        echo "determining suitable boot device"
+        device=$(disk_device /boot)
+        if [ "$device" ] ; then
+          device="/dev/$device"
+          has_device=1
+          ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
+        fi
+      fi
+    fi
+    if [ -z "$has_device" ] ; then
+      echo "no grub2 install device found"
       err=1
     fi
   else
@@ -63,4 +184,3 @@ else
 fi
 
 exit $err
-
