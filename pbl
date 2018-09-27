@@ -183,7 +183,7 @@ sub run_command
 
   my $command = join " ", @_;
 
-  my $result_fh = File::Temp->new(TEMPLATE => 'pbl.XXXXXX');
+  my $result_fh = File::Temp->new(TEMPLATE => 'pbl.XXXXXX', TMPDIR => 1);
   $ENV{PBL_RESULT} = $result_fh->filename;
 
   if(open my $f, "-|") {
