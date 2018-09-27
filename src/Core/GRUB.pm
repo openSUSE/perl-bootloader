@@ -592,7 +592,6 @@ sub UnixDev2GrubDev {
         $self->warning("Unknown device/partition, using fallback");
 
         $g_dev = "hd0";
-        $partition = undef;
 
         if (
             $original =~ m#^/dev/(?:vx|das|[ehpsvx])d[a-z]{1,2}(\d+)$# ||
