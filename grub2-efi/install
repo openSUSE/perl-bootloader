@@ -64,9 +64,9 @@ if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64" ] ; then
     exit 1
   fi
 elif [ -x /usr/sbin/grub2-install ] ; then
-  # Use '--suse-signed-grub' when shim is not used (aarch64 case)
+  # Use '--suse-force-signed' when shim is not used (aarch64 case)
   if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ]; then
-     append="$append --suse-signed-grub"
+     append="$append --suse-force-signed"
   fi
   ( set -x ; /usr/sbin/grub2-install --target="$target" $append )
 else
