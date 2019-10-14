@@ -694,7 +694,7 @@ sub GetSysconfigValue
 
   if(open my $fh, Bootloader::Path::Sysconfig()) {
     while(<$fh>) {
-      $val = $1, last if /^\s*$key\s*=\s*"(.*)"\s*$/;
+      $val = $2, last if /^\s*$key\s*=\s*(["']?)(.*?)\1?\s*$/
     }
 
     close $fh;
