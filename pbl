@@ -30,6 +30,7 @@ my $VERSION = "0.0";
 my $pbl_dir = "/usr/lib/bootloader";
 
 sub pbl_usage;
+sub update_bootloader_usage;
 sub new;
 sub log_msg;
 sub run_command;
@@ -65,6 +66,26 @@ Options:
     --get-option OPTION     Get OPTION from default boot options.
     --log LOGFILE           Log messages to LOGFILE (default: /var/log/pbl.log)
     --version               Show pbl version.
+    --help                  Write this help text.
+
+= = = = = = = =
+
+  exit shift;
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# update_bootloader_usage($exit_code)
+#
+# Print help text and exit.
+#
+sub update_bootloader_usage
+{
+  print <<"= = = = = = = =";
+Usage: update_bootloader
+       bootloader_entry
+Configure/install boot loader.
+
+Options:
     --help                  Write this help text.
 
 = = = = = = = =
@@ -264,6 +285,11 @@ if($program eq 'pbl') {
     'version'      => sub { print "$VERSION\n"; exit 0 },
     'help'         => sub { pbl_usage 0 },
   ) || pbl_usage 1;
+}
+else {
+  GetOptions(
+    'help'         => sub { update_bootloader_usage 0 },
+  ) || update_bootloader_usage 1;
 }
 
 log_msg(1, join(' ', ($0, @ARGV)));
