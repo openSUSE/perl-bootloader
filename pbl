@@ -86,7 +86,7 @@ Usage: update_bootloader
 Configure/install boot loader.
 
 Options:
-    --reinit                Force re-initializatino of the bootloader
+    --reinit                Force re-initialization of the bootloader
     --help                  Write this help text.
 
 = = = = = = = =
