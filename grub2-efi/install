@@ -47,13 +47,17 @@ fi
 # there is at least one efi variable visible. On systems without working NVRAM,
 # we either see no efivars at all (booted via non-EFI entry point) or there is
 # no efi variable exposed. Install grub in the removable location there.
+no_nvram_opts="--no-nvram --removable"
+has_nvram=0
 append=
-if [ ! -d /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ]; then
-	append="--no-nvram --removable"
+if [ ! -d /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ] ; then
+  append="$no_nvram_opts"
+else
+  has_nvram=1
 fi
 
 if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -f "/usr/lib/grub2/$target/tpm.mod" ] ; then
-	append="$append --suse-enable-tpm"
+  append="$append --suse-enable-tpm"
 fi
 
 if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64" ] ; then
@@ -65,8 +69,12 @@ if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64" ] ; then
   fi
 elif [ -x /usr/sbin/grub2-install ] ; then
   # Use '--suse-force-signed' when shim is not used (aarch64 case)
-  if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ]; then
+  if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
      append="$append --suse-force-signed"
+  fi
+  if [ "$has_nvram" = 1 -a "$target" = "arm64" ] ; then
+    # some arm firmwares need the fallback even though they have nvram vars (bsc#1167015)
+    ( set -x ; /usr/sbin/grub2-install --target="$target" $append $no_nvram_opts )
   fi
   ( set -x ; /usr/sbin/grub2-install --target="$target" $append )
 else
