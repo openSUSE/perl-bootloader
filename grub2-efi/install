@@ -60,7 +60,7 @@ if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -f "/usr/lib/grub2/$target/tpm.mo
   append="$append --suse-enable-tpm"
 fi
 
-if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64" ] ; then
+if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64-efi" ] ; then
   if [ -x /usr/sbin/shim-install ] ; then
     ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
   else
@@ -72,7 +72,7 @@ elif [ -x /usr/sbin/grub2-install ] ; then
   if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
      append="$append --suse-force-signed"
   fi
-  if [ "$has_nvram" = 1 -a "$target" = "arm64" ] ; then
+  if [ "$has_nvram" = 1 -a "$target" = "arm64-efi" ] ; then
     # some arm firmwares need the fallback even though they have nvram vars (bsc#1167015)
     ( set -x ; /usr/sbin/grub2-install --target="$target" $append $no_nvram_opts )
   fi
