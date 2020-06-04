@@ -669,7 +669,7 @@ See InitLibrary function for example.
 
 sub GetSecureBoot
 {
-  my $val = GetSysconfigValue("SECURE_BOOT");
+  my $val = GetSysconfigValue("SECURE_BOOT") // 0;
 
   $lib_ref->milestone("secureboot = $val") if $lib_ref;
 
