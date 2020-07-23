@@ -136,6 +136,7 @@ sub ReadMountPoints
 
   for my $line (@{$self->ReadFile(Bootloader::Path::Fstab())}) {
     (my $dev, my $mp) = split ' ', $line;
+    next unless defined $dev;
     next if $dev =~ /^#/;
     if($dev =~ m/^LABEL=(.*)/) {
       $dev = "/dev/disk/by-label/$1";	# do not translate otherwise it changes root always bnc#575362
