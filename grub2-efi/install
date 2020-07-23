@@ -56,7 +56,7 @@ else
   has_nvram=1
 fi
 
-if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -f "/usr/lib/grub2/$target/tpm.mod" ] ; then
+if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes ] && [ -f "/usr/lib/grub2/$target/tpm.mod" -o -f "/usr/share/grub2/$target/tpm.mod" ] ; then
   append="$append --suse-enable-tpm"
 fi
 
