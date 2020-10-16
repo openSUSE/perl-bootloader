@@ -60,6 +60,10 @@ if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes ] && [ -f "/usr/lib/grub2/$target/tp
   append="$append --suse-enable-tpm"
 fi
 
+if [ "$SYS__BOOTLOADER__UPDATE_NVRAM" = "no" ] ; then
+    append="$append --no-nvram"
+fi
+
 if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64-efi" ] ; then
   if [ -x /usr/sbin/shim-install ] ; then
     ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
