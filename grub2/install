@@ -138,6 +138,11 @@ if [ "$target" = "powerpc-ieee1275" ] ; then
   grep -q PowerNV /proc/cpuinfo && exit 0
 fi
 
+append=
+if [ "$SYS__BOOTLOADER__UPDATE_NVRAM" = "no" ] ; then
+    append="$append --no-nvram"
+fi
+
 if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -d "/usr/lib/trustedgrub2/$target" ] ; then
   trusted="--directory=/usr/lib/trustedgrub2/$target"
 fi
@@ -152,7 +157,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
         [ "${device::1}" != "/" ] && continue
         if [ -b "$device" -o -f "$device" ] ; then
           has_device=1
-          ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
+          ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
         else
           echo "$device: not a block device"
           err=1
@@ -167,7 +172,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
         if [ "$device" ] ; then
           device="/dev/$device"
           has_device=1
-          ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
+          ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
         fi
       fi
     fi
@@ -176,7 +181,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
       err=1
     fi
   else
-    ( set -x ; /usr/sbin/grub2-install $trusted --target="$target" )
+    ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" )
   fi
 else
   echo "grub2-install: command not found"
