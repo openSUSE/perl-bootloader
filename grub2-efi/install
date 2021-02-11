@@ -64,17 +64,17 @@ if [ "$SYS__BOOTLOADER__UPDATE_NVRAM" = "no" ] ; then
     append="$append --no-nvram"
 fi
 
-if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a "$target" != "arm64-efi" ] ; then
-  if [ -x /usr/sbin/shim-install ] ; then
-    ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
-  else
-    echo "shim-install: command not found"
-    exit 1
-  fi
+if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a -x /usr/sbin/shim-install ] ; then
+  ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
 elif [ -x /usr/sbin/grub2-install ] ; then
-  # Use '--suse-force-signed' when shim is not used (aarch64 case)
   if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
-     append="$append --suse-force-signed"
+    # Use '--suse-force-signed' when shim is not used (aarch64 case)
+    if [ "$target" = "arm64-efi" ] ; then
+      append="$append --suse-force-signed"
+    else
+      echo "shim-install: command not found"
+      exit 1
+    fi
   fi
   if [ "$has_nvram" = 1 -a "$target" = "arm64-efi" ] ; then
     # some arm firmwares need the fallback even though they have nvram vars (bsc#1167015)
