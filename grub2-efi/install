@@ -27,8 +27,8 @@ echo "target = $target"
 
 # We install grub2 at the end of the installation, not within (bsc#979145)
 if [ "$YAST_IS_RUNNING" = instsys ]; then
-	echo "Skipping grub2-efi during installation. Will be done at the end"
-	exit 0
+  echo "Skipping grub2-efi during installation. Will be done at the end"
+  exit 0
 fi
 
 # EFI has 2 boot paths. The default is that there is a target file listed in
@@ -50,7 +50,7 @@ fi
 no_nvram_opts="--no-nvram --removable"
 has_nvram=0
 append=
-if [ ! -d /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ] ; then
+if [ ! -d /sys/firmware/efi/efivars -o ! -w /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ] ; then
   append="$no_nvram_opts"
 else
   has_nvram=1
