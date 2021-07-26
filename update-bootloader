@@ -91,11 +91,11 @@ specify path to initrd file
 
 =item B<--xen>
 
-specify that you what to add a xen and not a regular image section
+specify that you want to add a xen and not a regular image section
 
 =item B<--xen-kernel> F<file>
 
-specify that you what to add a xen section with a specific image.
+specify that you want to add a xen section with a specific image.
 Implies --xen option.
 
 =item B<--default>
