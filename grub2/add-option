@@ -46,9 +46,15 @@ for (@lines) {
 
 exit 0 unless $changed;
 
-open my $f, ">$file.pblnew" or die "$file.pblnew: $!\n";
-print $f @lines;
-close $f;
+my $f;
 
-rename "$file.pblnew", $file;
+if(!(
+  open $f, ">$file.pblnew" and
+  print $f @lines and
+  close $f and
+  rename "$file.pblnew", $file
+)) {
+  unlink "$file.pblnew";
+  die "$file: failed to update config file\n"
+}
 
