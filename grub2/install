@@ -147,6 +147,14 @@ if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -d "/usr/lib/trustedgrub2/$target
   trusted="--directory=/usr/lib/trustedgrub2/$target"
 fi
 
+if [ "$target" = "powerpc-ieee1275" ] ; then
+    if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
+        append="$append --suse-force-signed"
+    else
+        append="$append --suse-inhibit-signed"
+    fi
+fi
+
 err=0
 if [ -x /usr/sbin/grub2-install ] ; then
   if [ "$needs_installdevice" = 1 ] ; then
