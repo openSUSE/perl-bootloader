@@ -180,6 +180,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
         if [ "$device" ] ; then
           device="/dev/$device"
           has_device=1
+          err=0
           ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
         fi
       fi
