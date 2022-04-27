@@ -233,7 +233,7 @@ sub read_sysconfig
       if(/^([A-Z_]+)=(.*?)\s*$/) {
         my $key = $1;
         my $val = $2;
-        $val =~ s/^(["'])(.*)\1$/$2/g;
+        $val =~ s/^(["'])(.*?)\1.*/$2/;
         $ENV{"SYS__\U$file\E__$key"} = $val;
       }
     }
