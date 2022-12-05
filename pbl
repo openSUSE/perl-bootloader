@@ -30,6 +30,7 @@ my $VERSION = "0.0";
 my $pbl_dir = "/usr/lib/bootloader";
 
 sub pbl_usage;
+sub bootloader_entry_usage;
 sub new;
 sub log_msg;
 sub run_command;
@@ -42,7 +43,8 @@ my $exit_code = 0;
 my @todo;
 
 my $opt_logfile = "/var/log/pbl.log";
-
+my @opt_add_kernel;
+my @opt_remove_kernel;
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # pbl_usage($exit_code)
@@ -56,17 +58,39 @@ Usage: pbl [OPTIONS]
 Configure/install boot loader.
 
 Options:
-    --install               Install boot loader.
-    --config                Create boot loader config.
-    --show                  Print current boot loader name.
-    --default ENTRY         Set default boot entry to ENTRY.
-    --add-option OPTION     Add OPTION to default boot options.
-    --del-option OPTION     Delete OPTION from default boot options.
-    --get-option OPTION     Get OPTION from default boot options.
-    --log LOGFILE           Log messages to LOGFILE (default: /var/log/pbl.log)
-    --version               Show pbl version.
-    --help                  Write this help text.
+    --install                   Install boot loader.
+    --config                    Create boot loader config.
+    --show                      Print current boot loader name.
+    --default ENTRY             Set default boot entry to ENTRY.
+    --add-option OPTION         Add OPTION to default boot options (grub2).
+    --del-option OPTION         Delete OPTION from default boot options (grub2).
+    --get-option OPTION         Get OPTION from default boot options (grub2).
+    --add-kernel VERSION FILE [INITRD]
+                                Add kernel FILE with version VERSION. Optionally add initrd file INITRD
+                                explicitly (systemd-boot).
+    --remove-kernel VERSION [FILE [INITRD]]
+                                Remove kernel with version VERSION. Optionally specify kernel and initrd
+                                explicitly (systemd-boot).
+    --log LOGFILE               Log messages to LOGFILE (default: /var/log/pbl.log)
+    --version                   Show pbl version.
+    --help                      Write this help text.
 
+= = = = = = = =
+
+  exit shift;
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# bootloader_entry_usage($exit_code)
+#
+# Print help text and exit.
+#
+sub bootloader_entry_usage
+{
+  print <<"= = = = = = = =";
+Usage: bootloader_entry add|remove kernel-flavor kernel-version kernel-image initrd-file
+Add or remove kernel images to boot config.
 = = = = = = = =
 
   exit shift;
@@ -253,17 +277,31 @@ $loader = $ENV{SYS__BOOTLOADER__LOADER_TYPE};
 
 if($program eq 'pbl') {
   GetOptions(
-    'log=s'        => \$opt_logfile,
-    'install'      => sub { push @todo, [ 'install' ] },
-    'config'       => sub { push @todo, [ 'config' ] },
-    'show'         => sub { print "$loader\n"; exit 0 },
-    'default=s'    => sub { push @todo, [ 'default', $_[1] ] },
-    'add-option=s' => sub { push @todo, [ 'add-option', $_[1] ] },
-    'del-option=s' => sub { push @todo, [ 'del-option', $_[1] ] },
-    'get-option=s' => sub { push @todo, [ 'get-option', $_[1] ] },
-    'version'      => sub { print "$VERSION\n"; exit 0 },
-    'help'         => sub { pbl_usage 0 },
+    'log=s'                => \$opt_logfile,
+    'install'              => sub { push @todo, [ 'install' ] },
+    'config'               => sub { push @todo, [ 'config' ] },
+    'show'                 => sub { print "$loader\n"; exit 0 },
+    'default=s'            => sub { push @todo, [ 'default', $_[1] ] },
+    'add-option=s'         => sub { push @todo, [ 'add-option', $_[1] ] },
+    'del-option=s'         => sub { push @todo, [ 'del-option', $_[1] ] },
+    'get-option=s'         => sub { push @todo, [ 'get-option', $_[1] ] },
+    'add-kernel=s{2,3}'    => \@opt_add_kernel,
+    'remove-kernel=s{1,3}' => \@opt_remove_kernel,
+    'version'              => sub { print "$VERSION\n"; exit 0 },
+    'help'                 => sub { pbl_usage 0 },
   ) || pbl_usage 1;
+
+  push @todo, [ "add-kernel", @opt_add_kernel ] if @opt_add_kernel;
+  push @todo, [ "remove-kernel", @opt_remove_kernel ] if @opt_remove_kernel;
+}
+
+if($program eq 'bootloader_entry') {
+  if($ARGV[0] =~ /^(add|remove)$/ && @ARGV == 5) {
+    push @todo, [ "$ARGV[0]-kernel", @ARGV[2..4] ]
+  }
+  else {
+    bootloader_entry_usage 1;
+  }
 }
 
 log_msg(1, join(' ', ($0, @ARGV)));
@@ -289,12 +327,14 @@ if($program ne 'pbl') {
 if(-d "$pbl_dir/$loader") {
   for (@todo) {
     my @cmd = @{$_};
+    my $opt = $cmd[0];
     $cmd[0] = "$pbl_dir/$loader/$cmd[0]";
     if(-x $cmd[0]) {
       $exit_code = run_command(@cmd) || $exit_code;
     }
     else {
       log_msg(1, "$cmd[0] skipped");
+      print "Option --$opt not available for $loader.\n";
     }
   }
 }
@@ -305,4 +345,3 @@ else {
 }
 
 exit $exit_code;
-

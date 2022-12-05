@@ -54,6 +54,12 @@ install: check
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/u-boot
 	@install -m 755 u-boot/config $(DESTDIR)/usr/lib/bootloader/u-boot
 
+	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/systemd-boot
+	@install -m 755 systemd-boot/install $(DESTDIR)/usr/lib/bootloader/systemd-boot
+	@install -m 755 systemd-boot/config $(DESTDIR)/usr/lib/bootloader/systemd-boot
+	@install -m 755 systemd-boot/add-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
+	@install -m 755 systemd-boot/remove-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
+
 	@install -m 755 pbl $(DESTDIR)/sbin/pbl
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)/sbin/pbl
 	@ln -snf pbl $(DESTDIR)/sbin/update-bootloader

@@ -1,0 +1,18 @@
+#! /bin/bash
+
+# Settings from /etc/sysconfig/filename are available as environment vars
+# with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
+#
+# Not all files are parsed, current list is:
+#   bootloader, language
+#
+
+err=0
+if [ -x /usr/bin/bootctl ] ; then
+  ( set -x ; bootctl --make-machine-id-directory=yes install ) || err=1
+else
+  echo "bootctl: command not found"
+  err=1
+fi
+
+exit $err
