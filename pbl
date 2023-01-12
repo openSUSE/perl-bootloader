@@ -60,16 +60,17 @@ Configure/install boot loader.
 Options:
     --install                   Install boot loader.
     --config                    Create boot loader config.
-    --show                      Print current boot loader name.
+    --show                      Print current boot loader.
+    --loader BOOTLOADER         Set current boot loader to BOOTLOADER.
     --default ENTRY             Set default boot entry to ENTRY.
     --add-option OPTION         Add OPTION to default boot options (grub2).
     --del-option OPTION         Delete OPTION from default boot options (grub2).
     --get-option OPTION         Get OPTION from default boot options (grub2).
-    --add-kernel VERSION FILE [INITRD]
-                                Add kernel FILE with version VERSION. Optionally add initrd file INITRD
+    --add-kernel VERSION [KERNEL [INITRD]]
+                                Add kernel with version VERSION. Optionally pass kernel and initrd
                                 explicitly (systemd-boot).
-    --remove-kernel VERSION [FILE [INITRD]]
-                                Remove kernel with version VERSION. Optionally specify kernel and initrd
+    --remove-kernel VERSION [KERNEL [INITRD]]
+                                Remove kernel with version VERSION. Optionally pass kernel and initrd
                                 explicitly (systemd-boot).
     --log LOGFILE               Log messages to LOGFILE (default: /var/log/pbl.log)
     --version                   Show pbl version.
@@ -281,11 +282,12 @@ if($program eq 'pbl') {
     'install'              => sub { push @todo, [ 'install' ] },
     'config'               => sub { push @todo, [ 'config' ] },
     'show'                 => sub { print "$loader\n"; exit 0 },
+    'loader=s'             => sub { system "perl -pi -e 's/^(LOADER_TYPE=)\\S+/\$1\"$_[1]\"/' /etc/sysconfig/bootloader" ; exit 0 },
     'default=s'            => sub { push @todo, [ 'default', $_[1] ] },
     'add-option=s'         => sub { push @todo, [ 'add-option', $_[1] ] },
     'del-option=s'         => sub { push @todo, [ 'del-option', $_[1] ] },
     'get-option=s'         => sub { push @todo, [ 'get-option', $_[1] ] },
-    'add-kernel=s{2,3}'    => \@opt_add_kernel,
+    'add-kernel=s{1,3}'    => \@opt_add_kernel,
     'remove-kernel=s{1,3}' => \@opt_remove_kernel,
     'version'              => sub { print "$VERSION\n"; exit 0 },
     'help'                 => sub { pbl_usage 0 },
@@ -324,7 +326,7 @@ if($program ne 'pbl') {
   unshift @todo, [ 'install' ] if grep { /^--reinit$/ } @ARGV;
 }
 
-if(-d "$pbl_dir/$loader") {
+if(-d "$pbl_dir/$loader" || $program eq "pbl") {
   for (@todo) {
     my @cmd = @{$_};
     my $opt = $cmd[0];
