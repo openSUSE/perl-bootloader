@@ -14,9 +14,18 @@ if [ -z "$target" ] ; then
   exit 1
 fi
 
+fw_platform_size=$(cat /sys/firmware/efi/fw_platform_size 2>/dev/null)
+
 case "$target" in
   i?86 ) target=i386 ;;
-  x86_64 | amd64 ) target=x86_64 ;;
+  x86_64 | amd64 )
+    target=x86_64
+    if [ "$fw_platform_size" = 32 ] ; then
+      target=i386
+      # no 32 bit shim
+      SYS__BOOTLOADER__SECURE_BOOT=no
+    fi
+    ;;
   aarch64 ) target=arm64 ;;
   arm* ) target=arm ;;
 esac
