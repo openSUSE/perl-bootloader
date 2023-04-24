@@ -25,18 +25,6 @@ check: $(PM_FILES)
 	@cd .check ; find -name *.pm -exec perl -I. -c '{}' ';'
 
 install: check
-	@rm -rf .install
-	@mkdir -p .install/lib
-	@cp -a src .install/lib/Bootloader
-	@rm -f `find .install/lib/Bootloader -name '*~'`
-	@perl -pi -e 's/0\.000/$(VERSION)/ if /VERSION = /' .install/lib/Bootloader/Library.pm
-	@cd .install ; \
-	touch Makefile.PL ; \
-	perl -Ilib -MExtUtils::MakeMaker -e 'WriteMakefile (NAME => "Bootloader", VERSION_FROM => "lib/Bootloader/Library.pm" )' ; \
-	make install_vendor
-	@install -D -m 755 pbl-yaml $(DESTDIR)/usr/sbin/pbl-yaml
-	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader
-
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/install $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2

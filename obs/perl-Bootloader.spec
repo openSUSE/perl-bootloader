@@ -25,10 +25,12 @@
 %{!?_distconfdir:%global _distconfdir /etc}
 
 Name:           perl-Bootloader
-Version:        0.0
+Version:        1.0
 Release:        0
 Requires:       coreutils
 Requires:       perl-base = %{perl_version}
+Provides:       perl-Bootloader-YAML = %{version}
+Obsoletes:      perl-Bootloader-YAML < %{version}
 Summary:        Tool for boot loader configuration
 License:        GPL-2.0-or-later
 Group:          System/Boot
@@ -41,36 +43,6 @@ BuildRequires:  perl
 %description
 Shell script wrapper for configuring various boot loaders.
 
-
-
-Authors:
---------
-    Jiri Srain <jsrain@suse.cz>
-    Joachim Plack <jplack@suse.de>
-    Alexander Osthof <aosthof@suse.de>
-    Josef Reidinger <jreidinger@suse.cz>
-    Steffen Winterfeldt <snwint@suse.com>
-
-%package YAML
-Requires:       %{name} = %{version}
-Requires:       perl-Bootloader-legacy = %{version}
-Requires:       perl-YAML-LibYAML
-Summary:        YAML interface for perl-Bootloader
-Group:          System/Boot
-
-%description YAML
-A command line interface to perl-Bootloader using YAML files for input and output.
-
-%package legacy
-Requires:       %{name} = %{version}
-Requires:       perl-base = %{perl_version}
-Recommends:     perl-gettext
-Summary:        Legacy part of perl-Bootloader
-Group:          System/Boot
-
-%description legacy
-The legacy part of perl-Bootloader (that is, the original perl-based library code).
-
 %prep
 %setup -q
 
@@ -78,19 +50,7 @@ The legacy part of perl-Bootloader (that is, the original perl-based library cod
 
 %install
 make install DESTDIR=%{buildroot} SBINDIR=%{sbindir} ETCDIR=%{_distconfdir}
-install -d -m 700 %{buildroot}/var/log/YaST2
 touch %{buildroot}/var/log/pbl.log
-%perl_process_packlist
-#install only necessary files for specific architecture
-%ifarch %ix86 x86_64
-rm -f %{buildroot}/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,PowerLILO*}
-%endif
-%ifarch ppc ppc64
-rm -f %{buildroot}/%{perl_vendorlib}/Bootloader/Core/{ZIPL*,LILO*,ELILO*,GRUB.*}
-%endif
-%ifarch s390 s390x
-rm -f %{buildroot}/%{perl_vendorlib}/Bootloader/Core/{*LILO*,GRUB.*,GRUB2EFI.*}
-%endif
 
 %post
 echo -n >>/var/log/pbl.log
@@ -110,16 +70,5 @@ chmod 600 /var/log/pbl.log
 %{_distconfdir}/logrotate.d/pbl
 %endif
 %ghost %attr(0600,root,root) /var/log/pbl.log
-
-%files YAML
-%defattr(-, root, root)
-%{_sbindir}/pbl-yaml
-
-%files legacy
-%defattr(-, root, root)
-%doc %{_mandir}/man3/*
-%{perl_vendorarch}/auto/Bootloader
-%{perl_vendorlib}/Bootloader
-%dir %attr(0700,root,root) /var/log/YaST2
 
 %changelog
