@@ -50,6 +50,7 @@ Shell script wrapper for configuring various boot loaders.
 
 %install
 make install DESTDIR=%{buildroot} SBINDIR=%{sbindir} ETCDIR=%{_distconfdir}
+mkdir -p %{buildroot}/var/log
 touch %{buildroot}/var/log/pbl.log
 
 %post
