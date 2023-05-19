@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! /usr/bin/bash
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This is a (wrapper) script to update the bootloader config.
@@ -13,47 +13,23 @@
 # For any other bootloader it runs the old bootloader_entry and
 # update-bootloader scripts (renamed to *.old).
 #
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+VERSION="0.0"
+
+pbl_dir="/usr/lib/bootloader"
+exit_code=0
+
+opt_log="/var/log/pbl.log"
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-use strict;
-use POSIX qw ( strftime uname );
-
-use File::Temp;
-use Getopt::Long;
-use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
-$Data::Dumper::Terse = 1;
-$Data::Dumper::Indent = 1;
-
-my $VERSION = "0.0";
-
-my $pbl_dir = "/usr/lib/bootloader";
-
-sub pbl_usage;
-sub bootloader_entry_usage;
-sub new;
-sub log_msg;
-sub run_command;
-sub read_sysconfig;
-
-my $program;
-my $log;
-my $loader;
-my $exit_code = 0;
-my @todo;
-
-my $opt_logfile = "/var/log/pbl.log";
-my @opt_add_kernel;
-my @opt_remove_kernel;
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# pbl_usage($exit_code)
+# bl_usage $exit_code
 #
 # Print help text and exit.
 #
-sub pbl_usage
-{
-  print <<"= = = = = = = =";
+bl_usage () {
+  cat <<EOF
 Usage: pbl [OPTIONS]
 Configure/install boot loader.
 
@@ -76,274 +52,28 @@ Options:
     --version                   Show pbl version.
     --help                      Write this help text.
 
-= = = = = = = =
+EOF
 
-  exit shift;
+  exit $1
 }
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# bootloader_entry_usage($exit_code)
-#
-# Print help text and exit.
-#
-sub bootloader_entry_usage
-{
-  print <<"= = = = = = = =";
-Usage: bootloader_entry add|remove kernel-flavor kernel-version kernel-image initrd-file
-Add or remove kernel images to boot config.
-= = = = = = = =
+while true ; do
+  case $1 in
+    --install) opt_install=1 ; shift ; continue ;;
+    --config) opt_config=1 ; shift ; continue ;;
+    --show) opt_show=1 ; shift ; continue ;;
+    --log) opt_log="$2" ; shift 2 ; continue ;;
+    --version) echo $VERSION ; exit 0 ;;
+    -h|--help) bl_usage 0 ;;
+  esac
 
-  exit shift;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-sub new
-{
-  $log->{session_id} = $program . sprintf("-%04d", int rand 10000);
-
-  # log to logfile if we can
-
-  if(open my $f, ">>$opt_logfile") {
-    my $tmp = select $f;
-    $| = 1;
-    select $tmp;
-    binmode $f, ':utf8';
-    $log->{log_fh} = $f;
-    $log->{log_is_tty} = 1 if $opt_logfile eq '-';
-  }
-
-  # find root device & detect if we are chroot-ed
-  my $r = "?";
-  my @r0 = stat "/";
-  my @r1 = stat "/proc/1/root";
-  if(@r0 && @r1) {
-    my $r0 = ($r0[0] >> 8) . ":" . ($r0[0] & 0xff);
-    $r = readlink "/dev/block/$r0";
-    $r =~ s#^..#/dev# if defined $r;
-    $r = $r0 unless defined $r;
-    if($r0[0] != $r1[0] || $r0[1] != $r1[1]) {
-      $r .= " (chroot)";
-    }
-  }
-
-  log_msg(1, "$log->{session_id} = $0, version = $VERSION, root = $r");
-}
+  break
+done
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# log_msg(level, message, var, depth)
-#
-# level: 0 .. 3 (debug, log_msg, warning, error)
-# message: log message (single line string)
-# var (optional): either a SCALAR or a REF
-#   - SCALAR (may be multiline) will be logged in a block delimited
-#     by '<<<<<<<<<<<<<<<<' and '>>>>>>>>>>>>>>>>'
-#   - REF will be logged using Data::Dumper
-# depth (optional): maximum depth when logging a REF
-#
-sub log_msg
-{
-  my $level = shift;
-  my $message = shift;
 
-  new if !$log;
+bl_usage 2
 
-  my $line = (caller(1))[2];
-  my $func = (caller(1))[3];
-  $func =~ s/^main:://;
-
-  $func = 'main', $line = (caller(0))[2] if $func eq '';
-
-  my $id = $log->{session_id} || "???-0000.0";
-
-  # we split the log line a bit into prefix & message
-
-  my $prefix = strftime("%Y-%m-%d %H:%M:%S", localtime) . " <$level>";
-
-  $message = "$id $func.$line: $message";
-
-  if($_[0]) {
-    my $x = $_[0];
-    my $m = $_[1];
-    if(ref $x) {
-      $Data::Dumper::Maxdepth = $m if $m;
-      chomp($x = Dumper $x);
-      $Data::Dumper::Maxdepth = 0 if $m;
-    }
-    else {
-      chomp $x;
-      $x = "<<<<<<<<<<<<<<<<\n$x\n>>>>>>>>>>>>>>>>";
-    }
-
-    $message .= "\n$x";
-  }
-
-  if($log->{log_fh}) {
-    print { $log->{log_fh} } "$prefix $message\n";
-  }
-
-  # log error messages to console unless we already did
-
-  if(!$log->{log_is_tty} && $level > 2) {
-    print STDERR "$program: $prefix $message\n";
-  }
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# exit_code = run_command(args)
-#
-# Run external command. All output is logged.
-#
-# The external command may put anything into the (temporary) file passed via
-# 'PBL_RESULT' environment variable. The content of that file is read and
-# printed to STDOUT.
-#
-sub run_command
-{
-  my $ret;
-  my $output;
-
-  my $command = join " ", @_;
-
-  my $result_fh = File::Temp->new(TEMPLATE => 'pbl.XXXXXX', TMPDIR => 1);
-  $ENV{PBL_RESULT} = $result_fh->filename;
-
-  if(open my $f, "-|") {
-    binmode $f, ':utf8';
-    local $/;
-    $output = <$f>;
-    close $f;
-    $ret = $? >> 8;
-  }
-  else {
-    open STDERR, ">&STDOUT";
-    exec @_;
-    print "$command: " . ($! == 13 ? $! : "command not found") . " \n";
-    exit 127;
-  }
-
-  if(!$ret) {
-    log_msg(1, "'$command' = $ret, output:", $output);
-    local $/;
-    my $result = <$result_fh>;
-    if($result ne "") {
-      print "$result\n";
-      log_msg(1, "result: $result");
-    }
-  }
-  else {
-    log_msg(3, "'$command' failed with exit code $ret, output:", $output);
-  }
-
-  return $ret;
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# read_sysconfig(FILENAME)
-#
-# Read sysconfig settings and convert them into environment vars of the form:
-#
-# SYS__FILENAME__KEY=value
-#
-sub read_sysconfig
-{
-  my $file = $_[0];
-
-  if(open my $f, "/etc/sysconfig/$file") {
-    while(<$f>) {
-      if(/^([A-Z_]+)=(.*?)\s*$/) {
-        my $key = $1;
-        my $val = $2;
-        $val =~ s/^(["'])(.*?)\1.*/$2/;
-        $ENV{"SYS__\U$file\E__$key"} = $val;
-      }
-    }
-    close $f;
-  }
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-($program = $0) =~ s#^.*/##;
-
-# get settings relevant for us
-read_sysconfig "bootloader";
-read_sysconfig "language";
-
-$loader = $ENV{SYS__BOOTLOADER__LOADER_TYPE};
-
-if($program eq 'pbl') {
-  GetOptions(
-    'log=s'                => \$opt_logfile,
-    'install'              => sub { push @todo, [ 'install' ] },
-    'config'               => sub { push @todo, [ 'config' ] },
-    'show'                 => sub { print "$loader\n"; exit 0 },
-    'loader=s'             => sub { system "perl -pi -e 's/^(LOADER_TYPE=)\\S+/\$1\"$_[1]\"/' /etc/sysconfig/bootloader" ; exit 0 },
-    'default=s'            => sub { push @todo, [ 'default', $_[1] ] },
-    'add-option=s'         => sub { push @todo, [ 'add-option', $_[1] ] },
-    'del-option=s'         => sub { push @todo, [ 'del-option', $_[1] ] },
-    'get-option=s'         => sub { push @todo, [ 'get-option', $_[1] ] },
-    'add-kernel=s{1,3}'    => \@opt_add_kernel,
-    'remove-kernel=s{1,3}' => \@opt_remove_kernel,
-    'version'              => sub { print "$VERSION\n"; exit 0 },
-    'help'                 => sub { pbl_usage 0 },
-  ) || pbl_usage 1;
-
-  push @todo, [ "add-kernel", @opt_add_kernel ] if @opt_add_kernel;
-  push @todo, [ "remove-kernel", @opt_remove_kernel ] if @opt_remove_kernel;
-}
-
-if($program eq 'bootloader_entry') {
-  if($ARGV[0] =~ /^(add|remove)$/ && @ARGV == 5) {
-    push @todo, [ "$ARGV[0]-kernel", @ARGV[2..4] ]
-  }
-  else {
-    bootloader_entry_usage 1;
-  }
-}
-
-log_msg(1, join(' ', ($0, @ARGV)));
-
-log_msg(1, "bootloader = $loader");
-
-exit 0 if !$loader;
-
-my $lang = $ENV{SYS__LANGUAGE__RC_LANG};
-if(defined $lang) {
-  log_msg(1, "locale = $lang");
-  delete $ENV{LC_MESSAGES};
-  delete $ENV{LC_ALL};
-  $ENV{LANG} = $lang;
-}
-
-if($program ne 'pbl') {
-  # compat: update-bootloader or bootloader_entry
-  push @todo, [ 'config' ];
-  unshift @todo, [ 'install' ] if grep { /^--reinit$/ } @ARGV;
-}
-
-if(-d "$pbl_dir/$loader" || $program eq "pbl") {
-  for (@todo) {
-    my @cmd = @{$_};
-    my $opt = $cmd[0];
-    $cmd[0] = "$pbl_dir/$loader/$cmd[0]";
-    if(-x $cmd[0]) {
-      $exit_code = run_command(@cmd) || $exit_code;
-    }
-    else {
-      log_msg(1, "$cmd[0] skipped");
-      print "Option --$opt not available for $loader.\n";
-    }
-  }
-}
-else {
-  exec "/usr/lib/bootloader/$program.old", @ARGV;
-  log_msg(3, "/usr/lib/bootloader/$program.old: command not found");
-  $exit_code = 1;
-}
-
-exit $exit_code;
+exit $exit_code
