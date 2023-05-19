@@ -1,0 +1,70 @@
+#! /usr/bin/bash
+
+# Print help text and exit.
+#
+usage () {
+  cat <<EOF
+Usage: kexec-bootloader [OPTIONS]
+Loads kexec kernel from bootloader configuration.
+
+Options:
+
+    -D, --debug         Print debugging information.
+        --dry-run       Do everything but don't actually run kexec.
+    -h, --help          Show this help message.
+
+kexec-bootloader gets the default kernel, initrd, and boot options and
+prepares a kexec() system call with it.
+
+You then can run 'kexec --exec' to boot with this configuration.
+EOF
+
+  exit $1
+}
+
+while true ; do
+  case $1 in
+    -D|--debug) opt_debug=1 ; shift ; continue ;;
+       --dry-run) opt_dry_run=1; shift ; continue ;;
+    -h|--help) usage 0 ;;
+  esac
+
+  break
+done
+
+[ "$#" != 0 ] && usage 1
+
+. <(pbl --default-settings)
+
+[ "$?" != 0 ] && exit 1
+
+for i in $(< /proc/cmdline) ; do
+  case $i in
+    root=*) root=$i ; break ;;
+  esac
+done
+
+if [ -z "$root" ] ; then
+  echo "Could not determine no 'root' option." >&2
+  exit 1
+fi
+
+kexec="kexec --kexec-syscall-auto --load '$kernel' --initrd='$initrd' --append='$root $append'"
+
+if [ "$opt_debug" = 1 ] ; then
+  echo "Image  : $kernel"
+  echo "Initrd : $initrd"
+  echo "Append : $append"
+  echo "Root   : $root"
+  echo "Kexec call: $kexec"
+fi
+
+if [ "$opt_dry_run" != 1 ] ; then
+  sh -c "$kexec"
+  if [ "$?" != 0 ] ; then
+    echo "kexec failed." >&2
+    exit 1
+  fi
+fi
+
+exit 0

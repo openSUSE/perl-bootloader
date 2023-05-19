@@ -60,6 +60,8 @@ install: check
 	@pod2man update-bootloader >$(DESTDIR)/usr/share/man/man8/update-bootloader.8
 	@chmod 644 $(DESTDIR)/usr/share/man/man8/update-bootloader.8
 
+	@install -D -m 755 kexec-bootloader $(DESTDIR)$(SBINDIR)/kexec-bootloader
+
 archive: changelog
 	mkdir -p package
 	git archive --prefix=$(PREFIX)/ $(BRANCH) > package/$(PREFIX).tar
