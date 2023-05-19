@@ -31,6 +31,7 @@ install: check
 	@install -m 755 grub2/add-option $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/get-option $(DESTDIR)/usr/lib/bootloader/grub2
+	@install -m 755 grub2/default-settings $(DESTDIR)/usr/lib/bootloader/grub2
 
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2-efi/install $(DESTDIR)/usr/lib/bootloader/grub2-efi
@@ -38,6 +39,7 @@ install: check
 	@install -m 755 grub2/add-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2/del-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
 	@install -m 755 grub2/get-option $(DESTDIR)/usr/lib/bootloader/grub2-efi
+	@install -m 755 grub2/default-settings $(DESTDIR)/usr/lib/bootloader/grub2-efi
 
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/u-boot
 	@install -m 755 u-boot/config $(DESTDIR)/usr/lib/bootloader/u-boot
@@ -57,6 +59,8 @@ install: check
 	@install -D -m 644 pbl.logrotate $(DESTDIR)$(ETCDIR)/logrotate.d/pbl
 	@pod2man update-bootloader >$(DESTDIR)/usr/share/man/man8/update-bootloader.8
 	@chmod 644 $(DESTDIR)/usr/share/man/man8/update-bootloader.8
+
+	@install -D -m 755 kexec-bootloader $(DESTDIR)$(SBINDIR)/kexec-bootloader
 
 archive: changelog
 	mkdir -p package
