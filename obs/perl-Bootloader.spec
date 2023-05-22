@@ -35,7 +35,6 @@ License:        GPL-2.0-or-later
 Group:          System/Boot
 URL:            https://github.com/openSUSE/perl-bootloader
 Source:         %{name}-%{version}.tar.xz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  perl
 #!BuildIgnore: mdadm e2fsprogs limal-bootloader
 
@@ -57,7 +56,6 @@ echo -n >>/var/log/pbl.log
 chmod 600 /var/log/pbl.log
 
 %files
-%defattr(-, root, root)
 %license COPYING
 %doc %{_mandir}/man8/*
 %doc boot.readme
