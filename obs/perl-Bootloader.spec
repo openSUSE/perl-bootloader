@@ -29,6 +29,7 @@ Version:        1.0
 Release:        0
 Requires:       coreutils
 Requires:       perl-base = %{perl_version}
+Provides:       pbl-default-settings
 Obsoletes:      perl-Bootloader-YAML < %{version}
 Summary:        Tool for boot loader configuration
 License:        GPL-2.0-or-later
