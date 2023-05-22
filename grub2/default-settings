@@ -17,7 +17,22 @@ else
   exit 1
 fi
 
-kernel=$(readlink -f /boot/vmlinuz)
+case $(arch) in
+	x86_64|i?86)
+		image=vmlinuz ;;
+	ppc*)
+		image=vmlinux ;;
+	s390|s390x)
+		image=image ;;
+	armv*)
+		image=zImage ;;
+	arm64|riscv64)
+		image=Image ;;
+	*)
+		echo Architecture $(arch) not supported. >&2
+esac
+
+kernel=$(readlink -f /boot/$image)
 initrd=$(readlink -f /boot/initrd)
 append="$GRUB_CMDLINE_LINUX_DEFAULT"
 
