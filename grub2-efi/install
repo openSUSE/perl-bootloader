@@ -7,6 +7,31 @@
 #   bootloader, language
 #
 
+
+# If the default EFI boot file is signed by SUSE, assume we have to also update it.
+#
+# This is also the logic shim uses.
+#
+check_update_default ()
+{
+  . /etc/os-release
+
+  case "$NAME" in
+    SLE*)
+      ca_string='SUSE Linux Enterprise Secure Boot CA1';;
+    openSUSE*)
+      ca_string='openSUSE Secure Boot CA1';;
+  esac
+
+  efi_default_file="/boot/efi/EFI/boot/$efi_default"
+
+  update_default=0
+
+  if [ -n "$ca_string" -a -f $efi_default_file ] ; then
+    grep -q "$ca_string" $efi_default_file && update_default=1
+  fi
+}
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -17,22 +42,24 @@ fi
 fw_platform_size=$(cat /sys/firmware/efi/fw_platform_size 2>/dev/null)
 
 case "$target" in
-  i?86 ) target=i386 ;;
+  i?86 ) target=i386 efi_default=bootia32.efi ;;
   x86_64 | amd64 )
-    target=x86_64
+    target=x86_64 efi_default=bootx64.efi
     if [ "$fw_platform_size" = 32 ] ; then
-      target=i386
+      target=i386 efi_default=bootia32.efi
       # no 32 bit shim
       SYS__BOOTLOADER__SECURE_BOOT=no
     fi
     ;;
-  aarch64 ) target=arm64 ;;
-  arm* ) target=arm ;;
+  aarch64 ) target=arm64 efi_default=bootaa64.efi ;;
+  arm* ) target=arm efi_default=bootarm.efi ;;
 esac
+
+check_update_default
 
 target="$target-efi"
 
-echo "target = $target"
+echo "target = $target, update default location = $update_default"
 
 # We install grub2 at the end of the installation, not within (bsc#979145)
 if [ "$YAST_IS_RUNNING" = instsys ]; then
@@ -61,6 +88,8 @@ has_nvram=0
 append=
 if [ ! -d /sys/firmware/efi/efivars -o ! -w /sys/firmware/efi/efivars -o ! "$(ls -A /sys/firmware/efi/efivars)" ] ; then
   append="$no_nvram_opts"
+  # no need to *additionally* update default location
+  update_default=0
 else
   has_nvram=1
 fi
@@ -90,6 +119,9 @@ elif [ -x /usr/sbin/grub2-install ] ; then
     ( set -x ; /usr/sbin/grub2-install --target="$target" $append $no_nvram_opts )
   fi
   ( set -x ; /usr/sbin/grub2-install --target="$target" $append )
+  if [ "$update_default" = 1 ] ; then
+    ( set -x ; /usr/sbin/grub2-install --target="$target" $append $no_nvram_opts )
+  fi
 else
   echo "grub2-install: command not found"
   exit 1
