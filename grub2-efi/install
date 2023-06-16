@@ -27,6 +27,7 @@ check_update_default ()
 
   update_default=0
 
+  # install/update default location if it is 'our' file
   if [ -n "$ca_string" -a -f $efi_default_file ] ; then
     grep -q "$ca_string" $efi_default_file && update_default=1
   fi
@@ -59,8 +60,6 @@ check_update_default
 
 target="$target-efi"
 
-echo "target = $target, update default location = $update_default"
-
 # We install grub2 at the end of the installation, not within (bsc#979145)
 if [ "$YAST_IS_RUNNING" = instsys ]; then
   echo "Skipping grub2-efi during installation. Will be done at the end"
@@ -92,14 +91,20 @@ if [ ! -d /sys/firmware/efi/efivars -o ! -w /sys/firmware/efi/efivars -o ! "$(ls
   update_default=0
 else
   has_nvram=1
+  # some arm firmwares need the fallback even though they have nvram vars (bsc#1167015)
+  if [ "$target" = "arm64-efi" ] ; then
+    update_default=1
+  fi
 fi
+
+echo "target = $target, update default location = $update_default"
 
 if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes ] && [ -f "/usr/lib/grub2/$target/tpm.mod" -o -f "/usr/share/grub2/$target/tpm.mod" ] ; then
   append="$append --suse-enable-tpm"
 fi
 
 if [ "$SYS__BOOTLOADER__UPDATE_NVRAM" = "no" ] ; then
-    append="$append --no-nvram"
+  append="$append --no-nvram"
 fi
 
 if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a -x /usr/sbin/shim-install ] ; then
@@ -114,13 +119,15 @@ elif [ -x /usr/sbin/grub2-install ] ; then
       exit 1
     fi
   fi
-  if [ "$has_nvram" = 1 -a "$target" = "arm64-efi" ] ; then
-    # some arm firmwares need the fallback even though they have nvram vars (bsc#1167015)
-    ( set -x ; /usr/sbin/grub2-install --target="$target" $append $no_nvram_opts )
-  fi
   ( set -x ; /usr/sbin/grub2-install --target="$target" $append )
   if [ "$update_default" = 1 ] ; then
-    ( set -x ; /usr/sbin/grub2-install --target="$target" $append $no_nvram_opts )
+    if [ -x /usr/sbin/shim-install ] ; then
+      # update shim to fallback location given it is used most often
+      ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --removable )
+    else
+      # fallback to signed grub so that check_update_default can still work
+      ( set -x ; cp /usr/share/grub2/x86_64-efi/grub.efi /boot/efi/EFI/boot/$efi_default )
+    fi
   fi
 else
   echo "grub2-install: command not found"
