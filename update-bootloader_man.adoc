@@ -1,0 +1,70 @@
+= update-bootloader(8)
+:doctype: manpage
+:manmanual: System Administration
+:mansource: update-bootloader {version}
+
+== Name
+
+update-bootloader - update boot loader configuration.
+
+== Synopsis
+
+*update-bootloader* [_OPTION_]
+
+
+== Description
+
+*update-bootloader* updates the boot loader configuration.
+
+*update-bootloader* is just a symlink to *pbl* and corresponds to *pbl --init* and *pbl --config*, respectively.
+
+*update-bootloader* is not intended to called manually. It is a preserved interface to the boot loader configuration that is used
+in the post-install section of some boot loader related packages (e.g. *shim*).
+
+== Option
+
+*--reinit*::
+Install or update boot loader, then update boot loader configuration.
+
+== Obsolete options
+
+*--add*, *--remove*, *--refresh*, *--image*, *--initrd*, *--xen*, *--xen-kernel*, *--default*, *--previous*, *--name*, *--force*, *--force-default*, *--man*, *--help*::
+These options relate to ancient versions of *update-bootloader* and are all ignored.
+
+== Files
+
+_/etc/sysconfig/bootloader_::
+General boot loader related configuration settings.
+
+_/var/log/pbl.log_::
+Default log file.
+
+_/usr/etc/logrotate.d/pbl_::
+Logrotate rules for _/var/log/pbl.log_.
+
+_/usr/lib/bootloader_::
+Directory with specific config scripts for each supported boot loader.
+
+== Examples
+
+----
+# update boot loader configuration
+update-bootloader
+
+# install/update boot loader and update boot loader configuration
+update-bootloader --reinit
+----
+
+== See Also
+
+*bootloader_entry*(8), *pbl*(8).
+
+== Links
+
+- The Boot Loader Specification: https://uapi-group.org/specifications/specs/boot_loader_specification
+- The Discoverable Partitions Specification: https://uapi-group.org/specifications/specs/discoverable_partitions_specification
+- grub2: https://www.gnu.org/software/grub/manual/grub/grub.html
+- shim: https://github.com/rhboot/shim
+- systemd-boot: https://www.freedesktop.org/software/systemd/man/systemd-boot.html
+- u-boot: http://www.denx.de/wiki/U-Boot
+- UEFI Specification: https://uefi.org/specifications
