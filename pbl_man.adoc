@@ -1,0 +1,114 @@
+= pbl(8)
+:doctype: manpage
+:manmanual: System Administration
+:mansource: pbl {version}
+
+== Name
+
+pbl - manage boot loader confguration.
+
+== Synopsis
+
+*pbl* [_OPTIONS_] _IMAGE_
+
+
+== Description
+
+*pbl* is a light wrapper to unify some common boot loader configuration tasks.
+
+It is not intended to provide a comprehensive API to boot loader configuration.
+
+Most notably, not all options make sense for all boot loaders.
+
+Supported boot loaders have a sub directory in _/usr/lib/bootloader_ containing a shell script for each option.
+To add support for a new boot loader create a new directoy with its name and add scripts for options you need.
+
+== Options
+
+*--install*::
+Install (or update) boot loader. +
+Note that this does not update the boot loader configuration.
+
+*--config*::
+Create (or update) boot loader configuration.
+
+*--show*::
+Print current boot loader.
+
+*--loader* __BOOTLOADER_::
+Set current boot loader to _BOOTLOADER_. +
+Note that this only changes a config variable. To actually use the new boot loader, run *pbl --install* and *pbl --config*.
+
+*--default* _ENTRY_::
+Set default boot entry to _ENTRY_.
+
+*--add-option* _OPTION_::
+Add _OPTION_ to default boot options (grub2).
+
+*--del-option* _OPTION_::
+Delete OPTION from default boot options (grub2).
+
+*--get-option* _OPTION_::
+Get _OPTION_ from default boot options (grub2).
+
+*--add-kernel* _VERSION_ [_KERNEL_ [_INITRD_]]::
+Add kernel with version _VERSION_. Optionally pass kernel and initrd explicitly (systemd-boot).
+
+*--remove-kernel* _VERSION_ [_KERNEL_ [_INITRD_]]::
+Remove kernel with version _VERSION_. Optionally pass kernel and initrd explicitly (systemd-boot).
+
+*--default-settings*::
+Print default kernel, initrd, and boot options.
+
+*--log* _LOGFILE_::
+Log messages to _LOGFILE_ (default: /var/log/pbl.log).
+
+*--version*::
+Show *pbl* version.
+
+*--help*::
+Write this help text.
+
+== Files
+
+_/etc/sysconfig/bootloader_::
+General boot loader related configuration settings.
+
+_/var/log/pbl.log_::
+Default log file.
+
+_/usr/etc/logrotate.d/pbl_::
+Logrotate rules for _/var/log/pbl.log_.
+
+_/usr/lib/bootloader_::
+Directory with specific config scripts for each supported boot loader.
+
+== Examples
+
+----
+# display default boot loader
+pbl --show
+
+# change default boot loader
+pbl --loader systemd-boot
+
+# (re-)install default boot loader
+pbl --install
+
+# update boot loader configuration
+pbl --config
+----
+
+== See Also
+
+*bootloader_entry*(8), *update-bootloader*(8).
+
+== Links
+
+- The Boot Loader Specification: https://uapi-group.org/specifications/specs/boot_loader_specification
+- The Discoverable Partitions Specification: https://uapi-group.org/specifications/specs/discoverable_partitions_specification
+- grub2: https://www.gnu.org/software/grub/manual/grub/grub.html
+- shim: https://github.com/rhboot/shim
+- systemd-boot: https://www.freedesktop.org/software/systemd/man/systemd-boot.html
+- u-boot: http://www.denx.de/wiki/U-Boot
+- UEFI Specification: https://uefi.org/specifications

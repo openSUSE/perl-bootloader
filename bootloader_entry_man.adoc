@@ -1,0 +1,70 @@
+= bootloader_entry(8)
+:doctype: manpage
+:manmanual: System Administration
+:mansource: bootloader_entry {version}
+
+== Name
+
+bootloader_entry - add or remove kernel/initrd pair to boot loader configuration.
+
+== Synopsis
+
+*bootloader_entry* [_COMMAND_] FLAVOR VERSION KERNEL INITRD
+
+
+== Description
+
+*bootloader_entry* adds or removes a kernel/initrd pair to the boot loader configuration.
+
+Note that the _FLAVOR_ argument is there for interface compatibility reasons and not actually used.
+
+*bootloader_entry* is just a symlink to *pbl*. The _add_ and _remove_ options will be translated to *pbl --add-kernel* and *pbl --remove-kernel*, respectively.
+
+*bootloader_entry* is not intended to called manually. It is a preserved interface to the boot loader configuration that is used
+in the post-install section of the Linux kernel package.
+
+== Commands
+
+*add*::
+Add kernel/initrd to boot config.
+
+*remove*::
+Remove kernel/initrd from boot config.
+
+== Files
+
+_/etc/sysconfig/bootloader_::
+General boot loader related configuration settings.
+
+_/var/log/pbl.log_::
+Default log file.
+
+_/usr/etc/logrotate.d/pbl_::
+Logrotate rules for _/var/log/pbl.log_.
+
+_/usr/lib/bootloader_::
+Directory with specific config scripts for each supported boot loader.
+
+== Examples
+
+----
+# add new kernel/initrd
+bootloader_entry add default 6.2.8-1-default vmlinuz-6.2.8-1-default initrd-6.2.8-1-default
+
+# remove kernel/initrd
+bootloader_entry remove default 6.2.8-1-default vmlinuz-6.2.8-1-default initrd-6.2.8-1-default
+----
+
+== See Also
+
+*pbl*(8), *update-bootloader*(8).
+
+== Links
+
+- The Boot Loader Specification: https://uapi-group.org/specifications/specs/boot_loader_specification
+- The Discoverable Partitions Specification: https://uapi-group.org/specifications/specs/discoverable_partitions_specification
+- grub2: https://www.gnu.org/software/grub/manual/grub/grub.html
+- shim: https://github.com/rhboot/shim
+- systemd-boot: https://www.freedesktop.org/software/systemd/man/systemd-boot.html
+- u-boot: http://www.denx.de/wiki/U-Boot
+- UEFI Specification: https://uefi.org/specifications

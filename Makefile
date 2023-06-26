@@ -9,10 +9,10 @@ ETCDIR  ?= /usr/etc
 
 PM_FILES = $(shell find src -name '*.pm')
 
-.PHONY:	export clean archive test install check
+.PHONY:	export clean archive test install check doc
 
 all:
-	@echo "Choose one target out of 'archive', 'test', 'test_clean', 'docs', or 'clean'"
+	@echo "Choose one target out of 'archive', 'test', 'test_clean', 'doc', or 'clean'"
 	@echo
 
 changelog: $(GITDEPS)
@@ -57,8 +57,6 @@ install: check
 	@install -D -m 644 boot.readme $(DESTDIR)/usr/share/doc/packages/perl-Bootloader/boot.readme
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8
 	@install -D -m 644 pbl.logrotate $(DESTDIR)$(ETCDIR)/logrotate.d/pbl
-	@pod2man update-bootloader >$(DESTDIR)/usr/share/man/man8/update-bootloader.8
-	@chmod 644 $(DESTDIR)/usr/share/man/man8/update-bootloader.8
 
 archive: changelog
 	mkdir -p package
@@ -66,8 +64,10 @@ archive: changelog
 	tar -r -f package/$(PREFIX).tar --mode=0664 --owner=root --group=root --mtime="`git show -s --format=%ci`" --transform='s:^:$(PREFIX)/:' VERSION changelog
 	xz -f package/$(PREFIX).tar
 
-docs:
-	cd doc/ && make
+%.8: %_man.adoc
+	asciidoctor -b manpage -a version=$(VERSION) -a soversion=${MAJOR_VERSION} $<
+
+doc: pbl.8 bootloader_entry.8 update-bootloader.8 kexec-bootloader.8
 
 test:
 	cd perl-Bootloader-testsuite/tests/test_interface/ && make
@@ -77,4 +77,4 @@ test_clean:
 
 clean:
 	rm -rf .check .install .package package
-	rm -f *~ */*~ */*/*~
+	rm -f *.8 *~ */*~ */*/*~

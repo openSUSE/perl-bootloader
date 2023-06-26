@@ -1,0 +1,41 @@
+= kexec-bootloader(8)
+:doctype: manpage
+:manmanual: System Administration
+:mansource: kexec-bootloader {version}
+
+== Name
+
+kexec-bootloader - load kexec kernel from boot loader configuration.
+
+== Synopsis
+
+*kexec-bootloader* [_OPTIONS_]
+
+
+== Description
+
+*kexec-bootloader* takes the default section of the boot loader configuration and loads that kernel and initrd
+with *kexec -l* and the respective command line.
+
+Under systemd *kexec-bootloader* may be invoked by kexec-load.service (*systemctl kexec*) to perform a kexec.
+
+To emulate previous SLE configurable behaviour where kexec occurs automatically at system reboot the systemd reboot target
+should be altered via *ln -s /usr/lib/systemd/system/kexec.target /etc/systemd/system/reboot.target*.
+
+== Options
+
+**--dry-run**::
+Do everything but don't actually run kexec.
+
+*-D*, **--debug**::
+Prints debugging output.
+
+*-h*, **help**::
+Shows a short usage message.
+
+== Return value
+The program returns 0 on success and 1 on failure.
+
+== See Also
+
+*kexec*(8).
