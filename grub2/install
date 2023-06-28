@@ -113,6 +113,19 @@ function disk_device
   echo $dev
 }
 
+# Check whether grub2-install supports --suse-force-signed.
+#
+# Exit code 0: supprted, != 0: not supported.
+#
+check_force_signed ()
+{
+  if [ "$target" = powerpc-ieee1275 ] ; then
+    /usr/sbin/grub2-install --help | grep -q -- --suse-force-signed
+  else
+    false
+  fi
+}
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -130,8 +143,8 @@ echo "target = $target"
 
 # We install grub2 at the end of the installation, not within (bsc#979145)
 if [ "$YAST_IS_RUNNING" = instsys ]; then
-	echo "Skipping grub2 during installation. Will be done at the end"
-	exit 0
+  echo "Skipping grub2 during installation. Will be done at the end"
+  exit 0
 fi
 
 if [ "$target" = "powerpc-ieee1275" ] ; then
@@ -140,19 +153,19 @@ fi
 
 append=
 if [ "$SYS__BOOTLOADER__UPDATE_NVRAM" = "no" ] ; then
-    append="$append --no-nvram"
+  append="$append --no-nvram"
 fi
 
 if [ "$SYS__BOOTLOADER__TRUSTED_BOOT" = yes -a -d "/usr/lib/trustedgrub2/$target" ] ; then
   trusted="--directory=/usr/lib/trustedgrub2/$target"
 fi
 
-if [ "$target" = "powerpc-ieee1275" ] ; then
-    if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
-        append="$append --suse-force-signed"
-    else
-        append="$append --suse-inhibit-signed"
-    fi
+if check_force_signed ; then
+  if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
+    append="$append --suse-force-signed"
+  else
+    append="$append --suse-inhibit-signed"
+  fi
 fi
 
 err=0
