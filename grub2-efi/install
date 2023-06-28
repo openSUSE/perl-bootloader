@@ -33,6 +33,19 @@ check_update_default ()
   fi
 }
 
+# Check whether grub2-install supports --suse-force-signed.
+#
+# Exit code 0: supprted, != 0: not supported.
+#
+check_force_signed ()
+{
+  if [ "$target" = arm64-efi ] ; then
+    /usr/sbin/grub2-install --help | grep -q -- --suse-force-signed
+  else
+    false
+  fi
+}
+
 target=$(uname --hardware-platform)
 
 if [ -z "$target" ] ; then
@@ -111,8 +124,8 @@ if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" -a -x /usr/sbin/shim-install ] ; th
   ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg $append )
 elif [ -x /usr/sbin/grub2-install ] ; then
   if [ "$SYS__BOOTLOADER__SECURE_BOOT" = "yes" ] ; then
-    # Use '--suse-force-signed' when shim is not used (aarch64 case)
-    if [ "$target" = "arm64-efi" ] ; then
+    # use '--suse-force-signed' if supported, when shim is not used
+    if check_force_signed ; then
       append="$append --suse-force-signed"
     else
       echo "shim-install: command not found"
@@ -126,7 +139,7 @@ elif [ -x /usr/sbin/grub2-install ] ; then
       ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --removable )
     else
       # fallback to signed grub so that check_update_default can still work
-      ( set -x ; cp /usr/share/grub2/x86_64-efi/grub.efi /boot/efi/EFI/boot/$efi_default )
+      ( set -x ; cp /usr/share/grub2/$target/grub.efi /boot/efi/EFI/boot/$efi_default )
     fi
   fi
 else
