@@ -298,7 +298,8 @@ if($program eq 'pbl') {
 }
 
 if($program eq 'bootloader_entry') {
-  if($ARGV[0] =~ /^(add|remove)$/ && @ARGV == 5) {
+  # there might be an optional 6th argument 'force-default'
+  if($ARGV[0] =~ /^(add|remove)$/ && @ARGV >= 5) {
     push @todo, [ "$ARGV[0]-kernel", @ARGV[2..4] ]
   }
   else {
