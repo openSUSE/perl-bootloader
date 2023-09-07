@@ -339,7 +339,7 @@ if(-d "$pbl_dir/$loader" || $program eq "pbl") {
     }
     else {
       log_msg(1, "$cmd[0] skipped");
-      print "Option --$opt not available for $loader.\n";
+      print "Option --$opt not available for $loader.\n" if $program eq "pbl";
     }
   }
 }
