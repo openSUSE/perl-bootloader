@@ -24,7 +24,7 @@ check: $(PM_FILES)
 	@cp -a src .check/Bootloader
 	@cd .check ; find -name *.pm -exec perl -I. -c '{}' ';'
 
-install: check
+install:
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/install $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2
@@ -50,7 +50,7 @@ install: check
 	@install -m 755 systemd-boot/add-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
 	@install -m 755 systemd-boot/remove-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
 
-	@install -D -m 755 pbl $(DESTDIR)$(SBINDIR)/pbl
+	@install -D -m 755 pbl.sh $(DESTDIR)$(SBINDIR)/pbl
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)$(SBINDIR)/pbl
 	@ln -snf pbl $(DESTDIR)$(SBINDIR)/update-bootloader
 	@ln -rsnf $(DESTDIR)$(SBINDIR)/pbl $(DESTDIR)/usr/lib/bootloader/bootloader_entry
@@ -80,3 +80,4 @@ test_clean:
 clean:
 	rm -rf .check .install .package package
 	rm -f *.8 *~ */*~ */*/*~
+	rm -f tests/*/*.{bash,dash,busybox}
