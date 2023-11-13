@@ -12,7 +12,7 @@ PM_FILES = $(shell find src -name '*.pm')
 .PHONY:	export clean archive test install check doc
 
 all:
-	@echo "Choose one target out of 'archive', 'test', 'test_clean', 'doc', or 'clean'"
+	@echo "Choose one target out of 'archive', 'test', 'doc', or 'clean'"
 	@echo
 
 changelog: $(GITDEPS)
@@ -24,7 +24,7 @@ check: $(PM_FILES)
 	@cp -a src .check/Bootloader
 	@cd .check ; find -name *.pm -exec perl -I. -c '{}' ';'
 
-install: check
+install:
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/install $(DESTDIR)/usr/lib/bootloader/grub2
 	@install -m 755 grub2/config $(DESTDIR)/usr/lib/bootloader/grub2
@@ -50,7 +50,7 @@ install: check
 	@install -m 755 systemd-boot/add-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
 	@install -m 755 systemd-boot/remove-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
 
-	@install -D -m 755 pbl $(DESTDIR)$(SBINDIR)/pbl
+	@install -D -m 755 pbl.sh $(DESTDIR)$(SBINDIR)/pbl
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)$(SBINDIR)/pbl
 	@ln -snf pbl $(DESTDIR)$(SBINDIR)/update-bootloader
 	@ln -rsnf $(DESTDIR)$(SBINDIR)/pbl $(DESTDIR)/usr/lib/bootloader/bootloader_entry
@@ -72,11 +72,9 @@ archive: changelog
 doc: pbl.8 bootloader_entry.8 update-bootloader.8 kexec-bootloader.8
 
 test:
-	cd perl-Bootloader-testsuite/tests/test_interface/ && make
-
-test_clean:
-	cd perl-Bootloader-testsuite/tests/test_interface/ && make clean
+	@./run_tests
 
 clean:
 	rm -rf .check .install .package package
 	rm -f *.8 *~ */*~ */*/*~
+	rm -f tests/*/*.{bash,dash,busybox}
