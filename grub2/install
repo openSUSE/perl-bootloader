@@ -126,7 +126,7 @@ check_force_signed ()
   fi
 }
 
-target=$(uname --hardware-platform)
+target=$(uname -m)
 
 if [ -z "$target" ] ; then
   echo "no target platform"

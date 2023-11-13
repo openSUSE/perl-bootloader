@@ -77,4 +77,5 @@ test:
 clean:
 	rm -rf .check .install .package package
 	rm -f *.8 *~ */*~ */*/*~
-	rm -f tests/*/*.{bash,dash,busybox}
+	rm -f tests/*/*.{bash,dash,ksh,busybox} tests/testresults*.diff
+	rm -rf tests/{real_,}root
