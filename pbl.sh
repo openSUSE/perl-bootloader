@@ -313,7 +313,7 @@ fi
 if [ "$program" = update-bootloader ] ; then
   while true ; do
     case $1 in
-      --reinit) shift ; run_script "install" continue ;;
+      --reinit) shift ; run_script "install" ; continue ;;
       ?*) shift ; continue ;;
     esac
 
@@ -330,7 +330,7 @@ fi
 #
 while true ; do
   case $1 in
-    --install) shift ; run_script "install" continue ;;
+    --install) shift ; run_script "install" ; continue ;;
     --config) shift ; run_script "config" ; continue ;;
     --show ) echo "$loader" ; exit 0 ;;
     --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" ; shift ; continue ;;
