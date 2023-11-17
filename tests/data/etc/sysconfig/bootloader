@@ -9,7 +9,7 @@
 # and configure newly selected bootloader
 #
 #
-LOADER_TYPE="grub2-efi"
+LOADER_TYPE="grub2"
 
 ## Path:	System/Bootloader
 ## Description:	Bootloader configuration

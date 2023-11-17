@@ -1,3 +1,9 @@
 #! /bin/sh
 
-echo "2023-11-01 23:59:58"
+if [ "$1" = "+%F %T" ] ; then
+  echo "2023-11-01 23:59:58"
+  exit 0
+else
+  echo "unsupported date format" >&2
+  exit 1
+fi
