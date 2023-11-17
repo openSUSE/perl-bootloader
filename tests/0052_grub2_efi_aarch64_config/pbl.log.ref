@@ -1,0 +1,7 @@
+2023-11-01 23:59:58 <1> pbl-2: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-11: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> pbl-11: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
+>>>>>>>>>>>>>>>>
+target = arm64-efi, update default location = 0
++ /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
+<<<<<<<<<<<<<<<<

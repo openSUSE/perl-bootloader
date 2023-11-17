@@ -1,0 +1,6 @@
+2023-11-01 23:59:58 <1> pbl-2: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-11: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-11: '/usr/lib/bootloader/systemd-boot/config' = 0, output:
+>>>>>>>>>>>>>>>>
+nothing to do, really
+<<<<<<<<<<<<<<<<

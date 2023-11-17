@@ -1,0 +1,7 @@
+2023-11-01 23:59:58 <1> pbl-2: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-11: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-11: '/usr/lib/bootloader/grub2/install' = 0, output:
+>>>>>>>>>>>>>>>>
+target = powerpc-ieee1275
++ /usr/sbin/grub2-install --target=powerpc-ieee1275 --force --skip-fs-probe /dev/loopX
+<<<<<<<<<<<<<<<<
