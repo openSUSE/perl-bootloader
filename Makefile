@@ -1,28 +1,19 @@
 GIT2LOG := $(shell if [ -x ./git2log ] ; then echo ./git2log --update ; else echo true ; fi)
 GITDEPS := $(shell [ -d .git ] && echo .git/HEAD .git/refs/heads .git/refs/tags)
 VERSION := $(shell $(GIT2LOG) --version VERSION ; cat VERSION)
-BRANCH  := $(shell git branch | perl -ne 'print $$_ if s/^\*\s*//')
 PREFIX  := perl-Bootloader-$(VERSION)
 
 SBINDIR ?= /usr/sbin
 ETCDIR  ?= /usr/etc
 
-PM_FILES = $(shell find src -name '*.pm')
-
-.PHONY:	export clean archive test install check doc
+.PHONY:	clean test install doc
 
 all:
-	@echo "Choose one target out of 'archive', 'test', 'doc', or 'clean'"
+	@echo "Choose one target out of 'install', 'doc', 'test', or 'clean'"
 	@echo
 
 changelog: $(GITDEPS)
 	$(GIT2LOG) --changelog changelog
-
-check: $(PM_FILES)
-	@rm -rf .check
-	@mkdir -p .check
-	@cp -a src .check/Bootloader
-	@cd .check ; find -name *.pm -exec perl -I. -c '{}' ';'
 
 install:
 	@install -d -m 755 $(DESTDIR)/usr/lib/bootloader/grub2
@@ -59,12 +50,6 @@ install:
 	@install -D -m 644 pbl.logrotate $(DESTDIR)$(ETCDIR)/logrotate.d/pbl
 
 	@install -D -m 755 kexec-bootloader $(DESTDIR)$(SBINDIR)/kexec-bootloader
-
-archive: changelog
-	mkdir -p package
-	git archive --prefix=$(PREFIX)/ $(BRANCH) > package/$(PREFIX).tar
-	tar -r -f package/$(PREFIX).tar --mode=0664 --owner=root --group=root --mtime="`git show -s --format=%ci`" --transform='s:^:$(PREFIX)/:' VERSION changelog
-	xz -f package/$(PREFIX).tar
 
 %.8: %_man.adoc
 	asciidoctor -b manpage -a version=$(VERSION) -a soversion=${MAJOR_VERSION} $<
