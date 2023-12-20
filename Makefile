@@ -42,7 +42,7 @@ install:
 	@install -m 755 systemd-boot/remove-kernel $(DESTDIR)/usr/lib/bootloader/systemd-boot
 
 	@install -D -m 755 pbl.sh $(DESTDIR)$(SBINDIR)/pbl
-	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION = /' $(DESTDIR)$(SBINDIR)/pbl
+	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION ?=/' $(DESTDIR)$(SBINDIR)/pbl
 	@ln -snf pbl $(DESTDIR)$(SBINDIR)/update-bootloader
 	@ln -rsnf $(DESTDIR)$(SBINDIR)/pbl $(DESTDIR)/usr/lib/bootloader/bootloader_entry
 	@install -D -m 644 boot.readme $(DESTDIR)/usr/share/doc/packages/perl-Bootloader/boot.readme
