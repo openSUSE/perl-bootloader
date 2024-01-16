@@ -139,7 +139,10 @@ elif [ -x /usr/sbin/grub2-install ] ; then
       ( set -x ; /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --removable )
     else
       # fallback to signed grub so that check_update_default can still work
-      ( set -x ; cp /usr/share/grub2/$target/grub.efi /boot/efi/EFI/boot/$efi_default )
+      # older grub (<= 2.02) uses /usr/lib
+      grub_dir="/usr/share/grub2/$target"
+      [ -d "$grub_dir" ] || grub_dir="/usr/lib/grub2/$target"
+      ( set -x ; cp "$grub_dir/grub.efi" "/boot/efi/EFI/boot/$efi_default" )
     fi
   fi
 else
