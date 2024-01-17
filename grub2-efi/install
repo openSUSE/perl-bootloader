@@ -142,6 +142,8 @@ elif [ -x /usr/sbin/grub2-install ] ; then
       # older grub (<= 2.02) uses /usr/lib
       grub_dir="/usr/share/grub2/$target"
       [ -d "$grub_dir" ] || grub_dir="/usr/lib/grub2/$target"
+      # directory may not yet exist in some workflows
+      mkdir -p "/boot/efi/EFI/boot"
       ( set -x ; cp "$grub_dir/grub.efi" "/boot/efi/EFI/boot/$efi_default" )
     fi
   fi
