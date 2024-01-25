@@ -223,11 +223,17 @@ set_loader ()
 {
   new_loader="$1"
 
+  err=0
+
   if [ -w "$sysconfig_dir/bootloader" ] ; then
     sed -i -E -e "s/^(LOADER_TYPE=)\S+/\1\"$new_loader\"/" "$sysconfig_dir/bootloader"
+    err=$?
   else
     echo "$sysconfig_dir/bootloader: not writable" >&2
+    err=1
   fi
+
+  return "$err"
 }
 
 
@@ -328,24 +334,25 @@ fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # called as pbl
 #
+
 while true ; do
   case $1 in
-    --install) shift ; run_script "install" ; continue ;;
-    --config) shift ; run_script "config" ; continue ;;
+    --install) shift ; run_script "install" || exit ; continue ;;
+    --config) shift ; run_script "config" || exit ; continue ;;
     --show ) echo "$loader" ; exit 0 ;;
-    --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" ; shift ; continue ;;
-    --default ) shift ; run_script "default" "$1" ; shift ; continue ;;
-    --add-option ) check_args 1 "${@}" ; shift ; run_script "add-option" "$1" ; shift ; continue ;;
-    --del-option ) check_args 1 "${@}" ; shift ; run_script "del-option" "$1" ; shift ; continue ;;
-    --get-option ) check_args 1 "${@}" ; shift ; run_script "get-option" "$1" ; shift ; continue ;;
-    --default-settings) shift ; run_script "default-settings" ; continue ;;
+    --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" || exit ; shift ; continue ;;
+    --default ) shift ; run_script "default" "$1" || exit ; shift ; continue ;;
+    --add-option ) check_args 1 "${@}" ; shift ; run_script "add-option" "$1" || exit ; shift ; continue ;;
+    --del-option ) check_args 1 "${@}" ; shift ; run_script "del-option" "$1" || exit ; shift ; continue ;;
+    --get-option ) check_args 1 "${@}" ; shift ; run_script "get-option" "$1" || exit ; shift ; continue ;;
+    --default-settings) shift ; run_script "default-settings" || exit ; continue ;;
     --add-kernel ) check_args 1 "${@}" ; shift
       v="$1" ; shift
       k=
       i=
       [ -n "$1" -a "$1" = "${1#-}" ] && { k="$1" ; shift ; }
       [ -n "$1" -a "$1" = "${1#-}" ] && { i="$1" ; shift ; }
-      run_script "add-kernel" "$v" "$k" "$i"
+      run_script "add-kernel" "$v" "$k" "$i" || exit
       continue ;;
     --remove-kernel ) check_args 1 "${@}" ; shift
       v="$1" ; shift
@@ -353,7 +360,7 @@ while true ; do
       i=
       [ -n "$1" -a "$1" = "${1#-}" ] && { k="$1" ; shift ; }
       [ -n "$1" -a "$1" = "${1#-}" ] && { i="$1" ; shift ; }
-      run_script "remove-kernel" "$v" "$k" "$i"
+      run_script "remove-kernel" "$v" "$k" "$i" || exit
       continue ;;
     --log) check_args 1 "${@}" ; shift ; set_log "$1" ; shift ; continue ;;
     --version) echo "$VERSION" ; exit 0 ;;
@@ -365,3 +372,5 @@ while true ; do
 done
 
 [ -n "$1" ] && bl_usage 1
+
+exit 0
