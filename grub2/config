@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/sh
 
 # Settings from /etc/sysconfig/filename are available as environment vars
 # with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
@@ -18,4 +18,3 @@ else
   echo "grub2-mkconfig: command not found"
   exit 1
 fi
-
