@@ -5,14 +5,15 @@ test_root="$test_dir/root"
 test_data="$test_dir/data"
 
 programs="/usr/bin/bash /usr/bin/dash /usr/bin/ksh /usr/bin/busybox /usr/bin/true"
-busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/df /usr/bin/ls /usr/bin/grep"
+busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink"
 dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-install /usr/bin/bootctl"
 
 # Notes
 #
-# /usr/bin/date and /usr/bin/uname are wrapper scripts
+# /usr/bin/date, /usr/bin/df, and /usr/bin/uname are wrapper scripts
 #
-# - 'date' always returns the same date
+# - 'date "+%F %T"' returns the fixed date "2023-11-01 23:59:58"
+# - 'df --local --sync --output=source /foo' returns $TEST_DF_foo
 # - 'uname -m' returns $TEST_ARCH
 
 opt_refs=
@@ -123,21 +124,22 @@ do_test ()
 
   cp -r $test_root/* "$test_dir/real_root"
 
-  if [ -d "$test_dir/$t/data" ] ; then
-    cp -r $test_dir/$t/data/*  "$real_root"
-  fi
+  for data_dir in "$test_dir/$t"/data* ; do
+    if [ -d "$data_dir" ] ; then
+      cp -r "$data_dir"/*  "$real_root"
+    fi
+  done
 
   echo -n >"$real_root/var/log/pbl.log"
 
   if [ -n "$opt_refs" ] ; then
-    suffix="$opt_refs"
+    suffix=".$shell$opt_refs"
   else
     suffix=".$shell"
   fi
 
   # mounting /proc or /dev needed?
-  export TEST_ARCH=
-  cat "$test_dir/$t/script" | unshare --pid --fork --user --map-root-user --root="$real_root" >"$test_dir/$t/output$suffix" 2>&1
+  unshare --pid --fork --user --map-root-user --root="$real_root" >"$test_dir/$t/output$suffix" 2>&1 <"$test_dir/$t/script"
 
   get_testdata "$t" "$real_root"
 
@@ -146,27 +148,27 @@ do_test ()
 
 do_tests ()
 {
-  for t in $test_dir/????_* ; do
-    do_test ${t##*/}
+  for t in "$test_dir"/[0-9]???_* ; do
+    do_test "${t##*/}"
   done
 }
 
 show_results ()
 {
-  echo == $shell ==
+  echo "== $shell =="
 
   rm -f "$test_dir/testresults_$shell.diff"
 
-  for t in $test_dir/????_* ; do
+  for t in "$test_dir"/[0-9]???_* ; do
     n=${t##*/}
     printf "%-40s" "  $n"
     first=
-    for i in $t/*.ref ; do
+    for i in "$t"/*."$shell".ref ; do
       [ -e "$i" ] || continue
       i="${i%.ref}"
       f=${i##*/}
       echo -n "$first$f "
-      if diff -u "$i.ref" "$i.$shell" >> "$test_dir/testresults_$shell.diff" ; then
+      if diff -u "$i.ref" "$i" >> "$test_dir/testresults_$shell.diff" ; then
         echo -en "\u2714"
       else
         test_error=1
@@ -185,6 +187,15 @@ test_error=0
 
 if [ -n "$opt_refs" ] ; then
   set_bash
+  do_tests
+
+  set_dash
+  do_tests
+
+  set_ksh
+  do_tests
+
+  set_busybox
   do_tests
 else
   set_bash
