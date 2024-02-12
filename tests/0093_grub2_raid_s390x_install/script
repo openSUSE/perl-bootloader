@@ -1,0 +1,4 @@
+export TEST_ARCH=s390x
+export TEST_DF_boot=$(echo -e "Filesystem\n/dev/md0p1")
+pbl --loader grub2
+pbl --install

@@ -1,0 +1,6 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/install' = 0, output:
+>>>>>>>>>>>>>>>>
++ bootctl --make-machine-id-directory=yes install
+<<<<<<<<<<<<<<<<

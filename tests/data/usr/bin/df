@@ -1,0 +1,17 @@
+#! /bin/sh
+
+if [ "$1 $2 $3" = "--local --sync --output=source" ] ; then
+  dir="${4#/}"
+  eval "df_val=\"\$TEST_DF_$dir\""
+
+  if [ -n "$df_val" ] ; then
+    echo "$df_val"
+    exit 0
+  else
+    echo "TEST_DF_$dir not set" >&2
+    exit 1
+  fi
+else
+  echo "unsupported df option" >&2
+  exit 1
+fi
