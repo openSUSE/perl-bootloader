@@ -1,0 +1,54 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option quiet=on' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+/usr/lib/bootloader/grub2/del-option: 37: read: Illegal option -n
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option quiet=off' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+/usr/lib/bootloader/grub2/del-option: 37: read: Illegal option -n
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option foo' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+/usr/lib/bootloader/grub2/del-option: 37: read: Illegal option -n
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option quiet' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+/usr/lib/bootloader/grub2/del-option: 37: read: Illegal option -n
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option mitigations' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+/usr/lib/bootloader/grub2/del-option: 37: read: Illegal option -n
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option foobar' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+/usr/lib/bootloader/grub2/del-option: 37: read: Illegal option -n
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+>>>>>>>>>>>>>>>>
+/usr/lib/bootloader/grub2/default-settings: 12: Bad substitution
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append=
+<<<<<<<<<<<<<<<<

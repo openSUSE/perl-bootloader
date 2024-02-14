@@ -1,0 +1,45 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option quiet=on' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option quiet=off' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" quiet=off nosimplefb=1
+cmdline (new): mitigations=off zap="xxx  123" quiet foo="foo  bar" nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option foo' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet foo="foo  bar" nosimplefb=1
+cmdline (new): mitigations=off zap="xxx  123" quiet nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option quiet' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" quiet nosimplefb=1
+cmdline (new): mitigations=off zap="xxx  123" nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option mitigations' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off zap="xxx  123" nosimplefb=1
+cmdline (new): zap="xxx  123" nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/del-option foobar' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): zap="xxx  123" nosimplefb=1
+cmdline not updated
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="zap=\"xxx  123\" nosimplefb=1"
+<<<<<<<<<<<<<<<<

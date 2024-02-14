@@ -1,0 +1,3 @@
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="zap=\"xxx  123\" nosimplefb=1"
