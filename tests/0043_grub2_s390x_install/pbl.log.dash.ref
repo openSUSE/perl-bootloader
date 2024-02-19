@@ -1,7 +1,0 @@
-2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
-2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
-2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/install' = 0, output:
->>>>>>>>>>>>>>>>
-target = s390x-emu
-+ /usr/sbin/grub2-install --target=s390x-emu
-<<<<<<<<<<<<<<<<

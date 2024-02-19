@@ -1,3 +1,0 @@
-kernel=/boot/vmlinuz
-initrd=/boot/initrd
-append=

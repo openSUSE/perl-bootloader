@@ -69,15 +69,12 @@ disk_device ()
   echo "disk device($1)" >&2
 
   if [ "${1#/dev/}" = "$1" ] ; then
-    tmp=$(mktemp)
-    df --local --sync --output=source "$1" > "$tmp"
     while read dd_part ; do
       # starts with '/'
       [ "${dd_part#/}" != "${dd_part}" ] && break
-    done < "$tmp"
-    rm -f "$tmp"
+    done < <(df --local --sync --output=source "$1")
   else
-    dd_part=$1
+    dd_part="$1"
   fi
 
   [ -n "$dd_part" ] && dd_part=$(readlink -f "$dd_part")

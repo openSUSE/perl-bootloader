@@ -4,9 +4,9 @@ test_dir="tests"
 test_root="$test_dir/root"
 test_data="$test_dir/data"
 
-programs="/usr/bin/bash /usr/bin/dash /usr/bin/ksh /usr/bin/busybox /usr/bin/true"
+programs="/usr/bin/bash /usr/bin/ksh /usr/bin/busybox /usr/bin/true"
 busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink /usr/bin/cat /usr/bin/dirname /usr/bin/basename"
-dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install"
+dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install /usr/sbin/kexec"
 
 # Notes
 #
@@ -72,17 +72,6 @@ set_bash ()
   shell=bash
 }
 
-set_dash ()
-{
-  ln -sf "dash" "$test_root/usr/bin/sh"
-
-  for p in $busybox_programs ; do
-    ln -sf "system/${p##*/}" "$test_root/$p"
-  done
-
-  shell=dash
-}
-
 set_ksh ()
 {
   ln -sf "ksh" "$test_root/usr/bin/sh"
@@ -139,7 +128,7 @@ do_test ()
   fi
 
   # mounting /proc or /dev needed?
-  unshare --pid --fork --user --map-root-user --root="$real_root" >"$test_dir/$t/output$suffix" 2>&1 <"$test_dir/$t/script"
+  unshare --pid --fork --user --map-root-user --mount-proc --root="$real_root" >"$test_dir/$t/output$suffix" 2>&1 <"$test_dir/$t/script"
 
   get_testdata "$t" "$real_root"
 
@@ -189,9 +178,6 @@ if [ -n "$opt_refs" ] ; then
   set_bash
   do_tests
 
-  set_dash
-  do_tests
-
   set_ksh
   do_tests
 
@@ -199,10 +185,6 @@ if [ -n "$opt_refs" ] ; then
   do_tests
 else
   set_bash
-  do_tests
-  show_results
-
-  set_dash
   do_tests
   show_results
 

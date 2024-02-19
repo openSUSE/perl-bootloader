@@ -7,7 +7,6 @@
 #   bootloader, language
 #
 
-# FIXME: not for dash
 shellquote () {
   arg=${1//\\/\\\\}
   arg=${arg//\$/\\\$}

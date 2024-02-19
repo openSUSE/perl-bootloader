@@ -1,9 +1,0 @@
-2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
-2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
-2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
-2023-11-01 23:59:58 <1> pbl-0: result:
->>>>>>>>>>>>>>>>
-kernel=/boot/vmlinuz
-initrd=/boot/initrd
-append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
-<<<<<<<<<<<<<<<<
