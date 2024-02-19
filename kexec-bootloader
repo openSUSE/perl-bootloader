@@ -19,7 +19,7 @@ prepares a kexec() system call with it.
 You then can run 'kexec --exec' to boot with this configuration.
 EOF
 
-  exit $1
+  exit "$1"
 }
 
 while true ; do
@@ -34,9 +34,10 @@ done
 
 [ "$#" != 0 ] && usage 1
 
-. <(pbl --default-settings)
-
-[ "$?" != 0 ] && exit 1
+. <(pbl --default-settings) || {
+  echo "pbl failed to provide settings" >&2
+  exit 1
+}
 
 for i in $(< /proc/cmdline) ; do
   case $i in
@@ -60,11 +61,10 @@ if [ "$opt_debug" = 1 ] ; then
 fi
 
 if [ "$opt_dry_run" != 1 ] ; then
-  sh -c "$kexec"
-  if [ "$?" != 0 ] ; then
+  sh -c "$kexec" || {
     echo "kexec failed." >&2
     exit 1
-  fi
+  }
 fi
 
 exit 0
