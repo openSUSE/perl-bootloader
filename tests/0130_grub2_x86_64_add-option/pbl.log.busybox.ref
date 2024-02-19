@@ -1,0 +1,39 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/add-option foo="bar  zap"' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off quiet foo="foo  bar" quiet nosimplefb=1
+cmdline (new): mitigations=off quiet foo="bar  zap" quiet nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/add-option quiet=99' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off quiet foo="bar  zap" quiet nosimplefb=1
+cmdline (new): mitigations=off quiet=99 foo="bar  zap" nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/add-option mitigations=0' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=off quiet=99 foo="bar  zap" nosimplefb=1
+cmdline (new): mitigations=0 quiet=99 foo="bar  zap" nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/add-option foobar1=' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=0 quiet=99 foo="bar  zap" nosimplefb=1
+cmdline (new): mitigations=0 quiet=99 foo="bar  zap" nosimplefb=1 foobar1=
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/add-option foobar2' = 0, output:
+>>>>>>>>>>>>>>>>
+cmdline (old): mitigations=0 quiet=99 foo="bar  zap" nosimplefb=1 foobar1=
+cmdline (new): mitigations=0 quiet=99 foo="bar  zap" nosimplefb=1 foobar1= foobar2
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="mitigations=0 quiet=99 foo=\"bar  zap\" nosimplefb=1 foobar1= foobar2"
+<<<<<<<<<<<<<<<<

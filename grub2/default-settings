@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/sh
 
 # Settings from /etc/sysconfig/filename are available as environment vars
 # with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
@@ -6,6 +6,14 @@
 # Not all files are parsed, current list is:
 #   bootloader, language
 #
+
+shellquote () {
+  arg=${1//\\/\\\\}
+  arg=${arg//\$/\\\$}
+  arg=${arg//\"/\\\"}
+  arg=${arg//\`/\\\`}
+  echo -n "\"$arg\""
+}
 
 if [ -e /etc/default/grub ] ; then
   . /etc/default/grub
@@ -17,7 +25,9 @@ else
   exit 1
 fi
 
-case $(arch) in
+target=$(uname -m)
+
+case "$target" in
   x86_64|i?86)
     image=vmlinuz ;;
   ppc*)
@@ -29,15 +39,15 @@ case $(arch) in
   aarch64|riscv64)
     image=Image ;;
   *)
-    echo "Architecture $(arch) not supported."
+    echo "Architecture $target not supported."
 esac
 
-kernel=$(readlink -f /boot/$image)
+kernel=$(readlink -f "/boot/$image")
 initrd=$(readlink -f /boot/initrd)
-append="$GRUB_CMDLINE_LINUX_DEFAULT"
+append=$(shellquote "$GRUB_CMDLINE_LINUX_DEFAULT")
 
-echo "kernel=$kernel" >$PBL_RESULT
-echo "initrd=$initrd" >>$PBL_RESULT
-echo -n "append=${append@Q}" >>$PBL_RESULT
+echo "kernel=$kernel" > "$PBL_RESULT"
+echo "initrd=$initrd" >> "$PBL_RESULT"
+echo -n "append=$append" >> "$PBL_RESULT"
 
 exit 0

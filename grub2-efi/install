@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/sh
 
 # Settings from /etc/sysconfig/filename are available as environment vars
 # with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
@@ -28,8 +28,8 @@ check_update_default ()
   update_default=0
 
   # install/update default location if it is 'our' file
-  if [ -n "$ca_string" -a -f $efi_default_file ] ; then
-    grep -q "$ca_string" $efi_default_file && update_default=1
+  if [ -n "$ca_string" -a -f "$efi_default_file" ] ; then
+    grep -q "$ca_string" "$efi_default_file" && update_default=1
   fi
 }
 

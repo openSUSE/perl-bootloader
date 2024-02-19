@@ -60,7 +60,7 @@ test:
 	@./run_tests
 
 clean:
-	rm -rf .check .install .package package
+	rm -rf package
 	rm -f *.8 *~ */*~ */*/*~
-	rm -f tests/*/*.{bash,dash,ksh,busybox} tests/testresults*.diff
+	rm -f tests/*/*.{bash,ksh,busybox} tests/testresults*.diff
 	rm -rf tests/{real_,}root

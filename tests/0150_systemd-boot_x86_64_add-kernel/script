@@ -1,0 +1,6 @@
+export TEST_ARCH=x86_64
+pbl --loader systemd-boot
+pbl --add-kernel 6.5.4-1-default
+pbl --add-kernel 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default
+pbl --add-kernel 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd
+pbl --add-kernel 6.5.4-1-foobar

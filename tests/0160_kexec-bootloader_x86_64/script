@@ -1,0 +1,3 @@
+export TEST_ARCH=x86_64
+pbl --loader grub2
+kexec-bootloader --debug

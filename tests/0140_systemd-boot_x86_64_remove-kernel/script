@@ -1,0 +1,3 @@
+export TEST_ARCH=x86_64
+pbl --loader systemd-boot
+pbl --remove-kernel 6.5.4-1-default

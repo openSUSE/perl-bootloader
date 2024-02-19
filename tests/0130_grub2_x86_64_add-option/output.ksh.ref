@@ -1,0 +1,3 @@
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="mitigations=0 quiet=99 foo=\"bar  zap\" nosimplefb=1 foobar1= foobar2"

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/sh
 
 # Settings from /etc/sysconfig/filename are available as environment vars
 # with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
@@ -23,17 +23,17 @@
 #
 # Return empty string if there is no parent disk device for a partition.
 #
-function partition_to_disk
+partition_to_disk ()
 {
-  local part=$1
-  local dev=$(echo /sys/block/*/$part)
+  ptd_part=$1
+  ptd_dev=$(echo /sys/block/*/"$ptd_part")
   # there should normally be just one entry - but better make sure
-  dev=${dev%% *}
+  ptd_dev=${ptd_dev%% *}
 
-  if [ -d "$dev" ] ; then
-    dev=${dev#/sys/block/}
-    dev=${dev%/$part}
-    [ -b "/dev/$dev" ] && echo $dev
+  if [ -d "$ptd_dev" ] ; then
+    ptd_dev=${ptd_dev#/sys/block/}
+    ptd_dev=${ptd_dev%/"$ptd_part"}
+    [ -e "/dev/$ptd_dev" ] && echo "$ptd_dev"
   fi
 }
 
@@ -44,15 +44,15 @@ function partition_to_disk
 #
 # Return empty string if there are no slaves.
 #
-function first_slave
+first_slave ()
 {
-  local dev=$(echo /sys/block/$1/slaves/*)
-  dev=${dev%% *}
-  dev=${dev##*/}
+  slave_dev=$(echo /sys/block/"$1"/slaves/*)
+  slave_dev=${slave_dev%% *}
+  slave_dev=${slave_dev##*/}
 
-  [ "$dev" = "*" ] && dev=
+  [ "$slave_dev" = "*" ] && slave_dev=
 
-  echo $dev
+  echo "$slave_dev"
 }
 
 
@@ -64,53 +64,50 @@ function first_slave
 #
 # Return empty string if a disk device could not be found.
 #
-function disk_device
+disk_device ()
 {
-  local part
-  local dev
-  local dev1
-
   echo "disk device($1)" >&2
 
   if [ "${1#/dev/}" = "$1" ] ; then
-    while read part ; do
-      [ "${part::1}" = "/" ] && break
-    done < <(df --local --sync --output=source $1)
+    while read dd_part ; do
+      # starts with '/'
+      [ "${dd_part#/}" != "${dd_part}" ] && break
+    done < <(df --local --sync --output=source "$1")
   else
-    part=$1
+    dd_part="$1"
   fi
 
-  [ -n "$part" ] && part=$(readlink -e $part)
-  [ -n "$part" ] && part=${part#/dev/}
-  [ -z "$part" ] && exit
+  [ -n "$dd_part" ] && dd_part=$(readlink -f "$dd_part")
+  [ -n "$dd_part" ] && dd_part=${dd_part#/dev/}
+  [ -z "$dd_part" ] && exit
 
-  echo "kernel device = $part" >&2
+  echo "kernel device = $dd_part" >&2
 
-  dev=$part
+  dd_dev=$dd_part
 
   while true ; do
-    dev1=$(partition_to_disk $dev)
-    if [ -n "$dev1" ] ; then
-      echo "disk($dev) = $dev1" >&2
-      dev=$dev1
+    dd_dev1=$(partition_to_disk "$dd_dev")
+    if [ -n "$dd_dev1" ] ; then
+      echo "disk($dd_dev) = $dd_dev1" >&2
+      dd_dev=$dd_dev1
     fi
 
-    # $dev is a disk but not a partition
+    # $dd_dev is a disk but not a partition
 
-    dev1=$(first_slave $dev)
+    dd_dev1=$(first_slave "$dd_dev")
 
-    if [ -n "$dev1" ] ; then
-      echo "slave($dev) = $dev1" >&2
-      dev=$dev1
+    if [ -n "$dd_dev1" ] ; then
+      echo "slave($dd_dev) = $dd_dev1" >&2
+      dd_dev=$dd_dev1
       continue
     fi
 
     break
   done
 
-  echo "disk = $dev" >&2
+  echo "disk = $dd_dev" >&2
 
-  echo $dev
+  echo "$dd_dev"
 }
 
 # Check whether grub2-install supports --suse-force-signed.
@@ -175,7 +172,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
     if [ -r /etc/default/grub_installdevice ] ; then
       while read device ; do
         # ignore everything that doesn't look like a path
-        [ "${device::1}" != "/" ] && continue
+        [ "${device#/}" = "${device}" ] && continue
         if [ -b "$device" -o -f "$device" ] ; then
           has_device=1
           ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" --force --skip-fs-probe "$device" ) || err=1
