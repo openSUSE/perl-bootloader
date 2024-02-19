@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/sh
 
 # Settings from /etc/sysconfig/filename are available as environment vars
 # with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
@@ -7,13 +7,13 @@
 #   bootloader, language
 #
 
-# usage: remove-kernel KERNEL-VERSION [KERNEL-FILE [INITRD-FILE]]
+# usage: remove-kernel KERNEL-VERSION
 #
 # Remove kernel/initrd from boot config.
 
 err=0
 if [ -x /usr/bin/kernel-install ] ; then
-  ( set -x ; kernel-install remove $1 ) || err=1
+  ( set -x ; kernel-install remove "$1" ) || err=1
 else
   echo "kernel-install: command not found"
   err=1

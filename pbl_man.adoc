@@ -54,8 +54,8 @@ Get _OPTION_ from default boot options (grub2).
 *--add-kernel* _VERSION_ [_KERNEL_ [_INITRD_]]::
 Add kernel with version _VERSION_. Optionally pass kernel and initrd explicitly (systemd-boot).
 
-*--remove-kernel* _VERSION_ [_KERNEL_ [_INITRD_]]::
-Remove kernel with version _VERSION_. Optionally pass kernel and initrd explicitly (systemd-boot).
+*--remove-kernel* _VERSION_::
+Remove kernel with version _VERSION_ (systemd-boot).
 
 *--default-settings*::
 Print default kernel, initrd, and boot options.

@@ -50,9 +50,7 @@ Options:
     --add-kernel VERSION [KERNEL [INITRD]]
                                 Add kernel with version VERSION. Optionally pass kernel and initrd
                                 explicitly (systemd-boot).
-    --remove-kernel VERSION [KERNEL [INITRD]]
-                                Remove kernel with version VERSION. Optionally pass kernel and initrd
-                                explicitly (systemd-boot).
+    --remove-kernel VERSION     Remove kernel with version VERSION (systemd-boot).
     --default-settings          Return default kernel, initrd, and boot options.
     --log LOGFILE               Log messages to LOGFILE (default: /var/log/pbl.log)
     --version                   Show pbl version.
@@ -356,11 +354,7 @@ while true ; do
       continue ;;
     --remove-kernel ) check_args 1 "${@}" ; shift
       v="$1" ; shift
-      k=
-      i=
-      [ -n "$1" -a "$1" = "${1#-}" ] && { k="$1" ; shift ; }
-      [ -n "$1" -a "$1" = "${1#-}" ] && { i="$1" ; shift ; }
-      run_script "remove-kernel" "$v" "$k" "$i" || exit
+      run_script "remove-kernel" "$v" || exit
       continue ;;
     --log) check_args 1 "${@}" ; shift ; set_log "$1" ; shift ; continue ;;
     --version) echo "$VERSION" ; exit 0 ;;
