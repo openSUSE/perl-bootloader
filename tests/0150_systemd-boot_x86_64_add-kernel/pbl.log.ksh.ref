@@ -1,0 +1,21 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/add-kernel 6.5.4-1-default  ' = 0, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd-6.5.4-1-default
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/add-kernel 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default ' = 0, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd-6.5.4-1-default
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/add-kernel 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd' = 0, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/add-kernel 6.5.4-1-foobar  ' = 0, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-foobar /usr/lib/modules/6.5.4-1-foobar/vmlinuz
+<<<<<<<<<<<<<<<<

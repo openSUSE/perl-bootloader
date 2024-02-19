@@ -5,7 +5,7 @@ test_root="$test_dir/root"
 test_data="$test_dir/data"
 
 programs="/usr/bin/bash /usr/bin/dash /usr/bin/ksh /usr/bin/busybox /usr/bin/true"
-busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink /usr/bin/cat"
+busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink /usr/bin/cat /usr/bin/dirname /usr/bin/basename"
 dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install"
 
 # Notes

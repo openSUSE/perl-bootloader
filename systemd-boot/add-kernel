@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/sh
 
 # Settings from /etc/sysconfig/filename are available as environment vars
 # with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
@@ -13,40 +13,40 @@
 
 err=0
 if [ -x /usr/bin/kernel-install ] ; then
-  version=$1
-  kernel=$2
-  initrd=$3
+  version="$1"
+  kernel="$2"
+  initrd="$3"
 
-  if [[ -z "$kernel" ]] ; then
+  if [ -z "$kernel" ] ; then
     for i in vmlinuz Image image vmlinux ; do
-      if [[ -f "/boot/$i-$version" && -f "/boot/initrd-$version" ]] ; then
+      if [ -f "/boot/$i-$version" -a -f "/boot/initrd-$version" ] ; then
         kernel="/boot/$i-$version"
         initrd="/boot/initrd-$version"
         break
-      elif [[ -f "/usr/lib/modules/$version/$i" ]] ; then
+      elif [ -f "/usr/lib/modules/$version/$i" ] ; then
         kernel="/usr/lib/modules/$version/$i"
         break
       fi
     done
-  elif [[ ! "$kernel" =~ / && -f "/boot/$kernel" ]] ; then
+  elif [ "$kernel" = "${kernel#/}" -a -f "/boot/$kernel" ] ; then
     kernel="/boot/$kernel"
   fi
 
-  if [[ -z "$kernel" ]] ; then
+  if [ -z "$kernel" ] ; then
     echo "kernel version \"$version\" not found"
     exit 2
   fi
 
-  if [[ -z "$initrd" ]] ; then
-    if [[ "$kernel" =~ / ]] ; then
-      dir=$(dirname $kernel)
-      k=$(basename $kernel)
+  if [ -z "$initrd" ] ; then
+    if [ "$kernel" != "${kernel#/}" ] ; then
+      dir=$(dirname "$kernel")
+      k=$(basename "$kernel")
       i=initrd-${k#*-}
-      if [[ "$k" =~ - && -f "$dir/$i" ]] ; then
+      if [ -f "$dir/$i" ] ; then
         initrd="$dir/$i"
       fi
     fi
-  elif [[ ! "$initrd" =~ / && -f "/boot/$initrd" ]] ; then
+  elif [ "$initrd" = "${initrd#/}" -a -f "/boot/$initrd" ] ; then
     initrd="/boot/$initrd"
   fi
 
