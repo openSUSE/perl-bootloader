@@ -1,2 +1,0 @@
-htmldoc: 
-	./genhtml.sh 

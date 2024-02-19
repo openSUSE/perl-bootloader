@@ -1,8 +1,0 @@
-===  Test file encoding during file-i/o in perl-Bootloader  ===
-
-- file*: test inputs
-
-- input*: internal yaml representation of file* (generated from res00?
-  obtained during yaml_test run)
-
-- other files: encoding samples used to put together file*
