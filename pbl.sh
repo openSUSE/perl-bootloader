@@ -161,6 +161,7 @@ run_command ()
     fi
   else
     log_msg 3 "'$command' failed with exit code $err, output:" "$output"
+    echo "$output" 2>&1
   fi
 
   rm -f "$PBL_RESULT"
