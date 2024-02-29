@@ -144,6 +144,9 @@ run_command ()
   PBL_RESULT=$(mktemp)
   export PBL_RESULT
 
+  PBL_INCLUDE="$bl_dir/include"
+  export PBL_INCLUDE
+
   command="${*}"
 
   output=$("${@}" 2>&1)
@@ -166,6 +169,7 @@ run_command ()
 
   rm -f "$PBL_RESULT"
   unset PBL_RESULT
+  unset PBL_INCLUDE
 
   return "$err"
 }
