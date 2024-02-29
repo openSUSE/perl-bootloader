@@ -1,8 +1,14 @@
 2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
 2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
-2023-11-01 23:59:58 <3> pbl-0: '/usr/lib/bootloader/grub2/install' failed with exit code 1, output:
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/install' = 0, output:
 >>>>>>>>>>>>>>>>
 target = powerpc-ieee1275
 grub_installdevice missing or invalid
-no grub2 install device found
+determining suitable boot device
+disk device(/boot)
+kernel device = md0p1
+disk(md0p1) = md0
+slave(md0) = sda
+disk = sda
++ /usr/sbin/grub2-install '--target=powerpc-ieee1275' --force --skip-fs-probe /dev/sda
 <<<<<<<<<<<<<<<<
