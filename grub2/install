@@ -200,7 +200,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
       err=1
     fi
   else
-    ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" )
+    ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" ) || err=1
   fi
 else
   echo "grub2-install: command not found"
