@@ -1,0 +1,6 @@
+[✔] pbl --loader grub2-efi
+[✔] pbl --install
+target = x86_64-efi, update default location = 0
++ /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
+/usr/sbin/shim-install: test error 42 :-(
+[✘] pbl --install = 1

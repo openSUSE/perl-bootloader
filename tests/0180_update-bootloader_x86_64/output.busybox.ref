@@ -1,0 +1,21 @@
+[✔] pbl --loader grub2-efi
+[✔] update-bootloader
+[✔] update-bootloader --reinit
+[✔] update-bootloader
+target = x86_64-efi, update default location = 0
++ /usr/sbin/shim-install '--config-file=/boot/grub2/grub.cfg' --no-nvram --removable
+/usr/sbin/shim-install: test error 42 :-(
+[✘] update-bootloader --reinit = 1
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+/usr/sbin/grub2-mkconfig: test error 42 :-(
+[✘] update-bootloader = 1
+target = x86_64-efi, update default location = 0
++ /usr/sbin/shim-install '--config-file=/boot/grub2/grub.cfg' --no-nvram --removable
+/usr/sbin/shim-install: test error 42 :-(
+[✘] update-bootloader --reinit = 1
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+/usr/sbin/grub2-mkconfig: test error 42 :-(
+[✘] update-bootloader = 1
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+/usr/sbin/grub2-mkconfig: test error 42 :-(
+[✘] update-bootloader --reinit = 1

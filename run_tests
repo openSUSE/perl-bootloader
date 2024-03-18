@@ -4,7 +4,7 @@ test_dir="tests"
 test_root="$test_dir/root"
 test_data="$test_dir/data"
 
-programs="/usr/bin/bash /usr/bin/ksh /usr/bin/busybox /usr/bin/true"
+programs="/usr/bin/bash /usr/bin/ksh /usr/bin/busybox"
 busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink /usr/bin/cat /usr/bin/dirname /usr/bin/basename"
 dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install /usr/sbin/kexec"
 
@@ -15,6 +15,11 @@ dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-
 # - 'date "+%F %T"' returns the fixed date "2023-11-01 23:59:58"
 # - 'df --local --sync --output=source /foo' returns $TEST_DF_foo
 # - 'uname -m' returns $TEST_ARCH
+#
+# programs listed in dummy_programs are replaced by wrapper scripts that
+# return 0 or (if set) the value of the environment variable $TEST_<NAME>_EXIT
+# where <NAME> is the upper case program name, with any '-' replaced by '_'.
+# For example, grub2-install exits with $TEST_GRUB2_INSTALL_EXIT.
 
 opt_refs=
 
@@ -49,7 +54,24 @@ init_tests ()
   done
 
   for p in $dummy_programs ; do
-    ln -s /usr/bin/true "$test_root/$p"
+    cat >"$test_root/$p" <<'EOF'
+#! /usr/bin/bash
+
+p=${0##*/}
+p=${p//-/_}
+p=TEST_${p@U}_EXIT
+
+eval "p_exit=\$$p"
+
+[ -z "$p_exit" ] && p_exit=0
+
+if [ "$p_exit" != 0 ] ; then
+  echo "$0: test error $p_exit :-(" >&2
+fi
+
+exit $p_exit
+EOF
+   chmod 755 "$test_root/$p"
   done
 
   make install DESTDIR="$test_root"
@@ -58,7 +80,6 @@ init_tests ()
 done_tests ()
 {
   rm -r "$test_root"
-
 }
 
 set_bash ()
@@ -115,7 +136,7 @@ do_test ()
 
   for data_dir in "$test_dir/$t"/data* ; do
     if [ -d "$data_dir" ] ; then
-      cp -r "$data_dir"/*  "$real_root"
+      cp -r --remove-destination "$data_dir"/* "$real_root"
     fi
   done
 
@@ -127,8 +148,25 @@ do_test ()
     suffix=".$shell"
   fi
 
+  script=$(mktemp)
+
+  # add 'run' function for logging command exit codes
+  cat >"$script" <<'EOF'
+    run () {
+      "$@"
+      if [ "$?" = 0 ] ; then
+        echo "[✔] $*"
+      else
+        echo "[✘] $* = $?"
+      fi
+    }
+
+EOF
+
+  cat "$test_dir/$t/script" >>"$script"
+
   # mounting /proc or /dev needed?
-  unshare --pid --fork --user --map-root-user --mount-proc --root="$real_root" >"$test_dir/$t/output$suffix" 2>&1 <"$test_dir/$t/script"
+  unshare --pid --fork --user --map-root-user --mount-proc --root="$real_root" >"$test_dir/$t/output$suffix" 2>&1 <"$script"
 
   get_testdata "$t" "$real_root"
 

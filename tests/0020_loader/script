@@ -1,1 +1,1 @@
-pbl --loader grub2
+run pbl --loader grub2

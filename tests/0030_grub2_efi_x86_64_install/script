@@ -1,3 +1,5 @@
 export TEST_ARCH=x86_64
-pbl --loader grub2-efi
-pbl --install
+run pbl --loader grub2-efi
+run pbl --install
+export TEST_SHIM_INSTALL_EXIT=42
+run pbl --install

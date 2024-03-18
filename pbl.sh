@@ -144,6 +144,9 @@ run_command ()
   PBL_RESULT=$(mktemp)
   export PBL_RESULT
 
+  PBL_INCLUDE="$bl_dir/include"
+  export PBL_INCLUDE
+
   command="${*}"
 
   output=$("${@}" 2>&1)
@@ -161,10 +164,12 @@ run_command ()
     fi
   else
     log_msg 3 "'$command' failed with exit code $err, output:" "$output"
+    echo "$output" 2>&1
   fi
 
   rm -f "$PBL_RESULT"
   unset PBL_RESULT
+  unset PBL_INCLUDE
 
   return "$err"
 }
@@ -297,13 +302,7 @@ if [ "$program" = bootloader_entry ] ; then
   #
   if [ "$#" -ge 5 ] ; then
     case "$1" in
-      add|remove) run_script "$1-kernel" "$3" "$4" "$5"
-      err=$?
-      if [ "$err" = 0 ] ; then
-        run_script "config"
-        err=$?
-      fi
-      exit $err ;;
+      add|remove) run_script "$1-kernel" "$3" "$4" "$5" && run_script "config" ; exit ;;
     esac
   fi
 
@@ -317,7 +316,7 @@ fi
 if [ "$program" = update-bootloader ] ; then
   while true ; do
     case $1 in
-      --reinit) shift ; run_script "install" ; continue ;;
+      --reinit) shift ; run_script "install" && run_script "config" ; exit ;;
       ?*) shift ; continue ;;
     esac
 
@@ -326,7 +325,7 @@ if [ "$program" = update-bootloader ] ; then
 
   run_script "config"
 
-  exit $?
+  exit
 fi
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

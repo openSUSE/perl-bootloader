@@ -1,8 +1,8 @@
 export TEST_ARCH=x86_64
-pbl --loader grub2
-pbl --add-option 'foo="bar  zap"'
-pbl --add-option quiet=99
-pbl --add-option mitigations=0
-pbl --add-option foobar1=
-pbl --add-option foobar2
-pbl --default-settings
+run pbl --loader grub2
+run pbl --add-option 'foo="bar  zap"'
+run pbl --add-option quiet=99
+run pbl --add-option mitigations=0
+run pbl --add-option foobar1=
+run pbl --add-option foobar2
+run pbl --default-settings

@@ -184,7 +184,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
     fi
     if [ -z "$has_device" ] ; then
       echo "grub_installdevice missing or invalid"
-      if [ "$target" = "i386-pc" ] ; then
+      if [ "$target" = "i386-pc" -o "$target" = "powerpc-ieee1275" ] ; then
         echo "determining suitable boot device"
         device=$(disk_device /boot)
         if [ "$device" ] ; then
@@ -200,7 +200,7 @@ if [ -x /usr/sbin/grub2-install ] ; then
       err=1
     fi
   else
-    ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" )
+    ( set -x ; /usr/sbin/grub2-install $append $trusted --target="$target" ) || err=1
   fi
 else
   echo "grub2-install: command not found"

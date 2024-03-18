@@ -1,0 +1,13 @@
+[✔] pbl --loader grub2
+[✔] pbl --install
+target = i386-pc
+grub_installdevice missing or invalid
+determining suitable boot device
+disk device(/boot)
+kernel device = md0p1
+disk(md0p1) = md0
+slave(md0) = sda
+disk = sda
++ /usr/sbin/grub2-install '--target=i386-pc' --force --skip-fs-probe /dev/sda
+/usr/sbin/grub2-install: test error 42 :-(
+[✘] pbl --install = 1

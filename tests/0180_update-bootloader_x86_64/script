@@ -1,0 +1,13 @@
+export TEST_ARCH=x86_64
+run pbl --loader grub2-efi
+run update-bootloader
+run update-bootloader --reinit
+export TEST_SHIM_INSTALL_EXIT=42
+run update-bootloader
+run update-bootloader --reinit
+export TEST_GRUB2_MKCONFIG_EXIT=42
+run update-bootloader
+run update-bootloader --reinit
+unset TEST_SHIM_INSTALL_EXIT
+run update-bootloader
+run update-bootloader --reinit

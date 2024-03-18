@@ -1,4 +1,6 @@
 export TEST_ARCH=i686
 export TEST_DF_boot=$(echo -e "Filesystem\n/dev/md0p1")
-pbl --loader grub2
-pbl --install
+run pbl --loader grub2
+run pbl --install
+export TEST_GRUB2_INSTALL_EXIT=42
+run pbl --install
