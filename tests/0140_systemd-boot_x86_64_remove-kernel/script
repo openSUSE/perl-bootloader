@@ -1,3 +1,5 @@
 export TEST_ARCH=x86_64
-pbl --loader systemd-boot
-pbl --remove-kernel 6.5.4-1-default
+run pbl --loader systemd-boot
+run pbl --remove-kernel 6.5.4-1-default
+export TEST_KERNEL_INSTALL_EXIT=42
+run pbl --remove-kernel 6.5.4-1-default

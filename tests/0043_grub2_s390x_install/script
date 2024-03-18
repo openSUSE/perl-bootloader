@@ -1,3 +1,5 @@
 export TEST_ARCH=s390x
-pbl --loader grub2
-pbl --install
+run pbl --loader grub2
+run pbl --install
+export TEST_GRUB2_INSTALL_EXIT=42
+run pbl --install
