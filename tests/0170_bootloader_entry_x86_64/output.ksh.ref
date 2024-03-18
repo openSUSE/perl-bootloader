@@ -1,0 +1,12 @@
+[✔] pbl --loader systemd-boot
+[✔] /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default
+Usage: bootloader_entry add|remove kernel-flavor kernel-version kernel-image initrd-file
+Add or remove kernel images to boot config.
+[✘] /usr/lib/bootloader/bootloader_entry foo = 1
++ kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd-6.5.4-1-default
+/usr/bin/kernel-install: test error 42 :-(
+[✘] /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default = 1
+[✔] pbl --loader grub2
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+/usr/sbin/grub2-mkconfig: test error 42 :-(
+[✘] /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default = 1
