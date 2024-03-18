@@ -1,0 +1,5 @@
+[✔] pbl --loader systemd-boot
+[✔] pbl --install
++ bootctl --make-machine-id-directory=yes install
+/usr/bin/bootctl: test error 42 :-(
+[✘] pbl --install = 1

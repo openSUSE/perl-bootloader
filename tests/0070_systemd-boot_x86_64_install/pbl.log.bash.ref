@@ -4,3 +4,9 @@
 >>>>>>>>>>>>>>>>
 + bootctl --make-machine-id-directory=yes install
 <<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <3> pbl-0: '/usr/lib/bootloader/systemd-boot/install' failed with exit code 1, output:
+>>>>>>>>>>>>>>>>
++ bootctl --make-machine-id-directory=yes install
+/usr/bin/bootctl: test error 42 :-(
+<<<<<<<<<<<<<<<<

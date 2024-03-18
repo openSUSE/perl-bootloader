@@ -1,4 +1,10 @@
+[✔] pbl --loader grub2
 quiet
+[✔] pbl --get-option quiet
 mitigations=off
+[✔] pbl --get-option mitigations
 mitigations=on
+[✔] pbl --get-option mitigations=on
+[✔] pbl --get-option mitigations=xxx
 foo="foo  bar"
+[✔] pbl --get-option foo

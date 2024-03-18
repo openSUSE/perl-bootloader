@@ -1,3 +1,5 @@
+[✔] pbl --loader grub2
 kernel=/boot/vmlinuz
 initrd=/boot/initrd
 append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
+[✔] pbl --default-settings
