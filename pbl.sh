@@ -302,13 +302,7 @@ if [ "$program" = bootloader_entry ] ; then
   #
   if [ "$#" -ge 5 ] ; then
     case "$1" in
-      add|remove) run_script "$1-kernel" "$3" "$4" "$5"
-      err=$?
-      if [ "$err" = 0 ] ; then
-        run_script "config"
-        err=$?
-      fi
-      exit $err ;;
+      add|remove) run_script "$1-kernel" "$3" "$4" "$5" && run_script "config" ; exit ;;
     esac
   fi
 
@@ -322,7 +316,7 @@ fi
 if [ "$program" = update-bootloader ] ; then
   while true ; do
     case $1 in
-      --reinit) shift ; run_script "install" ; continue ;;
+      --reinit) shift ; run_script "install" && run_script "config" ; exit ;;
       ?*) shift ; continue ;;
     esac
 
@@ -331,7 +325,7 @@ if [ "$program" = update-bootloader ] ; then
 
   run_script "config"
 
-  exit $?
+  exit
 fi
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
