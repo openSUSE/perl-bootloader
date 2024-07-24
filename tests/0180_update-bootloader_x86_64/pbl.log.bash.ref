@@ -1,57 +1,57 @@
 2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
-2023-11-01 23:59:58 <1> update-bootloader-11: bootloader = grub2-efi
-2023-11-01 23:59:58 <1> update-bootloader-11: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
->>>>>>>>>>>>>>>>
-+ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
-<<<<<<<<<<<<<<<<
 2023-11-01 23:59:58 <1> update-bootloader-28: bootloader = grub2-efi
-2023-11-01 23:59:58 <1> update-bootloader-28: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
->>>>>>>>>>>>>>>>
-target = x86_64-efi, update default location = 0
-+ /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
-<<<<<<<<<<<<<<<<
 2023-11-01 23:59:58 <1> update-bootloader-28: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-58: bootloader = grub2-efi
-2023-11-01 23:59:58 <1> update-bootloader-58: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
+2023-11-01 23:59:58 <1> update-bootloader-62: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> update-bootloader-62: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
+>>>>>>>>>>>>>>>>
+target = x86_64-efi, update default location = 0
++ /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> update-bootloader-62: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-75: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-75: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-109: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> update-bootloader-109: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
+>>>>>>>>>>>>>>>>
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> update-bootloader-143: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-143: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
 /usr/sbin/shim-install: test error 42 :-(
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-96: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-96: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-181: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-181: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 /usr/sbin/grub2-mkconfig: test error 42 :-(
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-113: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-113: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-215: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-215: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
 /usr/sbin/shim-install: test error 42 :-(
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-134: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-134: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-253: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-253: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 /usr/sbin/grub2-mkconfig: test error 42 :-(
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-151: bootloader = grub2-efi
-2023-11-01 23:59:58 <1> update-bootloader-151: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
+2023-11-01 23:59:58 <1> update-bootloader-287: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> update-bootloader-287: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <3> update-bootloader-151: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
+2023-11-01 23:59:58 <3> update-bootloader-287: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 /usr/sbin/grub2-mkconfig: test error 42 :-(
