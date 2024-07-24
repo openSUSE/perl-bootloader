@@ -104,20 +104,6 @@ log_msg ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# shellquote_raw STRING
-#
-# Quote STRING so that STRING == $(echo "STRING")
-#
-shellquote_raw () {
-  arg=${1//\\/\\\\}
-  arg=${arg//\$/\\\$}
-  arg=${arg//\"/\\\"}
-  arg=${arg//\`/\\\`}
-  echo -n "$arg"
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # read_config FILE PREFIX
 #
 # Read config settings from FILE and convert them into environment vars of
@@ -174,9 +160,6 @@ run_command ()
   PBL_RESULT=$(mktemp)
   export PBL_RESULT
 
-  PBL_INCLUDE="$bl_dir/include"
-  export PBL_INCLUDE
-
   command="${*}"
 
   output=$("${@}" 2>&1)
@@ -199,7 +182,6 @@ run_command ()
 
   rm -f "$PBL_RESULT"
   unset PBL_RESULT
-  unset PBL_INCLUDE
 
   return "$err"
 }
@@ -252,35 +234,18 @@ set_log ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# set_config FILE KEY VALUE
-#
-# Set config valiable KEY in FILE to VALUE.
-#
-# Note that KEY must already exist.
-#
-set_config ()
-{
-  err=0
-
-  if [ -w "$1" ] ; then
-    sed -i -E -e "s/^($2=)\S+/\1\"$3\"/" "$1"
-    err=$?
-  else
-    echo "$1: not writable" >&2
-    err=1
-  fi
-
-  return "$err"
-}
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # set_loader LOADER
 #
 # Set LOADER_TYPE in $sysconfig_dir/bootloader to LOADER.
 #
 set_loader ()
 {
+  if [ "$1" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
+    set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "true"
+  elif [ \( "$1" = grub2-efi -o "$1" = grub2 \) -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
+    set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "false"
+  fi
+
   set_config "$sysconfig_dir/bootloader" "LOADER_TYPE" "$1"
 
   return $?
@@ -321,6 +286,13 @@ check_args ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+PBL_INCLUDE="$bl_dir/include"
+export PBL_INCLUDE
+
+# include common functions
+. "$PBL_INCLUDE/library"
+
 # get relevant settings
 read_sysconfig "bootloader";
 read_sysconfig "language";
@@ -332,6 +304,8 @@ lang="$SYS__LANGUAGE__RC_LANG"
 
 if [ "$loader" = grub2-efi -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
   loader=grub2-bls
+elif [ "$loader" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
+  loader=grub2-efi
 fi
 
 set_log "$logfile"
