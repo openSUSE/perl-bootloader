@@ -1,0 +1,20 @@
+#! /usr/bin/sh
+
+# Settings from /etc/sysconfig/filename are available as environment vars
+# with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
+#
+# Not all files are parsed, current list is:
+#   bootloader, language
+#
+
+if [ -x /usr/sbin/grub2-set-default ] ; then
+  if [ -f /boot/grub2/grubenv ] ; then
+    ( set -x ; /usr/sbin/grub2-set-default "$1" )
+  else
+    echo "/boot/grub2/grubenv: no such file"
+    exit 1
+  fi
+else
+  echo "grub2-set-default: command not found"
+  exit 1
+fi
