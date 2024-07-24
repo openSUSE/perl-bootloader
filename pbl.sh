@@ -104,6 +104,47 @@ log_msg ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# shellquote_raw STRING
+#
+# Quote STRING so that STRING == $(echo "STRING")
+#
+shellquote_raw () {
+  arg=${1//\\/\\\\}
+  arg=${arg//\$/\\\$}
+  arg=${arg//\"/\\\"}
+  arg=${arg//\`/\\\`}
+  echo -n "$arg"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# read_config FILE PREFIX
+#
+# Read config settings from FILE and convert them into environment vars of
+# the form:
+#
+# PREFIX__KEY=value
+#
+# Note that this parser assumes config files to stick to a KEY="VALUE" syntax.
+#
+read_config ()
+{
+  [ -r "$1" ] || return
+
+  old_ifs="$IFS"
+  IFS="="
+  while read -r key value ; do
+    if [ -n "$key" -a "$key" = "${key###}" ] ; then
+      sys_key="$2__$key"
+      eval "$sys_key=\$(shellquote_raw $value)"
+      export "${sys_key?}"
+    fi
+  done < "$1"
+  IFS="$old_ifs"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # read_sysconfig FILE
 #
 # Read sysconfig settings from /etc/sysconfig/FILE and convert them into
@@ -111,22 +152,11 @@ log_msg ()
 #
 # SYS__FILENAME__KEY=value
 #
-# Note that this parser assumes sysconfig files to stick to a KEY="VALUE" syntax.
-#
 read_sysconfig ()
 {
   filename=$(echo "$1" | tr "[:lower:]" "[:upper:]")
 
-  old_ifs="$IFS"
-  IFS="="
-  while read key value ; do
-    if [ -n "$key" -a "$key" = "${key###}" ] ; then
-      sys_key="SYS__${filename}__$key"
-      eval "$sys_key=$value"
-      export "${sys_key?}"
-    fi
-  done <"$sysconfig_dir/$1"
-  IFS="$old_ifs"
+  read_config "$sysconfig_dir/$1" "SYS__${filename}"
 }
 
 
@@ -222,21 +252,38 @@ set_log ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-set_loader ()
+# set_config FILE KEY VALUE
+#
+# Set config valiable KEY in FILE to VALUE.
+#
+# Note that KEY must already exist.
+#
+set_config ()
 {
-  new_loader="$1"
-
   err=0
 
-  if [ -w "$sysconfig_dir/bootloader" ] ; then
-    sed -i -E -e "s/^(LOADER_TYPE=)\S+/\1\"$new_loader\"/" "$sysconfig_dir/bootloader"
+  if [ -w "$1" ] ; then
+    sed -i -E -e "s/^($2=)\S+/\1\"$3\"/" "$1"
     err=$?
   else
-    echo "$sysconfig_dir/bootloader: not writable" >&2
+    echo "$1: not writable" >&2
     err=1
   fi
 
   return "$err"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# set_loader LOADER
+#
+# Set LOADER_TYPE in $sysconfig_dir/bootloader to LOADER.
+#
+set_loader ()
+{
+  set_config "$sysconfig_dir/bootloader" "LOADER_TYPE" "$1"
+
+  return $?
 }
 
 
@@ -278,8 +325,14 @@ check_args ()
 read_sysconfig "bootloader";
 read_sysconfig "language";
 
+read_config "/etc/default/grub" "DEFAULT"
+
 loader="$SYS__BOOTLOADER__LOADER_TYPE"
 lang="$SYS__LANGUAGE__RC_LANG"
+
+if [ "$loader" = grub2-efi -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
+  loader=grub2-bls
+fi
 
 set_log "$logfile"
 
@@ -333,12 +386,29 @@ fi
 #
 
 while true ; do
+  [ -z "$1" ] && break
+
+  case $1 in
+    --show ) echo "$loader" ; exit 0 ;;
+    --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" || exit ; shift ; continue ;;
+    --log) check_args 1 "${@}" ; shift ; set_log "$1" ; shift ; continue ;;
+    --version) echo "$VERSION" ; exit 0 ;;
+    --help) bl_usage 0 ;;
+  esac
+
+  if [ "$loader" = "" -o "$loader" = none ] ; then
+    exit 0
+  fi
+
+  if [ ! -d "/usr/lib/bootloader/$loader" -o "$loader" = include ] ; then
+    echo "bootloader \"$loader\" not supported" >&2
+    exit 1
+  fi
+
   case $1 in
     --install) shift ; run_script "install" || exit ; continue ;;
     --config) shift ; run_script "config" || exit ; continue ;;
-    --show ) echo "$loader" ; exit 0 ;;
-    --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" || exit ; shift ; continue ;;
-    --default ) shift ; run_script "default" "$1" || exit ; shift ; continue ;;
+    --default ) check_args 1 "${@}" ; shift ; run_script "default" "$1" || exit ; shift ; continue ;;
     --add-option ) check_args 1 "${@}" ; shift ; run_script "add-option" "$1" || exit ; shift ; continue ;;
     --del-option ) check_args 1 "${@}" ; shift ; run_script "del-option" "$1" || exit ; shift ; continue ;;
     --get-option ) check_args 1 "${@}" ; shift ; run_script "get-option" "$1" || exit ; shift ; continue ;;
@@ -355,9 +425,6 @@ while true ; do
       v="$1" ; shift
       run_script "remove-kernel" "$v" || exit
       continue ;;
-    --log) check_args 1 "${@}" ; shift ; set_log "$1" ; shift ; continue ;;
-    --version) echo "$VERSION" ; exit 0 ;;
-    --help) bl_usage 0 ;;
     -*) echo "unknown option: $1" >&2 ; bl_usage 1 ;;
   esac
 
