@@ -1,0 +1,34 @@
+#! /usr/bin/sh
+
+# Settings from /etc/sysconfig/filename are available as environment vars
+# with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
+#
+# Not all files are parsed, current list is:
+#   bootloader, language
+#
+
+# usage: get-option OPTION
+#
+# Read boot option.
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+#
+# The option value is written into the file passed via 'PBL_RESULT' environment var.
+# Either 'option=value', or 'option', or nothing is returned.
+
+# include common functions
+. "$PBL_INCLUDE/library"
+
+opt="$1"
+
+lib_get_cmdline_bls
+
+echo "CMDLINE: $cmdline"
+
+lib_get_option "$opt"
+
+if [ -n "$matched" ] ; then
+  echo "$matched" >> "$PBL_RESULT"
+fi
+
+exit 0

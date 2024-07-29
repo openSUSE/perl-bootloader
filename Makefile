@@ -15,7 +15,7 @@ changelog: $(GITDEPS)
 	$(GIT2LOG) --changelog changelog
 
 install:
-	@for bl in include grub2 grub2-efi systemd-boot u-boot; do install -m 755 -D -t $(DESTDIR)/usr/lib/bootloader/$$bl $$bl/* ; done
+	@for bl in include grub2 grub2-efi grub2-bls systemd-boot u-boot; do install -m 755 -D -t $(DESTDIR)/usr/lib/bootloader/$$bl $$bl/* ; done
 	@install -D -m 755 pbl.sh $(DESTDIR)$(SBINDIR)/pbl
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION ?=/' $(DESTDIR)$(SBINDIR)/pbl
 	@ln -snf pbl $(DESTDIR)$(SBINDIR)/update-bootloader

@@ -13,73 +13,19 @@
 #
 # OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
 
-if [ -e /etc/default/grub ] ; then
-  . /etc/default/grub
-  if [ -z "$GRUB_CMDLINE_LINUX_DEFAULT" ] ; then
-    echo "Warning: GRUB_CMDLINE_LINUX_DEFAULT is empty"
-  fi
-else
-  echo "/etc/default/grub missing"
-  exit 1
-fi
-
-cmd="$GRUB_CMDLINE_LINUX_DEFAULT"
+# include common functions
+. "$PBL_INCLUDE/library"
 
 opt="$1"
 
-echo "cmdline (old): $cmd"
+lib_get_cmdline_grub
 
-opt_key=${opt%%=*}
+echo "cmdline (old): $cmdline"
 
-ifs_orig="$IFS" IFS=
+lib_add_option "$opt"
 
-nl=$'\n'
-q=0
-n=
-while read -r -n 1 foo ; do
-  if [ "$q" = 0 ] ; then
-    [ "$foo" = '"' ] && q=1
-  else
-    [ "$foo" = '"' ] && q=0
-  fi
-  [ "$foo" = " " -a "$q" = 0 ] && foo="$nl"
-  n="$n$foo"
-done <<XXX
-$cmd
-XXX
+echo "cmdline (new): $cmdline"
 
-IFS="$nl"
-
-changed=
-newcmd=
-for i in $n ; do
-  match="${i#"$opt_key"}"
-  if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
-    if [ -z "$changed" ] ; then
-      newcmd="$newcmd $opt"
-      changed=1
-    fi
-  else
-    newcmd="$newcmd $i"
-  fi
-done
-
-if [ -z "$changed" ] ; then
-  newcmd="$newcmd $opt"
-fi
-
-IFS="$ifs_orig"
-
-newcmd=${newcmd# }
-
-echo "cmdline (new): $newcmd"
-
-newcmd=${newcmd//\\/\\\\\\\\}
-newcmd=${newcmd//\"/\\\\\"}
-
-sed -i -e "/^GRUB_CMDLINE_LINUX_DEFAULT=/c GRUB_CMDLINE_LINUX_DEFAULT=\"$newcmd\"" /etc/default/grub || {
-  echo "/etc/default/grub: failed to update config file"
-  exit 1
-}
+lib_set_cmdline_grub
 
 exit 0

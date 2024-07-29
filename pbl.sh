@@ -43,6 +43,7 @@ Options:
     --config                    Create boot loader config.
     --show                      Print current boot loader.
     --loader BOOTLOADER         Set current boot loader to BOOTLOADER.
+                                Supported values: none, grub2, grub2-bls, grub2-efi, systemd-boot, u-boot.
     --default ENTRY             Set default boot entry to ENTRY.
     --add-option OPTION         Add OPTION to default boot options (grub2).
     --del-option OPTION         Delete OPTION from default boot options (grub2).
@@ -104,6 +105,33 @@ log_msg ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# read_config FILE PREFIX
+#
+# Read config settings from FILE and convert them into environment vars of
+# the form:
+#
+# PREFIX__KEY=value
+#
+# Note that this parser assumes config files to stick to a KEY="VALUE" syntax.
+#
+read_config ()
+{
+  [ -r "$1" ] || return
+
+  old_ifs="$IFS"
+  IFS="="
+  while read -r key value ; do
+    if [ -n "$key" -a "$key" = "${key###}" ] ; then
+      sys_key="$2__$key"
+      eval "$sys_key=\$(lib_shellquote $value)"
+      export "${sys_key?}"
+    fi
+  done < "$1"
+  IFS="$old_ifs"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # read_sysconfig FILE
 #
 # Read sysconfig settings from /etc/sysconfig/FILE and convert them into
@@ -111,22 +139,11 @@ log_msg ()
 #
 # SYS__FILENAME__KEY=value
 #
-# Note that this parser assumes sysconfig files to stick to a KEY="VALUE" syntax.
-#
 read_sysconfig ()
 {
   filename=$(echo "$1" | tr "[:lower:]" "[:upper:]")
 
-  old_ifs="$IFS"
-  IFS="="
-  while read key value ; do
-    if [ -n "$key" -a "$key" = "${key###}" ] ; then
-      sys_key="SYS__${filename}__$key"
-      eval "$sys_key=$value"
-      export "${sys_key?}"
-    fi
-  done <"$sysconfig_dir/$1"
-  IFS="$old_ifs"
+  read_config "$sysconfig_dir/$1" "SYS__${filename}"
 }
 
 
@@ -143,9 +160,6 @@ run_command ()
 {
   PBL_RESULT=$(mktemp)
   export PBL_RESULT
-
-  PBL_INCLUDE="$bl_dir/include"
-  export PBL_INCLUDE
 
   command="${*}"
 
@@ -169,7 +183,6 @@ run_command ()
 
   rm -f "$PBL_RESULT"
   unset PBL_RESULT
-  unset PBL_INCLUDE
 
   return "$err"
 }
@@ -222,21 +235,21 @@ set_log ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# set_loader LOADER
+#
+# Set LOADER_TYPE in $sysconfig_dir/bootloader to LOADER.
+#
 set_loader ()
 {
-  new_loader="$1"
-
-  err=0
-
-  if [ -w "$sysconfig_dir/bootloader" ] ; then
-    sed -i -E -e "s/^(LOADER_TYPE=)\S+/\1\"$new_loader\"/" "$sysconfig_dir/bootloader"
-    err=$?
-  else
-    echo "$sysconfig_dir/bootloader: not writable" >&2
-    err=1
+  if [ "$1" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
+    lib_set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "true"
+  elif [ \( "$1" = grub2-efi -o "$1" = grub2 \) -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
+    lib_set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "false"
   fi
 
-  return "$err"
+  lib_set_config "$sysconfig_dir/bootloader" "LOADER_TYPE" "$1"
+
+  return $?
 }
 
 
@@ -274,12 +287,27 @@ check_args ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+PBL_INCLUDE="$bl_dir/include"
+export PBL_INCLUDE
+
+# include common functions
+. "$PBL_INCLUDE/library"
+
 # get relevant settings
 read_sysconfig "bootloader";
 read_sysconfig "language";
 
+read_config "/etc/default/grub" "DEFAULT"
+
 loader="$SYS__BOOTLOADER__LOADER_TYPE"
 lang="$SYS__LANGUAGE__RC_LANG"
+
+if [ "$loader" = grub2-efi -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
+  loader=grub2-bls
+elif [ "$loader" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
+  loader=grub2-efi
+fi
 
 set_log "$logfile"
 
@@ -333,12 +361,29 @@ fi
 #
 
 while true ; do
+  [ -z "$1" ] && break
+
+  case $1 in
+    --show ) echo "$loader" ; exit 0 ;;
+    --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" || exit ; shift ; continue ;;
+    --log) check_args 1 "${@}" ; shift ; set_log "$1" ; shift ; continue ;;
+    --version) echo "$VERSION" ; exit 0 ;;
+    --help) bl_usage 0 ;;
+  esac
+
+  if [ "$loader" = "" -o "$loader" = none ] ; then
+    exit 0
+  fi
+
+  if [ ! -d "/usr/lib/bootloader/$loader" -o "$loader" = include ] ; then
+    echo "bootloader \"$loader\" not supported" >&2
+    exit 1
+  fi
+
   case $1 in
     --install) shift ; run_script "install" || exit ; continue ;;
     --config) shift ; run_script "config" || exit ; continue ;;
-    --show ) echo "$loader" ; exit 0 ;;
-    --loader ) check_args 1 "${@}" ; shift ; set_loader "$1" || exit ; shift ; continue ;;
-    --default ) shift ; run_script "default" "$1" || exit ; shift ; continue ;;
+    --default ) check_args 1 "${@}" ; shift ; run_script "default" "$1" || exit ; shift ; continue ;;
     --add-option ) check_args 1 "${@}" ; shift ; run_script "add-option" "$1" || exit ; shift ; continue ;;
     --del-option ) check_args 1 "${@}" ; shift ; run_script "del-option" "$1" || exit ; shift ; continue ;;
     --get-option ) check_args 1 "${@}" ; shift ; run_script "get-option" "$1" || exit ; shift ; continue ;;
@@ -355,9 +400,6 @@ while true ; do
       v="$1" ; shift
       run_script "remove-kernel" "$v" || exit
       continue ;;
-    --log) check_args 1 "${@}" ; shift ; set_log "$1" ; shift ; continue ;;
-    --version) echo "$VERSION" ; exit 0 ;;
-    --help) bl_usage 0 ;;
     -*) echo "unknown option: $1" >&2 ; bl_usage 1 ;;
   esac
 

@@ -1,0 +1,10 @@
+[✔] pbl --loader grub2-bls
+[✔] pbl --add-option foo="bar  zap"
+[✔] pbl --add-option quiet=99
+[✔] pbl --add-option mitigations=0
+[✔] pbl --add-option foobar1=
+[✔] pbl --add-option foobar2
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="mitigations=0 zap=\"xxx  123\" quiet=99 foo=\"bar  zap\" nosimplefb=1 foobar1= foobar2"
+[✔] pbl --default-settings

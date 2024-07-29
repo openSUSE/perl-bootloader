@@ -1,0 +1,247 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# shellquote STRING
+#
+# Quote STRING so that STRING == $(echo "STRING")
+#
+lib_shellquote () {
+  arg=${1//\\/\\\\}
+  arg=${arg//\$/\\\$}
+  arg=${arg//\"/\\\"}
+  arg=${arg//\`/\\\`}
+  echo -n "$arg"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_set_config FILE KEY VALUE
+#
+# Set config valiable KEY in FILE to VALUE.
+#
+# Note that KEY must already exist.
+#
+lib_set_config ()
+{
+  err=0
+
+  if [ -w "$1" ] ; then
+    sed -i -E -e "s/^($2=)\S+/\1\"$3\"/" "$1"
+    err=$?
+  else
+    echo "$1: not writable" >&2
+    err=1
+  fi
+
+  return "$err"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_cmdline_grub
+#
+# Set $cmdline to default grub cmdline.
+#
+lib_get_cmdline_grub ()
+{
+  if [ -e /etc/default/grub ] ; then
+    . /etc/default/grub
+    if [ -z "$GRUB_CMDLINE_LINUX_DEFAULT" ] ; then
+      echo "Warning: GRUB_CMDLINE_LINUX_DEFAULT is empty"
+    fi
+  else
+    echo "/etc/default/grub missing"
+    exit 1
+  fi
+
+  cmdline="$GRUB_CMDLINE_LINUX_DEFAULT"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_set_cmdline_grub
+#
+# Set default grub cmdline to $cmdline.
+#
+lib_set_cmdline_grub ()
+{
+  tmp_cmdline=${cmdline//\\/\\\\\\\\}
+  tmp_cmdline=${tmp_cmdline//\"/\\\\\"}
+
+  sed -i -e "/^GRUB_CMDLINE_LINUX_DEFAULT=/c GRUB_CMDLINE_LINUX_DEFAULT=\"$tmp_cmdline\"" /etc/default/grub || {
+    echo "/etc/default/grub: failed to update config file"
+    exit 1
+  }
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_cmdline_bls
+#
+# Set $cmdline to default bls cmdline.
+#
+lib_get_cmdline_bls ()
+{
+  if [ -n "$KERNEL_INSTALL_CONF_ROOT" ] ; then
+    cmdline_file="$KERNEL_INSTALL_CONF_ROOT/cmdline"
+  elif [ -f /etc/kernel/cmdline ] ; then
+    cmdline_file=/etc/kernel/cmdline
+  elif [ -f /usr/lib/kernel/cmdline ] ; then
+    cmdline_file=/usr/lib/kernel/cmdline
+  else
+    cmdline_file=/proc/cmdline
+  fi
+
+  if [ -f "$cmdline_file" ] ; then
+    cmdline=$(cat $cmdline_file)
+
+    lib_del_option BOOT_IMAGE
+    lib_del_option initrd
+    lib_del_option systemd.machine_id
+  else
+    cmdline=
+  fi
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_set_cmdline_bls
+#
+# Set default bls cmdline to $cmdline.
+#
+lib_set_cmdline_bls ()
+{
+  echo "$cmdline" > /etc/kernel/cmdline || {
+    echo "/etc/kernel/cmdline: failed to update default kernel command"
+    exit 1
+  }
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_split_cmdline
+#
+# Parse $cmdline and put '\n' between options. This takes quoted (with '"')
+# options into account.
+#
+# The result is stored in $n.
+#
+# Set $IFS to '\n' and store original $IFS in $ifs_orig.
+#
+lib_split_cmdline ()
+{
+  ifs_orig="$IFS" IFS=
+
+  nl=$'\n'
+  q=0
+  n=
+  while read -r -n 1 foo ; do
+    if [ "$q" = 0 ] ; then
+      [ "$foo" = '"' ] && q=1
+    else
+      [ "$foo" = '"' ] && q=0
+    fi
+    [ "$foo" = " " -a "$q" = 0 ] && foo="$nl"
+    n="$n$foo"
+  done <<XXX
+  $cmdline
+XXX
+
+  IFS="$nl"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_add_option
+#
+# Add option OPTION to $cmdline.
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+#
+lib_add_option ()
+{
+  tmp_opt="$1"
+
+  opt_key=${tmp_opt%%=*}
+
+  lib_split_cmdline
+
+  changed=
+  new_cmdline=
+  for i in $n ; do
+    match="${i#"$opt_key"}"
+    if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
+      if [ -z "$changed" ] ; then
+        new_cmdline="$new_cmdline $tmp_opt"
+        changed=1
+      fi
+    else
+      new_cmdline="$new_cmdline $i"
+    fi
+  done
+
+  if [ -z "$changed" ] ; then
+    new_cmdline="$new_cmdline $tmp_opt"
+  fi
+
+  IFS="$ifs_orig"
+
+  cmdline=${new_cmdline# }
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_del_option OPTION
+#
+# Delete option OPTION from $cmdline.
+#
+# Set $changed to 1 if $cmdline was updated.
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+#
+lib_del_option ()
+{
+  tmp_opt="$1"
+
+  lib_split_cmdline
+
+  changed=
+  new_cmdline=
+  for i in $n ; do
+    match="${i#"$tmp_opt"}"
+    if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
+      changed=1
+    else
+      new_cmdline="$new_cmdline $i"
+    fi
+  done
+
+  IFS="$ifs_orig"
+
+  cmdline=${new_cmdline# }
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_option OPTION
+#
+# Get option OPTION from $cmdline.
+#
+# Set $matched to contain option from cmdline in key=value form.
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+#
+lib_get_option ()
+{
+  tmp_opt="$1"
+
+  lib_split_cmdline
+
+  matched=
+  for i in $n ; do
+    match="${i#"$tmp_opt"}"
+    if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
+      matched="$i"
+    fi
+  done
+
+  IFS="$ifs_orig"
+}

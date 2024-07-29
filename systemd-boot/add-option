@@ -1,0 +1,31 @@
+#! /usr/bin/sh
+
+# Settings from /etc/sysconfig/filename are available as environment vars
+# with the name 'SYS__FILENAME__KEY' (filename converted to upper case).
+#
+# Not all files are parsed, current list is:
+#   bootloader, language
+#
+
+# usage: add-option OPTION
+#
+# Modify default boot option (resp. add it).
+#
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+
+# include common functions
+. "$PBL_INCLUDE/library"
+
+opt="$1"
+
+lib_get_cmdline_bls
+
+echo "cmdline (old): $cmdline"
+
+lib_add_option "$opt"
+
+echo "cmdline (new): $cmdline"
+
+lib_set_cmdline_bls
+
+exit 0

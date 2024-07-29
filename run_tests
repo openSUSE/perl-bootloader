@@ -6,7 +6,7 @@ test_data="$test_dir/data"
 
 programs="/usr/bin/bash /usr/bin/ksh /usr/bin/busybox"
 busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink /usr/bin/cat /usr/bin/dirname /usr/bin/basename"
-dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install /usr/sbin/kexec"
+dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/grub2-set-default /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install /usr/sbin/kexec"
 
 # Notes
 #
