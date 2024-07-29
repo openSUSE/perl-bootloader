@@ -43,6 +43,7 @@ Options:
     --config                    Create boot loader config.
     --show                      Print current boot loader.
     --loader BOOTLOADER         Set current boot loader to BOOTLOADER.
+                                Supported values: none, grub2, grub2-bls, grub2-efi, systemd-boot, u-boot.
     --default ENTRY             Set default boot entry to ENTRY.
     --add-option OPTION         Add OPTION to default boot options (grub2).
     --del-option OPTION         Delete OPTION from default boot options (grub2).

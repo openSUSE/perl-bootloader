@@ -37,6 +37,7 @@ Print current boot loader.
 
 *--loader* __BOOTLOADER_::
 Set current boot loader to _BOOTLOADER_. +
+Supported values: none, grub2, grub2-bls, grub2-efi, systemd-boot, u-boot. +
 Note that this only changes a config variable. To actually use the new boot loader, run *pbl --install* and *pbl --config*.
 
 *--default* _ENTRY_::
