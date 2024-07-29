@@ -16,50 +16,16 @@
 # The option value is written into the file passed via 'PBL_RESULT' environment var.
 # Either 'option=value', or 'option', or nothing is returned.
 
-if [ -e /etc/default/grub ] ; then
-  . /etc/default/grub
-  if [ -z "$GRUB_CMDLINE_LINUX_DEFAULT" ] ; then
-    echo "Warning: GRUB_CMDLINE_LINUX_DEFAULT is empty"
-  fi
-else
-  echo "/etc/default/grub missing"
-  exit 1
-fi
-
-cmd="$GRUB_CMDLINE_LINUX_DEFAULT"
+# include common functions
+. "$PBL_INCLUDE/library"
 
 opt="$1"
 
-echo "CMDLINE: $cmd"
+lib_get_cmdline_grub
 
-ifs_orig="$IFS" IFS=
+echo "CMDLINE: $cmdline"
 
-nl=$'\n'
-q=0
-n=
-while read -r -n 1 foo ; do
-  if [ "$q" = 0 ] ; then
-    [ "$foo" = '"' ] && q=1
-  else
-    [ "$foo" = '"' ] && q=0
-  fi
-  [ "$foo" = " " -a "$q" = 0 ] && foo="$nl"
-  n="$n$foo"
-done <<XXX
-$cmd
-XXX
-
-IFS="$nl"
-
-matched=
-for i in $n ; do
-  match="${i#"$opt"}"
-  if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
-    matched="$i"
-  fi
-done
-
-IFS="$ifs_orig"
+lib_get_option
 
 if [ -n "$matched" ] ; then
   echo "$matched" >> "$PBL_RESULT"

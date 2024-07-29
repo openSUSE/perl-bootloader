@@ -122,7 +122,7 @@ read_config ()
   while read -r key value ; do
     if [ -n "$key" -a "$key" = "${key###}" ] ; then
       sys_key="$2__$key"
-      eval "$sys_key=\$(shellquote_raw $value)"
+      eval "$sys_key=\$(lib_shellquote $value)"
       export "${sys_key?}"
     fi
   done < "$1"
@@ -241,12 +241,12 @@ set_log ()
 set_loader ()
 {
   if [ "$1" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
-    set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "true"
+    lib_set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "true"
   elif [ \( "$1" = grub2-efi -o "$1" = grub2 \) -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
-    set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "false"
+    lib_set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "false"
   fi
 
-  set_config "$sysconfig_dir/bootloader" "LOADER_TYPE" "$1"
+  lib_set_config "$sysconfig_dir/bootloader" "LOADER_TYPE" "$1"
 
   return $?
 }
