@@ -7,25 +7,28 @@
 #   bootloader, language
 #
 
-# usage: add-option OPTION
+# usage: get-option OPTION
 #
-# Modify default boot option (resp. add it).
+# Read boot option.
 #
 # OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
+#
+# The option value is written into the file passed via 'PBL_RESULT' environment var.
+# Either 'option=value', or 'option', or nothing is returned.
 
 # include common functions
 . "$PBL_INCLUDE/library"
 
 opt="$1"
 
-lib_get_cmdline_grub
+lib_get_cmdline_bls
 
-echo "cmdline (old): $cmdline"
+echo "CMDLINE: $cmdline"
 
-lib_add_option "$opt"
+lib_get_option "$opt"
 
-echo "cmdline (new): $cmdline"
-
-lib_set_cmdline_grub
+if [ -n "$matched" ] ; then
+  echo "$matched" >> "$PBL_RESULT"
+fi
 
 exit 0

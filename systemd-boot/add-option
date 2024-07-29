@@ -18,7 +18,7 @@
 
 opt="$1"
 
-lib_get_cmdline_grub
+lib_get_cmdline_bls
 
 echo "cmdline (old): $cmdline"
 
@@ -26,6 +26,6 @@ lib_add_option "$opt"
 
 echo "cmdline (new): $cmdline"
 
-lib_set_cmdline_grub
+lib_set_cmdline_bls
 
 exit 0

@@ -25,7 +25,7 @@ lib_get_cmdline_grub
 
 echo "CMDLINE: $cmdline"
 
-lib_get_option
+lib_get_option "$opt"
 
 if [ -n "$matched" ] ; then
   echo "$matched" >> "$PBL_RESULT"

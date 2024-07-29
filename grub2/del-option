@@ -22,7 +22,7 @@ lib_get_cmdline_grub
 
 echo "cmdline (old): $cmdline"
 
-lib_del_option
+lib_del_option "$opt"
 
 if [ -z "$changed" ] ; then
   echo "cmdline not updated"

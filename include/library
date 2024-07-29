@@ -80,8 +80,25 @@ lib_set_cmdline_grub ()
 #
 lib_get_cmdline_bls ()
 {
+  if [ -n "$KERNEL_INSTALL_CONF_ROOT" ] ; then
+    cmdline_file="$KERNEL_INSTALL_CONF_ROOT/cmdline"
+  elif [ -f /etc/kernel/cmdline ] ; then
+    cmdline_file=/etc/kernel/cmdline
+  elif [ -f /usr/lib/kernel/cmdline ] ; then
+    cmdline_file=/usr/lib/kernel/cmdline
+  else
+    cmdline_file=/proc/cmdline
+  fi
 
-  cmdline=""
+  if [ -f "$cmdline_file" ] ; then
+    cmdline=$(cat $cmdline_file)
+
+    lib_del_option BOOT_IMAGE
+    lib_del_option initrd
+    lib_del_option systemd.machine_id
+  else
+    cmdline=
+  fi
 }
 
 
@@ -92,8 +109,10 @@ lib_get_cmdline_bls ()
 #
 lib_set_cmdline_bls ()
 {
-
-  cmdline=""
+  echo "$cmdline" > /etc/kernel/cmdline || {
+    echo "/etc/kernel/cmdline: failed to update default kernel command"
+    exit 1
+  }
 }
 
 
@@ -133,13 +152,15 @@ XXX
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # lib_add_option
 #
-# Add option $opt to $cmdline.
+# Add option OPTION to $cmdline.
 #
-# $opt is either of the form 'key=value' or 'key="value"' or just 'key'.
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
 #
 lib_add_option ()
 {
-  opt_key=${opt%%=*}
+  tmp_opt="$1"
+
+  opt_key=${tmp_opt%%=*}
 
   lib_split_cmdline
 
@@ -149,7 +170,7 @@ lib_add_option ()
     match="${i#"$opt_key"}"
     if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
       if [ -z "$changed" ] ; then
-        new_cmdline="$new_cmdline $opt"
+        new_cmdline="$new_cmdline $tmp_opt"
         changed=1
       fi
     else
@@ -158,7 +179,7 @@ lib_add_option ()
   done
 
   if [ -z "$changed" ] ; then
-    new_cmdline="$new_cmdline $opt"
+    new_cmdline="$new_cmdline $tmp_opt"
   fi
 
   IFS="$ifs_orig"
@@ -168,22 +189,24 @@ lib_add_option ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# lib_del_option
+# lib_del_option OPTION
 #
-# Delete option $opt from $cmdline.
+# Delete option OPTION from $cmdline.
 #
 # Set $changed to 1 if $cmdline was updated.
 #
-# $opt is either of the form 'key=value' or 'key="value"' or just 'key'.
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
 #
 lib_del_option ()
 {
+  tmp_opt="$1"
+
   lib_split_cmdline
 
   changed=
   new_cmdline=
   for i in $n ; do
-    match="${i#"$opt"}"
+    match="${i#"$tmp_opt"}"
     if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
       changed=1
     else
@@ -198,21 +221,23 @@ lib_del_option ()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# lib_get_option
+# lib_get_option OPTION
 #
-# Get option $opt from $cmdline.
+# Get option OPTION from $cmdline.
 #
 # Set $matched to contain option from cmdline in key=value form.
 #
-# $opt is either of the form 'key=value' or 'key="value"' or just 'key'.
+# OPTION is either of the form 'key=value' or 'key="value"' or just 'key'.
 #
 lib_get_option ()
 {
+  tmp_opt="$1"
+
   lib_split_cmdline
 
   matched=
   for i in $n ; do
-    match="${i#"$opt"}"
+    match="${i#"$tmp_opt"}"
     if [ "$match" != "$i" -a \( -z "$match" -o "${match:0:1}" = "=" \) ] ; then
       matched="$i"
     fi
