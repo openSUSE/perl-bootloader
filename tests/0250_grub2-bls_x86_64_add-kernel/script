@@ -1,0 +1,9 @@
+export TEST_ARCH=x86_64
+run pbl --loader grub2-bls
+run pbl --add-kernel 6.5.4-1-default
+run pbl --add-kernel 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default
+run pbl --add-kernel 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd
+run pbl --add-kernel 6.5.4-1-foobar
+run pbl --add-kernel 6.5.4-1-zapp
+export TEST_KERNEL_INSTALL_EXIT=42
+run pbl --add-kernel 6.5.4-1-default

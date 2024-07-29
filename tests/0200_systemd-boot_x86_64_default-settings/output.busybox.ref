@@ -1,0 +1,5 @@
+[✔] pbl --loader systemd-boot
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="mitigations=on mitigations=off zap=\"xxx  123\" quiet foo=\"foo  bar\" quiet=off nosimplefb=1"
+[✔] pbl --default-settings

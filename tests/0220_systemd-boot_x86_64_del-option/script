@@ -1,0 +1,9 @@
+export TEST_ARCH=x86_64
+run pbl --loader systemd-boot
+run pbl --del-option quiet=on
+run pbl --del-option quiet=off
+run pbl --del-option foo
+run pbl --del-option quiet
+run pbl --del-option mitigations
+run pbl --del-option foobar
+run pbl --default-settings

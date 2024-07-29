@@ -1,0 +1,7 @@
+export TEST_ARCH=x86_64
+run pbl --loader grub2-bls
+run pbl --get-option quiet
+run pbl --get-option mitigations
+run pbl --get-option mitigations=on
+run pbl --get-option mitigations=xxx
+run pbl --get-option foo

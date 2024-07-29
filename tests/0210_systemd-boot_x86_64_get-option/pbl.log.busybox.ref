@@ -1,0 +1,34 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/get-option quiet' = 0, output:
+>>>>>>>>>>>>>>>>
+CMDLINE: root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+quiet
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/get-option mitigations' = 0, output:
+>>>>>>>>>>>>>>>>
+CMDLINE: root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+mitigations=off
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/get-option mitigations=on' = 0, output:
+>>>>>>>>>>>>>>>>
+CMDLINE: root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/get-option mitigations=xxx' = 0, output:
+>>>>>>>>>>>>>>>>
+CMDLINE: root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet nosimplefb=1
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/get-option foo' = 0, output:
+>>>>>>>>>>>>>>>>
+CMDLINE: root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet nosimplefb=1
+<<<<<<<<<<<<<<<<

@@ -1,0 +1,11 @@
+[✔] pbl --loader systemd-boot
+[✔] pbl --del-option quiet=on
+[✔] pbl --del-option quiet=off
+[✔] pbl --del-option foo
+[✔] pbl --del-option quiet
+[✔] pbl --del-option mitigations
+[✔] pbl --del-option foobar
+kernel=/boot/vmlinuz
+initrd=/boot/initrd
+append="zap=\"xxx  123\" nosimplefb=1"
+[✔] pbl --default-settings
