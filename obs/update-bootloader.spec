@@ -1,7 +1,7 @@
 #
-# spec file for package perl-Bootloader
+# spec file for package update-bootloader
 #
-# Copyright (c) 2023 SUSE LLC
+# Copyright (c) 2024 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -24,11 +24,13 @@
 
 %{!?_distconfdir:%global _distconfdir /etc}
 
-Name:           perl-Bootloader
+Name:           update-bootloader
 Version:        0.0
 Release:        0
 Requires:       coreutils
 Obsoletes:      perl-Bootloader-YAML < %{version}
+Obsoletes:      perl-Bootloader < %{version}-%{release}
+Provides:       perl-Bootloader = %{version}-%{release}
 Conflicts:      kexec-tools < 2.0.26.0
 Summary:        Tool for boot loader configuration
 License:        GPL-2.0-or-later
