@@ -6,7 +6,7 @@ PREFIX  := update-bootloader-$(VERSION)
 SBINDIR ?= /usr/sbin
 ETCDIR  ?= /usr/etc
 
-.PHONY:	clean doc install test
+.PHONY:	clean doc install test tests
 
 all:
 	@echo "Choose target: clean, doc, install, test"
@@ -31,6 +31,7 @@ install:
 doc: pbl.8 bootloader_entry.8 update-bootloader.8 kexec-bootloader.8
 
 test:
+tests:
 	@./run_tests
 
 clean:
