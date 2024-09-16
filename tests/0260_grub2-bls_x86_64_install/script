@@ -1,5 +1,8 @@
 export TEST_ARCH=x86_64
 run pbl --loader grub2-bls
 run pbl --install
+# simulate missing sdbootutil
+chmod a-x /usr/bin/sdbootutil
+run pbl --install
 export TEST_BOOTCTL_EXIT=42
 run pbl --install
