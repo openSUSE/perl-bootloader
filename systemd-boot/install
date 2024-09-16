@@ -8,11 +8,15 @@
 #
 
 err=0
-if [ -x /usr/bin/bootctl ] ; then
-  ( set -x ; bootctl --make-machine-id-directory=yes install ) || err=1
+if [ -x /usr/bin/sdbootutil ] ; then
+  ( set -x ; sdbootutil install ) || err=1
 else
-  echo "bootctl: command not found"
-  err=1
+  if [ -x /usr/bin/bootctl ] ; then
+    ( set -x ; bootctl --make-machine-id-directory=yes install ) || err=1
+  else
+    echo "bootctl: command not found"
+    err=1
+  fi
 fi
 
 exit $err
