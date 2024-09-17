@@ -1,3 +1,6 @@
 export TEST_ARCH=x86_64
 run pbl --loader systemd-boot
 run pbl --default-settings
+# simulate missing bootctl
+chmod a-x /usr/bin/bootctl
+run pbl --default-settings
