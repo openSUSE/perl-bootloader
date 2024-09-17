@@ -30,7 +30,7 @@ install:
 
 doc: pbl.8 bootloader_entry.8 update-bootloader.8 kexec-bootloader.8
 
-test:
+test: tests
 tests:
 	@./run_tests
 
