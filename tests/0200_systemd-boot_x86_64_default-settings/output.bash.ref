@@ -1,4 +1,8 @@
 [✔] pbl --loader systemd-boot
+kernel=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/linux
+initrd=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/initrd-6.9.9-1-default
+append="mitigations=on mitigations=off zap=\"xxx  123\" quiet foo=\"foo  bar\" quiet=off nosimplefb=1"
+[✔] pbl --default-settings
 kernel=/boot/vmlinuz
 initrd=/boot/initrd
 append="mitigations=on mitigations=off zap=\"xxx  123\" quiet foo=\"foo  bar\" quiet=off nosimplefb=1"
