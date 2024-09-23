@@ -28,6 +28,7 @@ Name:           update-bootloader
 Version:        0.0
 Release:        0
 Requires:       coreutils
+Requires:       util-linux
 Obsoletes:      perl-Bootloader-YAML < %{version}
 Obsoletes:      perl-Bootloader < %{version}-%{release}
 Provides:       perl-Bootloader = %{version}-%{release}
