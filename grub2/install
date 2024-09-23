@@ -16,6 +16,24 @@
 #
 
 
+# Usage: prep_partition(disk)
+#
+# Find a PReP partition on a disk
+# Partition and disk name are without leading '/dev/'.
+#
+# Return empty string is there is no PReP partition.
+#
+prep_partition ()
+{
+  prep_part=$(/usr/sbin/fdisk -l -o "Device,Type" "/dev/$1" | grep -m1 PReP | cut -d ' ' -f 1)
+  prep_part="${prep_part#/dev/}"
+
+  echo "prep_partition($1) = $prep_part" >&2
+
+  echo "$prep_part"
+}
+
+
 # Usage: partition_to_disk(partition)
 #
 # Find disk device name for a partition.
@@ -187,9 +205,12 @@ if [ -x /usr/sbin/grub2-install ] ; then
     fi
     if [ -z "$has_device" ] ; then
       echo "grub_installdevice missing or invalid"
-      if [ "$target" = "i386-pc" ] ; then
+      if [ "$target" = "i386-pc" -o "$target" = "powerpc-ieee1275" ] ; then
         echo "determining suitable boot device"
         device=$(disk_device /boot)
+        if [ -n "$device" -a "$target" = "powerpc-ieee1275" ] ; then
+          device=$(prep_partition $device)
+        fi
         if [ "$device" ] ; then
           device="/dev/$device"
           has_device=1
