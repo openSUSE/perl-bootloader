@@ -16,6 +16,34 @@
 #
 
 
+# Usage: prep_partition(disk)
+#
+# Find a PReP partition on a disk
+# partition and disk name include '/dev/'
+#
+# Return empty string is there is no PReP partition.
+#
+prep_partition() {
+  local disk="$1" data ptab
+  data="$(/usr/sbin/sfdisk -J "$disk")" || return 1
+  ptab="$(echo "$data" | jq .partitiontable.partitions)" || return 1
+  local idx=0
+  while true; do
+    local node="$(echo "$ptab" | jq -r .[$idx].node)"
+    local type="$(echo "$ptab" | jq -r .[$idx].type)"
+    [ -n "$node" ] && [ "$node" != "null" ] || return 1
+    case "$type" in
+      41 | 9E1A2D38-C612-4316-AA26-8B49521E5A8B)
+        echo "$node"
+        return 0
+        ;;
+    esac
+    idx=$(expr $idx + 1)
+  done
+  return 1
+}
+
+
 # Usage: partition_to_disk(partition)
 #
 # Find disk device name for a partition.
@@ -187,6 +215,9 @@ if [ -x /usr/sbin/grub2-install ] ; then
       if [ "$target" = "i386-pc" -o "$target" = "powerpc-ieee1275" ] ; then
         echo "determining suitable boot device"
         device=$(disk_device /boot)
+        if [ "$device" ] && [ "$target" = "powerpc-ieee1275" ] ; then
+          device=$(prep_partition $device)
+        fi
         if [ "$device" ] ; then
           device="/dev/$device"
           has_device=1

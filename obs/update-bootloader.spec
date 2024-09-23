@@ -37,6 +37,8 @@ License:        GPL-2.0-or-later
 Group:          System/Boot
 URL:            https://github.com/openSUSE/perl-bootloader
 Source:         %{name}-%{version}.tar.xz
+Requires:       util-linux
+Requires:       jq
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  rubygem(asciidoctor)
 
