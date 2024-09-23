@@ -28,6 +28,7 @@ Name:           perl-Bootloader
 Version:        0.0
 Release:        0
 Requires:       coreutils
+Requires:       util-linux
 Obsoletes:      perl-Bootloader-YAML < %{version}
 Conflicts:      kexec-tools < 2.0.26.0
 Summary:        Tool for boot loader configuration
