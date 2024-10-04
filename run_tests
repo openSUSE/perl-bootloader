@@ -35,11 +35,12 @@ dummy_programs="\
 
 # Notes
 #
-# /usr/bin/bootctl, /usr/bin/date, /usr/bin/df, and /usr/bin/uname are wrapper scripts
+# /usr/bin/bootctl, /usr/bin/date, /usr/bin/df, /usr/sbin/efibootmgr, and /usr/bin/uname are wrapper scripts
 #
 # - 'bootctl status' returns a sample status listing; other bootctl calls do nothing
 # - 'date "+%F %T"' returns the fixed date "2023-11-01 23:59:58"
 # - 'df --local --sync --output=source /foo' returns $TEST_DF_foo
+# - 'efibootmgr' returns sample output.
 # - 'uname -m' returns $TEST_ARCH
 #
 # programs listed in dummy_programs are replaced by wrapper scripts that

@@ -7,4 +7,7 @@
 #   bootloader, language
 #
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
 echo "nothing to do, really"

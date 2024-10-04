@@ -7,6 +7,9 @@
 #   bootloader, language
 #
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
 err=0
 if [ -x /usr/bin/sdbootutil ] ; then
   ( set -x ; sdbootutil install ) || err=1
@@ -18,5 +21,7 @@ else
     err=1
   fi
 fi
+
+lib_efi_log_boot_entry
 
 exit $err
