@@ -2,11 +2,31 @@
 2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
 2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/install' = 0, output:
 >>>>>>>>>>>>>>>>
++ sdbootutil install
+efi_distro_dir=systemd
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0008
+efi_entry.file=EFI/systemd/shim.efi
+efi_entry.name=openSUSE Boot Manager (systemd-boot)
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/install' = 0, output:
+>>>>>>>>>>>>>>>>
 + bootctl '--make-machine-id-directory=yes' install
+efi_distro_dir=systemd
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0008
+efi_entry.file=EFI/systemd/shim.efi
+efi_entry.name=openSUSE Boot Manager (systemd-boot)
 <<<<<<<<<<<<<<<<
 2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
 2023-11-01 23:59:58 <3> pbl-0: '/usr/lib/bootloader/systemd-boot/install' failed with exit code 1, output:
 >>>>>>>>>>>>>>>>
 + bootctl '--make-machine-id-directory=yes' install
 /usr/bin/bootctl: test error 42 :-(
+efi_distro_dir=systemd
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0008
+efi_entry.file=EFI/systemd/shim.efi
+efi_entry.name=openSUSE Boot Manager (systemd-boot)
 <<<<<<<<<<<<<<<<

@@ -1,0 +1,26 @@
+#! /bin/sh
+
+if [ -n "$TEST_EFIBOOTMGR_EXIT" ] ; then
+  echo "$0: test error $TEST_EFIBOOTMGR_EXIT :-(" >&2
+  exit "$TEST_EFIBOOTMGR_EXIT"
+fi
+
+if [ -z "$1" -o "$1" = "--verbose" ] ; then
+  cat <<EOF
+BootCurrent: 0008
+Timeout: 3 seconds
+BootOrder: 0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+Boot0000* UiApp	FvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(462caa21-7614-4503-836e-8ab6f4662331)
+Boot0001* UEFI QEMU QEMU HARDDISK 	PciRoot(0x0)/Pci(0x2,0x0)/SCSI(0,0){auto_created_boot_option}
+Boot0002* UEFI QEMU QEMU HARDDISK  2	PciRoot(0x0)/Pci(0x2,0x0)/SCSI(1,0){auto_created_boot_option}
+Boot0003* UEFI PXEv4 (MAC:525400123456)	PciRoot(0x0)/Pci(0x6,0x0)/MAC(525400123456,1)/IPv4(0.0.0.00.0.0.0,0,0){auto_created_boot_option}
+Boot0004* UEFI PXEv6 (MAC:525400123456)	PciRoot(0x0)/Pci(0x6,0x0)/MAC(525400123456,1)/IPv6([::]:<->[::]:,0,0){auto_created_boot_option}
+Boot0005* UEFI HTTPv4 (MAC:525400123456)	PciRoot(0x0)/Pci(0x6,0x0)/MAC(525400123456,1)/IPv4(0.0.0.00.0.0.0,0,0)/Uri(){auto_created_boot_option}
+Boot0006* UEFI HTTPv6 (MAC:525400123456)	PciRoot(0x0)/Pci(0x6,0x0)/MAC(525400123456,1)/IPv6([::]:<->[::]:,0,0)/Uri(){auto_created_boot_option}
+Boot0007* openSUSE Boot Manager (grub2-bls)	HD(1,GPT,03ea2bcf-7126-4140-a94c-e3914b63b441,0x800,0x100000)/File(\EFI\opensuse\shim.efi)
+Boot0008* openSUSE Boot Manager (systemd-boot)	HD(1,GPT,03ea2bcf-7126-4140-a94c-e3914b63b441,0x800,0x100000)/File(\EFI\systemd\shim.efi)
+Boot0009* Linux Boot Manager	HD(1,GPT,03ea2bcf-7126-4140-a94c-e3914b63b441,0x800,0x100000)/File(\EFI\systemd\systemd-bootx64.efi)
+EOF
+fi
+
+exit 0

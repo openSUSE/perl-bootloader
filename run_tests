@@ -4,16 +4,43 @@ test_dir="tests"
 test_root="$test_dir/root"
 test_data="$test_dir/data"
 
-programs="/usr/bin/bash /usr/bin/ksh /usr/bin/busybox"
-busybox_programs="/usr/bin/sed /usr/bin/mktemp /usr/bin/tr /usr/bin/rm /usr/bin/ls /usr/bin/grep /usr/bin/readlink /usr/bin/cat /usr/bin/dirname /usr/bin/basename"
-dummy_programs="/usr/sbin/grub2-install /usr/sbin/grub2-mkconfig /usr/sbin/grub2-set-default /usr/sbin/shim-install /usr/bin/bootctl /usr/bin/kernel-install /usr/sbin/kexec"
+programs="\
+  /usr/bin/bash\
+  /usr/bin/ksh\
+  /usr/bin/busybox\
+"
+busybox_programs="\
+  /usr/bin/basename\
+  /usr/bin/cat\
+  /usr/bin/chmod\
+  /usr/bin/cut\
+  /usr/bin/dirname\
+  /usr/bin/grep\
+  /usr/bin/ls\
+  /usr/bin/mktemp\
+  /usr/bin/readlink\
+  /usr/bin/rm\
+  /usr/bin/sed\
+  /usr/bin/tr\
+"
+dummy_programs="\
+  /usr/bin/kernel-install\
+  /usr/bin/sdbootutil\
+  /usr/sbin/grub2-install\
+  /usr/sbin/grub2-mkconfig\
+  /usr/sbin/grub2-set-default\
+  /usr/sbin/kexec\
+  /usr/sbin/shim-install\
+"
 
 # Notes
 #
-# /usr/bin/date, /usr/bin/df, and /usr/bin/uname are wrapper scripts
+# /usr/bin/bootctl, /usr/bin/date, /usr/bin/df, /usr/sbin/efibootmgr, and /usr/bin/uname are wrapper scripts
 #
+# - 'bootctl status' returns a sample status listing; other bootctl calls do nothing
 # - 'date "+%F %T"' returns the fixed date "2023-11-01 23:59:58"
 # - 'df --local --sync --output=source /foo' returns $TEST_DF_foo
+# - 'efibootmgr' returns sample output.
 # - 'uname -m' returns $TEST_ARCH
 #
 # programs listed in dummy_programs are replaced by wrapper scripts that

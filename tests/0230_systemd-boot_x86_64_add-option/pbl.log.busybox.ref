@@ -33,7 +33,7 @@ cmdline (new): mitigations=0 zap="xxx  123" quiet=99 foo="bar  zap" nosimplefb=1
 2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/systemd-boot/default-settings' = 0, output:
 2023-11-01 23:59:58 <1> pbl-0: result:
 >>>>>>>>>>>>>>>>
-kernel=/boot/vmlinuz
-initrd=/boot/initrd
+kernel=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/linux
+initrd=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/initrd-6.9.9-1-default
 append="mitigations=0 zap=\"xxx  123\" quiet=99 foo=\"bar  zap\" nosimplefb=1 foobar1= foobar2"
 <<<<<<<<<<<<<<<<

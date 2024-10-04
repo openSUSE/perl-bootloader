@@ -7,6 +7,10 @@
 #   bootloader, language
 #
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
+lib_get_efi_mount_dir
 
 # If the default EFI boot file is signed by SUSE, assume we have to also update it.
 #
@@ -146,3 +150,9 @@ else
   echo "grub2-install: command not found"
   exit 1
 fi
+
+err=$?
+
+lib_efi_log_boot_entry
+
+exit $err

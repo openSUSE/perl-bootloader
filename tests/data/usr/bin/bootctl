@@ -1,0 +1,20 @@
+#! /bin/sh
+
+if [ -n "$TEST_BOOTCTL_EXIT" ] ; then
+  echo "$0: test error $TEST_BOOTCTL_EXIT :-(" >&2
+  exit "$TEST_BOOTCTL_EXIT"
+fi
+
+machine_id=$(cat /etc/machine-id)
+version=6.9.9-1
+
+# only parts we actually parse
+# double slash ('//') intentionally, as this was observed on a real system
+if [ "$1" = "status" ] ; then
+  cat <<EOF
+        linux: /boot/efi//$machine_id/$version-default/linux
+       initrd: /boot/efi//$machine_id/$version-default/initrd-$version-default
+EOF
+fi
+
+exit 0

@@ -5,7 +5,7 @@
 [✔] pbl --del-option quiet
 [✔] pbl --del-option mitigations
 [✔] pbl --del-option foobar
-kernel=/boot/vmlinuz
-initrd=/boot/initrd
+kernel=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/linux
+initrd=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/initrd-6.9.9-1-default
 append="zap=\"xxx  123\" nosimplefb=1"
 [✔] pbl --default-settings

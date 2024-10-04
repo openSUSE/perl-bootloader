@@ -1,0 +1,6 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2-bls
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2-bls/default 0' = 0, output:
+>>>>>>>>>>>>>>>>
++ bootctl set-default 0
+<<<<<<<<<<<<<<<<

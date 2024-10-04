@@ -3,6 +3,14 @@
 2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2-bls/default-settings' = 0, output:
 2023-11-01 23:59:58 <1> pbl-0: result:
 >>>>>>>>>>>>>>>>
+kernel=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/linux
+initrd=/boot/efi/66189a0fcd0549d4972374596381672c/6.9.9-1-default/initrd-6.9.9-1-default
+append="mitigations=on mitigations=off zap=\"xxx  123\" quiet foo=\"foo  bar\" quiet=off nosimplefb=1"
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2-bls
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2-bls/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
 kernel=/boot/vmlinuz
 initrd=/boot/initrd
 append="mitigations=on mitigations=off zap=\"xxx  123\" quiet foo=\"foo  bar\" quiet=off nosimplefb=1"

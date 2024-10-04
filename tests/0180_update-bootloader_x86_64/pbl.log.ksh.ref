@@ -9,49 +9,69 @@
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install '--config-file=/boot/grub2/grub.cfg' --no-nvram --removable
+efi_distro_dir=opensuse
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0007
+efi_entry.file=EFI/opensuse/shim.efi
+efi_entry.name=openSUSE Boot Manager (grub2-bls)
 <<<<<<<<<<<<<<<<
 2023-11-01 23:59:58 <1> update-bootloader-22: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-45: bootloader = grub2-efi
-2023-11-01 23:59:58 <1> update-bootloader-45: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
+2023-11-01 23:59:58 <1> update-bootloader-62: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> update-bootloader-62: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-58: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-58: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-75: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-75: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install '--config-file=/boot/grub2/grub.cfg' --no-nvram --removable
 /usr/sbin/shim-install: test error 42 :-(
+efi_distro_dir=opensuse
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0007
+efi_entry.file=EFI/opensuse/shim.efi
+efi_entry.name=openSUSE Boot Manager (grub2-bls)
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-74: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-74: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-108: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-108: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 /usr/sbin/grub2-mkconfig: test error 42 :-(
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-87: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-87: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-121: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-121: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install '--config-file=/boot/grub2/grub.cfg' --no-nvram --removable
 /usr/sbin/shim-install: test error 42 :-(
+efi_distro_dir=opensuse
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0007
+efi_entry.file=EFI/opensuse/shim.efi
+efi_entry.name=openSUSE Boot Manager (grub2-bls)
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-103: bootloader = grub2-efi
-2023-11-01 23:59:58 <3> update-bootloader-103: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
+2023-11-01 23:59:58 <1> update-bootloader-154: bootloader = grub2-efi
+2023-11-01 23:59:58 <3> update-bootloader-154: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 /usr/sbin/grub2-mkconfig: test error 42 :-(
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <1> update-bootloader-116: bootloader = grub2-efi
-2023-11-01 23:59:58 <1> update-bootloader-116: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
+2023-11-01 23:59:58 <1> update-bootloader-167: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> update-bootloader-167: '/usr/lib/bootloader/grub2-efi/install' = 0, output:
 >>>>>>>>>>>>>>>>
 target = x86_64-efi, update default location = 0
 + /usr/sbin/shim-install '--config-file=/boot/grub2/grub.cfg' --no-nvram --removable
+efi_distro_dir=opensuse
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0007
+efi_entry.file=EFI/opensuse/shim.efi
+efi_entry.name=openSUSE Boot Manager (grub2-bls)
 <<<<<<<<<<<<<<<<
-2023-11-01 23:59:58 <3> update-bootloader-116: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
+2023-11-01 23:59:58 <3> update-bootloader-167: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 /usr/sbin/grub2-mkconfig: test error 42 :-(

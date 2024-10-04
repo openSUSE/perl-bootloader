@@ -10,31 +10,39 @@
 # include common functions
 . "$PBL_INCLUDE/library"
 
-target=$(uname -m)
-
-case "$target" in
-  x86_64|i?86)
-    image=vmlinuz ;;
-  ppc*)
-    image=vmlinux ;;
-  s390*)
-    image=image ;;
-  armv*)
-    image=zImage ;;
-  aarch64|riscv64)
-    image=Image ;;
-  *)
-    echo "Architecture $target not supported."
-esac
-
 lib_get_cmdline_bls
-
-kernel=$(readlink -f "/boot/$image")
-initrd=$(readlink -f /boot/initrd)
 append=\"$(lib_shellquote "$cmdline")\"
+
+err=0
+if [ -x /usr/bin/bootctl ] ; then
+  kernel=$(bootctl status | grep linux: | cut -d ':' -f 2 | tr -ds ' ' '/')
+  initrd=$(bootctl status | grep initrd: | cut -d ':' -f 2 | tr -ds ' ' '/')
+else
+  target=$(uname -m)
+
+  case "$target" in
+    x86_64|i?86)
+      image=vmlinuz ;;
+    ppc*)
+      image=vmlinux ;;
+    s390*)
+      image=image ;;
+    armv*)
+      image=zImage ;;
+    aarch64|riscv64)
+      image=Image ;;
+    *)
+      echo "Architecture $target not supported."
+      err=1
+  esac
+
+  # FIXME: this is not correct but gives a possibly useful fallback
+  kernel=$(readlink -f "/boot/$image")
+  initrd=$(readlink -f "/boot/initrd")
+fi
 
 echo "kernel=$kernel" > "$PBL_RESULT"
 echo "initrd=$initrd" >> "$PBL_RESULT"
 echo -n "append=$append" >> "$PBL_RESULT"
 
-exit 0
+exit $err

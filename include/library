@@ -245,3 +245,104 @@ lib_get_option ()
 
   IFS="$ifs_orig"
 }
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_efi_mount_dir
+#
+# Set $efi_mount_dir to mount point of EFI System Partition.
+#
+lib_get_efi_mount_dir ()
+{
+  efi_mount_dir="/boot/efi"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_efi_distro_dir
+#
+# Set $efi_distro_dir to distro-specific EFI directory component.
+#
+# EFI boot files are expected to be installed into /EFI/$lib_efi_distro_dir
+# on the EFI System Partition.
+#
+# Set to empty string if it can't be determined.
+#
+lib_get_efi_distro_dir ()
+{
+  if [ "$SYS__BOOTLOADER__LOADER_TYPE" = systemd-boot ] ; then
+    efi_distro_dir=systemd
+  else
+    efi_distro_dir=$(. /etc/os-release 2>/dev/null && echo "$NAME $VERSION" | tr "[:upper:]" "[:lower:]" | cut -d ' ' -f 1)
+  fi
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_efi_boot_order
+#
+# Set $efi_boot_order to the current BootOrder as reported by efibootmgr.
+#
+lib_get_efi_boot_order ()
+{
+  efi_boot_order=$(/usr/sbin/efibootmgr 2>/dev/null | grep -m 1 "^BootOrder:" | cut -d ' ' -f 2)
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_efi_distro_entry
+#
+# Set $efi_distro_entry (combined) and $efi_distro_entry_num,
+# $efi_distro_entry_file, $efi_distro_entry_name (split into parts) to the
+# relevant EFI boot manager entry.
+#
+# Set $efi_distro_entry to emtpy string if no entry matched.
+#
+# $efi_distro_entry_* are the parsed sub-components of $efi_distro_entry for convenience.
+#
+# Prefers 'shim' entry over non-shim entries.
+#
+lib_get_efi_distro_entry ()
+{
+  lib_get_efi_distro_dir
+
+  if [ -n "$efi_distro_dir" ] ; then
+    efi_distro_entry=$(efibootmgr --verbose | tr '\\' '/' | grep -Ei "^boot.*/file\(/efi/$efi_distro_dir" | sed -E -e 's/^Boot(....)\*? (.*)\t\S+\/File\(\/([^)]*)\)$/\1 \3 \2/')
+    while read -r tmp_efi_num tmp_efi_file tmp_efi_name ; do
+      if [ \( "$tmp_efi_file" != "${tmp_efi_file/shim/}" \) -o \( "$tmp_efi_file" != "${tmp_efi_file/SHIM/}" \) ] ; then
+        tmp_secure_efi_entry="$tmp_efi_num $tmp_efi_file $tmp_efi_name"
+      else
+        tmp_efi_entry="$tmp_efi_num $tmp_efi_file $tmp_efi_name"
+      fi
+    # note: can't use '<<<' - not supported in ash
+    done < <(echo "$efi_distro_entry")
+  fi
+
+  if [ -n "$tmp_secure_efi_entry" ] ; then
+    efi_distro_entry="$tmp_secure_efi_entry"
+  else
+    efi_distro_entry="$tmp_efi_entry"
+  fi
+
+  # note: can't use '<<<' - not supported in ash
+  read -r efi_distro_entry_num efi_distro_entry_file efi_distro_entry_name < <(echo "$efi_distro_entry")
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_efi_log_boot_entry
+#
+# Log currently managed EFI boot manager entry.
+#
+lib_efi_log_boot_entry ()
+{
+  lib_get_efi_distro_dir
+  lib_get_efi_boot_order
+  lib_get_efi_distro_entry
+
+  echo "efi_distro_dir=$efi_distro_dir"
+  echo "efi_order=$efi_boot_order"
+  echo "efi_entry.num=$efi_distro_entry_num"
+  echo "efi_entry.file=$efi_distro_entry_file"
+  echo "efi_entry.name=$efi_distro_entry_name"
+}
