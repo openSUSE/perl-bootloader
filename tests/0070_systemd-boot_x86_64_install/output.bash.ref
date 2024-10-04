@@ -3,4 +3,9 @@
 [✔] pbl --install
 + bootctl --make-machine-id-directory=yes install
 /usr/bin/bootctl: test error 42 :-(
+efi_distro_dir=systemd
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0008
+efi_entry.file=EFI/systemd/shim.efi
+efi_entry.name=openSUSE Boot Manager (systemd-boot)
 [✘] pbl --install = 1

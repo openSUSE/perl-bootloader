@@ -4,6 +4,11 @@
 >>>>>>>>>>>>>>>>
 target = i386-efi, update default location = 0
 + /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
+efi_distro_dir=opensuse
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0007
+efi_entry.file=EFI/opensuse/shim.efi
+efi_entry.name=openSUSE Boot Manager (grub2-bls)
 <<<<<<<<<<<<<<<<
 2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2-efi
 2023-11-01 23:59:58 <3> pbl-0: '/usr/lib/bootloader/grub2-efi/install' failed with exit code 42, output:
@@ -11,4 +16,9 @@ target = i386-efi, update default location = 0
 target = i386-efi, update default location = 0
 + /usr/sbin/shim-install --config-file=/boot/grub2/grub.cfg --no-nvram --removable
 /usr/sbin/shim-install: test error 42 :-(
+efi_distro_dir=opensuse
+efi_order=0008,0009,0007,0001,0000,0002,0003,0004,0005,0006
+efi_entry.num=0007
+efi_entry.file=EFI/opensuse/shim.efi
+efi_entry.name=openSUSE Boot Manager (grub2-bls)
 <<<<<<<<<<<<<<<<
