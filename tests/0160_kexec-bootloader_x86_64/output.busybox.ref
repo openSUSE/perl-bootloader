@@ -10,6 +10,6 @@ Initrd : /boot/initrd
 Append : mitigations=off quiet foo="foo  bar" nosimplefb=1
 Root   : root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684
 Kexec call: kexec --kexec-syscall-auto --load '/boot/vmlinuz' --initrd='/boot/initrd' --append='root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet foo="foo  bar" nosimplefb=1'
-/usr/sbin/kexec: test error 42 :-(
+/usr/sbin/kexec --kexec-syscall-auto --load /boot/vmlinuz --initrd=/boot/initrd --append=root=UUID=f73ab362-3a50-45ae-a44c-723f2e359684 mitigations=off quiet foo="foo  bar" nosimplefb=1: test error 42 :-(
 kexec failed.
 [✘] kexec-bootloader --debug = 1

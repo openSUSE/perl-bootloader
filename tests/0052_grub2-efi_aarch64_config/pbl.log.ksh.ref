@@ -8,5 +8,5 @@
 2023-11-01 23:59:58 <3> pbl-0: '/usr/lib/bootloader/grub2-efi/config' failed with exit code 42, output:
 >>>>>>>>>>>>>>>>
 + /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
-/usr/sbin/grub2-mkconfig: test error 42 :-(
+/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg: test error 42 :-(
 <<<<<<<<<<<<<<<<

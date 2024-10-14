@@ -8,5 +8,5 @@
 2023-11-01 23:59:58 <3> pbl-0: '/usr/lib/bootloader/systemd-boot/remove-kernel 6.5.4-1-default' failed with exit code 1, output:
 >>>>>>>>>>>>>>>>
 + kernel-install remove 6.5.4-1-default
-/usr/bin/kernel-install: test error 42 :-(
+/usr/bin/kernel-install remove 6.5.4-1-default: test error 42 :-(
 <<<<<<<<<<<<<<<<

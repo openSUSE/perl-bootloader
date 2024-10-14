@@ -1,5 +1,5 @@
 [✔] pbl --loader systemd-boot
 [✔] pbl --remove-kernel 6.5.4-1-default
 + kernel-install remove 6.5.4-1-default
-/usr/bin/kernel-install: test error 42 :-(
+/usr/bin/kernel-install remove 6.5.4-1-default: test error 42 :-(
 [✘] pbl --remove-kernel 6.5.4-1-default = 1

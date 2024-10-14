@@ -10,5 +10,5 @@ target = i386-pc
 >>>>>>>>>>>>>>>>
 target = i386-pc
 + /usr/sbin/grub2-install '--target=i386-pc' --force --skip-fs-probe /dev/sda
-/usr/sbin/grub2-install: test error 42 :-(
+/usr/sbin/grub2-install --target=i386-pc --force --skip-fs-probe /dev/sda: test error 42 :-(
 <<<<<<<<<<<<<<<<
