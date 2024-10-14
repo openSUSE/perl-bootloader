@@ -4,11 +4,7 @@
 # Quote STRING so that STRING == $(echo "STRING")
 #
 lib_shellquote () {
-  arg=${1//\\/\\\\}
-  arg=${arg//\$/\\\$}
-  arg=${arg//\"/\\\"}
-  arg=${arg//\`/\\\`}
-  echo -n "$arg"
+  printf "$1" | sed -e 's/\\/\\\\/g' -e 's/\$/\\\$/g' -e 's/"/\\"/g' -e 's/`/\\\`/g'
 }
 
 
@@ -308,14 +304,13 @@ lib_get_efi_distro_entry ()
 
   if [ -n "$efi_distro_dir" ] ; then
     efi_distro_entry=$(efibootmgr --verbose | tr '\\' '/' | grep -Ei "^boot.*/file\(/efi/$efi_distro_dir" | sed -E -e 's/^Boot(....)\*? (.*)\t\S+\/File\(\/([^)]*)\)$/\1 \3 \2/')
-    while read -r tmp_efi_num tmp_efi_file tmp_efi_name ; do
+    echo "$efi_distro_entry" | while read -r tmp_efi_num tmp_efi_file tmp_efi_name ; do
       if [ \( "$tmp_efi_file" != "${tmp_efi_file/shim/}" \) -o \( "$tmp_efi_file" != "${tmp_efi_file/SHIM/}" \) ] ; then
         tmp_secure_efi_entry="$tmp_efi_num $tmp_efi_file $tmp_efi_name"
       else
         tmp_efi_entry="$tmp_efi_num $tmp_efi_file $tmp_efi_name"
       fi
-    # note: can't use '<<<' - not supported in ash
-    done < <(echo "$efi_distro_entry")
+    done
   fi
 
   if [ -n "$tmp_secure_efi_entry" ] ; then
@@ -324,8 +319,7 @@ lib_get_efi_distro_entry ()
     efi_distro_entry="$tmp_efi_entry"
   fi
 
-  # note: can't use '<<<' - not supported in ash
-  read -r efi_distro_entry_num efi_distro_entry_file efi_distro_entry_name < <(echo "$efi_distro_entry")
+  echo "$efi_distro_entry" | read -r efi_distro_entry_num efi_distro_entry_file efi_distro_entry_name
 }
 
 
