@@ -1,5 +1,5 @@
-export TEST_ARCH=ppc64le
-export TEST_DF_boot=$(echo -e "Filesystem\n/dev/md0p2")
+export TEST_ARCH=i686
+export TEST_DF_boot=$(echo -e "Filesystem\n/dev/sda2")
 run pbl --loader grub2
 run pbl --install
 export TEST_GRUB2_INSTALL_EXIT=42

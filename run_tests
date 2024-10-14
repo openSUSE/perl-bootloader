@@ -35,12 +35,13 @@ dummy_programs="\
 
 # Notes
 #
-# /usr/bin/bootctl, /usr/bin/date, /usr/bin/df, /usr/sbin/efibootmgr, and /usr/bin/uname are wrapper scripts
+# /usr/bin/bootctl, /usr/bin/date, /usr/bin/df, /usr/sbin/efibootmgr, /usr/sbin/fdisk, and /usr/bin/uname are wrapper scripts
 #
 # - 'bootctl status' returns a sample status listing; other bootctl calls do nothing
 # - 'date "+%F %T"' returns the fixed date "2023-11-01 23:59:58"
 # - 'df --local --sync --output=source /foo' returns $TEST_DF_foo
 # - 'efibootmgr' returns sample output.
+# - 'fdisk -l -o 'Device,Type' /dev/sda returns a sample lsiting; other fdisk calls return an error
 # - 'uname -m' returns $TEST_ARCH
 #
 # programs listed in dummy_programs are replaced by wrapper scripts that
@@ -93,7 +94,7 @@ eval "p_exit=\$$p"
 [ -z "$p_exit" ] && p_exit=0
 
 if [ "$p_exit" != 0 ] ; then
-  echo "$0: test error $p_exit :-(" >&2
+  echo "$0 $*: test error $p_exit :-(" >&2
 fi
 
 exit $p_exit
@@ -215,7 +216,7 @@ show_results ()
 
   for t in "$test_dir"/[0-9]???_* ; do
     n=${t##*/}
-    printf "%-40s" "  $n"
+    printf "%-48s" "  $n"
     first=
     for i in "$t"/*."$shell".ref ; do
       [ -e "$i" ] || continue

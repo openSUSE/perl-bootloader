@@ -135,7 +135,7 @@ disk_device ()
 check_force_signed ()
 {
   if [ "$target" = powerpc-ieee1275 ] ; then
-    /usr/sbin/grub2-install --help | grep -q -- --suse-force-signed
+    /usr/sbin/grub2-install --help 2>& 1 | grep -q -- --suse-force-signed
   else
     false
   fi

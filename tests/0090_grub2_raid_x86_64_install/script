@@ -1,5 +1,5 @@
 export TEST_ARCH=x86_64
-export TEST_DF_boot=$(echo -e "Filesystem\n/dev/md0p1")
+export TEST_DF_boot=$(echo -e "Filesystem\n/dev/md0p2")
 run pbl --loader grub2
 run pbl --install
 export TEST_GRUB2_INSTALL_EXIT=42
