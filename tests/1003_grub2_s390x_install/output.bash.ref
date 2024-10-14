@@ -1,0 +1,6 @@
+[✔] pbl --loader grub2
+[✔] pbl --install
+target = s390x-emu
++ /usr/sbin/grub2-install --target=s390x-emu
+/usr/sbin/grub2-install --target=s390x-emu: test error 42 :-(
+[✘] pbl --install = 1

@@ -1,7 +1,0 @@
-[✔] pbl --loader grub2
-[✔] pbl --install
-target = powerpc-ieee1275
-/usr/sbin/grub2-install: test error 42 :-(
-+ /usr/sbin/grub2-install '--target=powerpc-ieee1275' --force --skip-fs-probe /dev/sda
-/usr/sbin/grub2-install: test error 42 :-(
-[✘] pbl --install = 1

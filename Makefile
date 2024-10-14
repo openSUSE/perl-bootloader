@@ -38,5 +38,5 @@ tests:
 clean:
 	rm -rf package
 	rm -f VERSION changelog *.8 *~ */*~ */*/*~
-	rm -f tests/*/*.{bash,ksh,busybox} tests/testresults*.diff
+	rm -f tests/*/*.{bash,dash,ksh,busybox} tests/testresults*.diff
 	rm -rf tests/{real_,}root

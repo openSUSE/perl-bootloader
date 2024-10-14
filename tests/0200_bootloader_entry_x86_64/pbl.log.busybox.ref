@@ -1,0 +1,25 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> bootloader_entry-28: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> bootloader_entry-28: '/usr/lib/bootloader/systemd-boot/add-kernel 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default' = 0, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd-6.5.4-1-default
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> bootloader_entry-28: '/usr/lib/bootloader/systemd-boot/config' = 0, output:
+>>>>>>>>>>>>>>>>
+nothing to do, really
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> bootloader_entry-68: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> bootloader_entry-94: bootloader = systemd-boot
+2023-11-01 23:59:58 <3> bootloader_entry-94: '/usr/lib/bootloader/systemd-boot/add-kernel 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default' failed with exit code 1, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd-6.5.4-1-default
+/usr/bin/kernel-install add 6.5.4-1-default /boot/vmlinuz-6.5.4-1-default /boot/initrd-6.5.4-1-default: test error 42 :-(
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = systemd-boot
+2023-11-01 23:59:58 <1> bootloader_entry-153: bootloader = grub2
+2023-11-01 23:59:58 <1> bootloader_entry-153: /usr/lib/bootloader/grub2/add-kernel skipped
+2023-11-01 23:59:58 <3> bootloader_entry-153: '/usr/lib/bootloader/grub2/config' failed with exit code 42, output:
+>>>>>>>>>>>>>>>>
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg: test error 42 :-(
+<<<<<<<<<<<<<<<<

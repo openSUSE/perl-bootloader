@@ -1,0 +1,5 @@
+[✔] pbl --loader grub2-efi
+[✔] pbl --config
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg: test error 42 :-(
+[✘] pbl --config = 1

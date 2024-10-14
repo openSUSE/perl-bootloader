@@ -1,0 +1,27 @@
+#! /bin/sh
+
+if [ -n "$TEST_FDISK_EXIT" ] ; then
+  echo "$0: test error $TEST_FDISK_EXIT :-(" >&2
+  exit "$TEST_FDISK_EXIT"
+fi
+
+if [ "$*" = "-l -o Device,Type /dev/sda" ] ; then
+  cat <<EOF
+Disk /dev/sda: 60 GiB, 64424509440 bytes, 125829120 sectors
+Disk model: QEMU HARDDISK   
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 1103ADC6-B46E-40B7-B05C-18974539C247
+
+Device     Type
+/dev/sda1  PowerPC PReP boot
+/dev/sda2  Linux filesystem
+/dev/sda3  Linux swap
+EOF
+else
+  exit 1
+fi
+
+exit 0
