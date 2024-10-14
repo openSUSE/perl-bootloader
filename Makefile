@@ -1,7 +1,8 @@
+PACKAGE_NAME := $(shell if [ -f PACKAGE_NAME ] ; then cat PACKAGE_NAME ; else echo update-bootloader ; fi)
 GIT2LOG := $(shell if [ -x ./git2log ] ; then echo ./git2log --update ; else echo true ; fi)
 GITDEPS := $(shell [ -d .git ] && echo .git/HEAD .git/refs/heads .git/refs/tags)
 VERSION := $(shell $(GIT2LOG) --version VERSION ; cat VERSION)
-PREFIX  := update-bootloader-$(VERSION)
+PREFIX  := $(PACKAGE_NAME)-$(VERSION)
 
 SBINDIR ?= /usr/sbin
 ETCDIR  ?= /usr/etc
@@ -20,7 +21,7 @@ install:
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION ?=/' $(DESTDIR)$(SBINDIR)/pbl
 	@ln -snf pbl $(DESTDIR)$(SBINDIR)/update-bootloader
 	@ln -rsnf $(DESTDIR)$(SBINDIR)/pbl $(DESTDIR)/usr/lib/bootloader/bootloader_entry
-	@install -D -m 644 boot.readme $(DESTDIR)/usr/share/doc/packages/update-bootloader/boot.readme
+	@install -D -m 644 boot.readme $(DESTDIR)/usr/share/doc/packages/$(PACKAGE_NAME)/boot.readme
 	@install -D -m 644 pbl.logrotate $(DESTDIR)$(ETCDIR)/logrotate.d/pbl
 	@install -D -m 755 kexec-bootloader $(DESTDIR)$(SBINDIR)/kexec-bootloader
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8
