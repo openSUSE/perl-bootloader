@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# set $WITH_DASH to 1 to run tests also with dash
+with_dash=${WITH_DASH:-0}
+
 test_dir="tests"
 test_root="$test_dir/root"
 test_data="$test_dir/data"
@@ -9,6 +12,9 @@ programs="\
   /usr/bin/ksh\
   /usr/bin/busybox\
 "
+
+[ "$with_dash" = 1 ] && programs="$programs /usr/bin/dash"
+
 busybox_programs="\
   /usr/bin/basename\
   /usr/bin/cat\
@@ -119,6 +125,17 @@ set_bash ()
   done
 
   shell=bash
+}
+
+set_dash ()
+{
+  ln -sf "dash" "$test_root/usr/bin/sh"
+
+  for p in $busybox_programs ; do
+    ln -sf "system/${p##*/}" "$test_root/$p"
+  done
+
+  shell=dash
 }
 
 set_ksh ()
@@ -249,6 +266,11 @@ if [ -n "$opt_refs" ] ; then
 
   set_busybox
   do_tests
+
+  if [ "$with_dash" = 1 ] ; then
+    set_dash
+    do_tests
+  fi
 else
   set_bash
   do_tests
@@ -261,6 +283,12 @@ else
   set_busybox
   do_tests
   show_results
+
+  if [ "$with_dash" = 1 ] ; then
+    set_dash
+    do_tests
+    show_results
+  fi
 fi
 
 done_tests
