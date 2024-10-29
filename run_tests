@@ -109,6 +109,7 @@ EOF
   done
 
   make install DESTDIR="$test_root"
+  sed -i -e '1s/[^/]*sh/sh/' "$test_root/usr/sbin/pbl"
 }
 
 done_tests ()
