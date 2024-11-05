@@ -10,8 +10,10 @@
 err=0
 if [ -x /usr/bin/sdbootutil ] ; then
   ( set -x ; sdbootutil set-default "$1" ) || err=1
+elif [ -x /usr/bin/bootctl ] ; then
+  ( set -x ; bootctl set-default "$1" ) || err=1
 else
-  echo "sdbootutil: command not found"
+  echo "sdbootutil or bootctl: command not found"
   err=1
 fi
 
