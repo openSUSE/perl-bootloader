@@ -1,5 +1,9 @@
 export TEST_ARCH=x86_64
 run pbl --loader systemd-boot
+# with sdbootutil
+run /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default
+# without sdbootutil
+rm -f /usr/bin/sdbootutil
 run /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default
 run /usr/lib/bootloader/bootloader_entry foo
 export TEST_KERNEL_INSTALL_EXIT=42
