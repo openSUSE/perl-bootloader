@@ -1,2 +1,3 @@
 [✔] pbl --loader systemd-boot
 [✔] pbl --default 0
+[✔] pbl --default 0

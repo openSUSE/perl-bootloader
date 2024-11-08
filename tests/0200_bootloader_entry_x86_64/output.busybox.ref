@@ -1,5 +1,6 @@
 [✔] pbl --loader systemd-boot
 [✔] /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default
+[✔] /usr/lib/bootloader/bootloader_entry add default 6.5.4-1-default vmlinuz-6.5.4-1-default initrd-6.5.4-1-default
 Usage: bootloader_entry add|remove kernel-flavor kernel-version kernel-image initrd-file
 Add or remove kernel images to boot config.
 [✘] /usr/lib/bootloader/bootloader_entry foo = 1
