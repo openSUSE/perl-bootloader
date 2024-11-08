@@ -12,7 +12,14 @@
 # Add kernel/initrd to boot config.
 
 err=0
-if [ -x /usr/bin/kernel-install ] ; then
+
+if [ -x /usr/bin/sdbootutil ] ; then
+  version="$1"
+  # kernel and initrd files are ignored, as sdbootutil is the one that
+  # will find the correct kernel file from the snapshots, and will
+  # create the correct initrd for the system
+  ( set -x ; sdbootutil add-kernel "$version" ) || err=1
+elif [ -x /usr/bin/kernel-install ] ; then
   version="$1"
   kernel="$2"
   initrd="$3"
