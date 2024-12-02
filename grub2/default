@@ -7,6 +7,9 @@
 #   bootloader, language
 #
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
 if [ -x /usr/sbin/grub2-set-default ] ; then
   if [ -f /boot/grub2/grubenv ] ; then
     ( set -x ; /usr/sbin/grub2-set-default "$1" )

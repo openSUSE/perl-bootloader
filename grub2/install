@@ -15,6 +15,8 @@
 # physical disks then grub is installed only on one (the 'first') of them.
 #
 
+# include common functions
+. "$PBL_INCLUDE/library"
 
 # Usage: prep_partition(disk)
 #
