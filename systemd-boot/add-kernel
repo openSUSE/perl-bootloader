@@ -11,6 +11,9 @@
 #
 # Add kernel/initrd to boot config.
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
 err=0
 
 if [ -x /usr/bin/sdbootutil ] ; then

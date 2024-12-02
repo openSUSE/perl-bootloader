@@ -7,6 +7,9 @@
 #   bootloader, language
 #
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
 if [ -x /usr/sbin/grub2-mkconfig ] ; then
   if [ -d /boot/grub2 ] ; then
     ( set -x ; /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg )

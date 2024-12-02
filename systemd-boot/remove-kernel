@@ -11,6 +11,9 @@
 #
 # Remove kernel/initrd from boot config.
 
+# include common functions
+. "$PBL_INCLUDE/library"
+
 err=0
 if [ -x /usr/bin/kernel-install ] ; then
   ( set -x ; kernel-install remove "$1" ) || err=1
