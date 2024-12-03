@@ -7,3 +7,35 @@ kernel=/boot/vmlinuz
 initrd=/boot/initrd
 append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
 <<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/boot/vmlinuz-5.6.7-6-foobar
+initrd=/boot/initrd-5.6.7-6-foobar
+append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/usr/lib/modules/6.7.8-9-default/vmlinuz
+initrd=/boot/initrd-6.7.8-9-default
+append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/boot/vmlinuz-6.7.8-9-default
+initrd=/boot/initrd-6.7.8-9-default
+append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> pbl-0: '/usr/lib/bootloader/grub2/default-settings' = 0, output:
+2023-11-01 23:59:58 <1> pbl-0: result:
+>>>>>>>>>>>>>>>>
+kernel=/boot/vmlinuz-5.6.7-7-foobar
+initrd=/boot/initrd-5.6.7-7-foobar
+append="mitigations=off quiet foo=\"foo  bar\" nosimplefb=1"
+<<<<<<<<<<<<<<<<
