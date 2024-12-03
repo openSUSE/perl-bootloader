@@ -29,12 +29,12 @@ esac
 
 lib_get_cmdline_grub
 
-kernel=$(readlink -f "/boot/$image")
-initrd=$(readlink -f /boot/initrd)
+lib_get_default_kernel_initrd
+
 append=\"$(lib_shellquote "$cmdline")\"
 
-echo "kernel=$kernel" > "$PBL_RESULT"
-echo "initrd=$initrd" >> "$PBL_RESULT"
+echo "kernel=$default_kernel" > "$PBL_RESULT"
+echo "initrd=$default_initrd" >> "$PBL_RESULT"
 echo -n "append=$append" >> "$PBL_RESULT"
 
 exit 0
