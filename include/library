@@ -349,3 +349,59 @@ lib_efi_log_boot_entry ()
   echo "efi_entry.file=$efi_distro_entry_file"
   echo "efi_entry.name=$efi_distro_entry_name"
 }
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# lib_get_default_kernel_initrd
+#
+# Set $default_kernel and $default_initrd to default kernel image and initrd, resp.
+#
+lib_get_default_kernel_initrd ()
+{
+  default_kernel=
+  default_initrd=
+
+  tmp_target=$(uname -m)
+
+  case "$tmp_target" in
+    x86_64|i?86) tmp_image=vmlinuz ;;
+    ppc*) tmp_image=vmlinux ;;
+    s390*) tmp_image=image ;;
+    armv*) tmp_image=zImage ;;
+    aarch64|riscv64) tmp_image=Image ;;
+    *) echo "architecture $tmp_target not supported" ; exit 1
+  esac
+
+  # the default values, also in case nothing is found
+  default_kernel=$(readlink -f "/boot/$tmp_image")
+  default_initrd=$(readlink -f "/boot/initrd")
+
+  # there is a "/boot/<KERNEL>" symlink
+  if [ -e "$default_kernel" ] ; then
+    return
+  fi
+
+  tmp_kernel_version=$(uname -r)
+
+  # try "/boot/<KERNEL-CURRENT_KERNEL_VERSION>"
+  if [ -e "/boot/$tmp_image-$tmp_kernel_version" ] ; then
+    default_kernel=$(readlink -f "/boot/$tmp_image-$tmp_kernel_version")
+    default_initrd=$(readlink -f "/boot/initrd-$tmp_kernel_version")
+    return
+  fi
+
+  # try "/usr/lib/modules/<CURRENT_KERNEL_VERSION>/KERNEL"
+  if [ -e "/usr/lib/modules/$tmp_kernel_version/$tmp_image" ] ; then
+    default_kernel=$(readlink -f "/usr/lib/modules/$tmp_kernel_version/$tmp_image")
+    default_initrd=$(readlink -f "/boot/initrd-$tmp_kernel_version")
+    return
+  fi
+
+  # try newest (according to file date) "/boot/<KERNEL-VERSION>" entry
+  for tmp_kernel in $(ls -t /boot/$tmp_image-* 2>/dev/null) ; do
+    tmp_kernel_version=${tmp_kernel#*-}
+    default_kernel=$(readlink -f "/boot/$tmp_image-$tmp_kernel_version")
+    default_initrd=$(readlink -f "/boot/initrd-$tmp_kernel_version")
+    return
+  done
+}

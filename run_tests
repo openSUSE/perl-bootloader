@@ -22,11 +22,14 @@ busybox_programs="\
   /usr/bin/cut\
   /usr/bin/dirname\
   /usr/bin/grep\
+  /usr/bin/ln\
   /usr/bin/ls\
+  /usr/bin/mkdir\
   /usr/bin/mktemp\
   /usr/bin/readlink\
   /usr/bin/rm\
   /usr/bin/sed\
+  /usr/bin/sleep\
   /usr/bin/tr\
 "
 dummy_programs="\

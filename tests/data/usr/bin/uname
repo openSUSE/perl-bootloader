@@ -8,6 +8,14 @@ if [ "$1" = "-m" ] ; then
     echo "TEST_ARCH not set" >&2
     exit 1
   fi
+elif [ "$1" = "-r" ] ; then
+  if [ -n "$TEST_KERNEL_VERSION" ] ; then
+    echo "$TEST_KERNEL_VERSION"
+    exit 0
+  else
+    echo "TEST_KERNEL_VERSION not set" >&2
+    exit 1
+  fi
 else
   echo "unsupported uname option" >&2
   exit 1
