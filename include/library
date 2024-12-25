@@ -1,3 +1,5 @@
+# -*- bash -*-
+
 # get out of POSIX mode in case we are running bash
 unset POSIXLY_CORRECT
 
