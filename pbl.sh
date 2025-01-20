@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/sh
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This is a (wrapper) script to update the bootloader config.
