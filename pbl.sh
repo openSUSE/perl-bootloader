@@ -35,7 +35,7 @@ bl_usage ()
   [ "$1" = 0 ] && out=1
 
   cat <<=== >&$out
-Usage: pbl [OPTIONS]
+Usage: $program [OPTIONS]
 Configure/install boot loader.
 
 Options:
@@ -45,18 +45,29 @@ Options:
     --loader BOOTLOADER         Set current boot loader to BOOTLOADER.
                                 Supported values: none, grub2, grub2-bls, grub2-efi, systemd-boot, u-boot.
     --default ENTRY             Set default boot entry to ENTRY.
-    --add-option OPTION         Add OPTION to default boot options (grub2).
-    --del-option OPTION         Delete OPTION from default boot options (grub2).
-    --get-option OPTION         Get OPTION from default boot options (grub2).
+    --add-option OPTION         Add OPTION to default boot options.
+    --del-option OPTION         Delete OPTION from default boot options.
+    --get-option OPTION         Get OPTION from default boot options.
     --add-kernel VERSION [KERNEL [INITRD]]
                                 Add kernel with version VERSION. Optionally pass kernel and initrd
-                                explicitly (systemd-boot).
-    --remove-kernel VERSION     Remove kernel with version VERSION (systemd-boot).
+                                explicitly.
+    --remove-kernel VERSION     Remove kernel with version VERSION.
     --default-settings          Return default kernel, initrd, and boot options.
     --log LOGFILE               Log messages to LOGFILE (default: /var/log/pbl.log)
     --version                   Show pbl version.
     --help                      Write this help text.
 
+Legacy options:
+    --reinit                    Re-install boot loader (equivalent to --install --config).
+    --add                       Add new entry to boot loader configuration. Requires also --name,
+                                --image, and --initrd options. Use --add-kernel instead.
+    --image KERNEL              Use KERNEL as kernel when adding a boot loader entry.
+    --initrd INITRD             Use INITRD as initrd when adding a boot loader entry.
+    --name VERSION              Use VERSION as name for new boot loader entry.
+    --force                     This option is ignored.
+
+Calling $program without any options will rebuild the boot loader configuration
+(as if --config would have been used).
 ===
 
   exit "$1"
@@ -339,26 +350,19 @@ fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# compat: called as update-bootloader
+# called as pbl or update-bootloader
 #
-if [ "$program" = update-bootloader ] ; then
-  while true ; do
-    case $1 in
-      --reinit) shift ; run_script "install" && run_script "config" ; exit ;;
-      ?*) shift ; continue ;;
-    esac
 
-    break
-  done
+opt_ubl_add=
+opt_ubl_initrd=
+opt_ubl_kernel=
+opt_ubl_name=
 
+if [ "$#" = 0 ] ; then
+  [ "$program" = update-bootloader ] || echo "no option given, assuming --config"
   run_script "config"
-
   exit
 fi
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# called as pbl
-#
 
 while true ; do
   [ -z "$1" ] && break
@@ -400,6 +404,16 @@ while true ; do
       v="$1" ; shift
       run_script "remove-kernel" "$v" || exit
       continue ;;
+
+    # legacy options
+    --add) shift ; opt_ubl_add=1 ; continue ;;
+    --image) check_args 1 "${@}" ; shift ; opt_ubl_kernel="$1" ; shift ; continue ;;
+    --initrd) check_args 1 "${@}" ; shift ; opt_ubl_initrd="$1" ; shift ; continue ;;
+    --name) check_args 1 "${@}" ; shift ; opt_ubl_name="$1" ; shift ; continue ;;
+    --reinit) shift ; run_script "install" && run_script "config" ; exit ;;
+    --force) shift ; continue ;;
+
+    # fallback
     -*) echo "unknown option: $1" >&2 ; bl_usage 1 ;;
   esac
 
@@ -407,5 +421,15 @@ while true ; do
 done
 
 [ -n "$1" ] && bl_usage 1
+
+# handle legacy '--add' option
+if [ "$opt_ubl_add" = 1 ] ; then
+  if [ -n "$opt_ubl_name" -a -n "$opt_ubl_kernel" -a -n "$opt_ubl_initrd" ] ; then
+    run_script "add-kernel" "$opt_ubl_name" "$opt_ubl_kernel" "$opt_ubl_initrd"
+  else
+    echo "$program: --add requires --name, --image and --initrd options" >&2
+    exit 1
+  fi
+fi
 
 exit 0

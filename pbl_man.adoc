@@ -1,20 +1,22 @@
-= pbl(8)
+= update-bootloader(8)
 :doctype: manpage
 :manmanual: System Administration
-:mansource: pbl {version}
+:mansource: update-bootloader {version}
 
 == Name
 
-pbl - manage boot loader confguration.
+update-bootloader, pbl - manage boot loader configuration.
 
 == Synopsis
 
+*update-bootloader* [_OPTIONS_] _IMAGE_ +
 *pbl* [_OPTIONS_] _IMAGE_
 
 
 == Description
 
-*pbl* is a light wrapper to unify some common boot loader configuration tasks.
+*update-bootloader* is a light wrapper to unify some common boot loader configuration tasks. +
+*pbl* is an alternative name for the same program.
 
 It is not intended to provide a comprehensive API to boot loader configuration.
 
@@ -38,25 +40,25 @@ Print current boot loader.
 *--loader* __BOOTLOADER_::
 Set current boot loader to _BOOTLOADER_. +
 Supported values: none, grub2, grub2-bls, grub2-efi, systemd-boot, u-boot. +
-Note that this only changes a config variable. To actually use the new boot loader, run *pbl --install* and *pbl --config*.
+Note that this only changes a config variable. To actually use the new boot loader, run *update-bootloader --install* and *update-bootloader --config*.
 
 *--default* _ENTRY_::
 Set default boot entry to _ENTRY_.
 
 *--add-option* _OPTION_::
-Add _OPTION_ to default boot options (grub2).
+Add _OPTION_ to default boot options.
 
 *--del-option* _OPTION_::
-Delete OPTION from default boot options (grub2).
+Delete OPTION from default boot options.
 
 *--get-option* _OPTION_::
-Get _OPTION_ from default boot options (grub2).
+Get _OPTION_ from default boot options.
 
 *--add-kernel* _VERSION_ [_KERNEL_ [_INITRD_]]::
-Add kernel with version _VERSION_. Optionally pass kernel and initrd explicitly (systemd-boot).
+Add kernel with version _VERSION_. Optionally pass kernel and initrd explicitly.
 
 *--remove-kernel* _VERSION_::
-Remove kernel with version _VERSION_ (systemd-boot).
+Remove kernel with version _VERSION_.
 
 *--default-settings*::
 Print default kernel, initrd, and boot options.
@@ -65,10 +67,31 @@ Print default kernel, initrd, and boot options.
 Log messages to _LOGFILE_ (default: /var/log/pbl.log).
 
 *--version*::
-Show *pbl* version.
+Show *update-bootloader* version.
 
 *--help*::
 Write this help text.
+
+== Legacy options
+
+*--reinit*::
+Re-install boot loader (equivalent to *--install* *--config*).
+
+*--add*::
+Add new entry to boot loader configuration.
+Requires also *--name*, *--image*, and *--initrd* options. Use *--add-kernel* instead.
+
+*--image* _KERNEL_::
+Use _KERNEL_ as kernel when adding a boot loader entry.
+
+*--initrd* _INITRD_::
+Use _INITRD_ as initrd when adding a boot loader entry.
+
+*--name* _VERSION_::
+Use VERSION as name for new boot loader entry.
+
+*--force*::
+This option is ignored.
 
 == Files
 
@@ -88,21 +111,21 @@ Directory with specific config scripts for each supported boot loader.
 
 ----
 # display default boot loader
-pbl --show
+update-bootloader --show
 
 # change default boot loader
-pbl --loader systemd-boot
+update-bootloader --loader systemd-boot
 
 # (re-)install default boot loader
-pbl --install
+update-bootloader --install
 
 # update boot loader configuration
-pbl --config
+update-bootloader --config
 ----
 
 == See Also
 
-*bootloader_entry*(8), *update-bootloader*(8).
+*bootloader_entry*(8).
 
 == Links
 
