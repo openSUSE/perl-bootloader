@@ -111,7 +111,7 @@ EOF
    chmod 755 "$test_root/$p"
   done
 
-  make install DESTDIR="$test_root"
+  make install DESTDIR="$test_root" INTERPRETER=sh
   sed -i -e '1s/[^/]*sh/sh/' "$test_root/usr/sbin/pbl"
 }
 

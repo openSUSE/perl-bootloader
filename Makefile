@@ -4,6 +4,9 @@ GITDEPS := $(shell [ -d .git ] && echo .git/HEAD .git/refs/heads .git/refs/tags)
 VERSION := $(shell $(GIT2LOG) --version VERSION ; cat VERSION)
 PREFIX  := $(PACKAGE_NAME)-$(VERSION)
 
+# ash, bash, ksh, or sh (dash not supported)
+INTERPRETER = bash
+
 SBINDIR ?= /usr/sbin
 ETCDIR  ?= /usr/etc
 
@@ -16,7 +19,10 @@ changelog: $(GITDEPS)
 	$(GIT2LOG) --changelog changelog
 
 install:
-	@for bl in include grub2 grub2-efi grub2-bls systemd-boot u-boot; do install -m 755 -D -t $(DESTDIR)/usr/lib/bootloader/$$bl $$bl/* ; done
+	@for bl in include grub2 grub2-efi grub2-bls systemd-boot u-boot; do \
+	  mkdir -p $(DESTDIR)/usr/lib/bootloader/$$bl ; \
+	  cp --no-dereference $$bl/* $(DESTDIR)/usr/lib/bootloader/$$bl ; \
+	done
 	@install -D -m 755 pbl.sh $(DESTDIR)$(SBINDIR)/pbl
 	@perl -pi -e 's/0\.0/$(VERSION)/ if /VERSION ?=/' $(DESTDIR)$(SBINDIR)/pbl
 	@ln -snf pbl $(DESTDIR)$(SBINDIR)/update-bootloader
@@ -25,6 +31,9 @@ install:
 	@install -D -m 644 pbl.logrotate $(DESTDIR)$(ETCDIR)/logrotate.d/pbl
 	@install -D -m 755 kexec-bootloader $(DESTDIR)$(SBINDIR)/kexec-bootloader
 	@install -d -m 755 $(DESTDIR)/usr/share/man/man8
+	@for script in $(DESTDIR)$(SBINDIR)/{pbl,kexec-bootloader} $(DESTDIR)/usr/lib/bootloader/*/* ; do \
+	  [ -L "$$script" ] || sed -i -e '1s/^\(#!.*\/\)[^/]*sh$$/\1$(INTERPRETER)/' "$$script" ; \
+	done
 
 %.8: %_man.adoc
 	asciidoctor -b manpage -a version=$(VERSION) -a soversion=${MAJOR_VERSION} $<
