@@ -1,0 +1,11 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> update-bootloader-28: bootloader = grub2-bls
+2023-11-01 23:59:58 <1> update-bootloader-28: '/usr/lib/bootloader/grub2-bls/add-kernel 6.5.4-1-default /boot/vmlinuz /boot/initrd' = 0, output:
+>>>>>>>>>>>>>>>>
++ sdbootutil add-kernel 6.5.4-1-default
+<<<<<<<<<<<<<<<<
+2023-11-01 23:59:58 <1> update-bootloader-63: bootloader = grub2-bls
+2023-11-01 23:59:58 <1> update-bootloader-63: '/usr/lib/bootloader/grub2-bls/add-kernel 6.5.4-1-default /boot/vmlinuz /boot/initrd' = 0, output:
+>>>>>>>>>>>>>>>>
++ kernel-install add 6.5.4-1-default /boot/vmlinuz /boot/initrd
+<<<<<<<<<<<<<<<<

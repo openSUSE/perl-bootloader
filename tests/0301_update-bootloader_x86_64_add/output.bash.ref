@@ -1,0 +1,3 @@
+[✔] pbl --loader grub2-bls
+[✔] update-bootloader --add --image /boot/vmlinuz --initrd /boot/initrd --name 6.5.4-1-default
+[✔] update-bootloader --add --image /boot/vmlinuz --initrd /boot/initrd --name 6.5.4-1-default
