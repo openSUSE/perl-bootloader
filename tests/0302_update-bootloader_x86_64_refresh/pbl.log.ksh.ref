@@ -1,0 +1,6 @@
+2023-11-01 23:59:58 <1> pbl-0: bootloader = grub2
+2023-11-01 23:59:58 <1> update-bootloader-9: bootloader = grub2-efi
+2023-11-01 23:59:58 <1> update-bootloader-9: '/usr/lib/bootloader/grub2-efi/config' = 0, output:
+>>>>>>>>>>>>>>>>
++ /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+<<<<<<<<<<<<<<<<
