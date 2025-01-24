@@ -40,7 +40,7 @@ Configure/install boot loader.
 
 Options:
     --install                   Install boot loader.
-    --config                    Create boot loader config.
+    --config                    Create or update boot loader config.
     --show                      Print current boot loader.
     --loader BOOTLOADER         Set current boot loader to BOOTLOADER.
                                 Supported values: none, grub2, grub2-bls, grub2-efi, systemd-boot, u-boot.
@@ -64,7 +64,10 @@ Legacy options:
     --image KERNEL              Use KERNEL as kernel when adding a boot loader entry.
     --initrd INITRD             Use INITRD as initrd when adding a boot loader entry.
     --name VERSION              Use VERSION as name for new boot loader entry.
-    --force                     This option is ignored.
+    --refresh                   Create or update boot loader config (equivalent to --config).
+
+There are a number of legacy options that are accepted but ignored. They are:
+    --force, --force-default, --man, --previous, --xen, --xen-kernel
 
 Calling $program without any options will rebuild the boot loader configuration
 (as if --config would have been used).
@@ -411,7 +414,8 @@ while true ; do
     --initrd) check_args 1 "${@}" ; shift ; opt_ubl_initrd="$1" ; shift ; continue ;;
     --name) check_args 1 "${@}" ; shift ; opt_ubl_name="$1" ; shift ; continue ;;
     --reinit) shift ; run_script "install" && run_script "config" ; exit ;;
-    --force) shift ; continue ;;
+    --refresh) shift ; run_script "config" || exit ; continue ;;
+    --force|--force-default|--man|--previous|--xen|--xen-kernel) shift ; continue ;;
 
     # fallback
     -*) echo "unknown option: $1" >&2 ; bl_usage 1 ;;

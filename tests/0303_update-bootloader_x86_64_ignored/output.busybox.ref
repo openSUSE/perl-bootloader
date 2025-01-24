@@ -1,0 +1,7 @@
+[✔] pbl --loader grub2-efi
+[✔] update-bootloader --force
+[✔] update-bootloader --force-default
+[✔] update-bootloader --man
+[✔] update-bootloader --previous
+[✔] update-bootloader --xen
+[✔] update-bootloader --xen-kernel

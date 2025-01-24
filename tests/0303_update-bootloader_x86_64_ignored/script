@@ -1,0 +1,8 @@
+export TEST_ARCH=x86_64
+run pbl --loader grub2-efi
+run update-bootloader --force
+run update-bootloader --force-default
+run update-bootloader --man
+run update-bootloader --previous
+run update-bootloader --xen
+run update-bootloader --xen-kernel
