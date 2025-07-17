@@ -255,12 +255,6 @@ set_log ()
 #
 set_loader ()
 {
-  if [ "$1" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
-    lib_set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "true"
-  elif [ \( "$1" = grub2-efi -o "$1" = grub2 \) -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
-    lib_set_config "/etc/default/grub" "GRUB_ENABLE_BLSCFG" "false"
-  fi
-
   lib_set_config "$sysconfig_dir/bootloader" "LOADER_TYPE" "$1"
 
   return $?
@@ -312,16 +306,8 @@ export PBL_INCLUDE
 read_sysconfig "bootloader";
 read_sysconfig "language";
 
-read_config "/etc/default/grub" "DEFAULT"
-
 loader="$SYS__BOOTLOADER__LOADER_TYPE"
 lang="$SYS__LANGUAGE__RC_LANG"
-
-if [ "$loader" = grub2-efi -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = true ] ; then
-  loader=grub2-bls
-elif [ "$loader" = grub2-bls -a "$DEFAULT__GRUB_ENABLE_BLSCFG" = false ] ; then
-  loader=grub2-efi
-fi
 
 set_log "$logfile"
 
